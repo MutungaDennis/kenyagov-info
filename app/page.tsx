@@ -72,6 +72,7 @@ export default function Home() {
       <div className="govuk-grid-row">
         <div className="govuk-grid-column-full">
           <h2 className="govuk-heading-l">Structure of Government</h2>
+          <p className="govuk-body">The three arms of government plus independent constitutional bodies</p>
         </div>
 
         <div className="govuk-grid-column-one-third">
@@ -100,6 +101,18 @@ export default function Home() {
             </div>
           </div>
         </div>
+
+        {/* New Independent Bodies Card */}
+        <div className="govuk-grid-column-one-third govuk-!-margin-top-6">
+          <div className="govuk-card govuk-card--clickable">
+            <div className="govuk-card__content">
+              <h3 className="govuk-card__title"><Link href="/independent-bodies">Independent Bodies</Link></h3>
+              <p className="govuk-card__description">
+                Constitutional Commissions and Independent Offices — the quasi-fourth arm of government
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
       <hr className="govuk-section-break govuk-section-break--visible govuk-section-break--xl" />
@@ -119,7 +132,7 @@ export default function Home() {
 
       <hr className="govuk-section-break govuk-section-break--visible govuk-section-break--xl" />
 
-      {/* Leaders / Political Office Holders */}
+      {/* Current Leaders */}
       <div className="govuk-grid-row">
         <div className="govuk-grid-column-full">
           <h2 className="govuk-heading-l">Current Leaders</h2>
@@ -129,34 +142,33 @@ export default function Home() {
         <div className="govuk-grid-column-one-third">
           <h3 className="govuk-heading-m">National Leadership</h3>
           <ul className="govuk-list">
-            <li><Link href="/leaders/president" className="govuk-link">President & Deputy President</Link></li>
-            <li><Link href="/leaders/cabinet" className="govuk-link">Cabinet Secretaries</Link></li>
-            <li><Link href="/leaders/assembly" className="govuk-link">Members of Parliament (MPs)</Link></li>
-            <li><Link href="/leaders/senate" className="govuk-link">Senators</Link></li>
+            <li><Link href="/leaders/executive" className="govuk-link">President & Deputy President</Link></li>
+            <li><Link href="/leaders/executive" className="govuk-link">Cabinet Secretaries</Link></li>
+            <li><Link href="/leaders/legislature" className="govuk-link">Members of Parliament (MPs)</Link></li>
+            <li><Link href="/leaders/legislature" className="govuk-link">Senators</Link></li>
           </ul>
         </div>
 
         <div className="govuk-grid-column-one-third">
           <h3 className="govuk-heading-m">County Leadership</h3>
           <ul className="govuk-list">
-            <li><Link href="/leaders/governors" className="govuk-link">Governors & Deputy Governors</Link></li>
-            <li><Link href="/leaders/women-reps" className="govuk-link">Women Representatives</Link></li>
-            <li><Link href="/leaders/mcas" className="govuk-link">MCAs</Link></li>
+            <li><Link href="/leaders/county-executive" className="govuk-link">Governors & Deputy Governors</Link></li>
+            <li><Link href="/leaders/county-assembly" className="govuk-link">Women Representatives</Link></li>
+            <li><Link href="/leaders/county-assembly" className="govuk-link">MCAs</Link></li>
           </ul>
         </div>
 
         <div className="govuk-grid-column-one-third">
-          <h3 className="govuk-heading-m">Independent Offices</h3>
+          <h3 className="govuk-heading-m">Independent Bodies</h3>
           <ul className="govuk-list">
-            <li><Link href="/leaders/commissions" className="govuk-link">Constitutional Commissions Chairs</Link></li>
-            <li><Link href="/leaders/ceos" className="govuk-link">CEOs & Directors General</Link></li>
+            <li><Link href="/leaders/constitutional-commission" className="govuk-link">Constitutional Commissions Chairs</Link></li>
+            <li><Link href="/leaders/independent-office" className="govuk-link">CEOs & Directors General</Link></li>
           </ul>
         </div>
       </div>
 
       <hr className="govuk-section-break govuk-section-break--visible govuk-section-break--xl" />
 
-      {/* Feedback Component */}
       <GovUKFeedback />
     </div>
   );

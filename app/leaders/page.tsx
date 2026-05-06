@@ -40,7 +40,6 @@ export default function LeadersPage() {
 
         if (leadersData) {
           setLeaders(leadersData);
-          // Extract unique categories
           const uniqueCats = [...new Set(leadersData.map((l: Leader) => l.category))];
           setCategories(uniqueCats);
         }
@@ -87,6 +86,28 @@ export default function LeadersPage() {
         <p className="govuk-body-l">
           Elected and appointed public office holders across all arms and levels of government.
         </p>
+
+        {/* Category Cards */}
+        <div className="govuk-!-margin-bottom-9">
+          <h2 className="govuk-heading-m govuk-!-margin-bottom-4">Browse by Category</h2>
+          <div className="govuk-grid-row">
+            {categories.map((cat) => {
+              const slug = cat.toLowerCase().replace(/\s+/g, '-');
+              return (
+                <div key={cat} className="govuk-grid-column-one-third govuk-!-margin-bottom-4">
+                  <Link href={`/leaders/${slug}`} className="govuk-link">
+                    <div className="govuk-card govuk-card--clickable">
+                      <div className="govuk-card__content">
+                        <h3 className="govuk-card__title">{cat}</h3>
+                        <p className="govuk-body-s">View all {cat} leaders</p>
+                      </div>
+                    </div>
+                  </Link>
+                </div>
+              );
+            })}
+          </div>
+        </div>
 
         {/* Search & Filter */}
         <div className="govuk-grid-row govuk-!-margin-bottom-8">
@@ -138,27 +159,33 @@ export default function LeadersPage() {
             </p>
 
             <ul className="govuk-list">
-              {filteredLeaders.map((leader) => (
-                <li 
-                  key={leader.id} 
-                  className="govuk-!-margin-bottom-6 pb-6 border-b border-gray-200 last:border-b-0"
-                >
-                  <h3 className="govuk-heading-m govuk-!-margin-bottom-1">
-                    <Link href={leader.link || `/leaders/${leader.id}`} className="govuk-link">
-                      {leader.name}
-                    </Link>
-                  </h3>
-                  <p className="govuk-body font-medium">{leader.title}</p>
-                  {(leader.county || leader.constituency) && (
-                    <p className="govuk-body-s text-gray-600">
-                      {leader.county && `County: ${leader.county}`}
-                      {leader.county && leader.constituency && " • "}
-                      {leader.constituency && `Constituency: ${leader.constituency}`}
-                    </p>
-                  )}
-                  <p className="govuk-body-s">{leader.description}</p>
-                </li>
-              ))}
+              {filteredLeaders.map((leader) => {
+                const categorySlug = leader.category.toLowerCase().replace(/\s+/g, '-');
+                return (
+                  <li 
+                    key={leader.id} 
+                    className="govuk-!-margin-bottom-6 pb-6 border-b border-gray-200 last:border-b-0"
+                  >
+                    <h3 className="govuk-heading-m govuk-!-margin-bottom-1">
+                      <Link 
+                        href={`/leaders/${categorySlug}/${leader.id}`} 
+                        className="govuk-link"
+                      >
+                        {leader.name}
+                      </Link>
+                    </h3>
+                    <p className="govuk-body font-medium">{leader.title}</p>
+                    {(leader.county || leader.constituency) && (
+                      <p className="govuk-body-s text-gray-600">
+                        {leader.county && `County: ${leader.county}`}
+                        {leader.county && leader.constituency && " • "}
+                        {leader.constituency && `Constituency: ${leader.constituency}`}
+                      </p>
+                    )}
+                    <p className="govuk-body-s">{leader.description}</p>
+                  </li>
+                );
+              })}
             </ul>
 
             {filteredLeaders.length === 0 && (
