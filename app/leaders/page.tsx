@@ -122,43 +122,43 @@ export default function LeadersPage() {
           </p>
         )}
 
-        {/* Leaders List - FIXED */}
-        {!isLoading && (
+        {/* Leaders List */}
+        {!isLoading && filteredLeaders.length > 0 && (
           <ul className="govuk-list">
             {filteredLeaders.map((leader) => (
-            <li 
-              key={leader.id} 
-              className="govuk-!-margin-bottom-6 pb-6 border-b border-gray-200 last:border-b-0"
-            >
-              <h3 className="govuk-heading-m govuk-!-margin-bottom-1">
-                {leader.link ? (
-                  <Link href={leader.link} className="govuk-link">
-                    {leader.name}
-                  </Link>
-                ) : (
-                  <span>{leader.name}</span>
-                )}
-              </h3>
-              <p className="govuk-body govuk-!-margin-bottom-1 font-medium">
-                {leader.title}
-              </p>
-
-              {(leader.county || leader.constituency) && (
-                <p className="govuk-body-s text-gray-600">
-                  {leader.county && `County: ${leader.county}`}
-                  {leader.county && leader.constituency && " • "}
-                  {leader.constituency && `Constituency/Ward: ${leader.constituency}`}
+              <li 
+                key={leader.id} 
+                className="govuk-!-margin-bottom-6 pb-6 border-b border-gray-200 last:border-b-0"
+              >
+                <h3 className="govuk-heading-m govuk-!-margin-bottom-1">
+                  {leader.link ? (
+                    <Link href={leader.link} className="govuk-link">
+                      {leader.name}
+                    </Link>
+                  ) : (
+                    <span>{leader.name}</span>
+                  )}
+                </h3>
+                <p className="govuk-body govuk-!-margin-bottom-1 font-medium">
+                  {leader.title}
                 </p>
-              )}
 
-              <p className="govuk-body-s">{leader.description}</p>
-            </li>
+                {(leader.county || leader.constituency) && (
+                  <p className="govuk-body-s text-gray-600">
+                    {leader.county && `County: ${leader.county}`}
+                    {leader.county && leader.constituency && " • "}
+                    {leader.constituency && `Constituency/Ward: ${leader.constituency}`}
+                  </p>
+                )}
+
+                <p className="govuk-body-s">{leader.description}</p>
+              </li>
             ))}
           </ul>
+        )}
 
-          {filteredLeaders.length === 0 && (
-            <p className="govuk-body">No leaders found. Try adjusting your search or filter.</p>
-          )}
+        {!isLoading && filteredLeaders.length === 0 && (
+          <p className="govuk-body">No leaders found. Try adjusting your search or filter.</p>
         )}
 
         <GovUKFeedback />
