@@ -1,4 +1,3 @@
-import { leaders } from "@/data/leaders";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -6,6 +5,7 @@ import Link from "next/link";
 import GovUKBackLink from "@/components/govuk/BackLink";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import GovUKFeedback from "@/components/govuk/Feedback";
+import { createClient } from "@/lib/supabase/server";
 
 export default async function LeaderProfile({
   params,
@@ -13,17 +13,26 @@ export default async function LeaderProfile({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const supabase = await createClient();
 
-  const leader = leaders.find((l) => l.id === id);
+  const { data: leader } = await supabase
+    .from('leaders')
+    .select('*')
+    .eq('id', id)
+    .single();
 
   if (!leader) {
     notFound();
   }
 
   // Related leaders (same category)
-  const relatedLeaders = leaders
-    .filter((l) => l.category === leader.category && l.id !== leader.id)
-    .slice(0, 3);
+  const { data: relatedLeaders = [] } = await supabase
+    .from('leaders')
+    .select('*')
+    .eq('category', leader.category)
+    .neq('id', leader.id)
+    .order('name', { ascending: true })
+    .limit(3);
 
   return (
     <div className="govuk-width-container">
