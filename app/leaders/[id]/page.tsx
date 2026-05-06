@@ -182,7 +182,7 @@ export default async function LeaderProfile({
             </div>
 
             {/* RELATED LEADERS */}
-            {relatedLeaders.length > 0 && (
+            {relatedLeaders && relatedLeaders.length > 0 && (
               <>
                 <h2 className="govuk-heading-m govuk-!-margin-top-9">
                   Related leaders
