@@ -16,6 +16,12 @@ const nextConfig: NextConfig = {
     };
     return config;
   },
+
+  turbopack: {
+    resolveAlias: {
+      "govuk-frontend": path.resolve(__dirname, "node_modules/govuk-frontend/dist/govuk"),
+    },
+  },
 };
 
 export default nextConfig;
