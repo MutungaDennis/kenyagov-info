@@ -1,4 +1,5 @@
 import Link from "next/link";
+import GovUKFeedback from "@/components/govuk/Feedback";
 
 export default function Home() {
   return (
@@ -7,7 +8,7 @@ export default function Home() {
       <section className="govuk-grid-row govuk-!-margin-top-9 govuk-!-margin-bottom-9">
         <div className="govuk-grid-column-two-thirds">
           <h1 className="govuk-heading-xl govuk-!-margin-bottom-4">
-            Kenya Government Entities
+            KenyaGovInfo.KE
           </h1>
           <p className="govuk-body-l">
             The best place to find information about Kenyan government institutions, 
@@ -155,19 +156,8 @@ export default function Home() {
 
       <hr className="govuk-section-break govuk-section-break--visible govuk-section-break--xl" />
 
-      {/* Feedback Section - GOV.UK Style */}
-      <div className="govuk-grid-row">
-        <div className="govuk-grid-column-two-thirds">
-          <h2 className="govuk-heading-m">Is this page useful?</h2>
-          <div className="govuk-button-group">
-            <button className="govuk-button govuk-button--secondary">Yes</button>
-            <button className="govuk-button govuk-button--secondary">No</button>
-          </div>
-          <p className="govuk-body-s govuk-!-margin-top-3">
-            <Link href="/feedback" className="govuk-link">Report a problem with this page</Link>
-          </p>
-        </div>
-      </div>
+      {/* Feedback Component */}
+      <GovUKFeedback />
     </div>
   );
 }
