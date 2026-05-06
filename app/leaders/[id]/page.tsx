@@ -7,39 +7,51 @@ import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import GovUKFeedback from "@/components/govuk/Feedback";
 import { createClient } from "@/lib/supabase/server";
 
-export default async function LeaderProfile({
-  params,
-}: {
-  params: Promise<{ id: string }>;
+type Leader = {
+  id: string;
+  name: string;
+  title: string;
+  category: string;
+  county?: string;
+  constituency?: string;
+  organization?: string;
+  description: string;
+  image?: string;
+};
+
+export default async function LeaderProfile({ 
+  params 
+}: { 
+  params: Promise<{ id: string }> 
 }) {
   const { id } = await params;
   const supabase = await createClient();
 
-  const { data: leader } = await supabase
+  const { data: leader, error } = await supabase
     .from('leaders')
     .select('*')
     .eq('id', id)
     .single();
 
-  if (!leader) {
+  if (error || !leader) {
     notFound();
   }
 
-  // Related leaders (same category)
-  const { data: relatedLeaders = [] } = await supabase
+  // Related leaders - with default empty array
+  const { data } = await supabase
     .from('leaders')
     .select('*')
     .eq('category', leader.category)
     .neq('id', leader.id)
     .order('name', { ascending: true })
-    .limit(3);
+    .limit(4);
+
+  const relatedLeaders = data ?? [];
 
   return (
     <div className="govuk-width-container">
-      {/* Back */}
       <GovUKBackLink href="/leaders" />
 
-      {/* Breadcrumbs */}
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
@@ -50,19 +62,12 @@ export default async function LeaderProfile({
 
       <main className="govuk-main-wrapper">
         <div className="govuk-grid-row">
-          {/* MAIN CONTENT */}
           <div className="govuk-grid-column-two-thirds">
-            {/* Title */}
-            <p className="govuk-caption-l govuk-!-margin-bottom-1">
-              {leader.title}
-            </p>
+            <p className="govuk-caption-l">{leader.title}</p>
+            <h1 className="govuk-heading-xl">{leader.name}</h1>
 
-            <h1 className="govuk-heading-xl govuk-!-margin-bottom-6">
-              {leader.name}
-            </h1>
-
-            {/* Image */}
-            <div className="govuk-!-margin-bottom-6">
+            {/* Profile Image */}
+            <div className="govuk-!-margin-bottom-8">
               {leader.image ? (
                 <Image
                   src={leader.image}
@@ -80,121 +85,58 @@ export default async function LeaderProfile({
             </div>
 
             {/* KEY INFORMATION */}
-            <h2 className="govuk-heading-l">Key information</h2>
-
+            <h2 id="key-information" className="govuk-heading-l">Key information</h2>
             <dl className="govuk-summary-list">
               <div className="govuk-summary-list__row">
                 <dt className="govuk-summary-list__key">Full name</dt>
-                <dd className="govuk-summary-list__value">
-                  {leader.name}
-                </dd>
+                <dd className="govuk-summary-list__value">{leader.name}</dd>
               </div>
-
               <div className="govuk-summary-list__row">
                 <dt className="govuk-summary-list__key">Position</dt>
-                <dd className="govuk-summary-list__value">
-                  {leader.title}
-                </dd>
+                <dd className="govuk-summary-list__value">{leader.title}</dd>
               </div>
-
               {leader.category && (
                 <div className="govuk-summary-list__row">
                   <dt className="govuk-summary-list__key">Category</dt>
-                  <dd className="govuk-summary-list__value">
-                    {leader.category}
-                  </dd>
+                  <dd className="govuk-summary-list__value">{leader.category}</dd>
                 </div>
               )}
-
               {leader.organization && (
                 <div className="govuk-summary-list__row">
-                  <dt className="govuk-summary-list__key">
-                    Organisation
-                  </dt>
-                  <dd className="govuk-summary-list__value">
-                    {leader.organization}
-                  </dd>
+                  <dt className="govuk-summary-list__key">Organisation</dt>
+                  <dd className="govuk-summary-list__value">{leader.organization}</dd>
                 </div>
               )}
-
               {leader.county && (
                 <div className="govuk-summary-list__row">
                   <dt className="govuk-summary-list__key">County</dt>
-                  <dd className="govuk-summary-list__value">
-                    {leader.county}
-                  </dd>
+                  <dd className="govuk-summary-list__value">{leader.county}</dd>
                 </div>
               )}
-
               {leader.constituency && (
                 <div className="govuk-summary-list__row">
-                  <dt className="govuk-summary-list__key">
-                    Constituency / Ward
-                  </dt>
-                  <dd className="govuk-summary-list__value">
-                    {leader.constituency}
-                  </dd>
+                  <dt className="govuk-summary-list__key">Constituency / Ward</dt>
+                  <dd className="govuk-summary-list__value">{leader.constituency}</dd>
                 </div>
               )}
             </dl>
 
             {/* BIOGRAPHY */}
-            <h2 id="biography" className="govuk-heading-l">
+            <h2 id="biography" className="govuk-heading-l govuk-!-margin-top-9">
               Biography
             </h2>
-
             <div className="govuk-body">
               <p>{leader.description}</p>
             </div>
 
-            {/* CURRENT ROLE */}
-            <h2
-              id="role"
-              className="govuk-heading-l govuk-!-margin-top-9"
-            >
-              Current role
-            </h2>
-
-            <div className="govuk-body">
-              <p className="govuk-!-font-weight-bold">
-                {leader.title}
-              </p>
-
-              {leader.organization && (
-                <p>
-                  Organisation:{" "}
-                  <strong>{leader.organization}</strong>
-                </p>
-              )}
-
-              {leader.county && (
-                <p>
-                  County: <strong>{leader.county}</strong>
-                </p>
-              )}
-
-              {leader.constituency && (
-                <p>
-                  Constituency / Ward:{" "}
-                  <strong>{leader.constituency}</strong>
-                </p>
-              )}
-            </div>
-
             {/* RELATED LEADERS */}
-            {relatedLeaders && relatedLeaders.length > 0 && (
+            {relatedLeaders.length > 0 && (
               <>
-                <h2 className="govuk-heading-m govuk-!-margin-top-9">
-                  Related leaders
-                </h2>
-
+                <h2 className="govuk-heading-m govuk-!-margin-top-9">Related leaders</h2>
                 <ul className="govuk-list">
-                  {relatedLeaders.map((l) => (
+                  {relatedLeaders.map((l: Leader) => (
                     <li key={l.id}>
-                      <Link
-                        href={`/leaders/${l.id}`}
-                        className="govuk-link"
-                      >
+                      <Link href={`/leaders/${l.id}`} className="govuk-link">
                         {l.name}
                       </Link>
                     </li>
@@ -206,34 +148,18 @@ export default async function LeaderProfile({
 
           {/* SIDEBAR */}
           <div className="govuk-grid-column-one-third">
-            <nav
-              className="govuk-related-items"
-              aria-labelledby="contents-heading"
-            >
-              <h2
-                id="contents-heading"
-                className="govuk-heading-m"
-              >
+            <nav className="govuk-related-items" aria-labelledby="contents-heading">
+              <h2 id="contents-heading" className="govuk-heading-m">
                 Contents
               </h2>
-
               <ul className="govuk-list govuk-list--spaced">
-                <li>
-                  <a href="#biography" className="govuk-link">
-                    Biography
-                  </a>
-                </li>
-                <li>
-                  <a href="#role" className="govuk-link">
-                    Current role
-                  </a>
-                </li>
+                <li><a href="#key-information" className="govuk-link">Key information</a></li>
+                <li><a href="#biography" className="govuk-link">Biography</a></li>
               </ul>
             </nav>
           </div>
         </div>
 
-        {/* Feedback */}
         <GovUKFeedback />
       </main>
     </div>
