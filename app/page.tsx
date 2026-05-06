@@ -4,38 +4,7 @@ import GovUKFeedback from "@/components/govuk/Feedback";
 export default function Home() {
   return (
     <div className="govuk-width-container">
-      {/* Hero Section */}
-      <section className="govuk-grid-row govuk-!-margin-top-9 govuk-!-margin-bottom-9">
-        <div className="govuk-grid-column-two-thirds">
-          <h1 className="govuk-heading-xl govuk-!-margin-bottom-4">
-            KenyaGovInfo.KE
-          </h1>
-          <p className="govuk-body-l">
-            The best place to find information about Kenyan government institutions, 
-            ministries, commissions, counties and public services.
-          </p>
-
-          {/* Main Search */}
-          <div className="govuk-form-group">
-            <label className="govuk-label govuk-label--m" htmlFor="main-search">
-              Search government entities and services
-            </label>
-            <div className="govuk-input__wrapper">
-              <input
-                className="govuk-input govuk-input--width-full"
-                id="main-search"
-                type="text"
-                placeholder="e.g. KRA, Birth certificate, Nairobi County, IEBC, Driving licence..."
-              />
-              <button className="govuk-button govuk-!-margin-left-2" data-module="govuk-button">
-                Search
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <hr className="govuk-section-break govuk-section-break--visible govuk-section-break--xl" />
+      {/* Content sections start here after hero banner in header */}
 
       {/* Services and Information */}
       <div className="govuk-grid-row">

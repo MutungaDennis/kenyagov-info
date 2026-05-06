@@ -34,14 +34,20 @@ export default function RootLayout({
   return (
     <html lang="en" className="govuk-template">
       <body className="govuk-template__body">
-        {/* Show normal header only on inner pages */}
-        {!isHomePage && <GovUKHeader />}
+        {/* Show header on all pages */}
+        <GovUKHeader isHomePage={isHomePage} />
 
-        <div className="govuk-width-container">
-          <main className="govuk-main-wrapper govuk-main-wrapper--auto-spacing" id="main-content">
-            {children}
-          </main>
-        </div>
+        {/* Only show width container for non-home pages */}
+        {!isHomePage && (
+          <div className="govuk-width-container">
+            <main className="govuk-main-wrapper govuk-main-wrapper--auto-spacing" id="main-content">
+              {children}
+            </main>
+          </div>
+        )}
+
+        {/* Home page content is full-width, handled by its own layout */}
+        {isHomePage && children}
 
         <GovUKFooter />
       </body>

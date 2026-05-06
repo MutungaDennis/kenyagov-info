@@ -4,96 +4,139 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
 
-export default function GovUKHeader() {
+interface GovUKHeaderProps {
+  isHomePage?: boolean;
+}
+
+export default function GovUKHeader({ isHomePage = false }: GovUKHeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <header 
-      className="govuk-header border-b-8 border-[#003087]" 
-      role="banner" 
-      style={{ backgroundColor: '#003087' }}
-    >
-      <div className="govuk-width-container mx-auto max-w-7xl px-4">
-        
-        {/* Main Bar: Adjusted to push items apart */}
-        <div className="flex items-center justify-between py-2 min-h-[80px]">
-          
-          {/* Left: Logo + Scaled Brand Name */}
-          <div className="flex items-center gap-3">
-            <Image 
-              src="/logo.png" 
-              alt="Logo" 
-              width={60} 
-              height={60}
-              className="flex-shrink-0"
-              priority
-            />
-            {/* Increased text size to 40px to match GOV.UK style scale */}
-            <span className="text-[38px] md:text-[44px] font-bold text-white tracking-tighter leading-none">
-              KenyaGovInfo.KE
-            </span>
-          </div>
+    <>
+      {/* Top Navigation Bar - Appears on all pages */}
+      <header 
+        className="govuk-header" 
+        role="banner" 
+        style={{ backgroundColor: '#1d70b8' }}
+      >
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex items-center justify-between py-2 min-h-[60px]">
+            
+            {/* Left: Logo + Brand Name */}
+            <div className="flex items-center gap-3">
+              <Image 
+                src="/logo.png" 
+                alt="KenyaGovInfo Logo" 
+                width={48} 
+                height={48}
+                className="flex-shrink-0"
+                priority
+              />
+              <Link href="/" className="text-white font-bold text-[22px] hover:opacity-90 transition-opacity">
+                KenyaGovInfo.KE
+              </Link>
+            </div>
 
-          {/* Right Side: Menu + Search pushed to extreme right */}
-          <div className="flex items-center">
-            <button
-              onClick={() => setMenuOpen(!menuOpen)}
-              className={`flex items-center gap-3 px-4 py-2 text-white font-bold text-[19px] transition-colors ${menuOpen ? 'bg-white text-[#003087]' : 'hover:bg-[#00266b]'}`}
-              aria-expanded={menuOpen}
-            >
-              <span className={`text-xs transition-transform ${menuOpen ? 'rotate-180' : ''}`}>
-                {menuOpen ? '▲' : '▼'}
-              </span>
-              Menu
-            </button>
+            {/* Right: Menu + Search */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setMenuOpen(!menuOpen)}
+                className={`flex items-center gap-2 px-4 py-2 text-white font-bold text-[16px] transition-colors border-b-4 ${menuOpen ? 'border-white bg-[#003087]' : 'border-transparent hover:bg-[#0a5ba8]'}`}
+                aria-expanded={menuOpen}
+              >
+                <span className={`transition-transform inline-block ${menuOpen ? 'rotate-180' : ''}`}>
+                  ▼
+                </span>
+                Menu
+              </button>
 
-            <Link href="/search" className="p-3 text-white hover:bg-[#00266b] transition-colors">
-              <span className="text-2xl">🔍</span>
-            </Link>
-          </div>
-        </div>
-      </div>
-
-      {/* Full-width Dropdown: Moves outside the container to span full width if needed */}
-      {menuOpen && (
-        <div className="bg-[#f3f2f1] border-t border-[#bfc1c3] shadow-inner">
-          <div className="govuk-width-container mx-auto max-w-7xl px-4 py-12">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-              
-              {/* Column 1: Services */}
-              <div className="md:col-span-2">
-                <h2 className="text-3xl font-bold mb-8 text-black border-b-4 border-black pb-2 inline-block">
-                  Services and information
-                </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
-                  <Link href="/services/id" className="text-[#1d70b8] font-bold underline text-lg hover:text-[#003087]">Births, death, marriages and care</Link>
-                  <Link href="/services/passport" className="text-[#1d70b8] font-bold underline text-lg hover:text-[#003087]">Passports, travel and living abroad</Link>
-                  <Link href="/services/tax" className="text-[#1d70b8] font-bold underline text-lg hover:text-[#003087]">Money and tax</Link>
-                  <Link href="/services/driving" className="text-[#1d70b8] font-bold underline text-lg hover:text-[#003087]">Driving and transport</Link>
-                  <Link href="/services/housing" className="text-[#1d70b8] font-bold underline text-lg hover:text-[#003087]">Housing and local services</Link>
-                  <Link href="/counties" className="text-[#1d70b8] font-bold underline text-lg hover:text-[#003087]">County services</Link>
-                </div>
-              </div>
-
-              {/* Column 2: Government Activity */}
-              <div className="bg-white/50 p-6 rounded-sm">
-                <h2 className="text-2xl font-bold mb-6 text-black">Government activity</h2>
-                <div className="space-y-6">
-                  <div>
-                    <Link href="/executive" className="font-bold text-[#1d70b8] hover:underline text-lg">Departments</Link>
-                    <p className="text-gray-700 text-sm">Ministries, agencies and public bodies</p>
-                  </div>
-                  <div>
-                    <Link href="/news" className="font-bold text-[#1d70b8] hover:underline text-lg">News</Link>
-                    <p className="text-gray-700 text-sm">News stories, speeches and notices</p>
-                  </div>
-                </div>
-              </div>
-
+              <Link href="/search" className="p-3 text-white hover:bg-[#0a5ba8] transition-colors rounded">
+                <span className="text-xl">🔍</span>
+              </Link>
             </div>
           </div>
         </div>
+
+        {/* Dropdown Menu - Full width */}
+        {menuOpen && (
+          <div className="bg-white border-t-2 border-[#1d70b8]" style={{ backgroundColor: '#f3f2f1' }}>
+            <div className="max-w-7xl mx-auto px-4 py-12">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
+                
+                {/* Services Column */}
+                <div className="md:col-span-2">
+                  <h2 className="text-2xl font-bold mb-6 text-black pb-3 border-b-4 border-black inline-block">
+                    Services and information
+                  </h2>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3 mt-6">
+                    <Link href="/services/business" className="text-[#1d70b8] font-bold hover:underline text-base">Starting a business</Link>
+                    <Link href="/services/national-id" className="text-[#1d70b8] font-bold hover:underline text-base">National ID and certificates</Link>
+                    <Link href="/services/driving" className="text-[#1d70b8] font-bold hover:underline text-base">Driving and transport</Link>
+                    <Link href="/services/passport" className="text-[#1d70b8] font-bold hover:underline text-base">Passport and travel</Link>
+                    <Link href="/services/tax" className="text-[#1d70b8] font-bold hover:underline text-base">Taxes and KRA</Link>
+                    <Link href="/services/housing" className="text-[#1d70b8] font-bold hover:underline text-base">Housing and property</Link>
+                  </div>
+                </div>
+
+                {/* Government Activity Column */}
+                <div>
+                  <h2 className="text-2xl font-bold mb-6 text-black pb-3 border-b-4 border-black inline-block">
+                    Government activity
+                  </h2>
+                  <div className="space-y-6 mt-6">
+                    <div>
+                      <Link href="/executive" className="font-bold text-[#1d70b8] hover:underline text-base">Departments</Link>
+                      <p className="text-gray-700 text-sm mt-1">Ministries and agencies</p>
+                    </div>
+                    <div>
+                      <Link href="/legislature" className="font-bold text-[#1d70b8] hover:underline text-base">Legislature</Link>
+                      <p className="text-gray-700 text-sm mt-1">Parliament and Senate</p>
+                    </div>
+                    <div>
+                      <Link href="/counties" className="font-bold text-[#1d70b8] hover:underline text-base">County governments</Link>
+                      <p className="text-gray-700 text-sm mt-1">All 47 counties</p>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        )}
+      </header>
+
+      {/* Hero Banner - Only on home page */}
+      {isHomePage && (
+        <section 
+          className="text-white py-16 md:py-24"
+          style={{ backgroundColor: '#1d70b8' }}
+        >
+          <div className="max-w-7xl mx-auto px-4">
+            <h1 className="text-4xl md:text-5xl font-bold mb-6 leading-tight text-balance">
+              The best place to find information about Kenyan government institutions, ministries, commissions, counties and public services
+            </h1>
+            
+            <div className="mt-10">
+              <label className="block text-white font-bold text-lg mb-4">Search government entities and services</label>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <input
+                  type="text"
+                  placeholder="e.g. KRA, Birth certificate, Nairobi County..."
+                  className="flex-1 px-4 py-3 text-black text-base focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-[#1d70b8]"
+                />
+                <button 
+                  className="px-6 py-3 font-bold text-white transition-colors"
+                  style={{ backgroundColor: '#003087' }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#00266b'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#003087'}
+                >
+                  Search
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
       )}
-    </header>
+    </>
   );
 }
