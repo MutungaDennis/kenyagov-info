@@ -105,38 +105,7 @@ export default function GovUKHeader({ isHomePage = false }: GovUKHeaderProps) {
         )}
       </header>
 
-      {/* Hero Banner - Only on home page */}
-      {isHomePage && (
-        <section 
-          className="text-white py-16 md:py-24"
-          style={{ backgroundColor: '#1d70b8' }}
-        >
-          <div className="max-w-7xl mx-auto px-4">
-            <h1 className="text-4xl md:text-5xl font-bold mb-6 leading-tight text-balance">
-              The best place to find information about Kenyan government institutions, ministries, commissions, counties and public services
-            </h1>
-            
-            <div className="mt-10">
-              <label className="block text-white font-bold text-lg mb-4">Search government entities and services</label>
-              <div className="flex flex-col sm:flex-row gap-2">
-                <input
-                  type="text"
-                  placeholder="e.g. KRA, Birth certificate, Nairobi County..."
-                  className="flex-1 px-4 py-3 text-black text-base focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-[#1d70b8]"
-                />
-                <button 
-                  className="px-6 py-3 font-bold text-white transition-colors"
-                  style={{ backgroundColor: '#003087' }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#00266b'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#003087'}
-                >
-                  Search
-                </button>
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
+
     </>
   );
 }

@@ -3,8 +3,41 @@ import GovUKFeedback from "@/components/govuk/Feedback";
 
 export default function Home() {
   return (
-    <div className="govuk-width-container">
-      {/* Content sections start here after hero banner in header */}
+    <>
+      {/* Hero Banner */}
+      <section 
+        className="text-white py-16 md:py-24"
+        style={{ backgroundColor: '#1d70b8' }}
+      >
+        <div className="max-w-7xl mx-auto px-4">
+          <h1 className="text-3xl md:text-4xl font-bold mb-4">KenyaGovInfo.KE</h1>
+          
+          <p className="text-lg md:text-xl mb-8 leading-relaxed">
+            The best place to find information about Kenyan government institutions, 
+            ministries, commissions, counties and public services.
+          </p>
+
+          <label className="block text-white font-bold text-base mb-3">Search government entities and services</label>
+          
+          <div className="flex flex-col sm:flex-row gap-2">
+            <input
+              type="text"
+              placeholder="e.g. KRA, Birth certificate, Nairobi County..."
+              className="flex-1 px-4 py-3 text-gray-900 text-base focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-[#1d70b8]"
+            />
+            <button 
+              className="px-6 py-3 font-bold text-white transition-colors whitespace-nowrap"
+              style={{ backgroundColor: '#003087' }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#00266b'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#003087'}
+            >
+              Search
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <div className="govuk-width-container">
 
       {/* Services and Information */}
       <div className="govuk-grid-row">
@@ -127,6 +160,7 @@ export default function Home() {
 
       {/* Feedback Component */}
       <GovUKFeedback />
-    </div>
+      </div>
+    </>
   );
 }
