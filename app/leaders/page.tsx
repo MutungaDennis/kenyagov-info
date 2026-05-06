@@ -6,46 +6,64 @@ import GovUKBackLink from "@/components/govuk/BackLink";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import GovUKFeedback from "@/components/govuk/Feedback";
 import { createClient } from "@/lib/supabase/client";
-import type { Leader, LeaderCategory } from "@/lib/supabase/leaders";
+
+type Leader = {
+  id: string;
+  name: string;
+  title: string;
+  category: string;
+  county?: string;
+  constituency?: string;
+  description: string;
+  link?: string;
+};
 
 export default function LeadersPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [leaders, setLeaders] = useState<Leader[]>([]);
-  const [categories, setCategories] = useState<LeaderCategory[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const supabase = createClient();
 
   useEffect(() => {
     const fetchData = async () => {
-      const supabase = createClient();
-      
       try {
-        const [leadersData, categoriesData] = await Promise.all([
-          supabase.from('leaders').select('*').order('name', { ascending: true }),
-          supabase.from('leader_categories').select('*').order('name', { ascending: true })
-        ]);
-        
-        if (leadersData.data) setLeaders(leadersData.data);
-        if (categoriesData.data) setCategories(categoriesData.data);
-      } catch (error) {
-        console.error('Error fetching leaders:', error);
+        // Fetch leaders
+        const { data: leadersData, error: leadersError } = await supabase
+          .from('leaders')
+          .select('*')
+          .order('name', { ascending: true });
+
+        if (leadersError) throw leadersError;
+        if (leadersData) setLeaders(leadersData);
+
+        // Fetch unique categories
+        const uniqueCategories = [...new Set(leadersData?.map(l => l.category))];
+        setCategories(uniqueCategories);
+
+      } catch (err: any) {
+        console.error('Error fetching leaders:', err);
+        setError('Failed to load leaders. Please try again later.');
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchData();
-  }, []);
+  }, [supabase]);
 
   const filteredLeaders = useMemo(() => {
     return leaders
       .filter((leader) => {
-        const matchesSearch =
+        const matchesSearch = 
           leader.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
           leader.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
           (leader.county && leader.county.toLowerCase().includes(searchTerm.toLowerCase()));
 
-        const matchesCategory =
+        const matchesCategory = 
           selectedCategory === "All" || leader.category === selectedCategory;
 
         return matchesSearch && matchesCategory;
@@ -81,7 +99,7 @@ export default function LeadersPage() {
                 className="govuk-input"
                 id="search-leaders"
                 type="text"
-                placeholder="Search by name, title, county..."
+                placeholder="Search by name, title, or county..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -101,8 +119,8 @@ export default function LeadersPage() {
               >
                 <option value="All">All Leaders</option>
                 {categories.map((cat) => (
-                  <option key={cat.value} value={cat.value}>
-                    {cat.name}
+                  <option key={cat} value={cat}>
+                    {cat}
                   </option>
                 ))}
               </select>
@@ -110,55 +128,43 @@ export default function LeadersPage() {
           </div>
         </div>
 
-        {isLoading && (
-          <div className="govuk-body-s govuk-!-margin-bottom-6">
-            <p>Loading leaders...</p>
-          </div>
-        )}
+        {isLoading && <p className="govuk-body">Loading leaders...</p>}
+        {error && <p className="govuk-error-message">{error}</p>}
 
-        {!isLoading && (
-          <p className="govuk-body-s govuk-!-margin-bottom-6">
-            Showing {filteredLeaders.length} leaders
-          </p>
-        )}
+        {!isLoading && !error && (
+          <>
+            <p className="govuk-body-s govuk-!-margin-bottom-6">
+              Showing {filteredLeaders.length} leaders
+            </p>
 
-        {/* Leaders List */}
-        {!isLoading && filteredLeaders.length > 0 && (
-          <ul className="govuk-list">
-            {filteredLeaders.map((leader) => (
-              <li 
-                key={leader.id} 
-                className="govuk-!-margin-bottom-6 pb-6 border-b border-gray-200 last:border-b-0"
-              >
-                <h3 className="govuk-heading-m govuk-!-margin-bottom-1">
-                  {leader.link ? (
-                    <Link href={leader.link} className="govuk-link">
+            <ul className="govuk-list">
+              {filteredLeaders.map((leader) => (
+                <li 
+                  key={leader.id} 
+                  className="govuk-!-margin-bottom-6 pb-6 border-b border-gray-200 last:border-b-0"
+                >
+                  <h3 className="govuk-heading-m govuk-!-margin-bottom-1">
+                    <Link href={leader.link || `/leaders/${leader.id}`} className="govuk-link">
                       {leader.name}
                     </Link>
-                  ) : (
-                    <span>{leader.name}</span>
+                  </h3>
+                  <p className="govuk-body font-medium">{leader.title}</p>
+                  {(leader.county || leader.constituency) && (
+                    <p className="govuk-body-s text-gray-600">
+                      {leader.county && `County: ${leader.county}`}
+                      {leader.county && leader.constituency && " • "}
+                      {leader.constituency && `Constituency: ${leader.constituency}`}
+                    </p>
                   )}
-                </h3>
-                <p className="govuk-body govuk-!-margin-bottom-1 font-medium">
-                  {leader.title}
-                </p>
+                  <p className="govuk-body-s">{leader.description}</p>
+                </li>
+              ))}
+            </ul>
 
-                {(leader.county || leader.constituency) && (
-                  <p className="govuk-body-s text-gray-600">
-                    {leader.county && `County: ${leader.county}`}
-                    {leader.county && leader.constituency && " • "}
-                    {leader.constituency && `Constituency/Ward: ${leader.constituency}`}
-                  </p>
-                )}
-
-                <p className="govuk-body-s">{leader.description}</p>
-              </li>
-            ))}
-          </ul>
-        )}
-
-        {!isLoading && filteredLeaders.length === 0 && (
-          <p className="govuk-body">No leaders found. Try adjusting your search or filter.</p>
+            {filteredLeaders.length === 0 && (
+              <p className="govuk-body">No leaders found. Try adjusting your search or filter.</p>
+            )}
+          </>
         )}
 
         <GovUKFeedback />
