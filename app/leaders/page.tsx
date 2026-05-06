@@ -31,20 +31,20 @@ export default function LeadersPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch leaders
         const { data: leadersData, error: leadersError } = await supabase
           .from('leaders')
           .select('*')
           .order('name', { ascending: true });
 
         if (leadersError) throw leadersError;
-        if (leadersData) setLeaders(leadersData);
 
-        // Fetch unique categories
-        const uniqueCategories = [...new Set(leadersData?.map(l => l.category))];
-        setCategories(uniqueCategories);
-
-      } catch (err: any) {
+        if (leadersData) {
+          setLeaders(leadersData);
+          // Extract unique categories
+          const uniqueCats = [...new Set(leadersData.map((l: Leader) => l.category))];
+          setCategories(uniqueCats);
+        }
+      } catch (err: unknown) {
         console.error('Error fetching leaders:', err);
         setError('Failed to load leaders. Please try again later.');
       } finally {
@@ -58,12 +58,12 @@ export default function LeadersPage() {
   const filteredLeaders = useMemo(() => {
     return leaders
       .filter((leader) => {
-        const matchesSearch = 
+        const matchesSearch =
           leader.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
           leader.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
           (leader.county && leader.county.toLowerCase().includes(searchTerm.toLowerCase()));
 
-        const matchesCategory = 
+        const matchesCategory =
           selectedCategory === "All" || leader.category === selectedCategory;
 
         return matchesSearch && matchesCategory;
