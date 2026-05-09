@@ -218,7 +218,7 @@ export default async function InstitutionProfile({
                   </summary>
                   <div className="govuk-details__text">
                     <ul className="govuk-list govuk-list--bullet">
-                      {children.map((child: any) => (
+                      {children.map((child: RelatedInstitution) => (
                         <li key={child.id}>
                           <Link href={`/institutions/${child.slug}`} className="govuk-link">
                             {child.name}
@@ -237,7 +237,7 @@ export default async function InstitutionProfile({
               <div className="govuk-!-margin-top-9" id="related">
                 <h2 className="govuk-heading-l">Related institutions</h2>
                 <ul className="govuk-list govuk-list--bullet">
-                  {related.map((item: any) => (
+                  {related.map((item: RelatedInstitution) => (
                     <li key={item.id}>
                       <Link href={`/institutions/${item.slug}`} className="govuk-link">
                         {item.name}
