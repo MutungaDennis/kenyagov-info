@@ -1,11 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 
 import GovUKBackLink from "@/components/govuk/BackLink";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import GovUKFeedback from "@/components/govuk/Feedback";
+import GovUKSummaryList from "@/components/govuk/SummaryList";
 
 type Institution = {
   id: string;
@@ -13,27 +13,57 @@ type Institution = {
   name: string;
   short_name?: string | null;
   official_name?: string | null;
+
   institution_type?: string | null;
   institution_category?: string | null;
+  institution_subtype?: string | null;
+
   government_level?: string | null;
   arm_of_government?: string | null;
   constitutional_status?: string | null;
-  mtef_sector?: string | null;
+
   legal_basis_type?: string | null;
+  legal_basis_name?: string | null;
+  legal_basis_reference?: string | null;
+
+  mtef_sector?: string | null;
   description?: string | null;
   mandate?: string | null;
   vision?: string | null;
   mission?: string | null;
+
   functions?: string[] | null;
   keywords?: string[] | null;
+
   website_url?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  physical_address?: string | null;
   headquarters?: string | null;
+
   current_head_name?: string | null;
   current_head_title?: string | null;
-  established_date?: string | null;
   appointing_authority?: string | null;
+
   funding_model?: string | null;
-  is_active: boolean;
+  established_date?: string | null;
+
+  has_board?: boolean | null;
+  board_type?: string | null;
+
+  ecitizen_integrated?: boolean | null;
+  has_online_services?: boolean | null;
+  api_available?: boolean | null;
+  open_data_available?: boolean | null;
+
+  parent_institution_id?: string | null;
+};
+
+type RelatedInstitution = {
+  id: string;
+  name: string;
+  slug: string;
+  institution_type?: string | null;
 };
 
 export default async function InstitutionProfile({
@@ -42,20 +72,44 @@ export default async function InstitutionProfile({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const supabase = await createClient();
+  const supabase = createClient();
 
-  const { data: institution, error } = await supabase
-    .from('institutions')
-    .select('*')
-    .eq('slug', slug)
-    .eq('is_active', true)
+  const { data: inst, error } = await (await supabase)
+    .from("institutions")
+    .select("*")
+    .eq("slug", slug)
+    .eq("is_active", true)
     .single();
 
-  if (error || !institution) {
-    notFound();
+  if (error || !inst) notFound();
+
+  // Parent Institution
+  let parent: RelatedInstitution | null = null;
+  if (inst.parent_institution_id) {
+    const { data } = await (await supabase)
+      .from("institutions")
+      .select("id, name, slug, institution_type")
+      .eq("id", inst.parent_institution_id)
+      .single();
+    parent = data;
   }
 
-  const inst = institution as Institution;
+  // Child / Subordinate Entities
+  const { data: children } = await (await supabase)
+    .from("institutions")
+    .select("id, name, slug, institution_type, institution_category, institution_subtype")
+    .eq("parent_institution_id", inst.id)
+    .eq("is_active", true)
+    .order("name");
+
+  // Related by MTEF Sector
+  const relatedResponse = await (await supabase)
+    .from("institutions")
+    .select("id, name, slug, institution_type")
+    .eq("mtef_sector", inst.mtef_sector)
+    .neq("id", inst.id)
+    .limit(8);
+  const related = relatedResponse.data as RelatedInstitution[] | null;
 
   return (
     <div className="govuk-width-container">
@@ -71,150 +125,123 @@ export default async function InstitutionProfile({
 
       <main className="govuk-main-wrapper">
         <div className="govuk-grid-row">
-          {/* Main Content */}
           <div className="govuk-grid-column-two-thirds">
-            {/* Header */}
-            <p className="govuk-caption-l govuk-!-margin-bottom-1">
+
+            <p className="govuk-caption-l">
               {inst.institution_type} • {inst.government_level} • {inst.arm_of_government}
             </p>
-            
-            <h1 className="govuk-heading-xl govuk-!-margin-bottom-2">{inst.name}</h1>
-            
+
+            <h1 className="govuk-heading-xl">{inst.name}</h1>
+
             {inst.short_name && (
-              <p className="govuk-heading-m govuk-!-margin-bottom-6 text-gray-600">
-                {inst.short_name}
-              </p>
-            )}
-
-            {inst.official_name && inst.official_name !== inst.name && (
-              <p className="govuk-body-m govuk-!-margin-bottom-6">
-                Officially: <strong>{inst.official_name}</strong>
-              </p>
-            )}
-
-            {/* What it does */}
-            {inst.mandate && (
-              <>
-                <h2 className="govuk-heading-l govuk-!-margin-top-9">What it does</h2>
-                <p className="govuk-body-l">{inst.mandate}</p>
-              </>
-            )}
-
-            {inst.description && (
-              <p className="govuk-body">{inst.description}</p>
+              <p className="govuk-body-l">Also known as <strong>{inst.short_name}</strong></p>
             )}
 
             {/* Key Facts */}
-            <h2 className="govuk-heading-l govuk-!-margin-top-9">Key facts</h2>
-            <dl className="govuk-summary-list govuk-summary-list--no-border">
-              {inst.constitutional_status && (
-                <div className="govuk-summary-list__row">
-                  <dt className="govuk-summary-list__key">Constitutional Status</dt>
-                  <dd className="govuk-summary-list__value">{inst.constitutional_status}</dd>
-                </div>
-              )}
-              {inst.legal_basis_type && (
-                <div className="govuk-summary-list__row">
-                  <dt className="govuk-summary-list__key">Legal Basis</dt>
-                  <dd className="govuk-summary-list__value">{inst.legal_basis_type}</dd>
-                </div>
-              )}
-              {inst.mtef_sector && (
-                <div className="govuk-summary-list__row">
-                  <dt className="govuk-summary-list__key">MTEF Sector</dt>
-                  <dd className="govuk-summary-list__value">{inst.mtef_sector}</dd>
-                </div>
-              )}
-              {inst.funding_model && (
-                <div className="govuk-summary-list__row">
-                  <dt className="govuk-summary-list__key">Funding Model</dt>
-                  <dd className="govuk-summary-list__value">{inst.funding_model}</dd>
-                </div>
-              )}
-              {inst.headquarters && (
-                <div className="govuk-summary-list__row">
-                  <dt className="govuk-summary-list__key">Headquarters</dt>
-                  <dd className="govuk-summary-list__value">{inst.headquarters}</dd>
-                </div>
-              )}
-              {inst.established_date && (
-                <div className="govuk-summary-list__row">
-                  <dt className="govuk-summary-list__key">Established</dt>
-                  <dd className="govuk-summary-list__value">{inst.established_date}</dd>
-                </div>
-              )}
-            </dl>
+            <GovUKSummaryList
+              items={[
+                { key: "Category", value: inst.institution_category || "—" },
+                { key: "Legal Status", value: inst.constitutional_status || "—" },
+                { key: "MTEF Sector", value: inst.mtef_sector || "—" },
+                { key: "Parent Ministry", value: "Ministry of Labour & Social Protection" },
+                { key: "Headquarters", value: inst.headquarters || "—" },
+              ]}
+            />
 
-            {/* Leadership */}
-            {(inst.current_head_name || inst.appointing_authority) && (
-              <>
-                <h2 className="govuk-heading-l govuk-!-margin-top-9">Leadership</h2>
-                <dl className="govuk-summary-list">
-                  {inst.current_head_name && (
-                    <div className="govuk-summary-list__row">
-                      <dt className="govuk-summary-list__key">Current Head</dt>
-                      <dd className="govuk-summary-list__value">
-                        {inst.current_head_name} {inst.current_head_title && `— ${inst.current_head_title}`}
-                      </dd>
-                    </div>
-                  )}
-                  {inst.appointing_authority && (
-                    <div className="govuk-summary-list__row">
-                      <dt className="govuk-summary-list__key">Appointed By</dt>
-                      <dd className="govuk-summary-list__value">{inst.appointing_authority}</dd>
-                    </div>
-                  )}
-                </dl>
-              </>
-            )}
-
-            {/* Functions */}
-            {inst.functions && inst.functions.length > 0 && (
-              <>
-                <h2 className="govuk-heading-l govuk-!-margin-top-9">Main Functions</h2>
-                <ul className="govuk-list govuk-list--bullet">
-                  {inst.functions.map((func, index) => (
-                    <li key={index} className="govuk-body">{func}</li>
-                  ))}
-                </ul>
-              </>
-            )}
-
-            {/* Official Website */}
-            {inst.website_url && (
+            {/* What it does */}
+            {(inst.mandate || inst.description || inst.functions) && (
               <div className="govuk-!-margin-top-9">
-                <a 
-                  href={inst.website_url} 
-                  className="govuk-button govuk-button--secondary"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Visit Official Website →
-                </a>
+                <h2 className="govuk-heading-l">What it does</h2>
+                <p className="govuk-body-l">{inst.mandate || inst.description}</p>
+
+                {inst.functions && inst.functions.length > 0 && (
+                  <ul className="govuk-list govuk-list--bullet govuk-!-margin-top-6">
+                    {inst.functions.map((func: string, i: number) => (
+                      <li key={i}>{func}</li>
+                    ))}
+                  </ul>
+                )}
               </div>
             )}
+
+            {/* Leadership */}
+            {(inst.current_head_name || inst.has_board) && (
+              <div className="govuk-!-margin-top-9">
+                <h2 className="govuk-heading-l">Leadership & Governance</h2>
+                <GovUKSummaryList
+                  items={[
+                    { key: "Current Head", value: inst.current_head_name ? `${inst.current_head_name} ${inst.current_head_title ? `— ${inst.current_head_title}` : ''}` : "—" },
+                    { key: "Appointing Authority", value: inst.appointing_authority || "—" },
+                    { key: "Governing Board", value: inst.has_board ? (inst.board_type || "Yes") : "No" },
+                  ]}
+                />
+              </div>
+            )}
+
+            {/* Legal Foundation */}
+            {(inst.legal_basis_name || inst.constitutional_status) && (
+              <div className="govuk-!-margin-top-9">
+                <h2 className="govuk-heading-l">Legal Foundation</h2>
+                <GovUKSummaryList
+                  items={[
+                    { key: "Constitutional Status", value: inst.constitutional_status || "—" },
+                    { key: "Legal Basis", value: inst.legal_basis_name || "—" },
+                    { key: "Legal Reference", value: inst.legal_basis_reference || "—" },
+                  ]}
+                />
+              </div>
+            )}
+
+            {/* Child Entities */}
+            {children && children.length > 0 && (
+              <div className="govuk-!-margin-top-9">
+                <h2 className="govuk-heading-l">Entities under this institution</h2>
+                <ul className="govuk-list govuk-list--bullet">
+                  {children.map((child: Pick<Institution, "id" | "name" | "slug" | "institution_type" | "institution_category" | "institution_subtype">) => (
+                    <li key={child.id}>
+                      <Link href={`/institutions/${child.slug}`} className="govuk-link">
+                        {child.name}
+                      </Link>
+                      {child.institution_type && <span className="govuk-body-s text-gray-600"> ({child.institution_type})</span>}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Related Institutions */}
+            {related && related.length > 0 && (
+              <div className="govuk-!-margin-top-9">
+                <h2 className="govuk-heading-l">Related institutions</h2>
+                <ul className="govuk-list govuk-list--bullet">
+                  {related.map((item: RelatedInstitution) => (
+                    <li key={item.id}>
+                      <Link href={`/institutions/${item.slug}`} className="govuk-link">
+                        {item.name}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <GovUKFeedback />
           </div>
 
           {/* Sidebar */}
           <div className="govuk-grid-column-one-third">
-            <div className="govuk-related-items" aria-labelledby="related-heading">
-              <h2 id="related-heading" className="govuk-heading-m">Explore more</h2>
+            <div className="govuk-related-items" aria-labelledby="contents-heading">
+              <h2 id="contents-heading" className="govuk-heading-m">Contents</h2>
               <ul className="govuk-list govuk-list--spaced">
-                <li><Link href={`/institutions/${inst.slug}/leaders`} className="govuk-link">Current Leadership</Link></li>
-                <li><Link href={`/institutions/${inst.slug}/services`} className="govuk-link">Services Offered</Link></li>
-                <li><Link href={`/institutions/${inst.slug}/documents`} className="govuk-link">Key Documents</Link></li>
-                {inst.keywords && inst.keywords.length > 0 && (
-                  <li className="govuk-!-margin-top-4">
-                    <strong>Keywords:</strong><br />
-                    {inst.keywords.join(", ")}
-                  </li>
-                )}
+                <li><a href="#what-it-does" className="govuk-link">What it does</a></li>
+                <li><a href="#leadership" className="govuk-link">Leadership & Governance</a></li>
+                <li><a href="#legal" className="govuk-link">Legal Foundation</a></li>
+                {children && children.length > 0 && <li><a href="#children" className="govuk-link">Sub-entities</a></li>}
+                {related && related.length > 0 && <li><a href="#related" className="govuk-link">Related institutions</a></li>}
               </ul>
             </div>
           </div>
         </div>
-
-        <GovUKFeedback />
       </main>
     </div>
   );
