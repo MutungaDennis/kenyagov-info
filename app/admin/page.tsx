@@ -1,104 +1,168 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
+import GovUKBackLink from '@/components/govuk/BackLink';
+import GovUKFeedback from '@/components/govuk/Feedback';
 
 export default function AdminDashboard() {
-  const [selectedSection, setSelectedSection] = useState<string | null>(null);
-
-  const sections = [
-    {
-      id: 'officials',
-      title: 'Government Officials',
-      description: 'Add, edit, or delete government officials',
-      href: '/admin/officials',
-    },
-    {
-      id: 'counties',
-      title: 'Counties',
-      description: 'Manage county information',
-      href: '/admin/counties',
-    },
-    {
-      id: 'positions',
-      title: 'Positions',
-      description: 'Manage government positions',
-      href: '/admin/positions',
-    },
-    {
-      id: 'parties',
-      title: 'Political Parties',
-      description: 'Manage political parties',
-      href: '/admin/parties',
-    },
-    {
-      id: 'entities',
-      title: 'Government Entities',
-      description: 'Manage ministries, agencies, and institutions',
-      href: '/admin/entities',
-    },
-  ];
-
   return (
     <div className="govuk-width-container">
+      <GovUKBackLink href="/" />
+
       <main className="govuk-main-wrapper">
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-two-thirds">
             <h1 className="govuk-heading-xl">Admin Dashboard</h1>
             <p className="govuk-body-l">
-              Manage Kenya government information database
+              Manage content, institutions, leaders and data for KenyaGovInfo.KE
             </p>
-            
-            <div className="govuk-inset-text" style={{ marginTop: '2rem', marginBottom: '2rem' }}>
-              <strong>Note:</strong> This admin area allows you to add, edit, and delete government data.
-              All changes are stored in Supabase and will be reflected across the website.
+
+            <div className="govuk-inset-text govuk-!-margin-top-6">
+              All changes made here are saved in Supabase and will appear live on the website.
             </div>
 
-            <h2 className="govuk-heading-m govuk-!-margin-top-6">Data Management</h2>
-            
+            <h2 className="govuk-heading-l govuk-!-margin-top-9">Core Management</h2>
+
             <div className="govuk-grid-row">
-              {sections.map((section) => (
-                <div key={section.id} className="govuk-grid-column-one-half govuk-!-margin-bottom-6">
-                  <div className="govuk-card" style={{ height: '100%' }}>
-                    <div className="govuk-card__content">
-                      <h3 className="govuk-heading-m govuk-!-margin-top-0">
-                        <Link href={section.href} className="govuk-link">
-                          {section.title}
-                        </Link>
-                      </h3>
-                      <p className="govuk-body-s">{section.description}</p>
-                    </div>
+              {/* Government Institutions */}
+              <div className="govuk-grid-column-one-half govuk-!-margin-bottom-6">
+                <div className="govuk-card govuk-card--clickable">
+                  <div className="govuk-card__content">
+                    <h3 className="govuk-card__title">
+                      <Link href="/admin/institutions" className="govuk-link">
+                        Government Institutions
+                      </Link>
+                    </h3>
+                    <p className="govuk-card__description">
+                      Manage ministries, state departments, SAGAs, commissions and all public bodies
+                    </p>
                   </div>
                 </div>
-              ))}
+              </div>
+
+              {/* Current Leaders */}
+              <div className="govuk-grid-column-one-half govuk-!-margin-bottom-6">
+                <div className="govuk-card govuk-card--clickable">
+                  <div className="govuk-card__content">
+                    <h3 className="govuk-card__title">
+                      <Link href="/admin/leaders" className="govuk-link">
+                        Current Leaders
+                      </Link>
+                    </h3>
+                    <p className="govuk-card__description">
+                      Manage President, Cabinet Secretaries, Governors, MPs, Senators and other leaders
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Services */}
+              <div className="govuk-grid-column-one-half govuk-!-margin-bottom-6">
+                <div className="govuk-card govuk-card--clickable">
+                  <div className="govuk-card__content">
+                    <h3 className="govuk-card__title">
+                      <Link href="/admin/services" className="govuk-link">
+                        Public Services
+                      </Link>
+                    </h3>
+                    <p className="govuk-card__description">
+                      Manage popular services, guides and how-to information
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Counties */}
+              <div className="govuk-grid-column-one-half govuk-!-margin-bottom-6">
+                <div className="govuk-card govuk-card--clickable">
+                  <div className="govuk-card__content">
+                    <h3 className="govuk-card__title">
+                      <Link href="/admin/counties" className="govuk-link">
+                        County Governments
+                      </Link>
+                    </h3>
+                    <p className="govuk-card__description">
+                      Manage 47 counties, governors and county institutions
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <h2 className="govuk-heading-l govuk-!-margin-top-9">Additional Management</h2>
+
+            <div className="govuk-grid-row">
+              <div className="govuk-grid-column-one-third govuk-!-margin-bottom-6">
+                <div className="govuk-card">
+                  <div className="govuk-card__content">
+                    <h3 className="govuk-card__title">
+                      <Link href="/admin/constitutional-bodies" className="govuk-link">
+                        Constitutional Bodies
+                      </Link>
+                    </h3>
+                    <p className="govuk-card__description">IEBC, EACC, CRA, PSC, etc.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="govuk-grid-column-one-third govuk-!-margin-bottom-6">
+                <div className="govuk-card">
+                  <div className="govuk-card__content">
+                    <h3 className="govuk-card__title">
+                      <Link href="/admin/security" className="govuk-link">
+                        Security Agencies
+                      </Link>
+                    </h3>
+                    <p className="govuk-card__description">KDF, NPS, NIS and related bodies</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="govuk-grid-column-one-third govuk-!-margin-bottom-6">
+                <div className="govuk-card">
+                  <div className="govuk-card__content">
+                    <h3 className="govuk-card__title">
+                      <Link href="/admin/public-finance" className="govuk-link">
+                        Public Finance
+                      </Link>
+                    </h3>
+                    <p className="govuk-card__description">Budget, MTEF sectors and reports</p>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <hr className="govuk-section-break govuk-section-break--xl govuk-section-break--visible govuk-!-margin-top-9" />
 
-            <h2 className="govuk-heading-m govuk-!-margin-top-9">Quick Stats</h2>
-            <p className="govuk-body">
-              Database summary will appear here with counts of officials, counties, positions, etc.
-            </p>
+            <h2 className="govuk-heading-m">System Overview</h2>
+            <div className="govuk-grid-row">
+              <div className="govuk-grid-column-one-third">
+                <div className="govuk-panel">
+                  <strong>Institutions:</strong> <span className="govuk-!-font-size-24">142</span>
+                </div>
+              </div>
+              <div className="govuk-grid-column-one-third">
+                <div className="govuk-panel">
+                  <strong>Leaders:</strong> <span className="govuk-!-font-size-24">218</span>
+                </div>
+              </div>
+              <div className="govuk-grid-column-one-third">
+                <div className="govuk-panel">
+                  <strong>Services:</strong> <span className="govuk-!-font-size-24">87</span>
+                </div>
+              </div>
+            </div>
 
-            <hr className="govuk-section-break govuk-section-break--xl govuk-section-break--visible govuk-!-margin-top-9" />
-
-            <h2 className="govuk-heading-m govuk-!-margin-top-9">Database Sync</h2>
-            <p className="govuk-body">
-              This admin panel manages data stored in Supabase. Changes made here will be immediately
-              available across the website for public users.
-            </p>
-
-            <div className="govuk-button-group">
-              <button className="govuk-button">
-                Export Data
-              </button>
-              <button className="govuk-button govuk-button--secondary">
-                Sync with External Source
-              </button>
+            <div className="govuk-button-group govuk-!-margin-top-9">
+              <button className="govuk-button">Export All Data</button>
+              <button className="govuk-button govuk-button--secondary">Run Data Sync</button>
+              <button className="govuk-button govuk-button--warning">Clear Cache</button>
             </div>
           </div>
         </div>
       </main>
+
+      <GovUKFeedback />
     </div>
   );
 }

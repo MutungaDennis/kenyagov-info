@@ -1,7 +1,12 @@
-// schemaTypes/index.ts
-import { type SchemaTypeDefinition } from 'sanity'
-import { page } from './page' // 1. Import the page schema
+// sanity/schemaTypes/index.ts
+import { type SchemaTypeDefinition } from 'sanity';
+
+import { page } from './page';
+import { institutionContent } from './institutionContent';
 
 export const schema: { types: SchemaTypeDefinition[] } = {
-  types: [page], // 2. Add it to the array
-}
+  types: [
+    page,
+    institutionContent,     // ← Make sure this is included
+  ],
+};

@@ -189,3 +189,21 @@ export async function getPageBySlug(slug: string) {
     { slug }
   );
 }
+
+export async function getInstitutionContent(slug: string) {
+  return sanityClient.fetch(
+    `
+    *[_type == "institutionContent" && institutionSlug.current == $slug][0] {
+      headquarters,
+      whatItDoes,
+      legalBasis,
+      legalReference,
+      website,
+      email,
+      phone,
+      physicalAddress
+    }
+    `,
+    { slug }
+  );
+}

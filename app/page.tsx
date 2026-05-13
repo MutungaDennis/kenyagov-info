@@ -25,7 +25,7 @@ export default function Home() {
                 className="govuk-input govuk-input--width-full"
                 id="main-search"
                 type="text"
-                placeholder="e.g. Ministry of Health, Johnson Sakaja, Birth certificate, KRA, Nairobi County..."
+                placeholder="e.g. Ministry of Health, Johnson Sakaja, Birth certificate, KRA..."
               />
               <button className="govuk-button govuk-!-margin-left-2" data-module="govuk-button">
                 Search
@@ -37,27 +37,79 @@ export default function Home() {
 
       <hr className="govuk-section-break govuk-section-break--visible govuk-section-break--xl" />
 
-      {/* Popular Services */}
+      {/* Popular Services - GOV.UK Style */}
       <div className="govuk-grid-row">
         <div className="govuk-grid-column-two-thirds">
           <h2 className="govuk-heading-l">Popular Services</h2>
-          <p className="govuk-body">Common services accessed by Kenyans</p>
+          <p className="govuk-body">Common services accessed by Kenyans every day</p>
 
-          <ul className="govuk-list govuk-list--spaced">
-            <li><Link href="/services/business" className="govuk-link">Starting a business</Link></li>
-            <li><Link href="/services/id" className="govuk-link">National ID, Birth, Death & Marriage Certificates</Link></li>
-            <li><Link href="/services/driving" className="govuk-link">Driving licence and vehicle registration</Link></li>
-            <li><Link href="/services/passport" className="govuk-link">Passport application and renewal</Link></li>
-            <li><Link href="/services/tax" className="govuk-link">Taxes and KRA services</Link></li>
-          </ul>
+          <div className="govuk-grid-row">
+            <div className="govuk-grid-column-one-half">
+              <ul className="govuk-list govuk-list--spaced">
+                <li>
+                  <Link href="/services/business" className="govuk-link">Starting a business</Link>
+                  <p className="govuk-body-s">Register a company, business name or partnership</p>
+                </li>
+                <li>
+                  <Link href="/services/id" className="govuk-link">National ID, Birth, Death & Marriage Certificates</Link>
+                  <p className="govuk-body-s">Apply for or replace vital documents</p>
+                </li>
+                <li>
+                  <Link href="/services/passport" className="govuk-link">Passport application and renewal</Link>
+                  <p className="govuk-body-s">New passport, renewal or replacement</p>
+                </li>
+                <li>
+                  <Link href="/services/driving" className="govuk-link">Driving licence and vehicle registration</Link>
+                  <p className="govuk-body-s">Apply for or renew your driving licence</p>
+                </li>
+                <li>
+                  <Link href="/services/tax" className="govuk-link">Taxes and KRA services</Link>
+                  <p className="govuk-body-s">File returns, pay taxes and get PIN</p>
+                </li>
+              </ul>
+            </div>
+
+            <div className="govuk-grid-column-one-half">
+              <ul className="govuk-list govuk-list--spaced">
+                <li>
+                  <Link href="/services/nhif" className="govuk-link">NHIF / SHA registration</Link>
+                  <p className="govuk-body-s">Enrol for health insurance coverage</p>
+                </li>
+                <li>
+                  <Link href="/services/helb" className="govuk-link">HELB student loans</Link>
+                  <p className="govuk-body-s">Apply for higher education funding</p>
+                </li>
+                <li>
+                  <Link href="/services/land" className="govuk-link">Land title search and registration</Link>
+                  <p className="govuk-body-s">Search and transfer land titles</p>
+                </li>
+                <li>
+                  <Link href="/services/voting" className="govuk-link">Voter registration and IEBC services</Link>
+                  <p className="govuk-body-s">Register to vote or check your status</p>
+                </li>
+                <li>
+                  <Link href="/services/business-permit" className="govuk-link">Single Business Permit</Link>
+                  <p className="govuk-body-s">Apply for county business permits</p>
+                </li>
+              </ul>
+            </div>
+          </div>
         </div>
 
+        {/* Featured - Made compact */}
         <div className="govuk-grid-column-one-third">
           <h2 className="govuk-heading-m">Featured</h2>
-          <div className="govuk-panel govuk-panel--info">
-            <h3 className="govuk-panel__title">2027 General Election</h3>
-            <p className="govuk-body">Voter registration is ongoing. Check your status with IEBC.</p>
-            <Link href="/services/voting" className="govuk-link">Check Voter Status →</Link>
+          
+          <div className="govuk-panel govuk-panel--info govuk-!-margin-bottom-6">
+            <h3 className="govuk-heading-s">2027 General Election</h3>
+            <p className="govuk-body-s">Voter registration is ongoing. Check your status with IEBC.</p>
+            <Link href="/services/voting" className="govuk-link">Check your voter status →</Link>
+          </div>
+
+          <div className="govuk-panel">
+            <h3 className="govuk-heading-s">Universal Health Coverage</h3>
+            <p className="govuk-body-s">Register with Social Health Authority (SHA).</p>
+            <Link href="/services/nhif" className="govuk-link">Register for SHA →</Link>
           </div>
         </div>
       </div>
@@ -71,106 +123,68 @@ export default function Home() {
           <p className="govuk-body">Browse ministries, commissions, agencies, counties and other public bodies</p>
         </div>
 
-        <div className="govuk-grid-column-one-third">
+        <div className="govuk-grid-column-one-third govuk-!-margin-bottom-6">
           <div className="govuk-card govuk-card--clickable">
             <div className="govuk-card__content">
               <h3 className="govuk-card__title">
-                <Link href="/institutions/executive">The Executive</Link>
+                <Link href="/executive">The Executive</Link>
               </h3>
-              <p className="govuk-card__description">Presidency, Ministries and State Departments</p>
+              <p className="govuk-card__description">Presidency, Ministries & State Departments</p>
             </div>
           </div>
         </div>
 
-        <div className="govuk-grid-column-one-third">
+        <div className="govuk-grid-column-one-third govuk-!-margin-bottom-6">
           <div className="govuk-card govuk-card--clickable">
             <div className="govuk-card__content">
               <h3 className="govuk-card__title">
-                <Link href="/institutions/legislature">The Legislature</Link>
+                <Link href="/legislature">The Legislature</Link>
               </h3>
               <p className="govuk-card__description">National Assembly and Senate</p>
             </div>
           </div>
         </div>
 
-        <div className="govuk-grid-column-one-third">
+        <div className="govuk-grid-column-one-third govuk-!-margin-bottom-6">
           <div className="govuk-card govuk-card--clickable">
             <div className="govuk-card__content">
               <h3 className="govuk-card__title">
-                <Link href="/institutions/judiciary">The Judiciary</Link>
+                <Link href="/judiciary">The Judiciary</Link>
               </h3>
               <p className="govuk-card__description">Courts and Judicial Service Commission</p>
             </div>
           </div>
         </div>
 
-        <div className="govuk-grid-column-one-third govuk-!-margin-top-6">
+        <div className="govuk-grid-column-one-third govuk-!-margin-bottom-6">
           <div className="govuk-card govuk-card--clickable">
             <div className="govuk-card__content">
               <h3 className="govuk-card__title">
                 <Link href="/constitutional-bodies">Constitutional Bodies</Link>
               </h3>
-              <p className="govuk-card__description">Commissions, Independent Offices and Oversight Bodies</p>
+              <p className="govuk-card__description">Commissions and Independent Offices</p>
             </div>
           </div>
         </div>
 
-        <div className="govuk-grid-column-one-third govuk-!-margin-top-6">
+        <div className="govuk-grid-column-one-third govuk-!-margin-bottom-6">
           <div className="govuk-card govuk-card--clickable">
             <div className="govuk-card__content">
               <h3 className="govuk-card__title">
-                <Link href="/institutions/state-corporations">State Corporations & SAGAs</Link>
+                <Link href="/state-corporations">State Corporations & SAGAs</Link>
               </h3>
               <p className="govuk-card__description">Parastatals and semi-autonomous agencies</p>
             </div>
           </div>
         </div>
 
-        <div className="govuk-grid-column-one-third govuk-!-margin-top-6">
+        <div className="govuk-grid-column-one-third govuk-!-margin-bottom-6">
           <div className="govuk-card govuk-card--clickable">
             <div className="govuk-card__content">
               <h3 className="govuk-card__title">
                 <Link href="/counties">County Governments</Link>
               </h3>
-              <p className="govuk-card__description">47 County Governments and their institutions</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <hr className="govuk-section-break govuk-section-break--visible govuk-section-break--xl" />
-
-      {/* Additional Major Sections */}
-      <div className="govuk-grid-row">
-        <div className="govuk-grid-column-one-third">
-          <div className="govuk-card govuk-card--clickable">
-            <div className="govuk-card__content">
-              <h3 className="govuk-card__title">
-                <Link href="/security">Security Agencies</Link>
-              </h3>
-              <p className="govuk-card__description">KDF, National Police, NIS and related bodies</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="govuk-grid-column-one-third">
-          <div className="govuk-card govuk-card--clickable">
-            <div className="govuk-card__content">
-              <h3 className="govuk-card__title">
-                <Link href="/intergovernmental-relations">Intergovernmental Relations</Link>
-              </h3>
-              <p className="govuk-card__description">Council of Governors, IGTRC, IBEC and Summit</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="govuk-grid-column-one-third">
-          <div className="govuk-card govuk-card--clickable">
-            <div className="govuk-card__content">
-              <h3 className="govuk-card__title">
-                <Link href="/public-finance">Public Finance</Link>
-              </h3>
-              <p className="govuk-card__description">Budget, Expenditure, COFOG and MTEF Sectors</p>
+              <p className="govuk-card__description">All 47 Counties and their institutions</p>
             </div>
           </div>
         </div>
@@ -213,7 +227,7 @@ export default function Home() {
 
       <hr className="govuk-section-break govuk-section-break--visible govuk-section-break--xl" />
 
-      {/* Additional Important Sections */}
+      {/* Quick Links */}
       <div className="govuk-grid-row">
         <div className="govuk-grid-column-one-third">
           <Link href="/about-government" className="govuk-link govuk-!-font-weight-bold">
