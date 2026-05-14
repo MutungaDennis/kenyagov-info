@@ -4,6 +4,17 @@ import GovUKFeedback from "@/components/govuk/Feedback";
 export default function Home() {
   return (
     <div className="govuk-width-container">
+      {/* Beta Banner */}
+      <div className="govuk-phase-banner">
+        <p className="govuk-phase-banner__content">
+          <strong className="govuk-tag govuk-phase-banner__content__tag">BETA</strong>
+          <span className="govuk-phase-banner__text">
+            This website is in early development. Your feedback helps us improve it. 
+            <Link href="/feedback" className="govuk-link">Give feedback</Link>
+          </span>
+        </p>
+      </div>
+
       {/* Hero Section */}
       <section className="govuk-grid-row govuk-!-margin-top-9 govuk-!-margin-bottom-9">
         <div className="govuk-grid-column-two-thirds">
@@ -11,21 +22,21 @@ export default function Home() {
             KenyaGovInfo.KE
           </h1>
           <p className="govuk-body-l">
-            The best place to find information about Kenyan government institutions, 
-            ministries, commissions, counties and public services.
+            Your independent guide to Kenyan government institutions, leaders, 
+            counties, public services, and the laws that govern us.
           </p>
 
           {/* Main Search */}
           <div className="govuk-form-group">
             <label className="govuk-label govuk-label--m" htmlFor="main-search">
-              Search government entities and services
+              Search government entities, services or laws
             </label>
             <div className="govuk-input__wrapper">
               <input
                 className="govuk-input govuk-input--width-full"
                 id="main-search"
                 type="text"
-                placeholder="e.g. KRA, Birth certificate, Nairobi County, IEBC, Driving licence..."
+                placeholder="e.g. KRA, Constitution Article 47, Birth certificate, Nairobi County..."
               />
               <button className="govuk-button govuk-!-margin-left-2" data-module="govuk-button">
                 Search
@@ -37,30 +48,30 @@ export default function Home() {
 
       <hr className="govuk-section-break govuk-section-break--visible govuk-section-break--xl" />
 
-      {/* Services and Information */}
+      {/* Popular Services */}
       <div className="govuk-grid-row">
         <div className="govuk-grid-column-two-thirds">
-          <h2 className="govuk-heading-l">Services and Information</h2>
-          <p className="govuk-body">Common services Kenyans access from government institutions</p>
+          <h2 className="govuk-heading-l">Popular Services</h2>
+          <p className="govuk-body">Common services accessed by Kenyans</p>
 
           <ul className="govuk-list govuk-list--spaced">
             <li><Link href="/services/business" className="govuk-link">Starting a business</Link></li>
             <li><Link href="/services/id" className="govuk-link">National ID, Birth, Death & Marriage Certificates</Link></li>
             <li><Link href="/services/driving" className="govuk-link">Driving licence and vehicle registration</Link></li>
-            <li><Link href="/services/passport" className="govuk-link">Passport application and renewal</Link></li>
-            <li><Link href="/services/tax" className="govuk-link">Taxes and KRA services</Link></li>
+            <li><Link href="/services/passport" className="govuk-link">Passport application</Link></li>
+            <li><Link href="/services/tax" className="govuk-link">Taxes and iTax services</Link></li>
             <li><Link href="/services/housing" className="govuk-link">Affordable housing registration</Link></li>
-            <li><Link href="/services/education" className="govuk-link">HELB loans and university admissions</Link></li>
-            <li><Link href="/services/voting" className="govuk-link">Voter registration and IEBC services</Link></li>
+            <li><Link href="/services/education" className="govuk-link">HELB loans and university placement</Link></li>
+            <li><Link href="/services/voting" className="govuk-link">Voter registration (IEBC)</Link></li>
           </ul>
         </div>
 
         {/* Featured */}
         <div className="govuk-grid-column-one-third">
           <h2 className="govuk-heading-m">Featured</h2>
-          <div className="govuk-panel govuk-panel--info">
+          <div className="govuk-panel govuk-panel--info govuk-!-margin-bottom-6">
             <h3 className="govuk-panel__title">2027 General Election</h3>
-            <p className="govuk-body">Voter registration and candidate nomination updates from IEBC</p>
+            <p className="govuk-body">Voter registration and candidate nomination updates</p>
             <Link href="/featured/election" className="govuk-link">Learn more →</Link>
           </div>
         </div>
@@ -68,10 +79,11 @@ export default function Home() {
 
       <hr className="govuk-section-break govuk-section-break--visible govuk-section-break--xl" />
 
-      {/* Structure of Government */}
+      {/* National Government Structure */}
       <div className="govuk-grid-row">
         <div className="govuk-grid-column-full">
-          <h2 className="govuk-heading-l">Structure of Government</h2>
+          <h2 className="govuk-heading-l">Structure of the National Government</h2>
+          <p className="govuk-body">The three arms of government plus independent constitutional bodies</p>
         </div>
 
         <div className="govuk-grid-column-one-third">
@@ -100,26 +112,94 @@ export default function Home() {
             </div>
           </div>
         </div>
+
+        <div className="govuk-grid-column-one-third govuk-!-margin-top-6">
+          <div className="govuk-card govuk-card--clickable">
+            <div className="govuk-card__content">
+              <h3 className="govuk-card__title"><Link href="/independent-bodies">Constitutional & Independent Institutions</Link></h3>
+              <p className="govuk-card__description">Commissions, Offices and Independent Bodies</p>
+            </div>
+          </div>
+        </div>
       </div>
 
       <hr className="govuk-section-break govuk-section-break--visible govuk-section-break--xl" />
 
-      {/* County Governments */}
+      {/* County Governments Structure */}
       <div className="govuk-grid-row">
         <div className="govuk-grid-column-full">
-          <h2 className="govuk-heading-l">County Governments</h2>
-          <p className="govuk-body">47 County Governments — Devolution in action</p>
+          <h2 className="govuk-heading-l">Structure of County Governments</h2>
+          <p className="govuk-body">Devolution in action — County Executive and County Assemblies</p>
         </div>
-        <div className="govuk-grid-column-two-thirds">
-          <Link href="/counties" className="govuk-button govuk-button--secondary">
-            Browse all 47 Counties →
-          </Link>
+
+        <div className="govuk-grid-column-one-third">
+          <div className="govuk-card govuk-card--clickable">
+            <div className="govuk-card__content">
+              <h3 className="govuk-card__title"><Link href="/counties">County Executives</Link></h3>
+              <p className="govuk-card__description">Governors, Deputy Governors and County Administrations</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="govuk-grid-column-one-third">
+          <div className="govuk-card govuk-card--clickable">
+            <div className="govuk-card__content">
+              <h3 className="govuk-card__title"><Link href="/county-assemblies">County Assemblies</Link></h3>
+              <p className="govuk-card__description">County Assemblies and MCAs</p>
+            </div>
+          </div>
         </div>
       </div>
 
       <hr className="govuk-section-break govuk-section-break--visible govuk-section-break--xl" />
 
-      {/* Leaders / Political Office Holders */}
+      {/* Legal Framework */}
+      <div className="govuk-grid-row">
+        <div className="govuk-grid-column-full">
+          <h2 className="govuk-heading-l">Legal Framework</h2>
+          <p className="govuk-body">Key laws and documents that govern Kenya</p>
+        </div>
+
+        <div className="govuk-grid-column-one-third">
+          <div className="govuk-card govuk-card--clickable">
+            <div className="govuk-card__content">
+              <h3 className="govuk-card__title"><Link href="/constitution">The Constitution of Kenya 2010</Link></h3>
+              <p className="govuk-card__description">The supreme law of the land</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="govuk-grid-column-one-third">
+          <div className="govuk-card govuk-card--clickable">
+            <div className="govuk-card__content">
+              <h3 className="govuk-card__title"><Link href="/acts/parliament">Parliament Acts</Link></h3>
+              <p className="govuk-card__description">National Assembly & Senate Bills and Acts</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="govuk-grid-column-one-third">
+          <div className="govuk-card govuk-card--clickable">
+            <div className="govuk-card__content">
+              <h3 className="govuk-card__title"><Link href="/laws/county">County Assembly Laws</Link></h3>
+              <p className="govuk-card__description">Laws passed by the 47 County Assemblies</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="govuk-grid-column-one-third govuk-!-margin-top-6">
+          <div className="govuk-card govuk-card--clickable">
+            <div className="govuk-card__content">
+              <h3 className="govuk-card__title"><Link href="/judgments">Court Pronouncements</Link></h3>
+              <p className="govuk-card__description">Key judgments from Supreme Court, Court of Appeal & High Court</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <hr className="govuk-section-break govuk-section-break--visible govuk-section-break--xl" />
+
+      {/* Current Leaders - Using Cards for Better Click Experience */}
       <div className="govuk-grid-row">
         <div className="govuk-grid-column-full">
           <h2 className="govuk-heading-l">Current Leaders</h2>
@@ -127,36 +207,44 @@ export default function Home() {
         </div>
 
         <div className="govuk-grid-column-one-third">
-          <h3 className="govuk-heading-m">National Leadership</h3>
-          <ul className="govuk-list">
-            <li><Link href="/leaders/president" className="govuk-link">President & Deputy President</Link></li>
-            <li><Link href="/leaders/cabinet" className="govuk-link">Cabinet Secretaries</Link></li>
-            <li><Link href="/leaders/assembly" className="govuk-link">Members of Parliament (MPs)</Link></li>
-            <li><Link href="/leaders/senate" className="govuk-link">Senators</Link></li>
-          </ul>
+          <div className="govuk-card govuk-card--clickable">
+            <div className="govuk-card__content">
+              <h3 className="govuk-card__title"><Link href="/leaders/executive">National Executive</Link></h3>
+              <p className="govuk-card__description">President, Deputy President & Cabinet Secretaries</p>
+            </div>
+          </div>
         </div>
 
         <div className="govuk-grid-column-one-third">
-          <h3 className="govuk-heading-m">County Leadership</h3>
-          <ul className="govuk-list">
-            <li><Link href="/leaders/governors" className="govuk-link">Governors & Deputy Governors</Link></li>
-            <li><Link href="/leaders/women-reps" className="govuk-link">Women Representatives</Link></li>
-            <li><Link href="/leaders/mcas" className="govuk-link">MCAs</Link></li>
-          </ul>
+          <div className="govuk-card govuk-card--clickable">
+            <div className="govuk-card__content">
+              <h3 className="govuk-card__title"><Link href="/leaders/parliament">Parliament</Link></h3>
+              <p className="govuk-card__description">Members of Parliament & Senators</p>
+            </div>
+          </div>
         </div>
 
         <div className="govuk-grid-column-one-third">
-          <h3 className="govuk-heading-m">Independent Offices</h3>
-          <ul className="govuk-list">
-            <li><Link href="/leaders/commissions" className="govuk-link">Constitutional Commissions Chairs</Link></li>
-            <li><Link href="/leaders/ceos" className="govuk-link">CEOs & Directors General</Link></li>
-          </ul>
+          <div className="govuk-card govuk-card--clickable">
+            <div className="govuk-card__content">
+              <h3 className="govuk-card__title"><Link href="/leaders/county">County Leadership</Link></h3>
+              <p className="govuk-card__description">Governors, Deputy Governors, Women Representatives & MCAs</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="govuk-grid-column-one-third govuk-!-margin-top-6">
+          <div className="govuk-card govuk-card--clickable">
+            <div className="govuk-card__content">
+              <h3 className="govuk-card__title"><Link href="/leaders/commissions">Independent Offices</Link></h3>
+              <p className="govuk-card__description">Constitutional Commissions, CEOs & Directors General</p>
+            </div>
+          </div>
         </div>
       </div>
 
       <hr className="govuk-section-break govuk-section-break--visible govuk-section-break--xl" />
 
-      {/* Feedback Component */}
       <GovUKFeedback />
     </div>
   );
