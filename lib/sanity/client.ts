@@ -207,3 +207,45 @@ export async function getInstitutionContent(slug: string) {
     { slug }
   );
 }
+
+// Add this function to your existing sanity client file
+export async function getConstitutionArticle(chapter: number, article: number) {
+  return sanityClient.fetch(
+    `
+    *[_type == "constitutionArticle" 
+      && chapter == $chapter 
+      && articleNumber == $article][0] {
+        chapter,
+        chapterTitle,
+        articleNumber,
+        articleTitle,
+        officialText,
+        amplifiedText,
+        userIntents,
+        relatedActs[]->{
+          _id,
+          title,
+          slug
+        }
+      }
+    `,
+    { chapter, article }
+  );
+}
+
+export async function getConstitutionChapter(chapter: number) {
+  return sanityClient.fetch(
+    `
+    *[_type == "constitutionArticle" && chapter == $chapter] 
+    | order(articleNumber asc) {
+      _id,
+      chapter,
+      chapterTitle,
+      articleNumber,
+      articleTitle,
+      officialText
+    }
+    `,
+    { chapter }
+  );
+}
