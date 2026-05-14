@@ -3,7 +3,20 @@ import GovUKBackLink from "@/components/govuk/BackLink";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import GovUKFeedback from "@/components/govuk/Feedback";
 
-export default function ConstitutionPage() {
+import { getAllConstitutionArticles, getChapters } from "@/lib/sanity/client";
+
+export default async function ConstitutionPage() {
+  const articles = await getAllConstitutionArticles();
+  const chapters = await getChapters();
+
+  // Group articles by chapter
+  const articlesByChapter = articles.reduce((acc: any, article: any) => {
+    const ch = article.chapter || 0;
+    if (!acc[ch]) acc[ch] = [];
+    acc[ch].push(article);
+    return acc;
+  }, {});
+
   return (
     <div className="govuk-width-container">
       <GovUKBackLink href="/" />
@@ -16,121 +29,91 @@ export default function ConstitutionPage() {
       />
 
       <main className="govuk-main-wrapper">
-        <div className="govuk-grid-row">
-          <div className="govuk-grid-column-two-thirds">
-            <h1 className="govuk-heading-xl">The Constitution of Kenya 2010</h1>
-            <p className="govuk-body-l">
-              The supreme law of Kenya. This page gives you easy access to every chapter and article with plain English explanations.
-            </p>
-          </div>
-        </div>
+        <h1 className="govuk-heading-xl">The Constitution of Kenya 2010</h1>
+        <p className="govuk-body-l">
+          The supreme law of the Republic of Kenya. Searchable, readable, and explained in plain language.
+        </p>
 
         {/* Quick Search */}
-        <div className="govuk-grid-row govuk-!-margin-top-9">
-          <div className="govuk-grid-column-two-thirds">
-            <div className="govuk-form-group">
-              <label className="govuk-label govuk-label--m" htmlFor="const-search">
-                Search the Constitution
-              </label>
-              <input
-                className="govuk-input govuk-input--width-full"
-                id="const-search"
-                type="text"
-                placeholder="e.g. Article 35, Land rights, Devolution, Freedom of speech..."
-              />
-            </div>
-          </div>
+        <div className="govuk-form-group govuk-!-margin-top-9">
+          <label className="govuk-label govuk-label--m" htmlFor="constitution-search">
+            Search the Constitution
+          </label>
+          <input
+            className="govuk-input govuk-input--width-full"
+            id="constitution-search"
+            type="text"
+            placeholder="e.g. Article 35, Access to Information, Devolution, Land rights..."
+          />
         </div>
 
         <hr className="govuk-section-break govuk-section-break--visible govuk-section-break--xl" />
 
-        {/* Important Chapters */}
-        <h2 className="govuk-heading-l">Key Chapters</h2>
+        {/* Arrangement of Articles */}
+        <h2 className="govuk-heading-l">Arrangement of Articles</h2>
+        <p className="govuk-body">Official structure of the Constitution of Kenya 2010</p>
 
-        <div className="govuk-grid-row">
-          <div className="govuk-grid-column-one-third">
-            <div className="govuk-card govuk-card--clickable">
+        <div className="govuk-grid-row govuk-!-margin-top-6">
+          {/* Preamble */}
+          <div className="govuk-grid-column-full govuk-!-margin-bottom-8">
+            <div className="govuk-card">
               <div className="govuk-card__content">
-                <h3 className="govuk-card__title">
-                  <Link href="/constitution/4" className="govuk-link">Chapter 4 – Bill of Rights</Link>
+                <h3 className="govuk-heading-m">
+                  <Link href="/constitution/0" className="govuk-link">
+                    PREAMBLE
+                  </Link>
                 </h3>
-                <p className="govuk-card__description">
-                  Your fundamental rights and freedoms
-                </p>
               </div>
             </div>
           </div>
 
-          <div className="govuk-grid-column-one-third">
-            <div className="govuk-card govuk-card--clickable">
-              <div className="govuk-card__content">
-                <h3 className="govuk-card__title">
-                  <Link href="/constitution/11" className="govuk-link">Chapter 11 – Devolved Government</Link>
-                </h3>
-                <p className="govuk-card__description">
-                  Powers of counties and devolution
-                </p>
-              </div>
-            </div>
-          </div>
+          {/* Chapters */}
+          {chapters.map((chapter: any) => (
+            <div key={chapter.chapter} className="govuk-grid-column-one-half govuk-!-margin-bottom-8">
+              <div className="govuk-card">
+                <div className="govuk-card__content">
+                  <h3 className="govuk-heading-m">
+                    CHAPTER {chapter.chapter} — {chapter.chapterTitle?.toUpperCase()}
+                  </h3>
 
-          <div className="govuk-grid-column-one-third">
-            <div className="govuk-card govuk-card--clickable">
-              <div className="govuk-card__content">
-                <h3 className="govuk-card__title">
-                  <Link href="/constitution/12" className="govuk-link">Chapter 12 – Public Finance</Link>
-                </h3>
-                <p className="govuk-card__description">
-                  How public money is raised and spent
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
+                  <ul className="govuk-list govuk-list--bullet">
+                    {articlesByChapter[chapter.chapter]?.map((article: any) => (
+                      <li key={article._id}>
+                        <Link 
+                          href={`/constitution/${chapter.chapter}/${article.articleNumber}`}
+                          className="govuk-link"
+                        >
+                          {article.articleNumber} — {article.articleTitle}
+                        </Link>
+                      </li>
+                    )) || <li className="govuk-body-s">Articles coming soon...</li>}
+                  </ul>
 
-        <hr className="govuk-section-break govuk-section-break--visible govuk-section-break--xl" />
-
-        {/* All Chapters */}
-        <h2 className="govuk-heading-l">All Chapters</h2>
-
-        <div className="govuk-grid-row">
-          {Array.from({ length: 18 }, (_, i) => i + 1).map((chapter) => (
-            <div key={chapter} className="govuk-grid-column-one-third govuk-!-margin-bottom-6">
-              <Link 
-                href={`/constitution/${chapter}`}
-                className="govuk-link govuk-link--no-visited-state"
-              >
-                <div className="govuk-card">
-                  <div className="govuk-card__content">
-                    <h3 className="govuk-card__title">Chapter {chapter}</h3>
-                    <p className="govuk-body-s">Browse all articles</p>
-                  </div>
+                  <Link 
+                    href={`/constitution/${chapter.chapter}`}
+                    className="govuk-button govuk-button--secondary govuk-!-margin-top-4"
+                  >
+                    Browse all articles in this chapter →
+                  </Link>
                 </div>
-              </Link>
+              </div>
             </div>
           ))}
         </div>
 
         <hr className="govuk-section-break govuk-section-break--visible govuk-section-break--xl" />
 
-        {/* Popular Articles */}
+        {/* Popular / Most Important Articles */}
         <h2 className="govuk-heading-l">Most Accessed Articles</h2>
-
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-one-third">
-            <Link href="/constitution/4/35" className="govuk-link">
-              Article 35 – Access to Information
-            </Link>
+            <Link href="/constitution/4/35" className="govuk-link">Article 35 – Access to Information</Link>
           </div>
           <div className="govuk-grid-column-one-third">
-            <Link href="/constitution/4/40" className="govuk-link">
-              Article 40 – Protection of Right to Property
-            </Link>
+            <Link href="/constitution/4/40" className="govuk-link">Article 40 – Protection of Right to Property</Link>
           </div>
           <div className="govuk-grid-column-one-third">
-            <Link href="/constitution/4/43" className="govuk-link">
-              Article 43 – Economic and Social Rights
-            </Link>
+            <Link href="/constitution/4/43" className="govuk-link">Article 43 – Economic and Social Rights</Link>
           </div>
         </div>
 

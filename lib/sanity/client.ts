@@ -249,3 +249,50 @@ export async function getConstitutionChapter(chapter: number) {
     { chapter }
   );
 }
+
+export async function getAllConstitutionArticles() {
+  return sanityClient.fetch(`
+    *[_type == "constitutionArticle"] 
+    | order(chapter asc, articleNumber asc) {
+        _id,
+        chapter,
+        chapterTitle,
+        articleNumber,
+        articleTitle,
+        officialText,
+        amplifiedText,
+        userIntents,
+        
+        // Fetch related data (optional but useful)
+        relatedActs[]->{
+          _id,
+          title,
+          citation
+        },
+        relatedJudgments[]->{
+          _id,
+          caseName,
+          judgmentDate
+        }
+      }
+  `);
+}
+
+export async function getChapters() {
+  const data = await sanityClient.fetch(`
+    *[_type == "constitutionArticle"] 
+    | order(chapter asc) 
+    { 
+      chapter, 
+      chapterTitle 
+    }
+  `);
+
+  // Remove duplicate chapters (client-side deduplication)
+  const uniqueChapters = Array.from(
+    new Map(data.map((item: any) => [item.chapter, item])).values()
+  );
+
+  return uniqueChapters;
+}
+
