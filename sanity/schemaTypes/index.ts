@@ -6,6 +6,7 @@ import { institutionContent } from './institutionContent';
 import constitutionArticle from './constitutionArticle';
 import actOfParliament from './actOfParliament';
 import courtPronouncement from './courtPronouncement';
+import reportMandate from './reportMandate';
 
 export const schema: { types: SchemaTypeDefinition[] } = {
   types: [
@@ -14,5 +15,6 @@ export const schema: { types: SchemaTypeDefinition[] } = {
     constitutionArticle,
     actOfParliament,
     courtPronouncement,
+    reportMandate,
   ],
 };
