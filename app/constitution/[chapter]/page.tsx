@@ -4,6 +4,7 @@ import Link from "next/link";
 import GovUKBackLink from "@/components/govuk/BackLink";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import GovUKFeedback from "@/components/govuk/Feedback";
+import PortableTextContent from "@/components/sanity/PortableTextContent";
 
 import { getConstitutionChapter } from "@/lib/sanity/client";
 
@@ -15,7 +16,7 @@ export default async function ConstitutionChapterPage({ params }: Props) {
   const { chapter } = await params;
   const chapterNum = parseInt(chapter);
 
-  if (isNaN(chapterNum) || chapterNum < 1 || chapterNum > 18) {
+  if (isNaN(chapterNum) || chapterNum < 0 || chapterNum > 18) {
     notFound();
   }
 
@@ -46,27 +47,38 @@ export default async function ConstitutionChapterPage({ params }: Props) {
         <div className="govuk-grid-row govuk-!-margin-top-9">
           <div className="govuk-grid-column-two-thirds">
             <ul className="govuk-list govuk-list--spaced">
-              {articles.map((article: any) => (
-                <li key={article._id} className="govuk-!-margin-bottom-6">
-                  <h3 className="govuk-heading-m govuk-!-margin-bottom-2">
-                    <Link 
-                      href={`/constitution/${chapter}/${article.articleNumber}`}
-                      className="govuk-link"
-                    >
-                      Article {article.articleNumber}: {article.articleTitle}
-                    </Link>
-                  </h3>
-                  {article.officialText && (
-                    <p className="govuk-body-s line-clamp-3">
-                      {article.officialText.substring(0, 220)}...
-                    </p>
-                  )}
-                </li>
-              ))}
+              {articles.map((article: any) => {
+                // Safe preview text handling
+                let previewText = "";
+                if (typeof article.officialText === 'string') {
+                  previewText = article.officialText.substring(0, 220) + "...";
+                } else if (article.officialText && Array.isArray(article.officialText)) {
+                  // Extract text from first block if it's Portable Text
+                  previewText = (article.officialText[0]?.children?.[0]?.text || "").substring(0, 220) + "...";
+                }
+
+                return (
+                  <li key={article._id} className="govuk-!-margin-bottom-6">
+                    <h3 className="govuk-heading-m govuk-!-margin-bottom-2">
+                      <Link 
+                        href={`/constitution/${chapter}/${article.articleNumber}`}
+                        className="govuk-link"
+                      >
+                        Article {article.articleNumber}: {article.articleTitle}
+                      </Link>
+                    </h3>
+                    {previewText && (
+                      <p className="govuk-body-s line-clamp-3">
+                        {previewText}
+                      </p>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           </div>
 
-          {/* Sidebar */}
+          {/* Sidebar Navigation */}
           <div className="govuk-grid-column-one-third">
             <div className="govuk-related-items" aria-labelledby="chapter-contents">
               <h2 id="chapter-contents" className="govuk-heading-m">In this chapter</h2>
@@ -78,7 +90,7 @@ export default async function ConstitutionChapterPage({ params }: Props) {
                         href={`/constitution/${chapter}/${article.articleNumber}`}
                         className="govuk-link"
                       >
-                        Article {article.articleNumber}
+                        Article {article.articleNumber} — {article.articleTitle}
                       </Link>
                     </li>
                   ))}
