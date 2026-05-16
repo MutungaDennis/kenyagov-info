@@ -1,8 +1,10 @@
 // components/sanity/PortableTextContent.tsx
 import { PortableText } from '@portabletext/react';
+import Link from 'next/link';
 
 const portableTextComponents = {
   block: {
+    // Headings
     h1: ({ children }: any) => (
       <h1 className="govuk-heading-xl govuk-!-margin-top-9">{children}</h1>
     ),
@@ -13,45 +15,70 @@ const portableTextComponents = {
       <h3 className="govuk-heading-m govuk-!-margin-top-6">{children}</h3>
     ),
 
-    // ✅ This is the main fix
+    // Normal paragraphs with better spacing for legal text
     normal: ({ children }: any) => (
-      <p className="govuk-body-l govuk-!-margin-bottom-4">{children}</p>
+      <p className="govuk-body-l govuk-!-margin-bottom-6 leading-relaxed">
+        {children}
+      </p>
     ),
 
+    // Blockquote / Inset for emphasis
     blockquote: ({ children }: any) => (
-      <div className="govuk-inset-text">{children}</div>
+      <div className="govuk-inset-text govuk-!-margin-bottom-6">
+        {children}
+      </div>
     ),
   },
 
   marks: {
-    strong: ({ children }: any) => <strong>{children}</strong>,
+    strong: ({ children }: any) => <strong className="govuk-!-font-weight-bold">{children}</strong>,
     em: ({ children }: any) => <em className="italic">{children}</em>,
+
+    // ✅ Internal Constitution Article Links
+    internalLink: ({ children, value }: any) => {
+      const { chapter, article } = value || {};
+      if (!chapter || !article) return <span>{children}</span>;
+
+      return (
+        <Link 
+          href={`/constitution/${chapter}/${article}`}
+          className="govuk-link govuk-link--no-visited-state"
+        >
+          {children}
+        </Link>
+      );
+    },
   },
 
   list: {
     bullet: ({ children }: any) => (
-      <ul className="govuk-list govuk-list--bullet">{children}</ul>
+      <ul className="govuk-list govuk-list--bullet govuk-!-margin-bottom-6">{children}</ul>
     ),
     number: ({ children }: any) => (
-      <ol className="govuk-list govuk-list--number">{children}</ol>
+      <ol className="govuk-list govuk-list--number govuk-!-margin-bottom-6">{children}</ol>
     ),
   },
 };
 
 interface PortableTextContentProps {
   content: any;
+  className?: string;
 }
 
-export default function PortableTextContent({ content }: PortableTextContentProps) {
+export default function PortableTextContent({ content, className = "" }: PortableTextContentProps) {
   if (!content) return null;
 
-  // Handle plain string fallback
+  // Fallback for plain string (old data)
   if (typeof content === 'string') {
-    return <p className="govuk-body-l">{content}</p>;
+    return (
+      <div className={`whitespace-pre-line leading-relaxed govuk-body-l ${className}`}>
+        {content}
+      </div>
+    );
   }
 
   return (
-    <div className="govuk-!-margin-bottom-6">
+    <div className={`govuk-!-margin-bottom-6 ${className}`}>
       <PortableText value={content} components={portableTextComponents} />
     </div>
   );
