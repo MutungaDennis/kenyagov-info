@@ -210,13 +210,15 @@ export async function getInstitutionContent(slug: string) {
 
 // Add this function to your existing sanity client file
 export async function getConstitutionArticle(chapter: number, article: number) {
-  return sanityClient.fetch(
-    `
+  return sanityClient.fetch(`
     *[_type == "constitutionArticle" 
       && chapter == $chapter 
       && articleNumber == $article][0] {
+        _id,
         chapter,
         chapterTitle,
+        partNumber,
+        partTitle,
         articleNumber,
         articleTitle,
         officialText,
@@ -225,12 +227,10 @@ export async function getConstitutionArticle(chapter: number, article: number) {
         relatedActs[]->{
           _id,
           title,
-          slug
+          citation
         }
       }
-    `,
-    { chapter, article }
-  );
+  `, { chapter, article });
 }
 
 export async function getConstitutionChapter(chapter: number) {
@@ -296,3 +296,91 @@ export async function getChapters() {
   return uniqueChapters;
 }
 
+export async function getChapterArticles(chapter: number) {
+  return sanityClient.fetch(`
+    *[_type == "constitutionArticle" && chapter == $chapter] 
+    | order(articleNumber asc) {
+        _id,
+        articleNumber,
+        articleTitle
+      }
+  `, { chapter });
+}
+
+// ==========================================
+// ACTS OF PARLIAMENT
+// ==========================================
+
+export async function getAllActsOfParliament() {
+  return sanityClient.fetch(`
+    *[_type == "actOfParliament"] 
+    | order(yearEnacted desc, shortTitle asc) {
+      _id,
+      title,
+      shortTitle,
+      slug,
+      citation,
+      capNumber,
+      yearEnacted,
+      status,
+      globalSummary,
+      houseOfOrigin
+    }
+  `);
+}
+
+export async function getActOfParliamentBySlug(slug: string) {
+  return sanityClient.fetch(
+    `
+    *[_type == "actOfParliament" && slug.current == $slug][0] {
+      _id,
+      title,
+      shortTitle,
+      slug,
+      citation,
+      capNumber,
+      yearEnacted,
+      dateOfAssent,
+      dateOfCommencement,
+      status,
+      globalSummary,
+      officialKenyaLawUrl,
+      pdfDocument,
+      houseOfOrigin,
+
+      constitutionalBasis[]->{
+        _id,
+        articleNumber,
+        articleTitle,
+        chapter,
+        chapterTitle
+      },
+
+      parts[] {
+        partNumber,
+        partTitle,
+        sections[] {
+          sectionNumber,
+          sectionTitle,
+          officialText,
+          plainSummary
+        }
+      },
+
+      subsidiaryLegislation[] {
+        title,
+        legalNoticeNumber,
+        year,
+        pdfUrl
+      },
+
+      amendments[] {
+        amendingAct,
+        year,
+        notes
+      }
+    }
+    `,
+    { slug }
+  );
+}
