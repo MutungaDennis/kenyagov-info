@@ -1,14 +1,17 @@
-// app/counties/wards/page.tsx
-
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import WardsFilters from "@/components/wards/wards-filters";
+import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
+import GovUKFeedback from "@/components/govuk/Feedback";
 
 interface SearchParams {
   county?: string;
   constituency?: string;
   q?: string;
+  page?: string;
 }
+
+const ITEMS_PER_PAGE = 50;
 
 export default async function WardsPage({
   searchParams,
@@ -18,24 +21,28 @@ export default async function WardsPage({
   const supabase = await createClient();
 
   // ============================================
-  // SEARCH PARAMS
+  // PARSE SEARCH PARAMS Safely
   // ============================================
-
-  const { county, constituency, q } = await searchParams;
+  const parsedParams = await searchParams;
+  const county = parsedParams.county || "";
+  const constituency = parsedParams.constituency || "";
+  const q = parsedParams.q ? parsedParams.q.trim() : "";
+  
+  const currentPage = Math.max(1, parseInt(parsedParams.page || "1", 10));
+  const fromOffset = (currentPage - 1) * ITEMS_PER_PAGE;
+  const toOffset = fromOffset + ITEMS_PER_PAGE - 1;
 
   // ============================================
-  // GET COUNTIES
+  // FETCH REFERENCE COUNTIES FOR FILTERS
   // ============================================
-
   const { data: counties } = await supabase
     .from("counties")
     .select("name")
     .order("name");
 
   // ============================================
-  // DETERMINE COUNTY FROM CONSTITUENCY
+  // DETERMINE CONDITIONAL COUNTY FROM CONSTITUENCY
   // ============================================
-
   let selectedCounty = county;
 
   if (constituency && !county) {
@@ -50,25 +57,21 @@ export default async function WardsPage({
       .eq("name", constituency)
       .single();
 
-    if (
-      constituencyCounty?.counties &&
-      Array.isArray(constituencyCounty.counties) &&
-      constituencyCounty.counties.length > 0
-    ) {
-      selectedCounty = constituencyCounty.counties[0].name;
+    if (constituencyCounty?.counties) {
+      if (Array.isArray(constituencyCounty.counties) && constituencyCounty.counties.length > 0) {
+        selectedCounty = constituencyCounty.counties[0].name;
+      } else if (!Array.isArray(constituencyCounty.counties)) {
+        selectedCounty = (constituencyCounty.counties as any).name;
+      }
     }
   }
 
   // ============================================
-  // GET CONSTITUENCIES
+  // FETCH CONSTITUENCIES FOR FILTER DROPDOWNS
   // ============================================
-
   let constituencyQuery = supabase
     .from("constituencies")
-    .select(`
-      name,
-      county_code
-    `)
+    .select("name, county_code")
     .order("name");
 
   if (selectedCounty) {
@@ -79,20 +82,16 @@ export default async function WardsPage({
       .single();
 
     if (countyData) {
-      constituencyQuery = constituencyQuery.eq(
-        "county_code",
-        countyData.code
-      );
+      constituencyQuery = constituencyQuery.eq("county_code", countyData.code);
     }
   }
 
   const { data: constituencies } = await constituencyQuery;
 
   // ============================================
-  // WARDS QUERY
+  // BUILD CORE DATA AND TOTAL COUNT QUERIES
   // ============================================
-
-  let wardsQuery = supabase
+  let baseQuery = supabase
     .from("wards")
     .select(`
       id,
@@ -102,131 +101,228 @@ export default async function WardsPage({
       county_name,
       constituency_name,
       registered_voters_2022
-    `)
-    .eq("is_active", true)
-    .order("county_name", { ascending: true })
-    .order("constituency_name", { ascending: true })
-    .order("name", { ascending: true });
+    `, { count: 'exact' })
+    .eq("is_active", true);
 
-  if (selectedCounty) {
-    wardsQuery = wardsQuery.eq("county_name", selectedCounty);
-  }
-
-  if (constituency) {
-    wardsQuery = wardsQuery.eq("constituency_name", constituency);
-  }
-
+  // Apply strict conditional filters safely
+  if (selectedCounty) baseQuery = baseQuery.eq("county_name", selectedCounty);
+  if (constituency) baseQuery = baseQuery.eq("constituency_name", constituency);
+  
+  // FIX: Properly format and quote the PostgREST text matching statement
   if (q) {
-    wardsQuery = wardsQuery.or(`
-      name.ilike.%${q}%,
-      constituency_name.ilike.%${q}%,
-      county_name.ilike.%${q}%
-    `);
-  }
-
-  const { data: wards, error } = await wardsQuery;
-
-  // ============================================
-  // ERROR STATE
-  // ============================================
-
-  if (error) {
-    return (
-      <main className="govuk-width-container">
-        <h1 className="govuk-heading-l">Wards</h1>
-        <p className="govuk-body">Error loading wards data.</p>
-
-        <pre className="govuk-body-s">
-          {JSON.stringify(error, null, 2)}
-        </pre>
-      </main>
+    const formattedQuery = `%${q}%`;
+    baseQuery = baseQuery.or(
+      `name.ilike."${formattedQuery}",constituency_name.ilike."${formattedQuery}",county_name.ilike."${formattedQuery}"`
     );
   }
 
+  // Execute database query with fixed ranges
+  const { data: wards, count, error } = await baseQuery
+    .order("county_name", { ascending: true })
+    .order("constituency_name", { ascending: true })
+    .order("name", { ascending: true })
+    .range(fromOffset, toOffset);
+
   // ============================================
-  // PAGE
+  // EVALUATE ERRORS
   // ============================================
+  if (error) {
+    return (
+      <div className="govuk-width-container">
+        <main className="govuk-main-wrapper govuk-!-padding-top-2" id="main-content" role="main">
+          <h1 className="govuk-heading-l">System Error</h1>
+          <p className="govuk-body">Unable to process your request. Please check your data filters and try again.</p>
+          <pre style={{ background: '#f8f8f8', padding: '10px', border: '1px solid #bfc1c3' }}>{error.message}</pre>
+        </main>
+      </div>
+    );
+  }
+
+  const totalWards = count || 0;
+  const totalPages = Math.ceil(totalWards / ITEMS_PER_PAGE);
+  const hasActiveFilters = !!county || !!constituency || !!q;
+
+  const createPageUrl = (pageNumber: number) => {
+    const params = new URLSearchParams();
+    if (county) params.set("county", county);
+    if (constituency) params.set("constituency", constituency);
+    if (q) params.set("q", q);
+    params.set("page", pageNumber.toString());
+    return `/counties/wards?${params.toString()}`;
+  };
+
+  const getFilterClearUrl = (removeKey: "county" | "constituency" | "q") => {
+    const params = new URLSearchParams();
+    if (removeKey !== "county" && county) params.set("county", county);
+    if (removeKey !== "constituency" && constituency) params.set("constituency", constituency);
+    if (removeKey !== "q" && q) params.set("q", q);
+    return `/counties/wards?${params.toString()}`;
+  };
 
   return (
-    <main className="govuk-width-container">
-      <Link href="/" className="govuk-back-link">
-        Back
-      </Link>
-
-      <h1 className="govuk-heading-xl">Wards in Kenya</h1>
-
-      <p className="govuk-body">
-        Browse all wards in Kenya by county and constituency.
-      </p>
-
-      {/* FILTERS */}
-      <WardsFilters
-        counties={counties || []}
-        constituencies={constituencies || []}
-        selectedCounty={selectedCounty}
-        selectedConstituency={constituency}
-        search={q}
+    <div className="govuk-width-container">
+      <GovUKBreadcrumbs
+        items={[
+          { text: "Home", href: "/" },
+          { text: "Counties", href: "/counties" },
+          { text: "Wards", href: "/counties/wards" },
+        ]}
       />
 
-      {/* RESULTS COUNT */}
-      <p className="govuk-body">
-        Showing <strong>{wards?.length || 0}</strong> wards
-      </p>
+      <main className="govuk-main-wrapper govuk-!-padding-top-2" id="main-content" role="main">
+        <div className="govuk-grid-row">
+          <div className="govuk-grid-column-full">
+            
+            <h1 className="govuk-heading-l govuk-!-margin-bottom-2">Wards in Kenya</h1>
+            <p className="govuk-body govuk-!-margin-bottom-4">
+              Browse electoral and administrative ward boundaries mapped across all 47 devolved counties and 290 constituencies.
+            </p>
 
-      {/* TABLE */}
-      <table className="govuk-table">
-        <thead className="govuk-table__head">
-          <tr className="govuk-table__row">
-            <th className="govuk-table__header">No.</th>
-            <th className="govuk-table__header">Ward</th>
-            <th className="govuk-table__header">Constituency</th>
-            <th className="govuk-table__header">County</th>
-            <th className="govuk-table__header">
-              Registered Voters (2022)
-            </th>
-          </tr>
-        </thead>
+            {/* ASYNC FILTER DRIVER INPUT BOX BLOCK */}
+            <WardsFilters
+              counties={counties || []}
+              constituencies={constituencies || []}
+              selectedCounty={selectedCounty}
+              selectedConstituency={constituency}
+              search={q}
+            />
 
-        <tbody className="govuk-table__body">
-          {wards?.map((ward, index) => (
-            <tr key={ward.id} className="govuk-table__row">
-              <td className="govuk-table__cell">{index + 1}</td>
+            {/* GOV.UK Compliant Filter Removal Tags Display Panel */}
+            {hasActiveFilters && (
+              <div className="govuk-!-margin-bottom-4" style={{ background: '#f8f8f8', padding: '12px', border: '1px solid #bfc1c3' }}>
+                <p className="govuk-body-s govuk-!-font-weight-bold govuk-!-margin-bottom-2">Active filters:</p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
+                  {county && (
+                    <Link href={getFilterClearUrl("county")} style={{ background: '#fff', border: '1px solid #1d70b8', padding: '4px 8px', cursor: 'pointer', fontSize: '14px', textDecoration: 'none', color: '#1d70b8', display: 'inline-flex', alignItems: 'center' }}>
+                      County: {county} <span style={{ marginLeft: '8px', color: '#d4351c', fontWeight: 'bold' }}>&times;</span>
+                    </Link>
+                  )}
+                  {constituency && (
+                    <Link href={getFilterClearUrl("constituency")} style={{ background: '#fff', border: '1px solid #1d70b8', padding: '4px 8px', cursor: 'pointer', fontSize: '14px', textDecoration: 'none', color: '#1d70b8', display: 'inline-flex', alignItems: 'center' }}>
+                      Constituency: {constituency} <span style={{ marginLeft: '8px', color: '#d4351c', fontWeight: 'bold' }}>&times;</span>
+                    </Link>
+                  )}
+                  {q && (
+                    <Link href={getFilterClearUrl("q")} style={{ background: '#fff', border: '1px solid #1d70b8', padding: '4px 8px', cursor: 'pointer', fontSize: '14px', textDecoration: 'none', color: '#1d70b8', display: 'inline-flex', alignItems: 'center' }}>
+                      Search: &ldquo;{q}&rdquo; <span style={{ marginLeft: '8px', color: '#d4351c', fontWeight: 'bold' }}>&times;</span>
+                    </Link>
+                  )}
+                  <Link href="/counties/wards" className="govuk-link govuk-!-font-size-16" style={{ paddingLeft: '4px' }}>
+                    Clear all filters
+                  </Link>
+                </div>
+              </div>
+            )}
 
-              <td className="govuk-table__cell">
-                <Link
-                  href={`/counties/wards/${ward.slug}`}
-                  className="govuk-link"
-                >
-                  {ward.name}
+            {/* METADATA RESULT HOOK COUNTER */}
+            <h2 className="govuk-heading-s govuk-!-margin-bottom-3" aria-live="polite">
+              Showing {totalWards > 0 ? fromOffset + 1 : 0} to {Math.min(toOffset + 1, totalWards)} of {totalWards.toLocaleString()} electoral wards
+            </h2>
+
+            {totalWards > 0 ? (
+              <>
+                {/* Responsive Mobile Layout Container Wrapper */}
+                <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', marginBottom: '25px' }}>
+                  <table className="govuk-table" style={{ minWidth: '700px' }}>
+                    <caption className="govuk-table__caption govuk-visually-hidden">
+                      List of administrative wards in Kenya detailing constituencies and local voter volumes.
+                    </caption>
+                    <thead className="govuk-table__head">
+                      <tr className="govuk-table__row">
+                        <th scope="col" className="govuk-table__header govuk-!-font-size-16" style={{ width: '60px' }}>No.</th>
+                        <th scope="col" className="govuk-table__header govuk-!-font-size-16">Ward</th>
+                        <th scope="col" className="govuk-table__header govuk-!-font-size-16">Constituency</th>
+                        <th scope="col" className="govuk-table__header govuk-!-font-size-16">County</th>
+                        <th scope="col" className="govuk-table__header govuk-!-font-size-16">Registered Voters (2022)</th>
+                      </tr>
+                    </thead>
+                    <tbody className="govuk-table__body">
+                      {wards?.map((ward, index) => (
+                        <tr key={ward.id} className="govuk-table__row">
+                          <td className="govuk-table__cell govuk-body-s">{fromOffset + index + 1}</td>
+                          <th scope="row" className="govuk-table__header" style={{ fontWeight: 'normal' }}>
+                            <Link href={`/counties/wards/${ward.slug}`} className="govuk-link govuk-!-font-weight-bold govuk-!-font-size-16">
+                              {ward.name}
+                            </Link>
+                          </th>
+                          <td className="govuk-table__cell govuk-body-s">{ward.constituency_name}</td>
+                          <td className="govuk-table__cell govuk-body-s">{ward.county_name}</td>
+                          <td className="govuk-table__cell govuk-body-s">
+                            {ward.registered_voters_2022 ? ward.registered_voters_2022.toLocaleString() : "—"}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* GOV.UK Design System Pagination Component */}
+                {totalPages > 1 && (
+                  <nav className="govuk-pagination" role="navigation" aria-label="Pagination Navigation Menu">
+                    {currentPage > 1 && (
+                      <div className="govuk-pagination__prev">
+                        <Link className="govuk-link govuk-pagination__link" href={createPageUrl(currentPage - 1)} rel="prev">
+                          <svg className="govuk-pagination__icon govuk-pagination__icon--prev" xmlns="http://w3.org" height="13" width="15" viewBox="0 0 17 13">
+                            <path d="m3.3 7 4.1 4.1-1.4 1.4L0 6.5 6 0l1.4 1.4L3.3 5.5H17v2H3.3z"></path>
+                          </svg>
+                          <span className="govuk-pagination__link-title">Previous</span>
+                        </Link>
+                      </div>
+                    )}
+                    
+                    <ul className="govuk-pagination__list">
+                      {Array.from({ length: totalPages }, (_, i) => i + 1)
+                        .filter(p => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
+                        .map((p, idx, arr) => {
+                          const showEllipsis = idx > 0 && p - arr[idx - 1] > 1;
+                          return (
+                            <div key={p} style={{ display: 'contents' }}>
+                              {showEllipsis && (
+                                <li className="govuk-pagination__item govuk-pagination__item--ellipsis" style={{ display: 'inline-block', padding: '0 8px', color: '#1d70b8' }}>
+                                  ...
+                                </li>
+                              )}
+                              <li className={`govuk-pagination__item ${p === currentPage ? 'govuk-pagination__item--current' : ''}`}>
+                                <Link 
+                                  className="govuk-link govuk-pagination__link" 
+                                  href={createPageUrl(p)} 
+                                  aria-label={`Page ${p}`} 
+                                  aria-current={p === currentPage ? 'page' : undefined}
+                                >
+                                  {p}
+                                </Link>
+                              </li>
+                            </div>
+                          );
+                        })}
+                    </ul>
+
+                    {currentPage < totalPages && (
+                      <div className="govuk-pagination__next">
+                        <Link className="govuk-link govuk-pagination__link" href={createPageUrl(currentPage + 1)} rel="next">
+                          <span className="govuk-pagination__link-title">Next</span>
+                          <svg className="govuk-pagination__icon govuk-pagination__icon--next" xmlns="http://w3.org" height="13" width="15" viewBox="0 0 17 13">
+                            <path d="m13.7 5.5-4.1-4.1 1.4-1.4L17 6.5 11 13l-1.4-1.4 4.1-4.1H0v-2h13.7z"></path>
+                          </svg>
+                        </Link>
+                      </div>
+                    )}
+                  </nav>
+                )}
+              </>
+            ) : (
+              <div style={{ marginTop: 25 }} className="govuk-body">
+                <p>No results match your selected county, constituency, or keyword search parameter configurations.</p>
+                <Link href="/counties/wards" className="govuk-link govuk-!-font-weight-bold">
+                  Reset view and display all records
                 </Link>
-              </td>
+              </div>
+            )}
 
-              <td className="govuk-table__cell">
-                {ward.constituency_name}
-              </td>
-
-              <td className="govuk-table__cell">
-                {ward.county_name}
-              </td>
-
-              <td className="govuk-table__cell">
-                {ward.registered_voters_2022?.toLocaleString() ?? "—"}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      {/* EMPTY STATE */}
-      {wards && wards.length === 0 && (
-        <div style={{ marginTop: 30 }}>
-          <p className="govuk-body">No wards found matching your filters.</p>
-
-          <Link href="/counties/wards" className="govuk-link">
-            Clear filters
-          </Link>
+            <GovUKFeedback />
+          </div>
         </div>
-      )}
-    </main>
+      </main>
+    </div>
   );
 }

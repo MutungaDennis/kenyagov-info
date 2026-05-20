@@ -1,13 +1,11 @@
-import Link from "next/link";
-//import GovUKBackLink from "@/components/govuk/BackLink";
+'use client';
+
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import GovUKFeedback from "@/components/govuk/Feedback";
 
 export default function DevolutionPage() {
   return (
     <div className="govuk-width-container">
-      {/* <GovUKBackLink href="/counties" /> */}
-
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
@@ -16,57 +14,78 @@ export default function DevolutionPage() {
         ]}
       />
 
-      <main className="govuk-main-wrapper">
+      {/* Tightened page padding wrapper to pull layout upwards */}
+      <main className="govuk-main-wrapper govuk-!-padding-top-2" id="main-content" role="main">
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-two-thirds">
-            <h1 className="govuk-heading-xl">Devolution in Kenya</h1>
-            <p className="govuk-body-l">
-              Devolution is one of the most transformative features of the Constitution of Kenya 2010. 
-              It transferred power, resources, and decision-making closer to the people through 47 county governments.
+            
+            {/* Reduced from heading-xl to heading-l to maintain site uniformity */}
+            <h1 className="govuk-heading-l govuk-!-margin-bottom-3">Devolution in Kenya</h1>
+            
+            {/* Reduced from body-l to body to clean up mobile layouts */}
+            <p className="govuk-body govuk-!-margin-bottom-4">
+              Devolution was established under Chapter 11 of the Constitution of Kenya 2010. 
+              It decentralized statutory powers, financial resources, and administrative decision-making from the national executive to 47 elected county governments.
             </p>
 
-            <div className="govuk-inset-text">
-              “Devolution shall ensure the participation of people in the exercise of powers of the State” — Article 174(c)
+            {/* Inset text strictly formatted for factual statutory quotation */}
+            <div className="govuk-inset-text govuk-!-margin-bottom-6">
+              &ldquo;Devolution shall ensure the participation of people in the exercise of powers of the State&rdquo; &mdash; Article 174(c) of the Constitution of Kenya
             </div>
 
-            {/* Objects of Devolution */}
-            <h2 className="govuk-heading-l">Objects of Devolution</h2>
-            <p className="govuk-body">Article 174 of the Constitution outlines the following objects:</p>
-            <ul className="govuk-list govuk-list--bullet">
+            {/* Sub-headings lowered to heading-m to keep typography hierarchical */}
+            <h2 className="govuk-heading-m govuk-!-margin-bottom-2">Objects of Devolution</h2>
+            <p className="govuk-body govuk-!-margin-bottom-3">
+              Article 174 of the Constitution outlines the official objectives of the decentralized structure:
+            </p>
+            <ul className="govuk-list govuk-list--bullet govuk-!-margin-bottom-6">
               <li>Promote democratic and accountable exercise of power</li>
-              <li>Foster national unity by recognising diversity</li>
-              <li>Give powers of self-governance to the people</li>
-              <li>Recognise the right of communities to manage their own affairs</li>
-              <li>Protect and promote interests of minorities and marginalised communities</li>
-              <li>Promote social and economic development and proximate services</li>
-              <li>Ensure equitable sharing of national and local resources</li>
-              <li>Facilitate decentralisation of State organs</li>
-              <li>Enhance checks and balances and separation of powers</li>
+              <li>Foster national unity by recognizing socio-cultural diversity</li>
+              <li>Give powers of local self-governance to the public</li>
+              <li>Recognize the right of local communities to manage their own affairs</li>
+              <li>Protect and promote the interests of minority and marginalized communities</li>
+              <li>Promote social and economic development and proximate public services</li>
+              <li>Ensure equitable sharing of national and local fiscal resources</li>
+              <li>Facilitate the decentralization of state organs and institutions</li>
+              <li>Enhance institutional checks, balances, and the separation of powers</li>
             </ul>
 
-            <h2 className="govuk-heading-l govuk-!-margin-top-9">Principles of Devolved Government</h2>
-            <p className="govuk-body">Article 175 requires county governments to be based on:</p>
-            <ul className="govuk-list govuk-list--bullet">
-              <li>Democratic principles</li>
-              <li>Separation of powers</li>
-              <li>Accountability and transparency</li>
-              <li>Equitable sharing of resources</li>
+            <h2 className="govuk-heading-m govuk-!-margin-top-6 govuk-!-margin-bottom-2">Principles of Devolved Government</h2>
+            <p className="govuk-body govuk-!-margin-bottom-3">
+              Article 175 requires all 47 county administrative structures to operate based on:
+            </p>
+            <ul className="govuk-list govuk-list--bullet govuk-!-margin-bottom-6">
+              <li>Democratic principles and structures</li>
+              <li>Clear separation of powers between county executives and assemblies</li>
+              <li>Institutional accountability, fiscal responsibility, and public transparency</li>
+              <li>Reliable and equitable pathways for resource sharing</li>
             </ul>
 
-            {/* Key Laws Supporting Devolution */}
-            <h2 className="govuk-heading-l govuk-!-margin-top-9">Key Legislation Supporting Devolution</h2>
-            <ul className="govuk-list govuk-list--bullet">
-              <li><strong>County Governments Act, No. 17 of 2012</strong> — Framework for county operations</li>
-              <li><strong>Public Finance Management Act, No. 18 of 2012</strong> — Revenue sharing and budgeting</li>
-              <li><strong>Intergovernmental Relations Act, No. 2 of 2012</strong> — Coordination between national and county governments</li>
-              <li><strong>Transition to Devolved Government Act, No. 7 of 2013</strong></li>
-              <li><strong>Urban Areas and Cities Act, No. 13 of 2011</strong></li>
-              <li><strong>Division of Revenue Act (Annual)</strong> — Determines equitable share to counties</li>
+            <h2 className="govuk-heading-m govuk-!-margin-top-6 govuk-!-margin-bottom-2">Key Statutory Legislation</h2>
+            <p className="govuk-body govuk-!-margin-bottom-3">
+              The practical execution of devolution is operationalized by specific pieces of national legislation:
+            </p>
+            <ul className="govuk-list govuk-list--bullet govuk-!-margin-bottom-6">
+              <li>
+                <strong>County Governments Act (No. 17 of 2012)</strong> &mdash; Provides the legal framework for county human resources, operations, and public participation methods.
+              </li>
+              <li>
+                <strong>Public Finance Management Act (No. 18 of 2012)</strong> &mdash; Controls county revenue allocations, tracking oversight, budget implementation, and public audit timelines.
+              </li>
+              <li>
+                <strong>Intergovernmental Relations Act (No. 2 of 2012)</strong> &mdash; Governs dispute resolution channels and coordination frameworks between national ministries and county teams.
+              </li>
+              <li>
+                <strong>Urban Areas and Cities Act (No. 13 of 2011)</strong> &mdash; Dictates the classification and administration criteria for towns, municipalities, and city boards.
+              </li>
+              <li>
+                <strong>Annual Division of Revenue Act</strong> &mdash; Statutorily determines the exact vertical financial division of revenue between national and county governments.
+              </li>
             </ul>
 
-            <h2 className="govuk-heading-l govuk-!-margin-top-9">Current Status of Devolution (2025/2026)</h2>
-            <p className="govuk-body">
-              Devolution has completed over 12 years of implementation. Significant progress has been made in health, infrastructure, and service delivery, though challenges remain in capacity, revenue collection, and coordination.
+            <h2 className="govuk-heading-m govuk-!-margin-top-6 govuk-!-margin-bottom-2">Current Implementation Status</h2>
+            <p className="govuk-body govuk-!-margin-bottom-6">
+              Devolution has completed over a decade of active implementation across Kenya. While local infrastructure deployment and healthcare access measurements have expanded across rural hubs, administrative challenges persist regarding local revenue collection gaps, capacity limits, and system inter-coordination.
             </p>
 
             <GovUKFeedback />
