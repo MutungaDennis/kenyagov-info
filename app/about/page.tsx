@@ -1,12 +1,12 @@
 import Link from "next/link";
-import GovUKBackLink from "@/components/govuk/BackLink";
+//import GovUKBackLink from "@/components/govuk/BackLink";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import GovUKFeedback from "@/components/govuk/Feedback";
 
 export default function AboutPage() {
   return (
     <div className="govuk-width-container">
-      <GovUKBackLink href="/" />
+      {/* <GovUKBackLink href="/" /> */}
 
       <GovUKBreadcrumbs
         items={[
@@ -18,10 +18,10 @@ export default function AboutPage() {
       <main className="govuk-main-wrapper">
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-two-thirds">
-            <h1 className="govuk-heading-xl">About KenyaGovInfo.KE</h1>
+            <h1 className="govuk-heading-xl">About CitizenGuide.KE</h1>
             
             <p className="govuk-body-l">
-              KenyaGovInfo.KE is an independent platform that makes Kenyan government easier to understand.
+              CitizenGuide.KE is an independent platform that makes Kenyan government easier to understand.
             </p>
 
             <div className="govuk-inset-text">
@@ -64,7 +64,7 @@ export default function AboutPage() {
 
             <h2 className="govuk-heading-l govuk-!-margin-top-12">Our Mission</h2>
             <p className="govuk-body">
-              KenyaGovInfo.KE was created to bridge this gap — to become the <strong>single, clear, 
+              CitizenGuide.KE was created to bridge this gap — to become the <strong>single, clear, 
               and neutral</strong> directory of Kenyan public institutions, services, and leaders.
             </p>
 
@@ -84,7 +84,7 @@ export default function AboutPage() {
 
             <h2 className="govuk-heading-l govuk-!-margin-top-12">Important Disclaimer</h2>
             <div className="govuk-inset-text">
-              KenyaGovInfo.KE is a completely <strong>independent</strong> project. 
+              CitizenGuide.KE is a completely <strong>independent</strong> project. 
               We are not affiliated with, endorsed by, or funded by the Government of Kenya. 
               All information is compiled from publicly available official sources. 
               For official services and transactions, always use <a href="https://www.ecitizen.go.ke" target="_blank" className="govuk-link"> eCitizen</a>  

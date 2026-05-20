@@ -1,12 +1,12 @@
 import Link from "next/link";
-import GovUKBackLink from "@/components/govuk/BackLink";
+//import GovUKBackLink from "@/components/govuk/BackLink";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import GovUKFeedback from "@/components/govuk/Feedback";
 
 export default function CookiesPage() {
   return (
     <div className="govuk-width-container">
-      <GovUKBackLink href="/" />
+      {/* <GovUKBackLink href="/" /> */}
 
       <GovUKBreadcrumbs
         items={[
@@ -28,7 +28,7 @@ export default function CookiesPage() {
 
             <h2 className="govuk-heading-l govuk-!-margin-top-12">How we use cookies</h2>
             <p className="govuk-body">
-              KenyaGovInfo.KE uses only a small number of cookies. We do not use cookies for advertising.
+              CitizenGuide.KE uses only a small number of cookies. We do not use cookies for advertising.
             </p>
 
             {/* Enhanced GOV.UK Table */}

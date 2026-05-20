@@ -1,12 +1,12 @@
 import Link from "next/link";
-import GovUKBackLink from "@/components/govuk/BackLink";
+//import GovUKBackLink from "@/components/govuk/BackLink";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import GovUKFeedback from "@/components/govuk/Feedback";
 
 export default function FeedbackPage() {
   return (
     <div className="govuk-width-container">
-      <GovUKBackLink href="/" />
+      {/* <GovUKBackLink href="/" /> */}
 
       <GovUKBreadcrumbs
         items={[
@@ -18,7 +18,7 @@ export default function FeedbackPage() {
       <main className="govuk-main-wrapper">
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-two-thirds">
-            <h1 className="govuk-heading-xl">Help us improve KenyaGovInfo.KE</h1>
+            <h1 className="govuk-heading-xl">Help us improve CitizenGuide.KE</h1>
 
             <div className="govuk-inset-text">
               Do not include personal or financial information 

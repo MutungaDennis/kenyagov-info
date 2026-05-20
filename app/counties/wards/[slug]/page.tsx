@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
-import GovUKBackLink from "@/components/govuk/BackLink";
+//import GovUKBackLink from "@/components/govuk/BackLink";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import GovUKSummaryList from "@/components/govuk/SummaryList";
 import GovUKTable from "@/components/govuk/Table";
@@ -84,7 +84,7 @@ export default async function WardPage({
       {/* ========================= */}
       {/* BACK LINK */}
       {/* ========================= */}
-      <GovUKBackLink href="/counties/wards" />
+      {/* <GovUKBackLink href="/counties/wards" /> */}
 
       {/* ========================= */}
       {/* BREADCRUMBS (GOV.UK COMPONENT) */}
@@ -93,7 +93,10 @@ export default async function WardPage({
         items={[
           { text: "Home", href: "/" },
           { text: "Wards", href: "/counties/wards" },
-          { text: ward.name },
+          {
+              text: ward.name,
+              href: ""
+          },
         ]}
       />
 

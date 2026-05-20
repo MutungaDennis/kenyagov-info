@@ -1,12 +1,12 @@
 import Link from "next/link";
-import GovUKBackLink from "@/components/govuk/BackLink";
+//import GovUKBackLink from "@/components/govuk/BackLink";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import GovUKFeedback from "@/components/govuk/Feedback";
 
 export default function ContactPage() {
   return (
     <div className="govuk-width-container">
-      <GovUKBackLink href="/" />
+      {/* <GovUKBackLink href="/" /> */}
 
       <GovUKBreadcrumbs
         items={[
@@ -20,11 +20,11 @@ export default function ContactPage() {
           <div className="govuk-grid-column-two-thirds">
             <h1 className="govuk-heading-xl">Contact Us</h1>
             <p className="govuk-body-l">
-              We’d love to hear from you. Your feedback helps us improve KenyaGovInfo.KE.
+              We’d love to hear from you. Your feedback helps us improve CitizenGuide.KE.
             </p>
 
             <div className="govuk-inset-text">
-              KenyaGovInfo.KE is an <strong>independent platform</strong>. 
+              CitizenGuide.KE is an <strong>independent platform</strong>. 
               We are not part of the Government of Kenya.
             </div>
 
@@ -80,7 +80,7 @@ export default function ContactPage() {
             <h2 className="govuk-heading-l govuk-!-margin-top-12">Alternative ways to contact us</h2>
             <ul className="govuk-list govuk-list--spaced">
               <li>
-                <strong>Email:</strong> <a href="mailto:info@kenyagovinfo.ke" className="govuk-link">info@kenyagovinfo.ke</a>
+                <strong>Email:</strong> <a href="mailto:info@citizenguide.ke" className="govuk-link">info@citizenguide.ke</a>
               </li>
               <li>
                 <strong>GitHub:</strong> We welcome issues and suggestions on our repository (coming soon)

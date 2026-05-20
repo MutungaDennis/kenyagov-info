@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import GovUKBackLink from '@/components/govuk/BackLink';
+//import GovUKBackLink from '@/components/govuk/BackLink';
 import GovUKBreadcrumbs from '@/components/govuk/Breadcrumbs';
 import GovUKFeedback from '@/components/govuk/Feedback';
 import { OfficialDetail } from '@/components/officials/OfficialDetail';
@@ -48,7 +48,7 @@ export default function OfficialPage() {
   if (error || !official) {
     return (
       <div className="govuk-width-container">
-        <GovUKBackLink href="/officials" />
+        {/* <GovUKBackLink href="/officials" /> */}
         <div className="govuk-error-summary">
           <h2 className="govuk-error-summary__title">
             Unable to load official information
@@ -69,7 +69,7 @@ export default function OfficialPage() {
 
   return (
     <div className="govuk-width-container">
-      <GovUKBackLink href="/officials" />
+      {/* <GovUKBackLink href="/officials" /> */}
 
       <GovUKBreadcrumbs
         items={[

@@ -1,12 +1,12 @@
 import Link from "next/link";
-import GovUKBackLink from "@/components/govuk/BackLink";
+//import GovUKBackLink from "@/components/govuk/BackLink";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import GovUKFeedback from "@/components/govuk/Feedback";
 
 export default function AccessibilityPage() {
   return (
     <div className="govuk-width-container">
-      <GovUKBackLink href="/" />
+      {/* <GovUKBackLink href="/" /> */}
 
       <GovUKBreadcrumbs
         items={[
@@ -21,7 +21,7 @@ export default function AccessibilityPage() {
             <h1 className="govuk-heading-xl">Accessibility Statement</h1>
             
             <p className="govuk-body-l">
-              KenyaGovInfo.KE is committed to making this website accessible to as many people as possible.
+              CitizenGuide.KE is committed to making this website accessible to as many people as possible.
             </p>
 
             <div className="govuk-panel govuk-panel--info">

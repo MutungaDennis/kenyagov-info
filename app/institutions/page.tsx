@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState, useMemo, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import GovUKBackLink from "@/components/govuk/BackLink";
+//import GovUKBackLink from "@/components/govuk/BackLink";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import GovUKFeedback from "@/components/govuk/Feedback";
 
@@ -113,7 +113,7 @@ export default function InstitutionsPage() {
 
   return (
     <div className="govuk-width-container">
-      <GovUKBackLink href="/" />
+      {/* <GovUKBackLink href="/" /> */}
 
       <GovUKBreadcrumbs
         items={[

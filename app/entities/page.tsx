@@ -1,12 +1,12 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
-import GovUKBackLink from '@/components/govuk/BackLink';
+//import GovUKBackLink from '@/components/govuk/BackLink';
 import GovUKBreadcrumbs from '@/components/govuk/Breadcrumbs';
 import GovUKFeedback from '@/components/govuk/Feedback';
 import { ENTITY_HIERARCHY } from '@/lib/data/leadership-hierarchy';
 
 export const metadata: Metadata = {
-  title: 'Government Entities | Kenya Info',
+  title: 'Government Entities | CitizenGuide.KE',
   description: 'Browse Kenyan government organizations, ministries, and institutions',
 };
 
@@ -15,7 +15,7 @@ export default function EntitiesPage() {
 
   return (
     <div className="govuk-width-container">
-      <GovUKBackLink href="/" />
+      {/* <GovUKBackLink href="/" /> */}
 
       <GovUKBreadcrumbs
         items={[

@@ -1,11 +1,11 @@
-import GovUKBackLink from "@/components/govuk/BackLink";
+//import GovUKBackLink from "@/components/govuk/BackLink";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import GovUKSummaryList from "@/components/govuk/SummaryList";
 
 export default function PresidencyPage() {
   return (
     <div className="govuk-width-container">
-      <GovUKBackLink href="/executive" />
+      {/* <GovUKBackLink href="/executive" /> */}
 
       <GovUKBreadcrumbs
         items={[

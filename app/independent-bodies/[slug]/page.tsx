@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import GovUKBackLink from "@/components/govuk/BackLink";
+//import GovUKBackLink from "@/components/govuk/BackLink";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import GovUKFeedback from "@/components/govuk/Feedback";
 import LastUpdated from "@/components/govuk/LastUpdated";
@@ -42,7 +42,7 @@ export default async function IndependentBodyPage({
 
   return (
     <div className="govuk-width-container">
-      <GovUKBackLink href="/independent-bodies" />
+      {/* <GovUKBackLink href="/independent-bodies" /> */}
 
       <GovUKBreadcrumbs
         items={[

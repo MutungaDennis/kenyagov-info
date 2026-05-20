@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 
-import GovUKBackLink from "@/components/govuk/BackLink";
+//import GovUKBackLink from "@/components/govuk/BackLink";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import GovUKFeedback from "@/components/govuk/Feedback";
 import PortableTextContent from "@/components/sanity/PortableTextContent";
@@ -36,7 +36,7 @@ export default async function ConstitutionChapterPage({ params }: Props) {
 
   return (
     <div className="govuk-width-container">
-      <GovUKBackLink href="/constitution" />
+      {/* <GovUKBackLink href="/constitution" /> */}
 
       <GovUKBreadcrumbs items={breadcrumbs} />
 

@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
-import GovUKBackLink from '@/components/govuk/BackLink';
+//import GovUKBackLink from '@/components/govuk/BackLink';
 import GovUKBreadcrumbs from '@/components/govuk/Breadcrumbs';
 import GovUKFeedback from '@/components/govuk/Feedback';
 import { LEADERSHIP_HIERARCHY } from '@/lib/data/leadership-hierarchy';
@@ -15,7 +15,7 @@ export default function LeadershipPage() {
 
   return (
     <div className="govuk-width-container">
-      <GovUKBackLink href="/" />
+      {/* <GovUKBackLink href="/" /> */}
 
       <GovUKBreadcrumbs
         items={[

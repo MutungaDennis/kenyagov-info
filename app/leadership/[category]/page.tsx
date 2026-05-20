@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import GovUKBackLink from '@/components/govuk/BackLink';
+//import GovUKBackLink from '@/components/govuk/BackLink';
 import GovUKBreadcrumbs from '@/components/govuk/Breadcrumbs';
 import GovUKFeedback from '@/components/govuk/Feedback';
 import {
@@ -40,7 +40,7 @@ export default async function LeadershipCategoryPage({ params }: PageProps) {
 
   return (
     <div className="govuk-width-container">
-      <GovUKBackLink href="/leadership" />
+      {/* <GovUKBackLink href="/leadership" /> */}
 
       <GovUKBreadcrumbs
         items={[

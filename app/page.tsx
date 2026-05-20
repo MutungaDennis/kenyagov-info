@@ -19,7 +19,7 @@ export default function Home() {
       <section className="govuk-grid-row govuk-!-margin-top-9 govuk-!-margin-bottom-9">
         <div className="govuk-grid-column-two-thirds">
           <h1 className="govuk-heading-xl govuk-!-margin-bottom-4">
-            KenyaGovInfo.KE
+            CitizenGuide.KE
           </h1>
           <p className="govuk-body-l">
             Your independent guide to Kenyan government institutions, leaders, 

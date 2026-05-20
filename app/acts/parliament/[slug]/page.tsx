@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import GovUKBackLink from "@/components/govuk/BackLink";
+//import GovUKBackLink from "@/components/govuk/BackLink";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import GovUKFeedback from "@/components/govuk/Feedback";
 import PrintPageButton from "@/components/govuk/PrintPageButton";
@@ -30,7 +30,7 @@ export default async function ActPage({
   return (
     <div className="govuk-width-container">
       {/* ================= BACK LINK ================= */}
-      <GovUKBackLink href="/acts/parliament" />
+      {/* <GovUKBackLink href="/acts/parliament" /> */}
 
       {/* ================= BREADCRUMBS ================= */}
       <GovUKBreadcrumbs

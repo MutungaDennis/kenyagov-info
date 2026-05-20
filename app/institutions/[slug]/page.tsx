@@ -3,7 +3,7 @@ import { getInstitutionContent } from "@/lib/sanity/client";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 
-import GovUKBackLink from "@/components/govuk/BackLink";
+//import GovUKBackLink from "@/components/govuk/BackLink";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import GovUKFeedback from "@/components/govuk/Feedback";
 import GovUKSummaryList from "@/components/govuk/SummaryList";
@@ -141,7 +141,7 @@ export default async function InstitutionProfile({
 
   return (
     <div className="govuk-width-container">
-      <GovUKBackLink href="/institutions" />
+      {/* <GovUKBackLink href="/institutions" /> */}
 
       <GovUKBreadcrumbs
         items={[

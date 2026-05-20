@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import GovUKBackLink from '@/components/govuk/BackLink';
+//import GovUKBackLink from '@/components/govuk/BackLink';
 import GovUKBreadcrumbs from '@/components/govuk/Breadcrumbs';
 import GovUKFeedback from '@/components/govuk/Feedback';
 import {
@@ -34,7 +34,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const categoryData = ENTITY_HIERARCHY[category as EntityCategory];
 
   return {
-    title: `${categoryData.name} | Kenya Info`,
+    title: `${categoryData.name} | CitizenGuide.KE`,
     description: categoryData.description,
   };
 }
@@ -63,7 +63,7 @@ export default async function EntitiesCategoryPage({ params }: PageProps) {
 
   return (
     <div className="govuk-width-container">
-      <GovUKBackLink href="/entities" />
+      {/* <GovUKBackLink href="/entities" /> */}
 
       <GovUKBreadcrumbs
         items={[

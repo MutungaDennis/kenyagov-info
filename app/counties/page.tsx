@@ -1,12 +1,12 @@
 import Link from "next/link";
-import GovUKBackLink from "@/components/govuk/BackLink";
+//import GovUKBackLink from "@/components/govuk/BackLink";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import GovUKFeedback from "@/components/govuk/Feedback";
 
 export default function CountiesPage() {
   return (
     <div className="govuk-width-container">
-      <GovUKBackLink href="/" />
+      {/* <GovUKBackLink href="/" /> */}
 
       <GovUKBreadcrumbs
         items={[
@@ -20,7 +20,7 @@ export default function CountiesPage() {
           <div className="govuk-grid-column-two-thirds">
             <h1 className="govuk-heading-xl">Counties of Kenya</h1>
             <p className="govuk-body-l">
-              Kenya has <strong>47 counties</strong> established under the Constitution of Kenya 2010 as the units of devolved government. 
+              CitizenGuide.KE has <strong>47 counties</strong> established under the Constitution of Kenya 2010 as the units of devolved government. 
               Devolution brought decision-making closer to the people and improved service delivery in health, agriculture, roads, and water.
             </p>
 

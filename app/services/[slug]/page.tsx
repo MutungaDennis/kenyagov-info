@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
-import GovUKBackLink from '@/components/govuk/BackLink';
+//import GovUKBackLink from '@/components/govuk/BackLink';
 import GovUKBreadcrumbs from '@/components/govuk/Breadcrumbs';
 import GovUKFeedback from '@/components/govuk/Feedback';
 import PortableTextContent from '@/components/sanity/PortableTextContent';
@@ -68,7 +68,7 @@ export default async function ServicePage({ params }: PageProps) {
   if (!service) {
     return (
       <div className="govuk-width-container">
-        <GovUKBackLink href="/services" />
+        {/* <GovUKBackLink href="/services" /> */}
         <main className="govuk-main-wrapper">
           <h1 className="govuk-heading-xl">Service Not Found</h1>
           <p className="govuk-body">
@@ -84,7 +84,7 @@ export default async function ServicePage({ params }: PageProps) {
 
   return (
     <div className="govuk-width-container">
-      <GovUKBackLink href="/services" />
+      {/* <GovUKBackLink href="/services" /> */}
 
       <GovUKBreadcrumbs
         items={[

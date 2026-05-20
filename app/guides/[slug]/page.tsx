@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import GovUKBackLink from '@/components/govuk/BackLink';
+//import GovUKBackLink from '@/components/govuk/BackLink';
 import GovUKBreadcrumbs from '@/components/govuk/Breadcrumbs';
 import GovUKFeedback from '@/components/govuk/Feedback';
 import { getGuideBySlug, getGuides } from '@/lib/sanity/client';
@@ -50,7 +50,7 @@ export default async function GuidePage({ params }: GuidePageProps) {
   if (!guide) {
     return (
       <div className="govuk-width-container">
-        <GovUKBackLink href="/guides" />
+        {/* <GovUKBackLink href="/guides" /> */}
         <div className="govuk-error-summary">
           <h2 className="govuk-error-summary__title">Guide not found</h2>
           <div className="govuk-error-summary__body">
@@ -66,7 +66,7 @@ export default async function GuidePage({ params }: GuidePageProps) {
 
   return (
     <div className="govuk-width-container">
-      <GovUKBackLink href="/guides" />
+      {/* <GovUKBackLink href="/guides" /> */}
 
       <GovUKBreadcrumbs
         items={[

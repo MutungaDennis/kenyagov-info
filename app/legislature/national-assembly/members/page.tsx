@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import GovUKBackLink from "@/components/govuk/BackLink";
+//import GovUKBackLink from "@/components/govuk/BackLink";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import GovUKTable from "@/components/govuk/Table";
 import GovUKFeedback from "@/components/govuk/Feedback";
@@ -29,7 +29,7 @@ export default function NationalAssemblyMembersPage() {
 
   return (
     <div className="govuk-width-container">
-      <GovUKBackLink href="/legislature/national-assembly" />
+      {/* <GovUKBackLink href="/legislature/national-assembly" /> */}
 
       <GovUKBreadcrumbs
         items={[
