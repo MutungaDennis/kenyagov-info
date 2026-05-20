@@ -1,19 +1,24 @@
 import { createClient } from "@/lib/supabase/server";
 import LastUpdated from "@/components/govuk/LastUpdated";
 
+interface PageProps {
+  searchParams?: Promise<{
+    q?: string;
+  }>;
+}
+
 export default async function IebcOfficesPage({
   searchParams,
-}: {
-  searchParams?: { q?: string };
-}) {
+}: PageProps) {
+  const params = await searchParams;
+
   const supabase = await createClient();
 
-  const query = searchParams?.q?.toLowerCase() || "";
+  const query = params?.q?.toLowerCase() || "";
 
   const { data } = await supabase
     .from("constituencies")
-    .select(
-      `
+    .select(`
       id,
       name,
       slug,
@@ -21,8 +26,7 @@ export default async function IebcOfficesPage({
       office_location,
       most_conspicuous_landmark,
       registered_voters_2022
-    `
-    )
+    `)
     .order("county_code", { ascending: true });
 
   const safeData = data ?? [];
@@ -46,8 +50,8 @@ export default async function IebcOfficesPage({
       </h1>
 
       <p className="govuk-body">
-        View constituency IEBC office details across Kenya. Use the search
-        to quickly find your area.
+        View constituency IEBC office details across Kenya.
+        Use the search to quickly find your area.
       </p>
 
       {/* SEARCH */}
@@ -62,15 +66,22 @@ export default async function IebcOfficesPage({
           name="q"
           type="text"
           defaultValue={query}
+          placeholder="e.g. Westlands"
         />
 
-        <button className="govuk-button govuk-!-margin-top-2" type="submit">
+        <button
+          className="govuk-button govuk-!-margin-top-2"
+          type="submit"
+        >
           Search
         </button>
       </form>
 
       {/* TABLE */}
-      <div className="govuk-table-wrapper">
+      <div
+        className="govuk-!-margin-top-6"
+        style={{ overflowX: "auto" }}
+      >
         <table className="govuk-table">
           <caption className="govuk-table__caption govuk-table__caption--m">
             Constituency IEBC Office Directory
@@ -78,25 +89,48 @@ export default async function IebcOfficesPage({
 
           <thead className="govuk-table__head">
             <tr className="govuk-table__row">
-              <th className="govuk-table__header">Constituency</th>
-              <th className="govuk-table__header">County Code</th>
-              <th className="govuk-table__header">IEBC Office</th>
-              <th className="govuk-table__header">Landmark</th>
-              <th className="govuk-table__header">Voters (2022)</th>
-              <th className="govuk-table__header">Action</th>
+              <th className="govuk-table__header">
+                Constituency
+              </th>
+
+              <th className="govuk-table__header">
+                County Code
+              </th>
+
+              <th className="govuk-table__header">
+                IEBC Office
+              </th>
+
+              <th className="govuk-table__header">
+                Landmark
+              </th>
+
+              <th className="govuk-table__header">
+                Registered Voters (2022)
+              </th>
+
+              <th className="govuk-table__header">
+                Action
+              </th>
             </tr>
           </thead>
 
           <tbody className="govuk-table__body">
             {filtered.length === 0 ? (
               <tr className="govuk-table__row">
-                <td className="govuk-table__cell" colSpan={6}>
+                <td
+                  className="govuk-table__cell"
+                  colSpan={6}
+                >
                   No constituencies found.
                 </td>
               </tr>
             ) : (
               filtered.map((c: any) => (
-                <tr key={c.id} className="govuk-table__row">
+                <tr
+                  key={c.id}
+                  className="govuk-table__row"
+                >
                   <td className="govuk-table__cell">
                     {c.name || "Unknown"}
                   </td>
@@ -106,20 +140,26 @@ export default async function IebcOfficesPage({
                   </td>
 
                   <td className="govuk-table__cell">
-                    {c.office_location || "Not recorded"}
+                    {c.office_location ||
+                      "Not recorded"}
                   </td>
 
                   <td className="govuk-table__cell">
-                    {c.most_conspicuous_landmark || "Not recorded"}
+                    {c.most_conspicuous_landmark ||
+                      "Not recorded"}
                   </td>
 
                   <td className="govuk-table__cell">
-                    {c.registered_voters_2022 ?? "N/A"}
+                    {c.registered_voters_2022 ??
+                      "N/A"}
                   </td>
 
                   <td className="govuk-table__cell">
                     {c.slug ? (
-                      <a href={`/politics/elections/constituencies/${c.slug}`}>
+                      <a
+                        href={`/politics/elections/constituencies/${c.slug}`}
+                        className="govuk-link"
+                      >
                         View
                       </a>
                     ) : (
@@ -133,7 +173,7 @@ export default async function IebcOfficesPage({
         </table>
       </div>
 
-      {/* LAST UPDATED (must be before feedback) */}
+      {/* LAST UPDATED */}
       <LastUpdated
         lastUpdated={new Date().toISOString()}
         published={new Date("2026-01-01").toISOString()}
