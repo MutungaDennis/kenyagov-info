@@ -6,6 +6,7 @@ import Link from "next/link";
 import GovUKHomeHeader from "@/components/govuk/HomeHeader";
 import GovUKFeedback from "@/components/govuk/Feedback";
 
+
 export default function Home() {
   const router = useRouter();
   const [query, setQuery] = useState("");
@@ -71,9 +72,30 @@ export default function Home() {
                   type="submit"
                   className="govuk-button" 
                   data-module="govuk-button"
-                  style={{ margin: 0, height: '40px', padding: '0 20px', borderRadius: '0', backgroundColor: '#00703c' }}
+                  aria-label="Search archives" // Essential GDS voiceover descriptor tag
+                  style={{ 
+                    margin: 0, 
+                    height: '40px', 
+                    width: '44px', // Standard accessible minimum tap boundary width
+                    padding: '0', 
+                    borderRadius: '0', 
+                    backgroundColor: '#00703c',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
                 >
-                  Search
+                  {/* Clean scalable inline SVG icon instead of loose text properties */}
+                  <svg 
+                    style={{ display: 'block', fill: '#ffffff' }} 
+                    version="1.1" 
+                    xmlns="http://w3.org" 
+                    width="20" 
+                    height="20" 
+                    viewBox="0 0 20 20"
+                  >
+                    <path d="M18.86 17.44l-5.11-5.11a7.37 7.37 0 1 0-1.41 1.41l5.11 5.11a1 1 0 1 0 1.42-1.41zM3 8.39a5.39 5.39 0 1 1 5.39 5.39A5.4 5.4 0 0 1 3 8.39z" />
+                  </svg>
                 </button>
               </div>
             </form>
@@ -81,6 +103,7 @@ export default function Home() {
         </section>
 
         <hr className="govuk-section-break govuk-section-break--visible govuk-section-break--xl govuk-!-margin-bottom-8" />
+
 
 
       {/* Popular Services */}
