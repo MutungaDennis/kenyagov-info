@@ -357,14 +357,27 @@ export async function getActOfParliamentBySlug(slug: string) {
       },
 
       parts[] {
+      _type,
         partNumber,
         partTitle,
         sections[] {
-          sectionNumber,
-          sectionTitle,
-          officialText,
-          plainSummary
-        }
+  sectionNumber,
+  sectionTitle,
+  officialText,
+  plainSummary
+},
+
+scheduleNumber,
+scheduleTitle,
+relatedSection,
+introText,
+
+items[] {
+  itemNumber,
+  itemTitle,
+  officialText,
+  plainSummary
+}
       },
 
       subsidiaryLegislation[] {

@@ -109,49 +109,164 @@ defineField({
     }),
 
     // Hierarchical Sections
-    defineField({
-      name: 'parts',
-      title: 'Parts & Sections',
-      type: 'array',
-      of: [
-        {
-          type: 'object',
-          name: 'part',
-          title: 'Part of Act',
-          fields: [
-            defineField({ name: 'partNumber', title: 'Part Number', type: 'string' }),
-            defineField({ name: 'partTitle', title: 'Part Title', type: 'string' }),
-            defineField({
-              name: 'sections',
-              title: 'Sections',
-              type: 'array',
-              of: [
-                {
-                  type: 'object',
-                  name: 'section',
-                  fields: [
-                    defineField({ name: 'sectionNumber', title: 'Section Number', type: 'string' }),
-                    defineField({ name: 'sectionTitle', title: 'Section Title', type: 'string' }),
-                    defineField({
-                      name: 'officialText',
-                      title: 'Official Legal Text',
-                      type: 'array',
-                      of: [{ type: 'block' }]
-                    }),
-                    defineField({
-                      name: 'plainSummary',
-                      title: 'Plain English Summary',
-                      type: 'text',
-                      rows: 3
-                    }),
-                  ]
-                }
+    // ==============================
+// PARTS, SECTIONS & SCHEDULES
+// ==============================
+defineField({
+  name: 'parts',
+  title: 'Parts, Sections & Schedules',
+  type: 'array',
+
+  of: [
+    // =====================================================
+    // PARTS OF ACT
+    // =====================================================
+    {
+      type: 'object',
+      name: 'part',
+      title: 'Part of Act',
+
+      fields: [
+        defineField({
+          name: 'partNumber',
+          title: 'Part Number',
+          type: 'string'
+        }),
+
+        defineField({
+          name: 'partTitle',
+          title: 'Part Title',
+          type: 'string'
+        }),
+
+        defineField({
+          name: 'sections',
+          title: 'Sections',
+          type: 'array',
+
+          of: [
+            {
+              type: 'object',
+              name: 'section',
+
+              fields: [
+                defineField({
+                  name: 'sectionNumber',
+                  title: 'Section Number',
+                  type: 'string'
+                }),
+
+                defineField({
+                  name: 'sectionTitle',
+                  title: 'Section Title',
+                  type: 'string'
+                }),
+
+                defineField({
+                  name: 'officialText',
+                  title: 'Official Legal Text',
+                  type: 'array',
+                  of: [{ type: 'block' }]
+                }),
+
+                defineField({
+                  name: 'plainSummary',
+                  title: 'Plain English Summary',
+                  type: 'text',
+                  rows: 3
+                }),
               ]
-            })
+            }
           ]
-        }
+        }),
       ]
-    }),
+    },
+
+    // =====================================================
+    // SCHEDULES
+    // =====================================================
+    {
+      type: 'object',
+      name: 'schedule',
+      title: 'Schedule',
+
+      fields: [
+        defineField({
+          name: 'scheduleNumber',
+          title: 'Schedule Number',
+          type: 'string',
+          description:
+            'e.g. First Schedule, Second Schedule'
+        }),
+
+        defineField({
+          name: 'scheduleTitle',
+          title: 'Schedule Title',
+          type: 'string'
+        }),
+
+        defineField({
+          name: 'relatedSection',
+          title: 'Related Section',
+          type: 'string',
+          description:
+            'e.g. Section 29'
+        }),
+
+        defineField({
+          name: 'introText',
+          title: 'Introductory Text',
+          type: 'array',
+          of: [{ type: 'block' }]
+        }),
+
+        // =========================================
+        // SCHEDULE ITEMS
+        // =========================================
+        defineField({
+          name: 'items',
+          title: 'Schedule Items',
+          type: 'array',
+
+          of: [
+            {
+              type: 'object',
+              name: 'scheduleItem',
+
+              fields: [
+                defineField({
+                  name: 'itemNumber',
+                  title: 'Item Number',
+                  type: 'string'
+                }),
+
+                defineField({
+                  name: 'itemTitle',
+                  title: 'Item Title',
+                  type: 'string'
+                }),
+
+                defineField({
+                  name: 'officialText',
+                  title: 'Official Legal Text',
+                  type: 'array',
+                  of: [{ type: 'block' }]
+                }),
+
+                defineField({
+                  name: 'plainSummary',
+                  title: 'Plain English Summary',
+                  type: 'text',
+                  rows: 3
+                }),
+              ]
+            }
+          ]
+        }),
+      ]
+    }
+  ]
+}),
 
     // Subsidiary Legislation
     defineField({
