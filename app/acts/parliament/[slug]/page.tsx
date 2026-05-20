@@ -169,19 +169,38 @@ export default async function ActPage({
                   </li>
                 )}
 
-                {act.parts?.map(
-                  (part: any, i: number) => (
-                    <li key={i}>
-                      <a
-                        href={`#part-${i}`}
-                        className="govuk-link"
-                      >
-                        {part.partNumber} —{" "}
-                        {part.partTitle}
-                      </a>
-                    </li>
-                  )
-                )}
+                {act.parts?.map((item: any, i: number) => {
+  // NORMAL PART
+  if (item._type === "part") {
+    return (
+      <li key={i}>
+        <a
+          href={`#part-${i}`}
+          className="govuk-link"
+        >
+          {item.partNumber} — {item.partTitle}
+        </a>
+      </li>
+    );
+  }
+
+  // SCHEDULE
+  if (item._type === "schedule") {
+    return (
+      <li key={i}>
+        <a
+          href={`#schedule-${i}`}
+          className="govuk-link"
+        >
+          {item.scheduleNumber} —{" "}
+          {item.scheduleTitle}
+        </a>
+      </li>
+    );
+  }
+
+  return null;
+})}
 
                 {act.amendments?.length > 0 && (
                   <li>
@@ -516,49 +535,208 @@ export default async function ActPage({
             )}
 
             {/* ================= SUBSIDIARY LEGISLATION ================= */}
-            {act.subsidiaryLegislation
-              ?.length > 0 && (
-              <section
-                id="subsidiary-legislation"
-                className="govuk-!-margin-bottom-8"
-              >
-                <h2 className="govuk-heading-l">
-                  Subsidiary Legislation
-                </h2>
+            {/* ================= PARTS, SECTIONS & SCHEDULES ================= */}
+{act.parts?.length > 0 && (
+  <section className="govuk-!-margin-bottom-8">
+    <h2 className="govuk-heading-l">
+      Parts, Sections and Schedules
+    </h2>
 
-                <ul className="govuk-list govuk-list--bullet">
-                  {act.subsidiaryLegislation.map(
-                    (item: any, i: number) => (
-                      <li key={i}>
-                        <strong>
-                          {item.title}
-                        </strong>
+    {act.parts.map((item: any, i: number) => {
+      // =====================================================
+      // PARTS
+      // =====================================================
+      if (item._type === "part") {
+        return (
+          <div
+            key={i}
+            id={`part-${i}`}
+            className="govuk-!-margin-bottom-8"
+          >
+            {/* PART HEADER */}
+            <div
+              className="govuk-!-padding-3 govuk-!-margin-bottom-4"
+              style={{
+                backgroundColor: "#f3f2f1",
+                borderLeft: "5px solid #505a5f",
+              }}
+            >
+              <h3 className="govuk-heading-m govuk-!-margin-bottom-0">
+                {item.partNumber} — {item.partTitle}
+              </h3>
+            </div>
 
-                        {item.legalNoticeNumber &&
-                          ` — ${item.legalNoticeNumber}`}
+            {/* SECTIONS */}
+            {item.sections?.map(
+              (section: any, j: number) => (
+                <div
+                  key={j}
+                  id={`section-${section.sectionNumber}`}
+                  className="govuk-!-padding-4 govuk-!-margin-bottom-5"
+                  style={{
+                    borderLeft: "5px solid #ffdd00",
+                    backgroundColor: "#fffbea",
+                  }}
+                >
+                  <h4 className="govuk-heading-s">
+                    Section {section.sectionNumber}
+                    {section.sectionTitle &&
+                      ` — ${section.sectionTitle}`}
+                  </h4>
 
-                        {item.year &&
-                          ` (${item.year})`}
+                  {/* OFFICIAL TEXT */}
+                  {section.officialText && (
+                    <details className="govuk-details govuk-!-margin-bottom-4">
+                      <summary className="govuk-details__summary">
+                        <span className="govuk-details__summary-text">
+                          View official legal text
+                        </span>
+                      </summary>
 
-                        {item.pdfUrl && (
-                          <>
-                            {" "}
-                            —{" "}
-                            <Link
-                              href={item.pdfUrl}
-                              className="govuk-link"
-                              target="_blank"
-                            >
-                              PDF
-                            </Link>
-                          </>
-                        )}
-                      </li>
-                    )
+                      <div className="govuk-details__text">
+                        <PortableText
+                          value={section.officialText}
+                        />
+                      </div>
+                    </details>
                   )}
-                </ul>
-              </section>
+
+                  {/* PLAIN SUMMARY */}
+                  {section.plainSummary && (
+                    <details className="govuk-details">
+                      <summary className="govuk-details__summary">
+                        <span className="govuk-details__summary-text">
+                          Plain English summary
+                        </span>
+                      </summary>
+
+                      <div className="govuk-details__text">
+                        <p className="govuk-body govuk-!-margin-bottom-0">
+                          {section.plainSummary}
+                        </p>
+                      </div>
+                    </details>
+                  )}
+                </div>
+              )
             )}
+          </div>
+        );
+      }
+
+      // =====================================================
+      // SCHEDULES
+      // =====================================================
+      if (item._type === "schedule") {
+        return (
+          <section
+            key={i}
+            id={`schedule-${i}`}
+            className="govuk-!-margin-bottom-9"
+          >
+            <div
+              className="govuk-!-padding-4 govuk-!-margin-bottom-5"
+              style={{
+                backgroundColor: "#1d70b8",
+                color: "white",
+              }}
+            >
+              <h3
+                className="govuk-heading-m govuk-!-margin-bottom-1"
+                style={{ color: "white" }}
+              >
+                {item.scheduleNumber}
+              </h3>
+
+              <p
+                className="govuk-body govuk-!-margin-bottom-0"
+                style={{ color: "white" }}
+              >
+                {item.scheduleTitle}
+              </p>
+
+              {item.relatedSection && (
+                <p
+                  className="govuk-body-s govuk-!-margin-top-2 govuk-!-margin-bottom-0"
+                  style={{ color: "white" }}
+                >
+                  Related to {item.relatedSection}
+                </p>
+              )}
+            </div>
+
+            {/* INTRO TEXT */}
+            {item.introText && (
+              <div className="govuk-!-margin-bottom-5">
+                <PortableText value={item.introText} />
+              </div>
+            )}
+
+            {/* SCHEDULE ITEMS */}
+            {item.items?.map(
+              (scheduleItem: any, j: number) => (
+                <div
+                  key={j}
+                  className="govuk-!-padding-4 govuk-!-margin-bottom-5"
+                  style={{
+                    borderLeft: "5px solid #1d70b8",
+                    backgroundColor: "#f8f8f8",
+                  }}
+                >
+                  <h4 className="govuk-heading-s">
+                    {scheduleItem.itemNumber}
+                    {scheduleItem.itemTitle &&
+                      ` — ${scheduleItem.itemTitle}`}
+                  </h4>
+
+                  {/* OFFICIAL TEXT */}
+                  {scheduleItem.officialText && (
+                    <details className="govuk-details govuk-!-margin-bottom-4">
+                      <summary className="govuk-details__summary">
+                        <span className="govuk-details__summary-text">
+                          View official legal text
+                        </span>
+                      </summary>
+
+                      <div className="govuk-details__text">
+                        <PortableText
+                          value={
+                            scheduleItem.officialText
+                          }
+                        />
+                      </div>
+                    </details>
+                  )}
+
+                  {/* PLAIN SUMMARY */}
+                  {scheduleItem.plainSummary && (
+                    <details className="govuk-details">
+                      <summary className="govuk-details__summary">
+                        <span className="govuk-details__summary-text">
+                          Plain English summary
+                        </span>
+                      </summary>
+
+                      <div className="govuk-details__text">
+                        <p className="govuk-body govuk-!-margin-bottom-0">
+                          {
+                            scheduleItem.plainSummary
+                          }
+                        </p>
+                      </div>
+                    </details>
+                  )}
+                </div>
+              )
+            )}
+          </section>
+        );
+      }
+
+      return null;
+    })}
+  </section>
+)}
 
             {/* ================= RELATED ACTS ================= */}
             <aside
