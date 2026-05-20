@@ -1,8 +1,6 @@
 'use client';
 
-// Styles
 import "govuk-frontend/govuk-frontend.min.css"; 
-
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 
@@ -34,14 +32,14 @@ export default function RootLayout({
   return (
     <html lang="en" className="govuk-template">
       <body className="govuk-template__body">
-        {/* Show normal header only on inner pages */}
+        {/* Render standard header only for internal sub-pages */}
         {!isHomePage && <GovUKHeader />}
 
-        <div className="govuk-width-container">
-          <main className="govuk-main-wrapper govuk-main-wrapper--auto-spacing" id="main-content">
-            {children}
-          </main>
-        </div>
+        {/* 
+          FIXED: Removed the duplicate govuk-width-container and main wrappers. 
+          This allows pages to span the full canvas width and inject their own native container structures.
+        */}
+        {children}
 
         <GovUKFooter />
       </body>

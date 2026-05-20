@@ -1,52 +1,87 @@
+'use client';
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
+import GovUKHomeHeader from "@/components/govuk/HomeHeader";
 import GovUKFeedback from "@/components/govuk/Feedback";
 
 export default function Home() {
+  const router = useRouter();
+  const [query, setQuery] = useState("");
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (query.trim()) {
+      router.push(`/search?q=${encodeURIComponent(query.trim())}`);
+    }
+  };
+
   return (
-    <div className="govuk-width-container">
-      {/* Beta Banner */}
-      <div className="govuk-phase-banner">
-        <p className="govuk-phase-banner__content">
-          <strong className="govuk-tag govuk-phase-banner__content__tag">BETA</strong>
-          <span className="govuk-phase-banner__text">
-            This website is in early development. Your feedback helps us improve it. 
-            <Link href="/feedback" className="govuk-link">Give feedback</Link>
-          </span>
-        </p>
-      </div>
+    <>
+      {/* Home-page exclusive minimal brand bar header component */}
+      <GovUKHomeHeader />
 
-      {/* Hero Section */}
-      <section className="govuk-grid-row govuk-!-margin-top-9 govuk-!-margin-bottom-9">
-        <div className="govuk-grid-column-two-thirds">
-          <h1 className="govuk-heading-xl govuk-!-margin-bottom-4">
-            CitizenGuide.KE
-          </h1>
-          <p className="govuk-body-l">
-            Your independent guide to Kenyan government institutions, leaders, 
-            counties, public services, and the laws that govern us.
+      <div className="govuk-width-container">
+        {/* GOV.UK Phase Banner (BETA Disclosure Panel) */}
+        <div className="govuk-phase-banner">
+          <p className="govuk-phase-banner__content">
+            <strong className="govuk-tag govuk-phase-banner__content__tag">BETA</strong>
+            <span className="govuk-phase-banner__text">
+              This website is an independent informational service in early development. Your feedback helps us improve it.{' '}
+              <Link href="/feedback" className="govuk-link">Give feedback</Link>
+            </span>
           </p>
-
-          {/* Main Search */}
-          <div className="govuk-form-group">
-            <label className="govuk-label govuk-label--m" htmlFor="main-search">
-              Search government entities, services or laws
-            </label>
-            <div className="govuk-input__wrapper">
-              <input
-                className="govuk-input govuk-input--width-full"
-                id="main-search"
-                type="text"
-                placeholder="e.g. KRA, Constitution Article 47, Birth certificate, Nairobi County..."
-              />
-              <button className="govuk-button govuk-!-margin-left-2" data-module="govuk-button">
-                Search
-              </button>
-            </div>
-          </div>
         </div>
-      </section>
 
-      <hr className="govuk-section-break govuk-section-break--visible govuk-section-break--xl" />
+        {/* High-Utility Hero Section with Downscaled Headings */}
+        <section className="govuk-grid-row govuk-!-margin-top-8 govuk-!-margin-bottom-8">
+          <div className="govuk-grid-column-two-thirds">
+            
+            {/* Reduced from heading-xl to heading-l for strict style guide compliance */}
+            <h1 className="govuk-heading-l govuk-!-margin-bottom-2">
+              CitizenGuide.KE
+            </h1>
+            <p className="govuk-body">
+              Your independent guide to Kenyan government institutions, leaders, 
+              counties, public services, and the laws that govern us.
+            </p>
+
+            {/* Main Unified Search Form Component */}
+            <form onSubmit={handleSearchSubmit} className="govuk-form-group govuk-!-margin-bottom-0">
+              <label className="govuk-label govuk-label--m govuk-!-font-weight-bold" htmlFor="main-search">
+                Search government entities, services or laws
+              </label>
+              <div className="govuk-hint govuk-!-margin-bottom-2" id="search-hint-text" style={{ fontSize: '16px' }}>
+                e.g. KRA, Constitution Article 47, Birth certificate, Nairobi County...
+              </div>
+              
+              <div style={{ display: 'flex', width: '100%', maxWidth: '600px' }}>
+                <input
+                  className="govuk-input"
+                  id="main-search"
+                  name="q"
+                  type="search"
+                  aria-describedby="search-hint-text"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  style={{ flex: 1, margin: 0, height: '40px', borderRight: 'none', borderRadius: '0' }}
+                />
+                <button 
+                  type="submit"
+                  className="govuk-button" 
+                  data-module="govuk-button"
+                  style={{ margin: 0, height: '40px', padding: '0 20px', borderRadius: '0', backgroundColor: '#00703c' }}
+                >
+                  Search
+                </button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <hr className="govuk-section-break govuk-section-break--visible govuk-section-break--xl govuk-!-margin-bottom-8" />
+
 
       {/* Popular Services */}
       <div className="govuk-grid-row">
@@ -247,5 +282,6 @@ export default function Home() {
 
       <GovUKFeedback />
     </div>
+    </>
   );
 }
