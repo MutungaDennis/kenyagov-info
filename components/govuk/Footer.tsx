@@ -50,10 +50,13 @@ export default function GovUKFooter() {
                 <li className="govuk-footer__list-item">
                   <Link href="/contact" className="govuk-footer__link">Contact</Link>
                 </li>
+                <li className="govuk-footer__list-item">
+                  <Link href="/feedback" className="govuk-footer__link">Give feedback</Link>
+                </li>
               </ul>
             </div>
 
-            {/* Column 3: Legal */}
+            {/* Column 3: Legal & Site Structure */}
             <div className="govuk-grid-column-one-third govuk-!-margin-bottom-4">
               <h2 className="govuk-footer__heading govuk-heading-s">Legal</h2>
               <ul className="govuk-footer__list">
@@ -65,6 +68,12 @@ export default function GovUKFooter() {
                 </li>
                 <li className="govuk-footer__list-item">
                   <Link href="/terms" className="govuk-footer__link">Terms and conditions</Link>
+                </li>
+                <li className="govuk-footer__list-item">
+                  <Link href="/open-data" className="govuk-footer__link">Open data &amp; disclosures</Link>
+                </li>
+                <li className="govuk-footer__list-item">
+                  <Link href="/sitemap" className="govuk-footer__link">Sitemap</Link>
                 </li>
               </ul>
             </div>
@@ -79,11 +88,10 @@ export default function GovUKFooter() {
         <div className="govuk-footer__meta">
           <div className="govuk-footer__meta-item govuk-footer__meta-item--grow">
             
-            {/* Replaced arbitrary flex-divs with native typography structures */}
             <div className="govuk-!-margin-bottom-6" style={{ display: 'inline-flex', alignItems: 'center' }}>
               <Image 
                 src="/logo.png" 
-                alt="" // Decorative icon wrapper gets blank alt tag context
+                alt="" 
                 width={36} 
                 height={36}
                 style={{ marginRight: '12px' }}
