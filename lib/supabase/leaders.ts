@@ -25,7 +25,7 @@ export interface LeaderCategory {
 
 export async function getAllLeaders(): Promise<Leader[]> {
   const supabase = await createClient();
-  
+
   const { data, error } = await supabase
     .from('leaders')
     .select('*')
@@ -39,9 +39,11 @@ export async function getAllLeaders(): Promise<Leader[]> {
   return data || [];
 }
 
-export async function getLeaderById(id: string): Promise<Leader | null> {
+export async function getLeaderById(
+  id: string
+): Promise<Leader | null> {
   const supabase = await createClient();
-  
+
   const { data, error } = await supabase
     .from('leaders')
     .select('*')
@@ -56,9 +58,11 @@ export async function getLeaderById(id: string): Promise<Leader | null> {
   return data;
 }
 
-export async function getLeadersByCategory(category: string): Promise<Leader[]> {
+export async function getLeadersByCategory(
+  category: string
+): Promise<Leader[]> {
   const supabase = await createClient();
-  
+
   const { data, error } = await supabase
     .from('leaders')
     .select('*')
@@ -73,9 +77,28 @@ export async function getLeadersByCategory(category: string): Promise<Leader[]> 
   return data || [];
 }
 
+export async function getLeadersBySubcategory(
+  subcategory: string
+): Promise<Leader[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from('leaders')
+    .select('*')
+    .eq('sub_category', subcategory)
+    .order('name', { ascending: true });
+
+  if (error) {
+    console.error('Error fetching leaders by subcategory:', error);
+    return [];
+  }
+
+  return data || [];
+}
+
 export async function getLeaderCategories(): Promise<LeaderCategory[]> {
   const supabase = await createClient();
-  
+
   const { data, error } = await supabase
     .from('leader_categories')
     .select('*')
@@ -89,13 +112,17 @@ export async function getLeaderCategories(): Promise<LeaderCategory[]> {
   return data || [];
 }
 
-export async function searchLeaders(query: string): Promise<Leader[]> {
+export async function searchLeaders(
+  query: string
+): Promise<Leader[]> {
   const supabase = await createClient();
-  
+
   const { data, error } = await supabase
     .from('leaders')
     .select('*')
-    .or(`name.ilike.%${query}%,title.ilike.%${query}%,description.ilike.%${query}%,organization.ilike.%${query}%`)
+    .or(
+      `name.ilike.%${query}%,title.ilike.%${query}%,description.ilike.%${query}%,organization.ilike.%${query}%`
+    )
     .order('name', { ascending: true });
 
   if (error) {
