@@ -159,13 +159,22 @@ export default async function WardsPage({
     return `/counties/wards?${params.toString()}`;
   };
 
+  // Compile active search parameters to craft an optimized endpoint track url for export route tracking
+  const getExportUrl = () => {
+    const params = new URLSearchParams();
+    if (county) params.set("county", county);
+    if (constituency) params.set("constituency", constituency);
+    if (q) params.set("q", q);
+    return `/api/data/exports/wards?${params.toString()}`;
+  };
+
   return (
     <div className="govuk-width-container">
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
           { text: "Counties", href: "/counties" },
-          { text: "Wards", href: "/counties/wards" },
+          { text: "Wards", href: "" },
         ]}
       />
 
@@ -193,17 +202,17 @@ export default async function WardsPage({
                 <p className="govuk-body-s govuk-!-font-weight-bold govuk-!-margin-bottom-2">Active filters:</p>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
                   {county && (
-                    <Link href={getFilterClearUrl("county")} style={{ background: '#fff', border: '1px solid #1d70b8', padding: '4px 8px', cursor: 'pointer', fontSize: '14px', textDecoration: 'none', color: '#1d70b8', display: 'inline-flex', alignItems: 'center' }}>
+                    <Link href={getFilterClearUrl("county")} style={{ background: '#fff', border: '1px solid #1d70b8', padding: '4px 8px', cursor: 'pointer', fontSize: '14px', textDecoration: 'none', color: '#1d70b8', display: 'inline-flex', alignItems: 'center', borderStyle: 'solid' }}>
                       County: {county} <span style={{ marginLeft: '8px', color: '#d4351c', fontWeight: 'bold' }}>&times;</span>
                     </Link>
                   )}
                   {constituency && (
-                    <Link href={getFilterClearUrl("constituency")} style={{ background: '#fff', border: '1px solid #1d70b8', padding: '4px 8px', cursor: 'pointer', fontSize: '14px', textDecoration: 'none', color: '#1d70b8', display: 'inline-flex', alignItems: 'center' }}>
+                    <Link href={getFilterClearUrl("constituency")} style={{ background: '#fff', border: '1px solid #1d70b8', padding: '4px 8px', cursor: 'pointer', fontSize: '14px', textDecoration: 'none', color: '#1d70b8', display: 'inline-flex', alignItems: 'center', borderStyle: 'solid' }}>
                       Constituency: {constituency} <span style={{ marginLeft: '8px', color: '#d4351c', fontWeight: 'bold' }}>&times;</span>
                     </Link>
                   )}
                   {q && (
-                    <Link href={getFilterClearUrl("q")} style={{ background: '#fff', border: '1px solid #1d70b8', padding: '4px 8px', cursor: 'pointer', fontSize: '14px', textDecoration: 'none', color: '#1d70b8', display: 'inline-flex', alignItems: 'center' }}>
+                    <Link href={getFilterClearUrl("q")} style={{ background: '#fff', border: '1px solid #1d70b8', padding: '4px 8px', cursor: 'pointer', fontSize: '14px', textDecoration: 'none', color: '#1d70b8', display: 'inline-flex', alignItems: 'center', borderStyle: 'solid' }}>
                       Search: &ldquo;{q}&rdquo; <span style={{ marginLeft: '8px', color: '#d4351c', fontWeight: 'bold' }}>&times;</span>
                     </Link>
                   )}
@@ -214,9 +223,23 @@ export default async function WardsPage({
               </div>
             )}
 
+            {/* Open Data Download Panel (GOV.UK Compliant Server Model) */}
+            <div className="govuk-!-margin-bottom-4" style={{ background: '#f3f2f1', padding: '12px 15px', border: '1px solid #bfc1c3', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+              <span className="govuk-body-s govuk-!-margin-0">
+                Machine-readable open data access framework complying with national transparency disclosure guidelines.
+              </span>
+              <a 
+                href={getExportUrl()}
+                className="govuk-link govuk-!-font-size-16 govuk-!-font-weight-bold"
+                style={{ textDecoration: 'underline' }}
+              >
+                Download filtered matching wards list as CSV text spreadsheet
+              </a>
+            </div>
+
             {/* METADATA RESULT HOOK COUNTER */}
             <h2 className="govuk-heading-s govuk-!-margin-bottom-3" aria-live="polite">
-              Showing {totalWards > 0 ? fromOffset + 1 : 0} to {Math.min(toOffset + 1, totalWards)} of {totalWards.toLocaleString()} electoral wards
+              Showing {totalWards > 0 ? fromOffset + 1 : 0} to {Math.min(toOffset + ITEMS_PER_PAGE, totalWards)} of {totalWards.toLocaleString()} electoral wards
             </h2>
 
             {totalWards > 0 ? (
@@ -229,19 +252,19 @@ export default async function WardsPage({
                     </caption>
                     <thead className="govuk-table__head">
                       <tr className="govuk-table__row">
-                        <th scope="col" className="govuk-table__header govuk-!-font-size-16" style={{ width: '60px' }}>No.</th>
-                        <th scope="col" className="govuk-table__header govuk-!-font-size-16">Ward</th>
-                        <th scope="col" className="govuk-table__header govuk-!-font-size-16">Constituency</th>
-                        <th scope="col" className="govuk-table__header govuk-!-font-size-16">County</th>
-                        <th scope="col" className="govuk-table__header govuk-!-font-size-16">Registered Voters (2022)</th>
+                        <th scope="col" className="govuk-table__header govuk-body-s" style={{ width: '60px' }}>No.</th>
+                        <th scope="col" className="govuk-table__header govuk-body-s">Ward</th>
+                        <th scope="col" className="govuk-table__header govuk-body-s">Constituency</th>
+                        <th scope="col" className="govuk-table__header govuk-body-s">County</th>
+                        <th scope="col" className="govuk-table__header govuk-body-s" style={{ width: '200px' }}>Registered Voters (2022)</th>
                       </tr>
                     </thead>
                     <tbody className="govuk-table__body">
                       {wards?.map((ward, index) => (
                         <tr key={ward.id} className="govuk-table__row">
                           <td className="govuk-table__cell govuk-body-s">{fromOffset + index + 1}</td>
-                          <th scope="row" className="govuk-table__header" style={{ fontWeight: 'normal' }}>
-                            <Link href={`/counties/wards/${ward.slug}`} className="govuk-link govuk-!-font-weight-bold govuk-!-font-size-16">
+                          <th scope="row" className="govuk-table__header govuk-body-s" style={{ fontWeight: 'normal' }}>
+                            <Link href={`/counties/wards/${ward.slug}`} className="govuk-link govuk-!-font-weight-bold">
                               {ward.name}
                             </Link>
                           </th>
