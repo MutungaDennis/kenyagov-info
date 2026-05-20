@@ -28,26 +28,27 @@ export default function AdminInstitutionsPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Filters
   const [selectedMainCategory, setSelectedMainCategory] = useState("All");
   const [selectedSubCategory, setSelectedSubCategory] = useState("All");
   const [showInactive, setShowInactive] = useState(false);
 
-  // Modal
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [institutionToDelete, setInstitutionToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [institutionToDelete, setInstitutionToDelete] =
+    useState<{ id: string; name: string } | null>(null);
 
   const supabase = createClient();
 
   const fetchInstitutions = useCallback(async () => {
     setLoading(true);
+
     const { data, error } = await supabase
-      .from('institutions')
+      .from("institutions")
       .select(`
-        id, slug, name, short_name, institution_type, institution_category,
-        government_level, arm_of_government, mtef_sector, is_active, description
+        id, slug, name, short_name, institution_type,
+        institution_category, government_level,
+        arm_of_government, mtef_sector, is_active, description
       `)
-      .order('name', { ascending: true });
+      .order("name", { ascending: true });
 
     if (error) console.error(error);
     else setInstitutions(data || []);
@@ -59,41 +60,49 @@ export default function AdminInstitutionsPage() {
     fetchInstitutions();
   }, [fetchInstitutions]);
 
-  // Main Categories (dynamic)
-  const mainCategories = useMemo(() => {
-    const cats = [...new Set(institutions.map(i => i.arm_of_government || i.institution_category).filter(Boolean))];
-    return ["All", ...cats.sort()];
+  // ✅ FIXED: main categories (NO null allowed)
+  const mainCategories = useMemo<string[]>(() => {
+    const cats = institutions
+      .map((i) => i.arm_of_government ?? i.institution_category)
+      .filter((v): v is string => typeof v === "string" && v.trim() !== "");
+
+    return ["All", ...Array.from(new Set(cats)).sort()];
   }, [institutions]);
 
-  // Dynamic Subcategories
-  const subCategoryOptions = useMemo(() => {
+  // ✅ FIXED: sub categories (NO null allowed)
+  const subCategoryOptions = useMemo<string[]>(() => {
     if (selectedMainCategory === "All") return ["All"];
 
-    const relevant = institutions.filter(inst => 
-      inst.arm_of_government === selectedMainCategory || 
-      inst.institution_category === selectedMainCategory
+    const relevant = institutions.filter(
+      (inst) =>
+        inst.arm_of_government === selectedMainCategory ||
+        inst.institution_category === selectedMainCategory
     );
 
-    const subs = [...new Set(relevant.map(i => i.institution_type).filter(Boolean))];
-    return ["All", ...subs.sort()];
+    const subs = relevant
+      .map((i) => i.institution_type)
+      .filter((v): v is string => typeof v === "string" && v.trim() !== "");
+
+    return ["All", ...Array.from(new Set(subs)).sort()];
   }, [selectedMainCategory, institutions]);
 
-  // Filtered Results
   const filteredInstitutions = useMemo(() => {
     return institutions
       .filter((inst) => {
-        const searchMatch = 
+        const searchMatch =
           inst.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (inst.short_name && inst.short_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-          (inst.description && inst.description.toLowerCase().includes(searchTerm.toLowerCase()));
+          (inst.short_name &&
+            inst.short_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (inst.description &&
+            inst.description.toLowerCase().includes(searchTerm.toLowerCase()));
 
-        const mainMatch = 
-          selectedMainCategory === "All" || 
-          inst.arm_of_government === selectedMainCategory || 
+        const mainMatch =
+          selectedMainCategory === "All" ||
+          inst.arm_of_government === selectedMainCategory ||
           inst.institution_category === selectedMainCategory;
 
-        const subMatch = 
-          selectedSubCategory === "All" || 
+        const subMatch =
+          selectedSubCategory === "All" ||
           inst.institution_type === selectedSubCategory;
 
         const activeMatch = showInactive || inst.is_active;
@@ -101,10 +110,20 @@ export default function AdminInstitutionsPage() {
         return searchMatch && mainMatch && subMatch && activeMatch;
       })
       .sort((a, b) => a.name.localeCompare(b.name));
-  }, [institutions, searchTerm, selectedMainCategory, selectedSubCategory, showInactive]);
+  }, [
+    institutions,
+    searchTerm,
+    selectedMainCategory,
+    selectedSubCategory,
+    showInactive,
+  ]);
 
   const toggleActive = async (id: string, current: boolean) => {
-    await supabase.from('institutions').update({ is_active: !current }).eq('id', id);
+    await supabase
+      .from("institutions")
+      .update({ is_active: !current })
+      .eq("id", id);
+
     fetchInstitutions();
   };
 
@@ -115,7 +134,12 @@ export default function AdminInstitutionsPage() {
 
   const confirmDelete = async () => {
     if (!institutionToDelete) return;
-    await supabase.from('institutions').delete().eq('id', institutionToDelete.id);
+
+    await supabase
+      .from("institutions")
+      .delete()
+      .eq("id", institutionToDelete.id);
+
     fetchInstitutions();
     setDeleteModalOpen(false);
     setInstitutionToDelete(null);
@@ -137,8 +161,11 @@ export default function AdminInstitutionsPage() {
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-two-thirds">
             <h1 className="govuk-heading-xl">Government Institutions</h1>
-            <p className="govuk-body-l">Manage all public institutions — currently {institutions.length} records</p>
+            <p className="govuk-body-l">
+              Manage all public institutions — currently {institutions.length} records
+            </p>
           </div>
+
           <div className="govuk-grid-column-one-third">
             <Link href="/admin/institutions/new" className="govuk-button">
               + Add New Institution
@@ -146,100 +173,114 @@ export default function AdminInstitutionsPage() {
           </div>
         </div>
 
-        {/* Filters - Similar to public page */}
+        {/* FILTERS */}
         <div className="govuk-grid-row govuk-!-margin-bottom-8">
           <div className="govuk-grid-column-one-third">
-            <div className="govuk-form-group">
-              <label className="govuk-label" htmlFor="search">Search</label>
-              <input
-                className="govuk-input"
-                id="search"
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="e.g. Ministry of Health, KRA..."
-              />
-            </div>
+            <label className="govuk-label">Search</label>
+            <input
+              className="govuk-input"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
 
           <div className="govuk-grid-column-one-third">
-            <div className="govuk-form-group">
-              <label className="govuk-label" htmlFor="main-category">Main Category</label>
-              <select 
-                className="govuk-select" 
-                id="main-category"
-                value={selectedMainCategory}
-                onChange={(e) => {
-                  setSelectedMainCategory(e.target.value);
-                  setSelectedSubCategory("All");
-                }}
-              >
-                {mainCategories.map(cat => (
-                  <option key={cat} value={cat}>{cat}</option>
-                ))}
-              </select>
-            </div>
+            <label className="govuk-label">Main Category</label>
+            <select
+              className="govuk-select"
+              value={selectedMainCategory}
+              onChange={(e) => {
+                setSelectedMainCategory(e.target.value);
+                setSelectedSubCategory("All");
+              }}
+            >
+              {mainCategories.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="govuk-grid-column-one-third">
-            <div className="govuk-form-group">
-              <label className="govuk-label" htmlFor="sub-category">Sub Category / Type</label>
-              <select 
-                className="govuk-select" 
-                id="sub-category"
-                value={selectedSubCategory}
-                onChange={(e) => setSelectedSubCategory(e.target.value)}
-                disabled={selectedMainCategory === "All"}
-              >
-                {subCategoryOptions.map(sub => (
-                  <option key={sub} value={sub}>{sub}</option>
-                ))}
-              </select>
-            </div>
+            <label className="govuk-label">Sub Category</label>
+            <select
+              className="govuk-select"
+              value={selectedSubCategory}
+              onChange={(e) => setSelectedSubCategory(e.target.value)}
+              disabled={selectedMainCategory === "All"}
+            >
+              {subCategoryOptions.map((sub) => (
+                <option key={sub} value={sub}>
+                  {sub}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
-        <p className="govuk-body-s govuk-!-margin-bottom-6">
+        <p className="govuk-body-s">
           Showing <strong>{filteredInstitutions.length}</strong> institutions
         </p>
 
-        {/* Table */}
+        {/* TABLE */}
         <div className="govuk-table-wrapper">
           <table className="govuk-table">
-            <thead className="govuk-table__head">
-              <tr className="govuk-table__row">
-                <th className="govuk-table__header" style={{ width: "50px" }}>#</th>
-                <th className="govuk-table__header">Institution</th>
-                <th className="govuk-table__header">Type</th>
-                <th className="govuk-table__header">Category</th>
-                <th className="govuk-table__header">Level</th>
-                <th className="govuk-table__header">Status</th>
-                <th className="govuk-table__header">Actions</th>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Institution</th>
+                <th>Type</th>
+                <th>Category</th>
+                <th>Level</th>
+                <th>Status</th>
+                <th>Actions</th>
               </tr>
             </thead>
-            <tbody className="govuk-table__body">
+
+            <tbody>
               {filteredInstitutions.map((inst, index) => (
-                <tr key={inst.id} className="govuk-table__row">
-                  <td className="govuk-table__cell">{index + 1}</td>
-                  <td className="govuk-table__cell">
+                <tr key={inst.id}>
+                  <td>{index + 1}</td>
+                  <td>
                     <strong>{inst.name}</strong>
                     {inst.short_name && ` (${inst.short_name})`}
                   </td>
-                  <td className="govuk-table__cell">{inst.institution_type}</td>
-                  <td className="govuk-table__cell">{inst.institution_category || inst.arm_of_government}</td>
-                  <td className="govuk-table__cell">{inst.government_level}</td>
-                  <td className="govuk-table__cell">
-                    <span className={`govuk-tag ${inst.is_active ? 'govuk-tag--green' : 'govuk-tag--grey'}`}>
-                      {inst.is_active ? 'Active' : 'Inactive'}
+                  <td>{inst.institution_type}</td>
+                  <td>
+                    {inst.institution_category || inst.arm_of_government}
+                  </td>
+                  <td>{inst.government_level}</td>
+                  <td>
+                    <span
+                      className={`govuk-tag ${
+                        inst.is_active ? "govuk-tag--green" : "govuk-tag--grey"
+                      }`}
+                    >
+                      {inst.is_active ? "Active" : "Inactive"}
                     </span>
                   </td>
-                  <td className="govuk-table__cell">
+                  <td>
                     <ActionDropdown
                       actions={[
-                        { label: "Edit", href: `/admin/institutions/${inst.id}/edit` },
-                        { label: "View Full Details", href: `/institutions/${inst.slug}` },
-                        { label: inst.is_active ? "Deactivate" : "Activate", onClick: () => toggleActive(inst.id, inst.is_active) },
-                        { label: "Delete", onClick: () => openDeleteModal(inst.id, inst.name), destructive: true },
+                        {
+                          label: "Edit",
+                          href: `/admin/institutions/${inst.id}/edit`,
+                        },
+                        {
+                          label: "View",
+                          href: `/institutions/${inst.slug}`,
+                        },
+                        {
+                          label: inst.is_active ? "Deactivate" : "Activate",
+                          onClick: () => toggleActive(inst.id, inst.is_active),
+                        },
+                        {
+                          label: "Delete",
+                          destructive: true,
+                          onClick: () =>
+                            openDeleteModal(inst.id, inst.name),
+                        },
                       ]}
                     />
                   </td>
@@ -249,21 +290,14 @@ export default function AdminInstitutionsPage() {
           </table>
         </div>
 
-        {filteredInstitutions.length === 0 && !loading && (
-          <div className="govuk-warning-text">
-            <span className="govuk-warning-text__icon" aria-hidden="true">!</span>
-            <strong className="govuk-warning-text__text">No institutions found</strong>
-          </div>
-        )}
-
-        {loading && <p className="govuk-body">Loading institutions...</p>}
+        {loading && <p className="govuk-body">Loading...</p>}
 
         <DeleteModal
           isOpen={deleteModalOpen}
           onClose={() => setDeleteModalOpen(false)}
           onConfirm={confirmDelete}
           title="Delete Institution"
-          message={`Are you sure you want to permanently delete "${institutionToDelete?.name}"? This action cannot be undone.`}
+          message={`Are you sure you want to delete "${institutionToDelete?.name}"?`}
         />
 
         <GovUKFeedback />
