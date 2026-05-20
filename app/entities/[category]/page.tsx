@@ -11,6 +11,15 @@ import {
 } from '@/lib/data/leadership-hierarchy';
 import { getEntitiesByCategory } from '@/lib/supabase/entities';
 
+// ✅ ADD THIS TYPE
+type Entity = {
+  id: string;
+  slug: string;
+  name: string;
+  description?: string | null;
+  county?: string | null;
+};
+
 interface PageProps {
   params: Promise<{ category: string }>;
 }
@@ -23,6 +32,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   const categoryData = ENTITY_HIERARCHY[category as EntityCategory];
+
   return {
     title: `${categoryData.name} | Kenya Info`,
     description: categoryData.description,
@@ -38,11 +48,14 @@ export default async function EntitiesCategoryPage({ params }: PageProps) {
 
   const categoryData = ENTITY_HIERARCHY[category as EntityCategory];
 
-  let entities = [];
-  let error = null;
+  // ✅ FIXED: typed array instead of implicit any[]
+  let entities: Entity[] = [];
+  let error: string | null = null;
 
   try {
-    entities = await getEntitiesByCategory(category as EntityCategory);
+    entities = (await getEntitiesByCategory(
+      category as EntityCategory
+    )) as Entity[];
   } catch (err) {
     console.error('Error fetching entities:', err);
     error = 'Failed to load entities';
@@ -68,6 +81,7 @@ export default async function EntitiesCategoryPage({ params }: PageProps) {
           </div>
         </div>
 
+        {/* ERROR */}
         {error && (
           <div className="govuk-grid-row govuk-!-margin-top-6">
             <div className="govuk-grid-column-full">
@@ -78,26 +92,38 @@ export default async function EntitiesCategoryPage({ params }: PageProps) {
           </div>
         )}
 
-        {entities && entities.length > 0 ? (
+        {/* ENTITIES */}
+        {entities.length > 0 ? (
           <div className="govuk-grid-row govuk-!-margin-top-9">
             <div className="govuk-grid-column-full">
-              <h2 className="govuk-heading-m">{categoryData.name} ({entities.length})</h2>
+              <h2 className="govuk-heading-m">
+                {categoryData.name} ({entities.length})
+              </h2>
+
               <div className="govuk-grid-row">
                 {entities.map((entity) => (
-                  <div key={entity.id} className="govuk-grid-column-one-third govuk-!-margin-bottom-6">
+                  <div
+                    key={entity.id}
+                    className="govuk-grid-column-one-third govuk-!-margin-bottom-6"
+                  >
                     <div className="govuk-card" style={{ height: '100%' }}>
                       <div className="govuk-card__content">
                         <h3 className="govuk-heading-m govuk-!-margin-top-0">
-                          <Link href={`/entities/${category}/${entity.slug}`} className="govuk-link">
+                          <Link
+                            href={`/entities/${category}/${entity.slug}`}
+                            className="govuk-link"
+                          >
                             {entity.name}
                           </Link>
                         </h3>
+
                         {entity.description && (
                           <p className="govuk-body-s govuk-!-margin-bottom-0">
                             {entity.description.substring(0, 100)}
                             {entity.description.length > 100 ? '...' : ''}
                           </p>
                         )}
+
                         {entity.county && (
                           <p className="govuk-body-s govuk-!-margin-top-2 govuk-!-margin-bottom-0">
                             <strong>{entity.county}</strong>

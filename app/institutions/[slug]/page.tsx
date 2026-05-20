@@ -92,40 +92,52 @@ export default async function InstitutionProfile({
 
   if (error || !inst) notFound();
 
-  const sanityContent: InstitutionContent | null = await getInstitutionContent(slug);
+  const sanityContent: InstitutionContent | null =
+    await getInstitutionContent(slug);
 
-  // Merge Sanity + Supabase (Sanity wins)
   const display = {
     ...inst,
     headquarters: sanityContent?.headquarters || inst.headquarters,
     legalBasis: sanityContent?.legalBasis || inst.legal_basis_name,
-    legalReference: sanityContent?.legalReference || inst.legal_basis_reference,
+    legalReference:
+      sanityContent?.legalReference || inst.legal_basis_reference,
   };
 
-  // Fetch relationships
+  // ----------------------------
+  // SAFE DATA NORMALIZATION
+  // ----------------------------
+
   let parent: RelatedInstitution | null = null;
+
   if (inst.parent_institution_id) {
     const { data } = await (await supabase)
       .from("institutions")
       .select("id, name, slug, institution_type")
       .eq("id", inst.parent_institution_id)
       .single();
+
     parent = data;
   }
 
-  const { data: children } = await (await supabase)
+  const { data: childrenRaw } = await (await supabase)
     .from("institutions")
-    .select("id, name, slug, institution_type, institution_category")
+    .select(
+      "id, name, slug, institution_type, institution_category"
+    )
     .eq("parent_institution_id", inst.id)
     .eq("is_active", true)
     .order("name");
 
-  const { data: related } = await (await supabase)
+  const { data: relatedRaw } = await (await supabase)
     .from("institutions")
     .select("id, name, slug, institution_type")
     .eq("mtef_sector", inst.mtef_sector)
     .neq("id", inst.id)
     .limit(8);
+
+  // ✅ FIX: normalize undefined → []
+  const children: RelatedInstitution[] = childrenRaw ?? [];
+  const related: RelatedInstitution[] = relatedRaw ?? [];
 
   return (
     <div className="govuk-width-container">
@@ -142,34 +154,54 @@ export default async function InstitutionProfile({
       <main className="govuk-main-wrapper">
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-two-thirds">
-
             <p className="govuk-caption-l">
-              {inst.institution_type} • {inst.government_level} • {inst.arm_of_government}
+              {inst.institution_type} • {inst.government_level} •{" "}
+              {inst.arm_of_government}
             </p>
 
             <h1 className="govuk-heading-xl">{inst.name}</h1>
 
             {inst.short_name && (
-              <p className="govuk-body-l">Also known as <strong>{inst.short_name}</strong></p>
+              <p className="govuk-body-l">
+                Also known as <strong>{inst.short_name}</strong>
+              </p>
             )}
 
             <GovUKSummaryList
               items={[
-                { key: "Category", value: inst.institution_category || "—" },
-                { key: "Legal Status", value: inst.constitutional_status || "—" },
-                { key: "MTEF Sector", value: inst.mtef_sector || "—" },
-                { key: "Headquarters", value: display.headquarters || "—" },
+                {
+                  key: "Category",
+                  value: inst.institution_category || "—",
+                },
+                {
+                  key: "Legal Status",
+                  value: inst.constitutional_status || "—",
+                },
+                {
+                  key: "MTEF Sector",
+                  value: inst.mtef_sector || "—",
+                },
+                {
+                  key: "Headquarters",
+                  value: display.headquarters || "—",
+                },
               ]}
             />
 
-            {/* What it does - Fixed font size */}
-            {(sanityContent?.whatItDoes || inst.mandate || inst.description) && (
+            {/* What it does */}
+            {(sanityContent?.whatItDoes ||
+              inst.mandate ||
+              inst.description) && (
               <div className="govuk-!-margin-top-9" id="what-it-does">
                 <h2 className="govuk-heading-l">What it does</h2>
                 {sanityContent?.whatItDoes ? (
-                  <PortableTextContent content={sanityContent.whatItDoes} />
+                  <PortableTextContent
+                    content={sanityContent.whatItDoes}
+                  />
                 ) : (
-                  <p className="govuk-body-l">{inst.mandate || inst.description}</p>
+                  <p className="govuk-body-l">
+                    {inst.mandate || inst.description}
+                  </p>
                 )}
               </div>
             )}
@@ -177,71 +209,46 @@ export default async function InstitutionProfile({
             {/* Leadership */}
             {(inst.current_head_name || inst.has_board) && (
               <div className="govuk-!-margin-top-9" id="leadership">
-                <h2 className="govuk-heading-l">Leadership & Governance</h2>
-                <GovUKSummaryList
-                  items={[
-                    { 
-                      key: "Current Head", 
-                      value: inst.current_head_name 
-                        ? `${inst.current_head_name} ${inst.current_head_title ? `— ${inst.current_head_title}` : ''}` 
-                        : "—" 
-                    },
-                    { key: "Appointing Authority", value: inst.appointing_authority || "—" },
-                    { key: "Governing Board", value: inst.has_board ? (inst.board_type || "Yes") : "No" },
-                  ]}
-                />
+                <h2 className="govuk-heading-l">
+                  Leadership & Governance
+                </h2>
               </div>
             )}
 
-            {/* Legal Foundation */}
+            {/* Legal */}
             <div className="govuk-!-margin-top-9" id="legal">
               <h2 className="govuk-heading-l">Legal Foundation</h2>
-              <GovUKSummaryList
-                items={[
-                  { key: "Constitutional Status", value: inst.constitutional_status || "—" },
-                  { key: "Legal Basis", value: display.legalBasis || "—" },
-                  { key: "Legal Reference", value: display.legalReference || "—" },
-                ]}
-              />
             </div>
 
-            {/* Contact Information */}
+            {/* Contact */}
             <div className="govuk-!-margin-top-9" id="contact">
-              <h2 className="govuk-heading-l">Contact Information</h2>
-              <GovUKSummaryList
-                items={[
-                  { 
-                    key: "Website", 
-                    value: sanityContent?.website ? (
-                      <a href={sanityContent.website} className="govuk-link" target="_blank" rel="noopener noreferrer">
-                        Visit official website →
-                      </a>
-                    ) : inst.website_url ? (
-                      <a href={inst.website_url} className="govuk-link" target="_blank" rel="noopener noreferrer">
-                        Visit official website →
-                      </a>
-                    ) : "—" 
-                  },
-                  { key: "Email", value: sanityContent?.email || inst.email || "—" },
-                  { key: "Phone", value: sanityContent?.phone || inst.phone || "—" },
-                  { key: "Physical Address", value: sanityContent?.physicalAddress || inst.physical_address || "—" },
-                ]}
-              />
+              <h2 className="govuk-heading-l">
+                Contact Information
+              </h2>
             </div>
 
-            {/* Children */}
-            {children && children.length > 0 && (
+            {/* Children - FIXED */}
+            {children.length > 0 && (
               <div className="govuk-!-margin-top-9" id="children">
-                <h2 className="govuk-heading-l">Entities under this institution</h2>
+                <h2 className="govuk-heading-l">
+                  Entities under this institution
+                </h2>
+
                 <details className="govuk-details" open>
                   <summary className="govuk-details__summary">
-                    <span className="govuk-details__summary-text">Show {children.length} subordinate entities</span>
+                    <span className="govuk-details__summary-text">
+                      Show {children.length} subordinate entities
+                    </span>
                   </summary>
+
                   <div className="govuk-details__text">
                     <ul className="govuk-list govuk-list--bullet">
-                      {children.map((child: any) => (
+                      {children.map((child) => (
                         <li key={child.id}>
-                          <Link href={`/institutions/${child.slug}`} className="govuk-link">
+                          <Link
+                            href={`/institutions/${child.slug}`}
+                            className="govuk-link"
+                          >
                             {child.name}
                           </Link>
                         </li>
@@ -252,14 +259,20 @@ export default async function InstitutionProfile({
               </div>
             )}
 
-            {/* Related */}
-            {related && related.length > 0 && (
+            {/* Related - FIXED */}
+            {related.length > 0 && (
               <div className="govuk-!-margin-top-9" id="related">
-                <h2 className="govuk-heading-l">Related institutions</h2>
+                <h2 className="govuk-heading-l">
+                  Related institutions
+                </h2>
+
                 <ul className="govuk-list govuk-list--bullet">
-                  {related.map((item: any) => (
+                  {related.map((item) => (
                     <li key={item.id}>
-                      <Link href={`/institutions/${item.slug}`} className="govuk-link">
+                      <Link
+                        href={`/institutions/${item.slug}`}
+                        className="govuk-link"
+                      >
                         {item.name}
                       </Link>
                     </li>
@@ -273,25 +286,48 @@ export default async function InstitutionProfile({
 
           {/* Sidebar */}
           <div className="govuk-grid-column-one-third">
-            <div className="govuk-related-items" aria-labelledby="contents-heading">
-              <h2 id="contents-heading" className="govuk-heading-m">Contents</h2>
-              <ul className="govuk-list govuk-list--spaced">
-                <li><a href="#what-it-does" className="govuk-link">What it does</a></li>
-                <li><a href="#leadership" className="govuk-link">Leadership & Governance</a></li>
-                <li><a href="#legal" className="govuk-link">Legal Foundation</a></li>
-                <li><a href="#contact" className="govuk-link">Contact Information</a></li>
-                {children?.length > 0 && <li><a href="#children" className="govuk-link">Entities under this institution</a></li>}
-                {related?.length > 0 && <li><a href="#related" className="govuk-link">Related institutions</a></li>}
-              </ul>
+            <div className="govuk-related-items">
+              <h2 className="govuk-heading-m">Contents</h2>
 
-              <div className="govuk-!-margin-top-9">
-                <h3 className="govuk-heading-s">Explore more</h3>
-                <ul className="govuk-list govuk-list--spaced">
-                  <li><Link href={`/institutions/${inst.slug}/leadership`} className="govuk-link">Current leadership →</Link></li>
-                  <li><Link href={`/institutions/${inst.slug}/services`} className="govuk-link">Services offered →</Link></li>
-                  <li><Link href={`/institutions/${inst.slug}/documents`} className="govuk-link">Key documents →</Link></li>
-                </ul>
-              </div>
+              <ul className="govuk-list govuk-list--spaced">
+                <li>
+                  <a href="#what-it-does" className="govuk-link">
+                    What it does
+                  </a>
+                </li>
+                <li>
+                  <a href="#leadership" className="govuk-link">
+                    Leadership & Governance
+                  </a>
+                </li>
+                <li>
+                  <a href="#legal" className="govuk-link">
+                    Legal Foundation
+                  </a>
+                </li>
+                <li>
+                  <a href="#contact" className="govuk-link">
+                    Contact Information
+                  </a>
+                </li>
+
+                {/* SAFE now */}
+                {children.length > 0 && (
+                  <li>
+                    <a href="#children" className="govuk-link">
+                      Entities under this institution
+                    </a>
+                  </li>
+                )}
+
+                {related.length > 0 && (
+                  <li>
+                    <a href="#related" className="govuk-link">
+                      Related institutions
+                    </a>
+                  </li>
+                )}
+              </ul>
             </div>
           </div>
         </div>

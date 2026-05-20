@@ -17,6 +17,14 @@ interface PageProps {
   params: Promise<{ category: string; subcategory: string }>;
 }
 
+type Leader = {
+  id: string;
+  name: string;
+  title?: string | null;
+  county?: string | null;
+  organization?: string | null;
+};
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { category, subcategory } = await params;
 
@@ -49,8 +57,9 @@ export default async function LeadershipSubcategoryPage({ params }: PageProps) {
   const categoryData = LEADERSHIP_HIERARCHY[category as LeadershipCategory];
   const subcatData = categoryData.subcategories[subcategory as LeadershipSubcategory];
 
-  let leaders = [];
-  let error = null;
+  // ✅ FIX: explicit typing prevents TS implicit any[]
+  let leaders: Leader[] = [];
+  let error: string | null = null;
 
   try {
     leaders = await getLeadersBySubcategory(subcategory);
@@ -95,22 +104,31 @@ export default async function LeadershipSubcategoryPage({ params }: PageProps) {
             <div className="govuk-grid-column-full">
               <div className="govuk-grid-row">
                 {leaders.map((leader) => (
-                  <div key={leader.id} className="govuk-grid-column-one-half govuk-!-margin-bottom-6">
+                  <div
+                    key={leader.id}
+                    className="govuk-grid-column-one-half govuk-!-margin-bottom-6"
+                  >
                     <div className="govuk-card" style={{ height: '100%' }}>
                       <div className="govuk-card__content">
                         <h3 className="govuk-heading-m govuk-!-margin-top-0">
-                          <Link href={`/leadership/${category}/${subcategory}/${leader.id}`} className="govuk-link">
+                          <Link
+                            href={`/leadership/${category}/${subcategory}/${leader.id}`}
+                            className="govuk-link"
+                          >
                             {leader.name}
                           </Link>
                         </h3>
+
                         {leader.title && (
                           <p className="govuk-body-s" style={{ marginTop: '0.5rem' }}>
                             <strong>{leader.title}</strong>
                           </p>
                         )}
+
                         {leader.county && (
                           <p className="govuk-body-s">{leader.county}</p>
                         )}
+
                         {leader.organization && (
                           <p className="govuk-body-s">
                             <span style={{ backgroundColor: '#e3e3e3', padding: '2px 6px' }}>
