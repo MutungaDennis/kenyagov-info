@@ -1,5 +1,4 @@
 import Link from "next/link";
-//import GovUKBackLink from "@/components/govuk/BackLink";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import GovUKFeedback from "@/components/govuk/Feedback";
 import { createClient } from "@/lib/supabase/server";
@@ -20,13 +19,14 @@ type StateDepartment = {
   name: string;
   short_name?: string | null;
   description?: string | null;
+  parent_institution_id?: string | null;
 };
 
 export default async function MinistriesPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   // 1. Fetch all Ministries
-  const { data: ministries } = await (await supabase)
+  const { data: ministries } = await supabase
     .from("institutions")
     .select("id, slug, name, short_name, description, current_head_name, current_head_title")
     .eq("institution_type", "Ministry")
@@ -35,7 +35,7 @@ export default async function MinistriesPage() {
     .order("name");
 
   // 2. Fetch all State Departments
-  const { data: stateDepts } = await (await supabase)
+  const { data: stateDepts } = await supabase
     .from("institutions")
     .select("id, slug, name, short_name, description, parent_institution_id")
     .eq("institution_type", "State Department")
@@ -52,78 +52,91 @@ export default async function MinistriesPage() {
 
   return (
     <div className="govuk-width-container">
-      {/* <GovUKBackLink href="/executive" /> */}
-
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
           { text: "The Executive", href: "/executive" },
-          { text: "Ministries", href: "/executive/ministries" },
+          { text: "Ministries", href: "" },
         ]}
       />
 
-      <main className="govuk-main-wrapper">
+      {/* Reduced padding wrapper to pull directory modules above the fold */}
+      <main className="govuk-main-wrapper govuk-!-padding-top-2" id="main-content" role="main">
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-two-thirds">
-            <h1 className="govuk-heading-xl">Ministries of Kenya</h1>
-            <p className="govuk-body-l">
-              The core policy-making arms of the Government of Kenya. Each ministry is headed by a Cabinet Secretary.
+            
+            {/* Scaled down heading size for site-wide uniformity */}
+            <h1 className="govuk-heading-l govuk-!-margin-bottom-2">Ministries of Kenya</h1>
+            <p className="govuk-body govuk-!-margin-bottom-6">
+              Official public register of the national ministries, constituent state departments, and executive portfolios responsible for administrative sector policy and program implementation.
             </p>
 
-            <div className="govuk-!-margin-top-9">
+            <div className="govuk-!-margin-top-4">
               {(ministries || []).map((ministry: Ministry) => {
-                const stateDepts = deptsByMinistry[ministry.id] || [];
+                const subDepartments = deptsByMinistry[ministry.id] || [];
+                // Clean up name prefixes to prevent duplicate "Ministry of Ministry of..." styling issues
+                const cleanMinistryName = ministry.name.replace(/^Ministry of /i, '');
 
                 return (
-                  <details key={ministry.id} className="govuk-details" open>
+                  /* GOV.UK Details components default to CLOSED for mobile scannability */
+                  <details key={ministry.id} className="govuk-details govuk-!-margin-bottom-4" data-module="govuk-details">
                     <summary className="govuk-details__summary">
-                      <span className="govuk-details__summary-text">
-                        Ministry of {ministry.name.replace(/^Ministry of /, '')}
+                      <span className="govuk-details__summary-text" style={{ fontSize: '19px', fontWeight: 'bold' }}>
+                        Ministry of {cleanMinistryName}
                       </span>
                     </summary>
 
-                    <div className="govuk-details__text">
-                      {/* Cabinet Secretary */}
+                    <div className="govuk-details__text" style={{ borderLeft: '4px solid #1d70b8', paddingLeft: '15px' }}>
+                      {/* Leadership Designation Row */}
                       {ministry.current_head_name && (
-                        <p className="govuk-body">
-                          <strong>Cabinet Secretary:</strong> {ministry.current_head_name}
-                          {ministry.current_head_title && ` — ${ministry.current_head_title}`}
+                        <p className="govuk-body govuk-!-margin-bottom-3">
+                          <strong>{ministry.current_head_title || "Cabinet Secretary"}:</strong> {ministry.current_head_name}
                         </p>
                       )}
 
-                      {/* Ministry Description */}
+                      {/* Ministry Institutional Mandate Objective */}
                       {ministry.description && (
-                        <p className="govuk-body">{ministry.description}</p>
+                        <p className="govuk-body govuk-!-margin-bottom-4">{ministry.description}</p>
                       )}
 
-                      {/* State Departments - Nested Accordion */}
-                      {stateDepts.length > 0 && (
-                        <details className="govuk-details govuk-!-margin-top-6" open>
-                          <summary className="govuk-details__summary">
-                            <span className="govuk-details__summary-text">
-                              State Departments ({stateDepts.length})
-                            </span>
-                          </summary>
-                          <div className="govuk-details__text">
-                            <ul className="govuk-list govuk-list--bullet">
-                              {stateDepts.map((dept: StateDepartment) => (
-                                <li key={dept.id}>
-                                  <Link href={`/institutions/${dept.slug}`} className="govuk-link">
-                                    {dept.name}
-                                  </Link>
-                                </li>
-                              ))}
-                            </ul>
+                      {/* State Departments Sub-Grid Structure (Replaced illegal nested details component) */}
+                      {subDepartments.length > 0 && (
+                        <div className="govuk-!-margin-top-4 govuk-!-margin-bottom-4">
+                          <h3 className="govuk-heading-s govuk-!-margin-bottom-2">
+                            Constituent State Departments ({subDepartments.length})
+                          </h3>
+                          
+                          {/* Mobile Safe Sub-Table Component Layer */}
+                          <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                            <table className="govuk-table" style={{ minWidth: '100%', margin: 0 }}>
+                              <thead className="govuk-table__head">
+                                <tr className="govuk-table__row">
+                                  <th scope="col" className="govuk-table__header govuk-body-s" style={{ fontWeight: 'bold' }}>Department Name</th>
+                                  <th scope="col" className="govuk-table__header govuk-body-s" style={{ fontWeight: 'bold', width: '100px', textAlign: 'right' }}>Action</th>
+                                </tr>
+                              </thead>
+                              <tbody className="govuk-table__body">
+                                {subDepartments.map((dept: StateDepartment) => (
+                                  <tr key={dept.id} className="govuk-table__row">
+                                    <th scope="row" className="govuk-table__header govuk-body-s" style={{ fontWeight: 'normal' }}>
+                                      {dept.name}
+                                    </th>
+                                    <td className="govuk-table__cell govuk-body-s" style={{ textAlign: 'right' }}>
+                                      <Link href={`/institutions/${dept.slug}`} className="govuk-link govuk-!-font-weight-bold">
+                                        View
+                                      </Link>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
                           </div>
-                        </details>
+                        </div>
                       )}
 
-                      <div className="govuk-!-margin-top-6">
-                        <Link 
-                          href={`/institutions/${ministry.slug}`} 
-                          className="govuk-link"
-                        >
-                          View full ministry profile →
+                      <div className="govuk-!-margin-top-4" style={{ borderTop: '1px solid #bfc1c3', paddingTop: '10px' }}>
+                        <Link href={`/institutions/${ministry.slug}`} className="govuk-link govuk-!-font-weight-bold">
+                          View full ministry profile and statutory resources &rarr;
                         </Link>
                       </div>
                     </div>
