@@ -8,18 +8,23 @@ interface SearchParams {
   letter?: string;
 }
 
+interface PageProps {
+  searchParams: Promise<SearchParams>;
+}
+
 export default async function CoalitionsPage({
   searchParams,
-}: {
-  searchParams: SearchParams;
-}) {
-  // ✅ FIX 1: await createClient
+}: PageProps) {
+  // Await search params
+  const params = await searchParams;
+
+  // Supabase client
   const supabase = await createClient();
 
-  const q = searchParams.q?.toLowerCase() || "";
-  const letter = searchParams.letter?.toUpperCase();
+  const q = params.q?.toLowerCase() || "";
+  const letter = params.letter?.toUpperCase();
 
-  // ✅ FIX 2: safe query (never assume data exists)
+  // Fetch coalitions safely
   const { data: coalitions, error } = await supabase
     .from("coalitions")
     .select(`
@@ -38,7 +43,7 @@ export default async function CoalitionsPage({
     `)
     .order("name", { ascending: true });
 
-  // ✅ FIX 3: safe fallback (NO crash even if DB empty)
+  // Error state
   if (error) {
     return (
       <main className="govuk-width-container">
@@ -50,10 +55,13 @@ export default async function CoalitionsPage({
           ]}
         />
 
-        <h1 className="govuk-heading-xl">Political Coalitions</h1>
+        <h1 className="govuk-heading-xl">
+          Political Coalitions
+        </h1>
 
         <div className="govuk-inset-text">
-          There was a problem loading coalitions. Please try again later.
+          There was a problem loading coalitions.
+          Please try again later.
         </div>
 
         <GovUKFeedback />
@@ -61,13 +69,14 @@ export default async function CoalitionsPage({
     );
   }
 
-  // ✅ FIX 4: ensure array safety
+  // Safe fallback
   const safeCoalitions = coalitions ?? [];
 
-  // Filtering (safe even when empty)
+  // Search + alphabet filtering
   const filtered = safeCoalitions
     .filter((c) => {
       if (!q) return true;
+
       return (
         c.name?.toLowerCase().includes(q) ||
         c.abbreviation?.toLowerCase().includes(q)
@@ -75,6 +84,7 @@ export default async function CoalitionsPage({
     })
     .filter((c) => {
       if (!letter) return true;
+
       return c.name?.[0]?.toUpperCase() === letter;
     });
 
@@ -90,17 +100,23 @@ export default async function CoalitionsPage({
         ]}
       />
 
-      <h1 className="govuk-heading-xl">Political Coalitions in Kenya</h1>
+      <h1 className="govuk-heading-xl">
+        Political Coalitions in Kenya
+      </h1>
 
       <p className="govuk-body-l">
-        Coalitions are voluntary alliances of political parties. A party can
-        belong to only one coalition at a time.
+        Coalitions are voluntary alliances of political
+        parties. A political party can belong to only one
+        coalition at a time.
       </p>
 
       {/* SEARCH */}
       <form method="GET" className="govuk-!-margin-bottom-6">
         <div className="govuk-form-group">
-          <label className="govuk-label">Search coalitions</label>
+          <label className="govuk-label">
+            Search coalitions
+          </label>
+
           <input
             className="govuk-input"
             name="q"
@@ -114,11 +130,19 @@ export default async function CoalitionsPage({
         </button>
       </form>
 
-      {/* A–Z FILTER */}
+      {/* A-Z FILTER */}
       <div className="govuk-!-margin-bottom-6">
-        <p className="govuk-body">Filter by alphabet</p>
+        <p className="govuk-body">
+          Filter by alphabet
+        </p>
 
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 8,
+          }}
+        >
           <Link className="govuk-link" href="/coalitions">
             All
           </Link>
@@ -129,7 +153,8 @@ export default async function CoalitionsPage({
               href={`/coalitions?letter=${l}`}
               className="govuk-link"
               style={{
-                fontWeight: letter === l ? "bold" : "normal",
+                fontWeight:
+                  letter === l ? "bold" : "normal",
               }}
             >
               {l}
@@ -138,7 +163,7 @@ export default async function CoalitionsPage({
         </div>
       </div>
 
-      {/* EMPTY STATE (IMPORTANT GOV.UK PATTERN) */}
+      {/* EMPTY STATE */}
       {safeCoalitions.length === 0 ? (
         <div className="govuk-inset-text">
           No coalitions have been added yet.
@@ -146,7 +171,8 @@ export default async function CoalitionsPage({
       ) : (
         <>
           <p className="govuk-body">
-            Showing <strong>{filtered.length}</strong> coalitions
+            Showing <strong>{filtered.length}</strong>{" "}
+            coalitions
           </p>
 
           <div className="govuk-grid-row">
@@ -176,15 +202,21 @@ export default async function CoalitionsPage({
                     <summary className="govuk-details__summary">
                       <span className="govuk-details__summary-text">
                         Member political parties (
-                        {coalition.political_parties?.length || 0})
+                        {coalition.political_parties?.length ||
+                          0}
+                        )
                       </span>
                     </summary>
 
                     <div className="govuk-details__text">
                       <ul className="govuk-list govuk-list--bullet">
-                        {(coalition.political_parties ?? []).map((p: any) => (
+                        {(coalition.political_parties ??
+                          []).map((p: any) => (
                           <li key={p.id}>
-                            <Link href={`/political-parties/${p.slug}`}>
+                            <Link
+                              href={`/political-parties/${p.slug}`}
+                              className="govuk-link"
+                            >
                               {p.name}
                             </Link>
                           </li>
