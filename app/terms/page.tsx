@@ -1,13 +1,12 @@
+'use client';
+
 import Link from "next/link";
-//import GovUKBackLink from "@/components/govuk/BackLink";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import GovUKFeedback from "@/components/govuk/Feedback";
 
 export default function TermsPage() {
   return (
     <div className="govuk-width-container">
-      {/* <GovUKBackLink href="/" /> */}
-
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
@@ -15,83 +14,82 @@ export default function TermsPage() {
         ]}
       />
 
-      <main className="govuk-main-wrapper">
+      {/* Tighter top padding layout wrapper to pull entries higher up the viewport */}
+      <main className="govuk-main-wrapper govuk-!-padding-top-2" id="main-content" role="main">
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-two-thirds">
-            <h1 className="govuk-heading-xl">Terms and Conditions</h1>
-            <p className="govuk-body-s">Last updated: May 2026</p>
+            
+            {/* Reduced heading size from xl to l for strict site-wide compliance */}
+            <h1 className="govuk-heading-l govuk-!-margin-bottom-2">Terms and Conditions</h1>
+            <p className="govuk-body-s govuk-!-margin-bottom-4">Last updated: May 2026</p>
 
             <p className="govuk-body">
-              Please read these Terms and Conditions carefully before using KenyaGovInfo.KE.
+              Please read these Terms and Conditions carefully before using the CitizenGuide.KE platform.
             </p>
 
-            <h2 className="govuk-heading-l govuk-!-margin-top-9">1. About KenyaGovInfo.KE</h2>
+            {/* Section 1: Institutional Clarification */}
+            <h2 className="govuk-heading-m govuk-!-margin-bottom-2">1. About CitizenGuide.KE</h2>
             <p className="govuk-body">
-              KenyaGovInfo.KE is an <strong>independent, non-governmental</strong> informational platform. 
-              It is not affiliated with, endorsed by, or operated by the Government of Kenya.
+              CitizenGuide.KE operates as an <strong>independent, non-governmental</strong> digital platform. It is not affiliated with, endorsed by, funded by, or an official representative of the Government of Kenya or any state agency.
             </p>
 
-            <h2 className="govuk-heading-l govuk-!-margin-top-9">2. Purpose of the Website</h2>
+            {/* Section 2: Purpose Mapping */}
+            <h2 className="govuk-heading-m govuk-!-margin-top-6 govuk-!-margin-bottom-2">2. Purpose of the Website</h2>
             <p className="govuk-body">
-              The purpose of this website is to provide clear, neutral, and accessible information about Kenyan 
-              government institutions, services, leaders, and public entities to help citizens better understand 
-              and engage with their government.
+              The purpose of this platform is to provide a clear, neutral, and consolidated directory mapping public institutions, elected officials, constituency boundaries, and public records. The objective is to make public data transparent and accessible to citizens seeking information.
             </p>
 
-            <h2 className="govuk-heading-l govuk-!-margin-top-9">3. Important Disclaimer</h2>
-            <div className="govuk-inset-text">
-              <p>
-                This website is for informational purposes only. We do not provide official government services, 
-                legal advice, or transactional capabilities. 
-                All official services and transactions should be conducted through the{' '}
-                <a href="https://www.ecitizen.go.ke" target="_blank" className="govuk-link">eCitizen Portal</a> 
-                or the relevant government institution.
+            {/* Section 3: Statutory Mandatory Disclaimer */}
+            <h2 className="govuk-heading-m govuk-!-margin-top-6 govuk-!-margin-bottom-2">3. Statutory Disclaimer</h2>
+            <div className="govuk-inset-text govuk-!-margin-bottom-4">
+              <p className="govuk-body-s govuk-!-margin-bottom-0">
+                This directory is for informational purposes only. We do not provide official state services, commercial licensing, immigration credentials, or transactional capabilities. 
+                All official applications, document registrations, and processing payments must be conducted through the authorized state platform directly via the <a href="https://www.ecitizen.go.ke" target="_blank" rel="noreferrer" className="govuk-link">eCitizen Portal</a> or respective ministry endpoints.
               </p>
             </div>
 
-            <h2 className="govuk-heading-l govuk-!-margin-top-9">4. Accuracy of Information</h2>
+            {/* Section 4: Data Standards Responsibility */}
+            <h2 className="govuk-heading-m govuk-!-margin-top-6 govuk-!-margin-bottom-2">4. Accuracy & Verification of Information</h2>
             <p className="govuk-body">
-              We make every effort to keep information accurate and up to date. However, we do not guarantee 
-              that all information is complete, accurate, or current. You should always verify critical information 
-              with official sources.
+              While we compile records exclusively from audited public sources (such as the Kenya Gazette, parliamentary records, and financial allocation charts), we do not warrant that all parameters remain perfectly complete, accurate, or current in real-time. Users bear the sole responsibility for cross-checking time-sensitive milestones against raw statutory legal documents.
             </p>
 
-            <h2 className="govuk-heading-l govuk-!-margin-top-9">5. Acceptable Use</h2>
-            <p className="govuk-body">You agree not to:</p>
-            <ul className="govuk-list govuk-list--bullet">
-              <li>Use the website for any unlawful purpose</li>
-              <li>Distribute false or misleading information from this site</li>
-              <li>Attempt to gain unauthorised access to any part of the website</li>
-              <li>Remove or alter any copyright or disclaimer notices</li>
+            {/* Section 5: Acceptable Use Conditions */}
+            <h2 className="govuk-heading-m govuk-!-margin-top-6 govuk-!-margin-bottom-2">5. Acceptable Use</h2>
+            <p className="govuk-body">As a condition of accessing these public records indices, you agree not to:</p>
+            <ul className="govuk-list govuk-list--bullet govuk-!-margin-bottom-4">
+              <li>Use the directory data rows or interface components for any unlawful purpose.</li>
+              <li>Distribute false, altered, or intentionally misleading info fragments derived from this site.</li>
+              <li>Attempt to bypass access limitations, inject scripts, or compromise the database server node.</li>
+              <li>Remove, strip, or alter any embedded data sources, tracking attributions, or disclaimer notices.</li>
             </ul>
 
-            <h2 className="govuk-heading-l govuk-!-margin-top-9">6. Intellectual Property</h2>
+            {/* Section 6: IP and Attribution Guidelines */}
+            <h2 className="govuk-heading-m govuk-!-margin-top-6 govuk-!-margin-bottom-2">6. Intellectual Property & Attribution</h2>
             <p className="govuk-body">
-              All content on KenyaGovInfo.KE (text, design, layout, logos) is owned by KenyaGovInfo.KE 
-              unless otherwise stated. You may not reproduce or republish substantial parts of the site 
-              without permission.
+              The thematic layout structure, design tokens, and consolidated text data sheets on CitizenGuide.KE belong to the platform unless otherwise stated. Raw public statistics, acts, or gazetted quotes remain public domain artifacts, but substantial automated scraping or duplication of our core directory trees without attribution is prohibited.
             </p>
 
-            <h2 className="govuk-heading-l govuk-!-margin-top-9">7. Limitation of Liability</h2>
+            {/* Section 7: Limitations Risk Block */}
+            <h2 className="govuk-heading-m govuk-!-margin-top-6 govuk-!-margin-bottom-2">7. Limitation of Liability</h2>
             <p className="govuk-body">
-              KenyaGovInfo.KE is provided &quot;as is&quot;. We are not liable for any loss or damage arising from your use 
-              of this website or reliance on any information provided.
+              CitizenGuide.KE is provided strictly on an &quot;as is&quot; and &quot;as available&quot; operational baseline. We disclaim all liability for any specific loss, administrative penalty, or data processing constraint arising from reliance on the informational records displayed across our pages.
             </p>
 
-            <h2 className="govuk-heading-l govuk-!-margin-top-9">8. Governing Law</h2>
+            {/* Section 8: Legal Venue Mapping */}
+            <h2 className="govuk-heading-m govuk-!-margin-top-6 govuk-!-margin-bottom-2">8. Governing Law</h2>
             <p className="govuk-body">
-              These Terms and Conditions are governed by the laws of the Republic of Kenya.
+              These Terms and Conditions and any directory dispute parameters are governed by and construed entirely in accordance with the laws of the Republic of Kenya.
             </p>
 
-            <h2 className="govuk-heading-l govuk-!-margin-top-9">9. Changes to these Terms</h2>
+            {/* Section 9: Terms Iteration Toggles */}
+            <h2 className="govuk-heading-m govuk-!-margin-top-6 govuk-!-margin-bottom-2">9. Changes to these Terms</h2>
             <p className="govuk-body">
-              We may update these Terms from time to time. Continued use of the website after changes 
-              constitutes acceptance of the new terms.
+              We may update these terms following amendments to national digital compliance frameworks. Continued interaction with the registry tools after changes are published constitutes active acceptance of the revised conditions.
             </p>
 
-            <p className="govuk-body govuk-!-margin-top-9">
-              If you have any questions about these Terms and Conditions, please{' '}
-              <Link href="/contact" className="govuk-link">contact us</Link>.
+            <p className="govuk-body govuk-!-margin-top-6" style={{ borderTop: '1px solid #bfc1c3', paddingTop: '15px' }}>
+              If you have queries regarding this legal usage agreement, contact our administrative support desk directly via the <Link href="/contact" className="govuk-link">Contact page</Link>.
             </p>
 
           </div>
