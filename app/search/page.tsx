@@ -15,7 +15,6 @@ export default async function SearchResultsPage({
 }) {
   const supabase = await createClient();
 
-  // Parse text queries safely and trim whitespace bounds
   const parsedParams = await searchParams;
   const q = parsedParams.q ? parsedParams.q.trim() : "";
   const selectedType = parsedParams.type || "";
@@ -28,29 +27,27 @@ export default async function SearchResultsPage({
   // ============================================
   if (q) {
     try {
-      // FIXED: Swapped out non-standard .wfts() for type-safe .textSearch() with websearch formatting
       let queryBuilder = supabase
         .from("global_search_view")
         .select("id, slug, name, snippet, entity_type, base_route")
         .textSearch("search_vector", q, {
           config: "english",
-          type: "websearch" // Converts search inputs safely to web-style search operators (AND/OR/quotes)
+          type: "websearch"
         });
 
       if (selectedType) {
         queryBuilder = queryBuilder.eq("entity_type", selectedType);
       }
 
-      const { data, error } = await queryBuilder.limit(30);
+      const { data, error } = await queryBuilder.limit(40);
 
       if (error) throw error;
       results = data || [];
     } catch (e: any) {
-      errorMsg = e.message || "An issue occurred processing full-text search strings.";
+      errorMsg = e.message || "An error occurred compiling global text queries.";
     }
   }
 
-  // Generate dynamic URLs mapping cleanly back to specific module sub-directories
   const getFilterUrl = (type: string) => {
     const params = new URLSearchParams();
     if (q) params.set("q", q);
@@ -72,7 +69,7 @@ export default async function SearchResultsPage({
           <div className="govuk-grid-column-full">
             <h1 className="govuk-heading-l govuk-!-margin-bottom-4">Search Results</h1>
 
-            {/* Inverted Hero Re-Search Container Layout */}
+            {/* Re-Search Field Box Layout */}
             <form method="GET" action="/search" className="govuk-form-group govuk-!-margin-bottom-6" style={{ background: '#f3f2f1', padding: '15px', borderLeft: '4px solid #002147' }}>
               <label className="govuk-label govuk-!-font-weight-bold" htmlFor="search-input">
                 Search government entities, services or laws
@@ -105,59 +102,68 @@ export default async function SearchResultsPage({
         </div>
 
         <div className="govuk-grid-row">
-          {/* Left Entity Classification Filters Sidebar Menu */}
+          {/* Classification Categorization Faceted Sidebar */}
           <div className="govuk-grid-column-one-third print-hide govuk-!-margin-bottom-4">
-            <h2 className="govuk-heading-s govuk-!-margin-bottom-2">Filter by type</h2>
-            <nav aria-label="Search categorization sub-filters">
+            <h2 className="govuk-heading-s govuk-!-margin-bottom-2">Filter by registry</h2>
+            
               <ul className="govuk-list govuk-list--spaced" style={{ margin: 0, padding: 0 }}>
                 <li>
-                  <Link 
-                    href={getFilterUrl("")} 
-                    className="govuk-link"
-                    style={{ fontWeight: selectedType === "" ? "bold" : "normal", textDecoration: selectedType === "" ? "none" : "underline" }}
-                  >
-                    All results
+                  <Link href={getFilterUrl("")} className="govuk-link" style={{ fontWeight: selectedType === "" ? "bold" : "normal", textDecoration: selectedType === "" ? "none" : "underline" }}>
+                    All categories
                   </Link>
                 </li>
                 <li>
-                  <Link 
-                    href={getFilterUrl("Ministry/Department")} 
-                    className="govuk-link"
-                    style={{ fontWeight: selectedType === "Ministry/Department" ? "bold" : "normal", textDecoration: selectedType === "Ministry/Department" ? "none" : "underline" }}
-                  >
-                    Ministries & Departments
+                  <Link href={getFilterUrl("Ministry/Department")} className="govuk-link" style={{ fontWeight: selectedType === "Ministry/Department" ? "bold" : "normal", textDecoration: selectedType === "Ministry/Department" ? "none" : "underline" }}>
+                    Ministries & State Depts
                   </Link>
                 </li>
                 <li>
-                  <Link 
-                    href={getFilterUrl("Ward")} 
-                    className="govuk-link"
-                    style={{ fontWeight: selectedType === "Ward" ? "bold" : "normal", textDecoration: selectedType === "Ward" ? "none" : "underline" }}
-                  >
-                    Electoral Wards
+                  <Link href={getFilterUrl("County")} className="govuk-link" style={{ fontWeight: selectedType === "County" ? "bold" : "normal", textDecoration: selectedType === "County" ? "none" : "underline" }}>
+                    Counties (All 47)
+                  </Link>
+                </li>
+                <li>
+                  <Link href={getFilterUrl("Constituency")} className="govuk-link" style={{ fontWeight: selectedType === "Constituency" ? "bold" : "normal", textDecoration: selectedType === "Constituency" ? "none" : "underline" }}>
+                    Constituencies (All 290)
+                  </Link>
+                </li>
+                <li>
+                  <Link href={getFilterUrl("Ward")} className="govuk-link" style={{ fontWeight: selectedType === "Ward" ? "bold" : "normal", textDecoration: selectedType === "Ward" ? "none" : "underline" }}>
+                    Administrative Wards
+                  </Link>
+                </li>
+                <li>
+                  <Link href={getFilterUrl("Political Party")} className="govuk-link" style={{ fontWeight: selectedType === "Political Party" ? "bold" : "normal", textDecoration: selectedType === "Political Party" ? "none" : "underline" }}>
+                    Political Parties
+                  </Link>
+                </li>
+                <li>
+                  <Link href={getFilterUrl("Leader")} className="govuk-link" style={{ fontWeight: selectedType === "Leader" ? "bold" : "normal", textDecoration: selectedType === "Leader" ? "none" : "underline" }}>
+                    Leadership Profiles
                   </Link>
                 </li>
               </ul>
-            </nav>
           </div>
 
-          {/* Right Main Search Results Grid Feed */}
+          {/* Results Output Stream Component */}
           <div className="govuk-grid-column-two-thirds">
             {errorMsg ? (
               <div className="govuk-error-summary" aria-labelledby="error-summary-title" role="alert" tabIndex={-1}>
-                <h2 className="govuk-error-summary__title" id="error-summary-title">System Execution Error</h2>
-                <div className="govuk-error-summary__body"><p className="govuk-body-s">{errorMsg}</p></div>
+                <h2 className="govuk-error-summary__title" id="error-summary-title">Search Processing Error</h2>
+                <div className="govuk-error-summary__body">
+                  <p className="govuk-body-s">{errorMsg}</p>
+                </div>
               </div>
             ) : q ? (
               <>
                 <h2 className="govuk-heading-m govuk-!-margin-bottom-4" aria-live="polite">
-                  Showing {results.length} matches for &ldquo;{q}&rdquo;
+                  Showing {results.length} results for &ldquo;{q}&rdquo;
                 </h2>
 
                 {results.length > 0 ? (
                   <ul className="govuk-list" style={{ borderTop: '1px solid #bfc1c3', padding: 0, margin: 0 }}>
                     {results.map((item) => (
-                      <li key={item.id} style={{ borderBottom: '1px solid #bfc1c3', padding: '15px 0', margin: 0 }}>
+                      <li key={item.id || item.slug} style={{ padding: '16px 0', borderBottom: '1px solid #e6e6e6' }}>
                         <span className="govuk-caption-m govuk-!-font-size-14 govuk-!-font-weight-bold" style={{ textTransform: 'uppercase', color: '#505a5f', display: 'block', marginBottom: '2px' }}>
                           {item.entity_type}
                         </span>
@@ -176,13 +182,13 @@ export default async function SearchResultsPage({
                   </ul>
                 ) : (
                   <div className="govuk-body govuk-!-margin-top-4">
-                    <p>No records or structural portfolios match your criteria.</p>
-                    <p className="govuk-body-s">Verify spelling parameters or clear type categorization filters.</p>
+                    <p>No matches found within the public tracking registers.</p>
+                    <p className="govuk-body-s">Verify the name structure, use broader keywords, or select &ldquo;All categories&rdquo; to reset filters.</p>
                   </div>
                 )}
               </>
             ) : (
-              <p className="govuk-body govuk-!-margin-top-4">Enter a text keyword parameter string to search public informational archives.</p>
+              <p className="govuk-body govuk-!-margin-top-4">Type a term or constitutional keyword string above to execute queries across national registers.</p>
             )}
 
             <GovUKFeedback />
@@ -192,3 +198,4 @@ export default async function SearchResultsPage({
     </div>
   );
 }
+
