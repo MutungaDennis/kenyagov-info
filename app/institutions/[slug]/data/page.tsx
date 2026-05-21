@@ -22,35 +22,47 @@ export default async function InstitutionDataPage({ params }: PageProps) {
 
   const supabase = createClient();
 
-  // 1. Fetch active cycle timeline parameters
-  const { data: activeCycle } = await (await supabase)
+  // 1. Fetch ALL available price cycles from Supabase to feed our dynamic history engine switcher
+  const { data: allCycles } = await (await supabase)
     .from("epra_price_cycles")
-    .select("id, start_date, end_date, usd_kes_exchange_rate")
-    .eq("is_active", true)
-    .maybeSingle();
+    .select("id, start_date, end_date, usd_kes_exchange_rate, is_active")
+    .order("start_date", { ascending: false });
 
-  let allTowns: any[] = [];
-
-  if (activeCycle) {
-    const { data: remaining } = await (await supabase)
-      .from("epra_town_prices")
-      .select("town_name, price_pms, price_ago, price_ik")
-      .eq("cycle_id", activeCycle.id)
-      .order("town_name", { ascending: true });
-
-    allTowns = remaining || [];
+  if (!allCycles || allCycles.length === 0) {
+    return (
+      <div className="govuk-width-container govuk-!-padding-top-6">
+        <div className="govuk-notification-banner" role="region">
+          <div className="govuk-notification-banner__header">
+            <h2 className="govuk-notification-banner__title">System Notice</h2>
+          </div>
+          <div className="govuk-notification-banner__content">
+            <h3 className="govuk-notification-banner__heading">Database Offline</h3>
+            <p className="govuk-body">No historical price scheduling cycles have been seeded in the repository tables yet.</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
-  const isDataEmpty = !activeCycle || allTowns.length === 0;
+  // Find the primary baseline cycle (fall back to the newest row if none are actively flagged as true)
+  const defaultCycle = allCycles.find(c => c.is_active) || allCycles[0];
 
-  // 2. Mock historical trend matrices to feed our SVG Chart component safely without db pollution
-  const historicalCyclesMock = [
-    { label: 'Jan 26', pms: 209.10, ago: 235.40 },
-    { label: 'Feb 26', pms: 211.50, ago: 238.20 },
-    { label: 'Mar 26', pms: 199.30, ago: 212.40 },
-    { label: 'Apr 26', pms: 197.60, ago: 196.63 },
-    { label: 'May 26', pms: 214.25, ago: 242.92 }, // Current Period
-  ];
+  // 2. Fetch ALL town price entries across ALL loaded timelines at once to avoid sluggish client refetching
+  const { data: globalTownPrices } = await (await supabase)
+    .from("epra_town_prices")
+    .select("cycle_id, town_name, price_pms, price_ago, price_ik")
+    .order("town_name", { ascending: true });
+
+  // 3. Fetch itemized macro breakdown parameters to power information tags
+  const { data: globalFormulaMatrix } = await (await supabase)
+    .from("epra_nairobi_breakdown")
+    .select("*");
+
+  // 4. Fetch dynamic international trends logs to map our custom pure SVG line charts coordinates
+  const { data: dbTrendsLog } = await (await supabase)
+    .from("epra_international_trends")
+    .select("cycle_id, trend_month_label, super_petrol_usd_mt, diesel_usd_mt, kerosene_usd_mt, murban_crude_usd_bbl, usd_kes_historic_rate")
+    .order("created_at", { ascending: true });
 
   return (
     <div className="govuk-width-container govuk-!-padding-top-6 govuk-!-padding-bottom-6">
@@ -75,26 +87,14 @@ export default async function InstitutionDataPage({ params }: PageProps) {
 
           <hr className="govuk-section-break govuk-section-break--m govuk-section-break--visible" />
 
-          {isDataEmpty ? (
-            <div className="govuk-notification-banner" role="region" aria-labelledby="govuk-notification-banner-title">
-              <div className="govuk-notification-banner__header">
-                <h2 className="govuk-notification-banner__title" id="govuk-notification-banner-title">Service Status</h2>
-              </div>
-              <div className="govuk-notification-banner__content">
-                <h3 className="govuk-notification-banner__heading">Metrics Log Empty</h3>
-                <p className="govuk-body">
-                  No active petroleum pricing logs or regional currency records were located in the system database for the current tracking month.
-                </p>
-              </div>
-            </div>
-          ) : (
-            /* Pass the raw state down to our beautiful interactive client engine */
-            <EpraDataViewerClient 
-              allTowns={allTowns} 
-              activeCycle={activeCycle} 
-              historicalData={historicalCyclesMock} 
-            />
-          )}
+          {/* Mount the high-performance client interface controller block */}
+          <EpraDataViewerClient 
+            allCycles={allCycles}
+            defaultCycleId={defaultCycle.id}
+            globalTownPrices={globalTownPrices || []}
+            globalFormulaMatrix={globalFormulaMatrix || []}
+            trendsLog={dbTrendsLog || []}
+          />
 
         </div>
       </main>
