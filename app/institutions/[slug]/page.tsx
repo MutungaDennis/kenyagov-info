@@ -206,25 +206,84 @@ export default async function InstitutionProfile({
               </div>
             )}
 
+            {/* =========================================================================
+                GOV.UK LAUNCHPAD TASK INTERFACE (THE DYNAMIC ACTION SUB-ROUTES)
+               ========================================================================= */}
+            <div className="govuk-!-margin-top-9" id="tasks-and-tools">
+              <h2 className="govuk-heading-l">Services, Data &amp; Tools</h2>
+              <p className="govuk-body">Select a section below to run computations, view public datasets, or find regional offices managed by this entity.</p>
+              
+              <ul className="govuk-list govuk-list--spaced govuk-!-margin-top-6">
+                <li>
+                  <Link href={`/institutions/${slug}/services`} className="govuk-link govuk-!-font-weight-bold govuk-!-font-size-22">
+                    Services &amp; Checklists
+                  </Link>
+                  <p className="govuk-body-s govuk-!-margin-top-1">Step-by-step documentation, processing timelines, and statutory fees for public services.</p>
+                </li>
+                <li>
+                  <Link href={`/institutions/${slug}/tools`} className="govuk-link govuk-!-font-weight-bold govuk-!-font-size-22">
+                    Interactive Tools &amp; Calculators
+                  </Link>
+                  <p className="govuk-body-s govuk-!-margin-top-1">Run complex mathematical calculators or data finders configured for this institution.</p>
+                </li>
+                <li>
+                  <Link href={`/institutions/${slug}/data`} className="govuk-link govuk-!-font-weight-bold govuk-!-font-size-22">
+                    Data, Charts &amp; Metrics
+                  </Link>
+                  <p className="govuk-body-s govuk-!-margin-top-1">Historical monthly tracking logs, statistical trends, and regional dashboard analytics.</p>
+                </li>
+                <li>
+                  <Link href={`/institutions/${slug}/publications`} className="govuk-link govuk-!-font-weight-bold govuk-!-font-size-22">
+                    Publications &amp; Official Gazettes
+                  </Link>
+                  <p className="govuk-body-s govuk-!-margin-top-1">Download strategic governance declarations, internal research audits, and public reporting forms.</p>
+                </li>
+                <li>
+                  <Link href={`/institutions/${slug}/tenders`} className="govuk-link govuk-!-font-weight-bold govuk-!-font-size-22">
+                    Procurement &amp; AGPO Disclosures
+                  </Link>
+                  <p className="govuk-body-s govuk-!-margin-top-1">Browse open invitations for tenders, contract award logs, and minority quota allocations.</p>
+                </li>
+                <li>
+                  <Link href={`/institutions/${slug}/locations`} className="govuk-link govuk-!-font-weight-bold govuk-!-font-size-22">
+                    Branch Locations &amp; Huduma Center Desks
+                  </Link>
+                  <p className="govuk-body-s govuk-!-margin-top-1">Locate regional offices outside Nairobi and track down physical counter numbers inside Huduma centers.</p>
+                </li>
+              </ul>
+            </div>
+
             {/* Leadership */}
             {(inst.current_head_name || inst.has_board) && (
               <div className="govuk-!-margin-top-9" id="leadership">
-                <h2 className="govuk-heading-l">
-                  Leadership & Governance
-                </h2>
+                <h2 className="govuk-heading-l">Leadership &amp; Governance</h2>
+                
+                {/* Dynamically link deeper to leadership route if additional text fields require context */}
+                <p className="govuk-body">
+                  Review the current oversight body, board structures, and managing directors for this organ under the 
+                  {" "}<Link href={`/institutions/${slug}/leadership`} className="govuk-link">Leadership Hub</Link>.
+                </p>
               </div>
             )}
 
             {/* Legal */}
             <div className="govuk-!-margin-top-9" id="legal">
               <h2 className="govuk-heading-l">Legal Foundation</h2>
+              <p className="govuk-body">
+                This entity functions under statutory provisions outlined in the <strong>{display.legalBasis || "Constitution of Kenya"}</strong>
+                {display.legalReference && ` (${display.legalReference})`}.
+              </p>
             </div>
 
             {/* Contact */}
             <div className="govuk-!-margin-top-9" id="contact">
-              <h2 className="govuk-heading-l">
-                Contact Information
-              </h2>
+              <h2 className="govuk-heading-l">Contact Information</h2>
+              <p className="govuk-body">For formal processing, contact the head office directly through the public channels registered below:</p>
+              <ul className="govuk-list govuk-list--bullet">
+                {inst.email && <li>Email: <a href={`mailto:${inst.email}`} className="govuk-link">{inst.email}</a></li>}
+                {inst.phone && <li>Phone: {inst.phone}</li>}
+                {inst.website_url && <li>Official Web Portal: <a href={inst.website_url} className="govuk-link" target="_blank" rel="noreferrer">{inst.website_url}</a></li>}
+              </ul>
             </div>
 
             {/* Children - FIXED */}
@@ -296,8 +355,13 @@ export default async function InstitutionProfile({
                   </a>
                 </li>
                 <li>
+                  <a href="#tasks-and-tools" className="govuk-link">
+                    Services, Data &amp; Tools
+                  </a>
+                </li>
+                <li>
                   <a href="#leadership" className="govuk-link">
-                    Leadership & Governance
+                    Leadership &amp; Governance
                   </a>
                 </li>
                 <li>
