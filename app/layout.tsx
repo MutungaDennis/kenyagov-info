@@ -3,9 +3,17 @@
 import "govuk-frontend/govuk-frontend.min.css"; 
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
+import { Inter } from 'next/font/google'; // 1. Import Inter
 
 import GovUKHeader from "@/components/govuk/Header";
 import GovUKFooter from "@/components/govuk/Footer";
+
+// 2. Configure Inter
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-inter', 
+});
 
 export default function RootLayout({
   children,
@@ -30,17 +38,11 @@ export default function RootLayout({
   }, []);
 
   return (
-    <html lang="en" className="govuk-template">
+    // 3. Inject inter.variable to pass the font variable down
+    <html lang="en-KE" className={`govuk-template ${inter.variable}`}>
       <body className="govuk-template__body">
-        {/* Render standard header only for internal sub-pages */}
         {!isHomePage && <GovUKHeader />}
-
-        {/* 
-          FIXED: Removed the duplicate govuk-width-container and main wrappers. 
-          This allows pages to span the full canvas width and inject their own native container structures.
-        */}
         {children}
-
         <GovUKFooter />
       </body>
     </html>
