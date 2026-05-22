@@ -15,13 +15,6 @@ export default async function InstitutionToolsPage({ params }: PageProps) {
   if (slug.toLowerCase() !== "epra") {
     return (
       <div className="govuk-width-container govuk-!-padding-top-6">
-        <div className="govuk-breadcrumbs govuk-!-margin-bottom-6">
-          <ol className="govuk-breadcrumbs__list">
-            <li className="govuk-breadcrumbs__list-item"><Link href="/" className="govuk-breadcrumbs__link">Home</Link></li>
-            <li className="govuk-breadcrumbs__list-item"><Link href="/institutions" className="govuk-breadcrumbs__link">Institutions</Link></li>
-            <li className="govuk-breadcrumbs__list-item"><Link href={`/institutions/${slug}`} className="govuk-breadcrumbs__link">{slug.toUpperCase()}</Link></li>
-          </ol>
-        </div>
         <main className="govuk-main-wrapper">
           <h1 className="govuk-heading-xl">{slug.toUpperCase()} Tools</h1>
           <p className="govuk-body">No specialized digital tools are configured for this specific entity layout.</p>
@@ -32,7 +25,7 @@ export default async function InstitutionToolsPage({ params }: PageProps) {
 
   const supabase = createClient();
 
-  // 1. Fetch the active processing cycle record
+  // 1. Fetch the primary active processing cycle record
   const { data: activeCycle } = await (await supabase)
     .from("epra_price_cycles")
     .select("id, start_date, end_date")
@@ -107,8 +100,10 @@ export default async function InstitutionToolsPage({ params }: PageProps) {
                 <div style={{ borderBottom: '2px solid #bfc1c3', paddingBottom: '30px', marginBottom: '40px' }}>
                   <h2 className="govuk-heading-l govuk-!-margin-bottom-2">1. Fuel Price Tax Decomposition Engine</h2>
                   <p className="govuk-body-s" style={{ color: '#505a5f' }}>
-                    Valid for the current cycle: <strong>{new Date(activeCycle.start_date).toLocaleDateString('en-KE', { day: 'numeric', month: 'long', year: 'numeric' })}</strong> to <strong>{new Date(activeCycle.end_date).toLocaleDateString('en-KE', { day: 'numeric', month: 'long', year: 'numeric' })}</strong>.
+                    Valid for the active override window: <strong>{new Date(activeCycle.start_date).toLocaleDateString('en-KE', { day: 'numeric', month: 'long', year: 'numeric' })}</strong> to <strong>{new Date(activeCycle.end_date).toLocaleDateString('en-KE', { day: 'numeric', month: 'long', year: 'numeric' })}</strong>.
                   </p>
+                  
+                  {/* Clean Property Pipeline Pass mapping town and breakdown metrics */}
                   <FuelCalculator towns={townsData} breakdown={formulaMatrix} />
                 </div>
 
