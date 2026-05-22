@@ -12,7 +12,7 @@ export default function GovUKFooter() {
         <div className="govuk-footer__navigation">
           <div className="govuk-grid-row">
             
-            {/* Column 1: Explore */}
+            {/* Column 1: Explore Government Branches */}
             <div className="govuk-grid-column-one-third govuk-!-margin-bottom-4">
               <h2 className="govuk-footer__heading govuk-heading-s">Explore</h2>
               <ul className="govuk-footer__list">
@@ -20,21 +20,21 @@ export default function GovUKFooter() {
                   <Link href="/services" className="govuk-footer__link">Services</Link>
                 </li>
                 <li className="govuk-footer__list-item">
-                  <Link href="/executive" className="govuk-footer__link">Executive</Link>
+                  <Link href="/executive" className="govuk-footer__link">Executive (Ministries & Agencies)</Link>
                 </li>
                 <li className="govuk-footer__list-item">
-                  <Link href="/legislature" className="govuk-footer__link">Legislature</Link>
+                  <Link href="/legislature" className="govuk-footer__link">Legislature (Parliament & Senate)</Link>
                 </li>
                 <li className="govuk-footer__list-item">
-                  <Link href="/judiciary" className="govuk-footer__link">Judiciary</Link>
+                  <Link href="/judiciary" className="govuk-footer__link">Judiciary (Courts)</Link>
                 </li>
                 <li className="govuk-footer__list-item">
-                  <Link href="/counties" className="govuk-footer__link">Counties</Link>
+                  <Link href="/counties" className="govuk-footer__link">Counties (All 47 Governments)</Link>
                 </li>
               </ul>
             </div>
 
-            {/* Column 2: About this site */}
+            {/* Column 2: About this platform */}
             <div className="govuk-grid-column-one-third govuk-!-margin-bottom-4">
               <h2 className="govuk-footer__heading govuk-heading-s">About this site</h2>
               <ul className="govuk-footer__list">
@@ -42,7 +42,7 @@ export default function GovUKFooter() {
                   <Link href="/about" className="govuk-footer__link">About CitizenGuide.KE</Link>
                 </li>
                 <li className="govuk-footer__list-item">
-                  <Link href="/help" className="govuk-footer__link">Help</Link>
+                  <Link href="/help" className="govuk-footer__link">Help &amp; Support</Link>
                 </li>
                 <li className="govuk-footer__list-item">
                   <Link href="/accessibility" className="govuk-footer__link">Accessibility statement</Link>
@@ -56,7 +56,7 @@ export default function GovUKFooter() {
               </ul>
             </div>
 
-            {/* Column 3: Legal & Site Structure */}
+            {/* Column 3: Legal & Public Disclosures */}
             <div className="govuk-grid-column-one-third govuk-!-margin-bottom-4">
               <h2 className="govuk-footer__heading govuk-heading-s">Legal</h2>
               <ul className="govuk-footer__list">
@@ -88,15 +88,9 @@ export default function GovUKFooter() {
         <div className="govuk-footer__meta">
           <div className="govuk-footer__meta-item govuk-footer__meta-item--grow">
             
-            <div className="govuk-!-margin-bottom-6" style={{ display: 'inline-flex', alignItems: 'center' }}>
-              <Image 
-                src="/logo.png" 
-                alt="" 
-                width={36} 
-                height={36}
-                style={{ marginRight: '12px' }}
-              />
-              <span className="govuk-heading-s govuk-!-margin-0" style={{ letterSpacing: '0.5px' }}>
+            {/* Standardized Kenya Branding Block without custom styles */}
+            <div className="govuk-!-margin-bottom-4">
+              <span className="govuk-heading-s govuk-!-margin-0">
                 CitizenGuide.KE
               </span>
             </div>
@@ -106,11 +100,11 @@ export default function GovUKFooter() {
                 <strong>Disclaimer:</strong> CitizenGuide.KE is an independent citizen-facing informational platform. It is <strong>not</strong> an official outlet of the Government of Kenya. All information is compiled from audited public records.
               </p>
               <p className="govuk-footer__meta-text govuk-!-font-size-16 govuk-!-margin-bottom-4">
-                For official transactions and processing, access the authorized national portals directly via the primary <a href="https://www.ecitizen.go.ke" className="govuk-footer__link" target="_blank" rel="noreferrer">eCitizen Gateway</a>.
+                For official transactions, applications, and record lookups, access authorized national portals directly via the primary <a href="https://www.ecitizen.go.ke" className="govuk-footer__link" target="_blank" rel="noreferrer">eCitizen Gateway</a>.
               </p>
             </div>
 
-            {/* Standard licensing text block location */}
+            {/* Licensing and Copy Block */}
             <p className="govuk-footer__meta-text govuk-!-font-size-14">
               &copy; {new Date().getFullYear()} CitizenGuide.KE &bull; Built independently in accordance with public information disclosure guidelines.
             </p>
