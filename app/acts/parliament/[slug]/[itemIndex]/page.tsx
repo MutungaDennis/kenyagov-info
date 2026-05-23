@@ -55,13 +55,56 @@ export default async function ActItemViewPage({ params }: Props) {
           </h1>
         </div>
 
+        {/* 📱 MOBILE QUICK NAVIGATION DROPDOWN (Hidden on Desktop via media queries) */}
+        <details 
+          className="govuk-details mobile-only-navigation govuk-!-margin-bottom-4" 
+          style={{ backgroundColor: "#f3f2f1", padding: "10px", borderLeft: "4px solid #1d70b8" }}
+        >
+          <summary className="govuk-details__summary" style={{ cursor: "pointer" }}>
+            <span className="govuk-details__summary-text govuk-!-font-weight-bold" style={{ fontSize: "15px", color: "#1d70b8" }}>
+              Navigate Act Document Structure ({allItems.length} Divisions)
+            </span>
+          </summary>
+          <div className="govuk-details__text" style={{ borderLeft: "none", paddingLeft: 0, paddingTop: "10px" }}>
+            <ul className="govuk-list" style={{ margin: 0, padding: 0, fontSize: "14px" }}>
+              <li style={{ padding: "6px 0", borderBottom: "1px solid #e5e5e5" }}>
+                <Link href={`/acts/parliament/${slug}`} className="govuk-link govuk-link--no-underline" style={{ fontWeight: "bold" }}>
+                  ↑ Main Table of Contents Index
+                </Link>
+              </li>
+              {allItems.map((item: any, idx: number) => {
+                const isCurrent = idx === indexNum;
+                const textLabel = item._type === "part" ? item.partNumber : item.scheduleNumber;
+                return (
+                  <li 
+                    key={idx} 
+                    style={{ 
+                      padding: "6px 6px", 
+                      borderBottom: "1px solid #e5e5e5",
+                      backgroundColor: isCurrent ? "#e5e5e5" : "transparent"
+                    }}
+                  >
+                    {isCurrent ? (
+                      <strong style={{ color: "#0b0c0c" }}>{textLabel} — {item._type === "part" ? item.partTitle : item.scheduleTitle} (Current)</strong>
+                    ) : (
+                      <Link href={`/acts/parliament/${slug}/${idx}`} className="govuk-link govuk-link--no-underline">
+                        <strong>{textLabel}:</strong> {item._type === "part" ? item.partTitle : item.scheduleTitle}
+                      </Link>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        </details>
+
         <hr className="govuk-section-break govuk-section-break--visible govuk-section-break--m" />
 
-        {/* Two Column Legislation Dashboard Grid Frame */}
-        <div className="legislation-grid-frame">
+        {/* Responsive Grid Frame: We use column-reverse on mobile to push the desktop sidebar underneath */}
+        <div className="legislation-flex-container">
           
-          {/* Left Column: Persistent Table of Contents Navigation Sidebar Menu */}
-          <aside className="legislation-toc-sidebar" aria-label="Table of contents mapping profile">
+          {/* Left Column Sidebar: Pushed beneath content on mobile, sticky left column on desktop */}
+          <aside className="legislation-sidebar-column" aria-label="Table of contents mapping profile">
             <div className="govuk-!-padding-3" style={{ backgroundColor: "#f3f2f1", borderTop: "3px solid #1d70b8" }}>
               <h2 className="govuk-heading-s govuk-!-margin-bottom-2" style={{ fontSize: "14px", color: "#1d70b8" }}>
                 Act Document Structure
@@ -233,23 +276,45 @@ export default async function ActItemViewPage({ params }: Props) {
         <GovUKFeedback />
       </main>
 
-      {/* Global CSS Layout Overrides safe for Next App Architecture Layout Trees */}
+            {/* Global CSS Layout Overrides safe for Next App Architecture Layout Trees */}
       <style dangerouslySetInnerHTML={{__html: `
         summary::-webkit-details-marker { display: none !important; }
         summary { list-style: none !important; }
         .govuk-link--no-underline { text-decoration: none !important; color: #1d70b8 !important; }
         .govuk-link--no-underline:hover { text-decoration: underline !important; color: #003078 !important; }
         
-        .legislation-grid-frame { display: flex; flex-direction: column; gap: 24px; }
-        .legislation-toc-sidebar { width: 100%; position: relative; }
-        .legislation-main-viewport { width: 100%; }
+        /* 📱 Mobile First Responsive Core Layout rules */
+        .legislation-flex-container { 
+          display: flex; 
+          flex-direction: column-reverse; /* Content goes first, desktop sidebar drops below [1] */
+          gap: 24px; 
+        }
+        .legislation-sidebar-column { width: 100%; }
+        .legislation-content-column { width: 100%; }
+        .mobile-only-navigation { display: block; }
 
+        /* 🖥️ Widescreen Tablet & Desktop Breakpoint overrides */
         @media (min-width: 48.0625rem) {
-          .legislation-grid-frame { flex-direction: row; align-items: start; }
-          .legislation-toc-sidebar { width: 280px; position: sticky; top: 20px; align-self: start; flex-shrink: 0; }
-          .legislation-main-viewport { flex: 1; min-width: 0; }
+          .legislation-flex-container { 
+            flex-direction: row; /* Snaps side-by-side [1] */
+          }
+          .legislation-sidebar-column { 
+            width: 280px; 
+            position: sticky; 
+            top: 20px; 
+            align-self: start; 
+            flex-shrink: 0; 
+          }
+          .legislation-content-column { 
+            flex: 1; 
+            min-width: 0; 
+          }
+          .mobile-only-navigation { 
+            display: none !important; /* Disappears on big screens */
+          }
         }
       `}} />
+
     </div>
   );
 }
