@@ -1,30 +1,46 @@
-// components/sanity/PortableTextContent.tsx
 import { PortableText } from '@portabletext/react';
 import Link from 'next/link';
 
 const portableTextComponents = {
   block: {
-    // Headings
+    // Shrank dynamic content headings to clean statutory text proportions
     h1: ({ children }: any) => (
-      <h1 className="govuk-heading-xl govuk-!-margin-top-9">{children}</h1>
+      <h3 className="govuk-heading-m govuk-!-margin-top-4 govuk-!-margin-bottom-2">{children}</h3>
     ),
     h2: ({ children }: any) => (
-      <h2 className="govuk-heading-l govuk-!-margin-top-9">{children}</h2>
+      <h4 className="govuk-heading-s govuk-!-margin-top-3 govuk-!-margin-bottom-1" style={{ fontSize: "18px" }}>{children}</h4>
     ),
     h3: ({ children }: any) => (
-      <h3 className="govuk-heading-m govuk-!-margin-top-6">{children}</h3>
+      <h5 className="govuk-heading-s govuk-!-margin-top-2 govuk-!-margin-bottom-1" style={{ fontSize: "16px" }}>{children}</h5>
     ),
 
-    // Normal paragraphs with better spacing for legal text
+    // Replaced 'govuk-body-l' (24px) with crisp, premium 'govuk-body-m' (16px) legal blocks
     normal: ({ children }: any) => (
-      <p className="govuk-body-l govuk-!-margin-bottom-6 leading-relaxed">
+      <p 
+        className="govuk-body" 
+        style={{ 
+          fontSize: "16px", 
+          lineHeight: "1.5", 
+          marginBottom: "10px", 
+          color: "#0b0c0c",
+          letterSpacing: "-0.01em"
+        }}
+      >
         {children}
       </p>
     ),
 
-    // Blockquote / Inset for emphasis
     blockquote: ({ children }: any) => (
-      <div className="govuk-inset-text govuk-!-margin-bottom-6">
+      <div 
+        className="govuk-inset-text" 
+        style={{ 
+          marginTop: "8px", 
+          marginBottom: "12px", 
+          paddingTop: "6px", 
+          paddingBottom: "6px",
+          fontSize: "15px"
+        }}
+      >
         {children}
       </div>
     ),
@@ -34,7 +50,6 @@ const portableTextComponents = {
     strong: ({ children }: any) => <strong className="govuk-!-font-weight-bold">{children}</strong>,
     em: ({ children }: any) => <em className="italic">{children}</em>,
 
-    // ✅ Internal Constitution Article Links
     internalLink: ({ children, value }: any) => {
       const { chapter, article } = value || {};
       if (!chapter || !article) return <span>{children}</span>;
@@ -42,7 +57,8 @@ const portableTextComponents = {
       return (
         <Link 
           href={`/constitution/${chapter}/${article}`}
-          className="govuk-link govuk-link--no-visited-state"
+          className="govuk-link govuk-link--no-underline"
+          style={{ textDecoration: "none", color: "#1d70b8" }}
         >
           {children}
         </Link>
@@ -51,11 +67,22 @@ const portableTextComponents = {
   },
 
   list: {
+    // Tightened the bullet and numerical arrays to group lines tightly together
     bullet: ({ children }: any) => (
-      <ul className="govuk-list govuk-list--bullet govuk-!-margin-bottom-6">{children}</ul>
+      <ul 
+        className="govuk-list govuk-list--bullet" 
+        style={{ marginTop: "4px", marginBottom: "8px", paddingLeft: "20px", fontSize: "16px" }}
+      >
+        {children}
+      </ul>
     ),
     number: ({ children }: any) => (
-      <ol className="govuk-list govuk-list--number govuk-!-margin-bottom-6">{children}</ol>
+      <ol 
+        className="govuk-list govuk-list--number" 
+        style={{ marginTop: "4px", marginBottom: "8px", paddingLeft: "20px", fontSize: "16px" }}
+      >
+        {children}
+      </ol>
     ),
   },
 };
@@ -68,17 +95,23 @@ interface PortableTextContentProps {
 export default function PortableTextContent({ content, className = "" }: PortableTextContentProps) {
   if (!content) return null;
 
-  // Fallback for plain string (old data)
   if (typeof content === 'string') {
     return (
-      <div className={`whitespace-pre-line leading-relaxed govuk-body-l ${className}`}>
+      <div 
+        className={`whitespace-pre-line govuk-body ${className}`}
+        style={{ 
+          fontSize: "16px", 
+          lineHeight: "1.5", 
+          color: "#0b0c0c" 
+        }}
+      >
         {content}
       </div>
     );
   }
 
   return (
-    <div className={`govuk-!-margin-bottom-6 ${className}`}>
+    <div className={`legislation-content-wrapper ${className}`} style={{ margin: 0 }}>
       <PortableText value={content} components={portableTextComponents} />
     </div>
   );
