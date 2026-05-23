@@ -29,7 +29,7 @@ export default function Home() {
           <p className="govuk-phase-banner__content">
             <strong className="govuk-tag govuk-phase-banner__content__tag">BETA</strong>
             <span className="govuk-phase-banner__text">
-              This website is an independent informational service in early development. Your feedback helps us improve it.{' '}
+              This website is in early development. Your feedback helps us improve it.{' '}
               <Link href="/feedback" className="govuk-link">Give feedback</Link>
             </span>
           </p>
