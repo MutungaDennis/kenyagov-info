@@ -57,7 +57,7 @@ export default function HolidaysPage() {
                   lineHeight: 1.3,
                 }}
               >
-                <strong>28 May 2026</strong>
+                <strong>27 May 2026</strong>
 
                 <span
                   className="govuk-body"
@@ -67,7 +67,7 @@ export default function HolidaysPage() {
                     marginTop: "10px",
                   }}
                 >
-                  Thursday — Eid al-Adha *
+                  Wednesday — Eid al-Adha *
                 </span>
               </div>
             </div>
