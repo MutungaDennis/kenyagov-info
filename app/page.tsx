@@ -193,7 +193,7 @@ export default function Home() {
         <div className="govuk-grid-column-one-third">
           <div className="govuk-card govuk-card--clickable">
             <div className="govuk-card__content">
-              <h3 className="govuk-card__title"><Link href="/counties">County Executives</Link></h3>
+              <h3 className="govuk-card__title"><Link href="/counties/governors">County Executives</Link></h3>
               <p className="govuk-card__description">Governors, Deputy Governors and County Administrations</p>
             </div>
           </div>
