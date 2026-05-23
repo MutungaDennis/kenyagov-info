@@ -320,10 +320,10 @@ export default function HolidaysPage() {
 
                     <tr className="govuk-table__row">
                       <td className="govuk-table__cell">
-                        28 May 2026
+                        27 May 2026
                       </td>
                       <td className="govuk-table__cell">
-                        Thursday
+                        Wednesday
                       </td>
                       <td className="govuk-table__cell">
                         Eid al-Adha *
