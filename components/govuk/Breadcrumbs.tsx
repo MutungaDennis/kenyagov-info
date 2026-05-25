@@ -1,8 +1,9 @@
+// components/govuk/Breadcrumbs.tsx
 import Link from "next/link";
 
-type Crumb = {
+export type Crumb = {
   text: string;
-  href?: string; // 👈 make optional
+  href?: string;  
 };
 
 type Props = {
@@ -16,15 +17,11 @@ export default function GovUKBreadcrumbs({ items }: Props) {
         {items.map((crumb, i) => (
           <li key={i} className="govuk-breadcrumbs__list-item">
             {crumb.href ? (
-              <Link
-                href={crumb.href}
-                className="govuk-breadcrumbs__link"
-              >
+              <Link href={crumb.href} className="govuk-breadcrumbs__link">
                 {crumb.text}
               </Link>
             ) : (
-              // 👇 current page (no link)
-              <span aria-current="page">
+              <span aria-current="page" className="govuk-breadcrumbs__link-active">
                 {crumb.text}
               </span>
             )}
