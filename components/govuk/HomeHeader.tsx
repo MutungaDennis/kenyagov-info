@@ -55,7 +55,7 @@ export default function GovUKHomeHeader() {
             }}
           >
             <Image 
-              src="/logo.png" 
+              src="/logo.jpeg" 
               alt="" 
               width={36} 
               height={36} 

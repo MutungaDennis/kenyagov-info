@@ -50,7 +50,7 @@ export default function GovUKHeader() {
         >
           <Link href="/" className="govuk-header__link govuk-header__link--homepage" style={{ display: 'inline-flex', alignItems: 'center', textDecoration: 'none' }}>
             <Image 
-              src="/logo.png" 
+              src="/logo.jpeg" 
               alt="" 
               width={36} 
               height={36} 
