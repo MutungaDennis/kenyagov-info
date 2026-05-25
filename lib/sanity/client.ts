@@ -201,7 +201,21 @@ export async function getInstitutionContent(slug: string) {
       website,
       email,
       phone,
-      physicalAddress
+      physicalAddress,
+      contentType,
+      servicesCharter,
+      consularHoursDescription,
+      localPublicHolidays,
+      "coverBannerUrl": coverBannerImage.asset->url,
+      downloadableDocuments[]{
+        documentName,
+        "fileUrl": fileAsset.asset->url
+      },
+      governingActs[]->{
+        shortTitle,
+        citation,
+        "slug": slug.current
+      }
     }
     `,
     { slug }
