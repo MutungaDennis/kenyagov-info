@@ -73,7 +73,20 @@ CZ: "Czech Republic",
 PL: "Poland",
 RO: "Romania",
 GH: "Ghana",
-BF: "Burkina Faso"
+BF: "Burkina Faso",
+IN: "India",
+BD: "Bangladesh",
+LK: "Sri Lanka",
+BT: "Bhutan",
+MV: "Maldives",
+NP: "Nepal",
+SG: "Singapore",
+ID: "Indonesia",
+PH: "Philippines",
+IE: "Ireland"
+
+
+
 
 
 
