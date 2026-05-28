@@ -42,7 +42,24 @@ export default function RootLayout({
 
   return (
     <html lang="en-KE" className={`govuk-template ${publicSans.variable}`}>
-      <body className="govuk-template__body">
+      {/* 
+        CRITICAL FIX: Added suppressHydrationWarning to silence Grammarly extension flags,
+        and injected a style block to erase the default GOV.UK framework top margins/paddings.
+      */}
+      <body className="govuk-template__body" suppressHydrationWarning={true} style={{ margin: 0, padding: 0 }}>
+        
+        {/* Force an immediate top spacing reset to pull the header flush to the glass edge */}
+        <style dangerouslySetInnerHTML={{__html: `
+          html, body, html.govuk-template, body.govuk-template__body {
+            margin-top: 0 !important;
+            padding-top: 0 !important;
+          }
+          /* Removes legacy framework top offsets built for cookie banners */
+          .govuk-template__body {
+            top: 0 !important;
+          }
+        `}} />
+
         {!isHomePage && <GovUKHeader />}
         
         <div className="govuk-width-container">
