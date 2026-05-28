@@ -1,33 +1,33 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@supabase/supabase-js";
 
-export async function handleFeedbackSubmission(formData: FormData, turnstileToken: string) {
-  const doing = formData.get("doing") as string;
-  const wrong = formData.get("wrong") as string;
+export async function handleGeneralFeedback(formData: FormData, turnstileToken: string) {
+  const feedbackText = formData.get("feedback_text") as string;
+  const fullName = formData.get("full_name") as string;
   const email = formData.get("email") as string;
-  const pagePath = formData.get("page_path") as string; // Read current route location
+
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return { success: false, error: "Server configuration error: Missing connection credentials." };
+  }
 
   try {
-    const supabase = await createClient();
-
-    const { error } = await supabase.from("citizen_feedback").insert(
-      [
-        {
-          what_were_you_doing: doing,
-          what_went_wrong: wrong,
-          email_address: email || null,
-          page_path: pagePath, // Map to column row
-        },
-      ],
-      {
-        captchaToken: turnstileToken,
-      } as any
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY
     );
 
-    if (error) return { success: false, error: error.message };
+    const { error } = await supabaseAdmin.from("general_feedback").insert([
+      {
+        feedback_text: feedbackText,
+        full_name: fullName || null,
+        email_address: email || null,
+      }
+    ]);
+
+    if (error) return { success: false, error: `Supabase Error: ${error.message}` };
     return { success: true };
-  } catch (err) {
-    return { success: false, error: "An unexpected connection error occurred." };
+  } catch (err: any) {
+    return { success: false, error: `Server Exception: ${err.message || err}` };
   }
 }

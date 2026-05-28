@@ -1,164 +1,171 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useState, useRef, useEffect, useTransition } from "react";
+import Script from "next/script";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-import { handleFeedbackSubmission } from "./actions"; // Import the Server Action
+import { handleGeneralFeedback } from "./actions";
 
-export default function FeedbackPage() {
+export default function GeneralFeedbackPage() {
   const firstInputRef = useRef<HTMLTextAreaElement>(null);
   const [isPending, startTransition] = useTransition();
   const [submissionState, setSubmissionState] = useState<{ success?: boolean; error?: string } | null>(null);
-  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
-  // Requirement: Immediate keyboard focus on touchscreens
+  // Focus character input field instantly on load
   useEffect(() => {
     if (firstInputRef.current) {
       firstInputRef.current.focus();
     }
   }, []);
 
-  // Requirement: Initialize Cloudflare Turnstile widget script interaction
-  useEffect(() => {
-    // @ts-ignore
-    window.onTurnstileLoaded = () => {
-      // @ts-ignore
-      turnstile.render("#turnstile-container", {
-        sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
-        callback: function (token: string) {
-          setTurnstileToken(token);
-        },
-      });
-    };
-  }, []);
-
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    
-    if (!turnstileToken) {
-      setSubmissionState({ error: "Please complete the automated security check." });
+    setSubmissionState(null);
+
+    const targetForm = event.currentTarget;
+    const formData = new FormData(targetForm);
+    const implicitToken = formData.get("cf-turnstile-response") as string;
+
+    if (!implicitToken) {
+      setSubmissionState({ error: "Security check is initializing. Please try again in a moment." });
       return;
     }
 
-    const formData = new FormData(event.currentTarget);
-
     startTransition(async () => {
-      // Execute the server action directly without an API fetch call
-      const result = await handleFeedbackSubmission(formData, turnstileToken);
-      
+      const result = await handleGeneralFeedback(formData, implicitToken);
       if (result.success) {
         setSubmissionState({ success: true });
+        targetForm.reset();
       } else {
-        setSubmissionState({ error: result.error || "Failed to log feedback." });
+        setSubmissionState({ error: result.error || "Could not save feedback. Please try again." });
       }
     });
   }
 
+  // GOV.UK Standard Success Banner Layout Pattern
   if (submissionState?.success) {
     return (
-      <div className="govuk-width-container">
-        <main className="govuk-main-wrapper">
+      <div className="govuk-grid-row">
+        <div className="govuk-grid-column-two-thirds">
           <div className="govuk-panel govuk-panel--confirmation">
-            <h1 className="govuk-panel__title">Feedback sent</h1>
+            <h1 className="govuk-panel__title">Feedback submitted</h1>
+            <div className="govuk-panel__body">
+              Thank you for helping us improve CitizenGuide.KE
+            </div>
           </div>
           <p className="govuk-body govuk-!-margin-top-6">
-            Thank you for your feedback. Your input helps us make this platform better for all Kenyans.
+            We review every suggestion sent to us to make our service better for all Kenyans.
           </p>
-          <Link href="/" className="govuk-button">Back to Home</Link>
-        </main>
+          <Link href="/" className="govuk-button">
+            Return to homepage
+          </Link>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="govuk-width-container">
+    <>
+      <Script src="https://cloudflare.com" async defer />
+
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
-          { text: "Feedback", href: "/feedback" },
+          { text: "Give feedback", href: "/feedback" },
         ]}
       />
 
-      <main className="govuk-main-wrapper">
-        <div className="govuk-grid-row">
-          <div className="govuk-grid-column-two-thirds">
-            
-            {submissionState?.error && (
-              <div className="govuk-error-summary" role="alert">
-                <h2 className="govuk-error-summary__title">There is a problem</h2>
-                <div className="govuk-error-summary__body">
-                  <p className="govuk-body">{submissionState.error}</p>
-                </div>
+      <div className="govuk-grid-row govuk-!-margin-top-4">
+        <div className="govuk-grid-column-two-thirds">
+          
+          {submissionState?.error && (
+            <div className="govuk-error-summary" role="alert" style={{ border: "4px solid #d4351c" }}>
+              <h2 className="govuk-error-summary__title">There is a problem</h2>
+              <div className="govuk-error-summary__body">
+                <p className="govuk-body" style={{ color: "#d4351c" }}>{submissionState.error}</p>
               </div>
-            )}
+            </div>
+          )}
 
-            <h1 className="govuk-heading-xl">Help us improve CitizenGuide.KE</h1>
+          <h1 className="govuk-heading-xl">Give feedback about CitizenGuide.KE</h1>
+          <p className="govuk-body-m text-secondary">
+            Use this form to tell us about your experience using the platform or suggest overall improvements to the system.
+          </p>
 
-            <div className="govuk-inset-text">
-              Do not include personal or financial information (such as your National ID number or phone number).
+          <form onSubmit={handleSubmit} noValidate>
+            
+            {/* Feedback Content Input Section */}
+            <div className="govuk-form-group">
+              <label className="govuk-label govuk-label--m" htmlFor="feedback_text">
+                How can we improve this website?
+              </label>
+              <div id="feedback-hint" className="govuk-hint">
+                Do not include sensitive personal or financial information, such as your National ID number or banking details.
+              </div>
+              <textarea
+                ref={firstInputRef}
+                className="govuk-textarea"
+                id="feedback_text"
+                name="feedback_text"
+                rows={5}
+                required
+                aria-describedby="feedback-hint"
+              ></textarea>
             </div>
 
-            <form onSubmit={handleSubmit}>
-              <div className="govuk-form-group">
-                <label className="govuk-label govuk-label--m" htmlFor="doing">
-                  What were you doing?
-                </label>
-                <textarea 
-                  ref={firstInputRef}
-                  className="govuk-textarea" 
-                  id="doing" 
-                  name="doing" 
-                  rows={4}
-                  required
-                  placeholder="e.g. Looking for information about National ID application..."
-                ></textarea>
-              </div>
+            {/* Optional Name Input Section */}
+            <div className="govuk-form-group">
+              <label className="govuk-label govuk-label--m" htmlFor="full_name">
+                Full name (optional)
+              </label>
+              <input
+                className="govuk-input govuk-!-width-two-thirds"
+                id="full_name"
+                name="full_name"
+                type="text"
+                autoComplete="name"
+              />
+            </div>
 
-              <div className="govuk-form-group">
-                <label className="govuk-label govuk-label--m" htmlFor="wrong">
-                  What went wrong?
-                </label>
-                <textarea 
-                  className="govuk-textarea" 
-                  id="wrong" 
-                  name="wrong" 
-                  rows={6}
-                  required
-                  placeholder="e.g. Information is outdated, link is broken, page is confusing..."
-                ></textarea>
+            {/* Optional Email Input Section */}
+            <div className="govuk-form-group">
+              <label className="govuk-label govuk-label--m" htmlFor="email">
+                Email address (optional)
+              </label>
+              <div id="email-hint" className="govuk-hint">
+                Only provide your email if you want us to reply or ask follow-up questions.
               </div>
+              <input
+                className="govuk-input govuk-!-width-two-thirds"
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                aria-describedby="email-hint"
+              />
+            </div>
 
-              <div className="govuk-form-group">
-                <label className="govuk-label" htmlFor="email">
-                  Email address (optional) – so we can reply if needed
-                </label>
-                <input 
-                  className="govuk-input" 
-                  id="email" 
-                  name="email" 
-                  type="email" 
-                  placeholder="your@email.com"
-                />
-              </div>
+            {/* Bot Check Verification Container */}
+            <div className="govuk-form-group">
+              <div 
+                className="cf-turnstile" 
+                data-sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
+                data-theme="light"
+              ></div>
+            </div>
 
-              {/* Turnstile Container */}
-              <div className="govuk-form-group">
-                <div id="turnstile-container"></div>
-                <script src="https://cloudflare.com" async defer></script>
-              </div>
+            <div className="govuk-button-group">
+              <button type="submit" disabled={isPending} className="govuk-button">
+                {isPending ? "Submitting..." : "Submit feedback"}
+              </button>
+              <Link href="/" className="govuk-button govuk-button--secondary">
+                Cancel
+              </Link>
+            </div>
 
-              <div className="govuk-button-group">
-                <button type="submit" disabled={isPending} className="govuk-button">
-                  {isPending ? "Sending..." : "Send"}
-                </button>
-                <Link href="/" className="govuk-button govuk-button--secondary">
-                  Cancel
-                </Link>
-              </div>
-            </form>
-          </div>
+          </form>
         </div>
-      </main>
-    </div>
+      </div>
+    </>
   );
 }
