@@ -1,23 +1,22 @@
 'use client';
 
-// 1. Core Framework Styles (Loaded first)
 import "govuk-frontend/govuk-frontend.min.css"; 
-
-// 2. Your Custom Global Overrides (Loaded second with a safe relative path)
-import "./globals.css"; 
+import "@/app/globals.css"; 
 
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { Lexend } from 'next/font/google';
+import { Public_Sans } from 'next/font/google';
 
 import GovUKHeader from "@/components/govuk/Header";
 import GovUKFooter from "@/components/govuk/Footer";
+import GovUKFeedback from "@/components/govuk/Feedback";
+import GovUKReportProblem from "@/components/govuk/ReportProblem";
 
-// Configure Lexend Font Asset
-const lexend = Lexend({
+// Configure Public Sans Font
+const publicSans = Public_Sans({
   subsets: ['latin'],
   display: 'swap',
-  variable: '--font-lexend',
+  variable: '--font-public-sans',
 });
 
 export default function RootLayout({
@@ -31,28 +30,31 @@ export default function RootLayout({
   useEffect(() => {
     const initGovuk = async () => {
       try {
-        // @ts-expect-error - No types for the minified JS distribution
+        // @ts-expect-error - No types for minified JS
         const { initAll } = await import("govuk-frontend/govuk-frontend.min.js");
         initAll();
       } catch (error) {
         console.error("Failed to initialize GOV.UK Frontend:", error);
       }
     };
-
     initGovuk();
   }, []);
 
   return (
-    <html lang="en-KE" className={`govuk-template ${lexend.variable}`}>
+    <html lang="en-KE" className={`govuk-template ${publicSans.variable}`}>
       <body className="govuk-template__body">
-        {/* Render header on internal subpages */}
         {!isHomePage && <GovUKHeader />}
-
-        {/* GOV.UK Layout grid and alignment wrapper */}
+        
         <div className="govuk-width-container">
           <main className="govuk-main-wrapper" id="main-content" role="main">
             {children}
           </main>
+
+          {/* Global Feedback Section (Sits right above the footer boundary) */}
+          <div className="govuk-!-margin-top-9 govuk-!-margin-bottom-6">
+            <GovUKFeedback />
+            <GovUKReportProblem />
+          </div>
         </div>
 
         <GovUKFooter />

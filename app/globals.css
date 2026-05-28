@@ -2,35 +2,25 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #0b0c0c; /* High contrast dark charcoal grey */
+  --foreground: #0b0c0c;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  /* Maps Tailwind's utility system to Lexend as the absolute default */
-  --font-sans: var(--font-lexend), sans-serif;
+  --font-sans: var(--font-public-sans), sans-serif;
 }
 
-/* 
-  1. THE NUCLEAR STRIKE AGAINST GDS TRANSPORT & ARIAL
-  Forces Lexend onto the html node, the body node, and absolutely *every*
-  single nested element, pseudo-element, and blank layout spacer container.
-*/
+/* Force Public Sans everywhere, eliminating GDS Transport completely [1] */
 html,
 html.govuk-template,
 .govuk-template,
 body,
 .govuk-template__body,
 * {
-  font-family: var(--font-lexend), sans-serif !important;
+  font-family: var(--font-public-sans), sans-serif !important;
 }
 
-/* 
-  2. TARGETING PSEUDO-ELEMENTS AND INTERACTIVE STATES
-  Ensures that generated CSS content (like arrows, bullet points, tooltips, 
-  and text selected/highlighted by the user) also defaults to Lexend.
-*/
 *:before,
 *:after,
 *::placeholder,
@@ -39,14 +29,9 @@ a:visited,
 a:hover,
 a:active,
 a:focus {
-  font-family: var(--font-lexend), sans-serif !important;
+  font-family: var(--font-public-sans), sans-serif !important;
 }
 
-/* 
-  3. RENDERING COMPLIANCE & ACCESSIBILITY
-  Preserves GOV.UK's layout rendering rules, text smoothing, 
-  and core accessible color contrasts.
-*/
 body {
   background: var(--background);
   color: var(--foreground);
@@ -54,11 +39,6 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* 
-  4. FORCE HIGH-CONTRAST LIGHT MODE
-  Prevents OS-level dark-mode overrides from breaking the strict 
-  public-information design principles.
-*/
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #ffffff;
