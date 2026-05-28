@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import GovUKSummaryList from "@/components/govuk/SummaryList";
-import GovUKFeedback from "@/components/govuk/Feedback";
+
 
 type PresidentialSpeech = {
   id: string;
@@ -179,7 +179,7 @@ export default function PresidentProfilePage() {
               </div>
             )}
 
-            <GovUKFeedback />
+            
           </div>
         </div>
       </main>

@@ -1,7 +1,7 @@
 import Link from "next/link";
 //import GovUKBackLink from "@/components/govuk/BackLink";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-import GovUKFeedback from "@/components/govuk/Feedback";
+
 
 export default function CabinetSecretariesPage() {
   return (
@@ -48,7 +48,7 @@ export default function CabinetSecretariesPage() {
           </div>
         </div>
 
-        <GovUKFeedback />
+       
       </main>
     </div>
   );

@@ -3,7 +3,6 @@
 import React from "react";
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-import GovUKFeedback from "@/components/govuk/Feedback";
 import LastUpdated from "@/components/govuk/LastUpdated";
 
 export default function LanguagesPage() {
@@ -150,7 +149,7 @@ export default function LanguagesPage() {
         <div className="govuk-grid-row govuk-!-margin-top-6">
           <div className="govuk-grid-column-full">
             <LastUpdated published="2026-05-22" lastUpdated="2026-05-22" />
-            <GovUKFeedback />
+            
           </div>
         </div>
 

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-import GovUKFeedback from "@/components/govuk/Feedback";
+
 
 export default function ContactPage() {
   const handleSubmit = (e: React.FormEvent) => {
@@ -128,7 +128,7 @@ export default function ContactPage() {
           </div>
         </div>
 
-        <GovUKFeedback />
+       
       </main>
     </div>
   );

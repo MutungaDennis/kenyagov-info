@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import GovUKSummaryList from "@/components/govuk/SummaryList";
-import GovUKFeedback from "@/components/govuk/Feedback";
+
 import PrintPageButton from "@/components/govuk/PrintPageButton";
 import LastUpdated from "@/components/govuk/LastUpdated";
 
@@ -151,7 +151,7 @@ export default async function WardPage({ params }: WardPageProps) {
               </Link>
             </div>
 
-            <GovUKFeedback />
+            
           </div>
         </div>
       </main>

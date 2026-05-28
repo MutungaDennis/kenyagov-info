@@ -3,7 +3,6 @@
 import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-import GovUKFeedback from "@/components/govuk/Feedback";
 import { senateMembers, type Senator } from "@/data/senate-members";
 
 const ITEMS_PER_PAGE = 50;
@@ -305,7 +304,6 @@ export default function SenateSenatorsPage() {
               </div>
             )}
 
-            <GovUKFeedback />
           </div>
         </div>
       </main>

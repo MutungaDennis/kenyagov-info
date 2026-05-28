@@ -2,7 +2,6 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 //import GovUKBackLink from '@/components/govuk/BackLink';
 import GovUKBreadcrumbs from '@/components/govuk/Breadcrumbs';
-import GovUKFeedback from '@/components/govuk/Feedback';
 import PortableTextContent from '@/components/sanity/PortableTextContent';
 import { sanityClient } from '@/lib/sanity/client';
 import { SERVICE_QUERY, SINGLE_SERVICE_QUERY } from '@/lib/sanity/queries';
@@ -197,7 +196,7 @@ export default async function ServicePage({ params }: PageProps) {
             )}
 
             <div className="govuk-!-margin-top-12">
-              <GovUKFeedback />
+            
             </div>
           </div>
         </div>

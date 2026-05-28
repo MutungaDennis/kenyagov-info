@@ -1,7 +1,6 @@
 // app/politics/page.tsx
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-import GovUKFeedback from "@/components/govuk/Feedback";
 import LastUpdated from "@/components/govuk/LastUpdated";
 
 const politicsSections = [
@@ -123,7 +122,6 @@ export default function PoliticsPage() {
 
         <LastUpdated published="2026-05-19" lastUpdated="2026-05-19" />
 
-        <GovUKFeedback />
       </main>
     </div>
   );

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import GovUKSummaryList from "@/components/govuk/SummaryList";
-import GovUKFeedback from "@/components/govuk/Feedback";
+
 
 // FIXED: Explicitly defined 'export default function' declaration hook to satisfy Next.js page requirements
 export default function CabinetOfficePage() {
@@ -99,7 +99,7 @@ export default function CabinetOfficePage() {
               ]}
             />
 
-            <GovUKFeedback />
+            
           </div>
         </div>
       </main>

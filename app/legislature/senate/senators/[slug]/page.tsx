@@ -4,7 +4,6 @@ import { notFound, useParams } from "next/navigation";
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import GovUKSummaryList from "@/components/govuk/SummaryList";
-import GovUKFeedback from "@/components/govuk/Feedback";
 import PrintPageButton from "@/components/govuk/PrintPageButton";
 import { senateMembers } from "@/data/senate-members";
 
@@ -100,7 +99,7 @@ export default function SenatorProfilePage() {
               </Link>
             </div>
 
-            <GovUKFeedback />
+            
           </div>
         </div>
       </main>

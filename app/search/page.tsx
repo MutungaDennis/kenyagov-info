@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-import GovUKFeedback from "@/components/govuk/Feedback";
+
 
 interface SearchParams {
   q?: string;
@@ -191,7 +191,7 @@ export default async function SearchResultsPage({
               <p className="govuk-body govuk-!-margin-top-4">Type a term or constitutional keyword string above to execute queries across national registers.</p>
             )}
 
-            <GovUKFeedback />
+            
           </div>
         </div>
       </main>

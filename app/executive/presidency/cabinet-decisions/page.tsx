@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import Link from "next/link"; // FIXED: Corrected import source for the Next.js Link component
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-import GovUKFeedback from "@/components/govuk/Feedback";
+
 
 type CabinetDecision = {
   id: string;
@@ -226,7 +226,7 @@ export default function CabinetDecisionsPage() {
               </div>
             )}
 
-            <GovUKFeedback />
+            
           </div>
         </div>
       </main>

@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-import GovUKFeedback from "@/components/govuk/Feedback";
+
 import PrintPageButton from "@/components/govuk/PrintPageButton";
 import LastUpdated from "@/components/govuk/LastUpdated";
 
@@ -182,7 +182,7 @@ export default async function WardAboutPage({ params }: AboutPageProps) {
               </Link>
             </div>
 
-            <GovUKFeedback />
+            
           </div>
         </div>
       </main>

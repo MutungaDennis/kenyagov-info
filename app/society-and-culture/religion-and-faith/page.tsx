@@ -4,7 +4,6 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-import GovUKFeedback from "@/components/govuk/Feedback";
 import LastUpdated from "@/components/govuk/LastUpdated";
 
 interface CensusYear {
@@ -285,7 +284,7 @@ export default function ReligionAndFaithPage() {
         <div className="govuk-grid-row govuk-!-margin-top-6">
           <div className="govuk-grid-column-full">
             <LastUpdated published="2026-05-22" lastUpdated="2026-05-22" />
-            <GovUKFeedback />
+            
           </div>
         </div>
 

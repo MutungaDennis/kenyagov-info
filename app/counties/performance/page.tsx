@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-import GovUKFeedback from "@/components/govuk/Feedback";
+
 
 type CountyPerformance = {
   rank: number;
@@ -233,7 +233,7 @@ export default function CountyPerformancePage() {
               </li>
             </ul>
 
-            <GovUKFeedback />
+            
           </div>
         </div>
       </main>

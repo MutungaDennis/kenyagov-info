@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-import GovUKFeedback from "@/components/govuk/Feedback";
+
 
 export default function SitemapPage() {
   return (
@@ -90,7 +90,7 @@ export default function SitemapPage() {
               <li><Link href="/search" className="govuk-link">Global Search Portal 🔍</Link></li>
             </ul>
 
-            <GovUKFeedback />
+          
           </div>
         </div>
       </main>

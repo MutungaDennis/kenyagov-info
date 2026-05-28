@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-import GovUKFeedback from "@/components/govuk/Feedback";
+
 import PortableTextContent from "@/components/sanity/PortableTextContent";
 
 import { getConstitutionArticle, getChapterArticles } from "@/lib/sanity/client";
@@ -220,7 +220,7 @@ export default async function ConstitutionArticlePage({ params }: Props) {
           </div>
         </div>
 
-        <GovUKFeedback />
+        
       </main>
 
       {/* CSS Overrides for responsive layout controls and link behaviors */}

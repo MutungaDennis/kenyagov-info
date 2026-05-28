@@ -2,7 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import WardsFilters from "@/components/wards/wards-filters";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-import GovUKFeedback from "@/components/govuk/Feedback";
+
 
 interface SearchParams {
   county?: string;
@@ -342,7 +342,7 @@ export default async function WardsPage({
               </div>
             )}
 
-            <GovUKFeedback />
+            
           </div>
         </div>
       </main>

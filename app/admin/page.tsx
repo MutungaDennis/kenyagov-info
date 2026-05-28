@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import GovUKBackLink from '@/components/govuk/BackLink';
-import GovUKFeedback from '@/components/govuk/Feedback';
+
 
 export default function AdminDashboard() {
   return (
@@ -162,7 +162,7 @@ export default function AdminDashboard() {
         </div>
       </main>
 
-      <GovUKFeedback />
+      
     </div>
   );
 }

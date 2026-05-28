@@ -1,9 +1,8 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import GovUKBackLink from "@/components/govuk/BackLink";
+//import GovUKBackLink from "@/components/govuk/BackLink";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-import GovUKFeedback from "@/components/govuk/Feedback";
 import { createClient } from "@/lib/supabase/server";
 
 type Leader = {
@@ -38,7 +37,7 @@ export default async function LeaderProfile({
 
   return (
     <div className="govuk-width-container">
-      <GovUKBackLink href={`/leaders/${category}`} />
+      {/* <GovUKBackLink href={`/leaders/${category}`} /> */}
 
       <GovUKBreadcrumbs
         items={[
@@ -90,7 +89,7 @@ export default async function LeaderProfile({
           <p>{leader.description}</p>
         </div>
 
-        <GovUKFeedback />
+        
       </main>
     </div>
   );

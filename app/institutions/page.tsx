@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState, useMemo, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-import GovUKFeedback from "@/components/govuk/Feedback";
+
 import React from "react";
 
 type Institution = {
@@ -327,7 +327,7 @@ export default function InstitutionsPage() {
           </nav>
         )}
 
-        <GovUKFeedback />
+        
       </main>
 
       {/* Global CSS Layout Overrides safe for Next App Architecture Layout Trees */}

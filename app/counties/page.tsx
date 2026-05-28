@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-import GovUKFeedback from "@/components/govuk/Feedback";
+
 
 export default function CountiesPage() {
   return (
@@ -96,7 +96,7 @@ export default function CountiesPage() {
               </li>
             </ul>
 
-            <GovUKFeedback />
+            
           </div>
         </div>
       </main>

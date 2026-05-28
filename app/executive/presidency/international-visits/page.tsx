@@ -2,7 +2,6 @@
 
 import { useState, useMemo } from "react";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-import GovUKFeedback from "@/components/govuk/Feedback";
 import Link from "next/link";
 
 type VisitRecord = {
@@ -302,7 +301,7 @@ export default function InternationalVisitsPage() {
               </div>
             )}
 
-            <GovUKFeedback />
+            
           </div>
         </div>
       </main>

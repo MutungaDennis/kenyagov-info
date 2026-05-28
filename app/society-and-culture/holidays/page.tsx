@@ -1,7 +1,7 @@
 // app/society-andculture/holidays/page.tsx
 
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-import GovUKFeedback from "@/components/govuk/Feedback";
+
 
 export default function HolidaysPage() {
   return (
@@ -942,7 +942,7 @@ export default function HolidaysPage() {
               </div>
             </div>
 
-            <GovUKFeedback />
+            
           </div>
 
           {/* RIGHT SIDEBAR */}

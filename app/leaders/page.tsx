@@ -2,9 +2,8 @@
 
 import Link from "next/link";
 import { useState, useMemo, useEffect } from "react";
-import GovUKBackLink from "@/components/govuk/BackLink";
+//import GovUKBackLink from "@/components/govuk/BackLink";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-import GovUKFeedback from "@/components/govuk/Feedback";
 import { createClient } from "@/lib/supabase/client";
 
 type Leader = {
@@ -72,7 +71,7 @@ export default function LeadersPage() {
 
   return (
     <div className="govuk-width-container">
-      <GovUKBackLink href="/" />
+      {/* <GovUKBackLink href="/" /> */}
 
       <GovUKBreadcrumbs
         items={[
@@ -194,7 +193,7 @@ export default function LeadersPage() {
           </>
         )}
 
-        <GovUKFeedback />
+        
       </main>
     </div>
   );

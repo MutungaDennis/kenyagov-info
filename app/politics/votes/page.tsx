@@ -2,7 +2,6 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import PollingStationFilters from "@/components/votes/polling-station-filters";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-import GovUKFeedback from "@/components/govuk/Feedback";
 
 interface SearchParams {
   county?: string;
@@ -338,7 +337,7 @@ export default async function PollingStationsPage({
               </div>
             )}
 
-            <GovUKFeedback />
+          
           </div>
         </div>
       </main>

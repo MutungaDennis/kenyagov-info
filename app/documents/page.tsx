@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-import GovUKFeedback from "@/components/govuk/Feedback";
+
 
 type PolicyDocument = {
   id: string;
@@ -287,7 +287,7 @@ export default function NationalPolicyIndexPage() {
               </div>
             )}
 
-            <GovUKFeedback />
+            
           </div>
         </div>
       </main>

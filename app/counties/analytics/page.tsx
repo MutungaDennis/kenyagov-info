@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-import GovUKFeedback from "@/components/govuk/Feedback";
+
 
 type MainTab = 'demographics' | 'finance' | 'spatial' | 'sectors';
 type SubTab = 'broad' | 'cbc' | 'pwd' | 'revenue' | 'spending' | 'thematic' | 'land_use' | 'health' | 'roads';
@@ -364,7 +364,7 @@ export default function CountiesAnalyticsPage() {
           </div>
         </div>
 
-        <GovUKFeedback />
+        
       </main>
     </div>
   );

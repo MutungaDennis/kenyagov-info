@@ -3,7 +3,7 @@
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import GovUKSummaryList from "@/components/govuk/SummaryList";
-import GovUKFeedback from "@/components/govuk/Feedback";
+
 
 export default function SenatePage() {
   return (
@@ -85,7 +85,7 @@ export default function SenatePage() {
               </li>
             </ul>
 
-            <GovUKFeedback />
+            
           </div>
         </div>
       </main>

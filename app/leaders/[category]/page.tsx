@@ -1,8 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-//import GovUKBackLink from "@/components/govuk/BackLink";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-import GovUKFeedback from "@/components/govuk/Feedback";
 import { createClient } from "@/lib/supabase/server";
 
 type Leader = {
@@ -76,7 +74,7 @@ export default async function LeadersByCategory({
           ))}
         </ul>
 
-        <GovUKFeedback />
+        
       </main>
     </div>
   );

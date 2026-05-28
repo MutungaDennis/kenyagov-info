@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import GovUKSummaryList from "@/components/govuk/SummaryList";
-import GovUKFeedback from "@/components/govuk/Feedback";
+
 
 type VisionSection = 'overview' | 'economic' | 'social' | 'political' | 'mtps';
 
@@ -211,7 +211,7 @@ export default function Vision2030Page() {
           </div>
         </div>
 
-        <GovUKFeedback />
+        
       </main>
     </div>
   );

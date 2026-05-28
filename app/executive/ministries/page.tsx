@@ -1,6 +1,6 @@
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-import GovUKFeedback from "@/components/govuk/Feedback";
+
 import { createClient } from "@/lib/supabase/server";
 
 type Ministry = {
@@ -147,7 +147,7 @@ export default async function MinistriesPage() {
           </div>
         </div>
 
-        <GovUKFeedback />
+       
       </main>
     </div>
   );

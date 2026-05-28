@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-import GovUKFeedback from "@/components/govuk/Feedback";
+
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -173,7 +173,7 @@ export default async function PollingStationDetailPage({ params }: PageProps) {
           </div>
         </div>
 
-        <GovUKFeedback />
+        
       </main>
     </div>
   );

@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-import GovUKFeedback from "@/components/govuk/Feedback";
+
 import PortableTextContent from "@/components/sanity/PortableTextContent";
 import { getActOfParliamentBySlug } from "@/lib/sanity/client";
 
@@ -273,7 +273,7 @@ export default async function ActItemViewPage({ params }: Props) {
           </div>
         </div>
 
-        <GovUKFeedback />
+        
       </main>
 
             {/* Global CSS Layout Overrides safe for Next App Architecture Layout Trees */}

@@ -1,7 +1,7 @@
 import Link from "next/link";
 //import GovUKBackLink from "@/components/govuk/BackLink";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-import GovUKFeedback from "@/components/govuk/Feedback";
+
 
 export default function SupremeCourtPage() {
   return (
@@ -97,7 +97,7 @@ export default function SupremeCourtPage() {
               <Link href="/judiciary" className="govuk-link">← Back to Judiciary Overview</Link>
             </p>
 
-            <GovUKFeedback />
+            
           </div>
         </div>
       </main>

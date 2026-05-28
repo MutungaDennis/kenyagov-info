@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-import GovUKFeedback from "@/components/govuk/Feedback";
+
 
 interface SearchParams {
   q?: string;
@@ -64,7 +64,7 @@ export default async function CoalitionsPage({
           Please try again later.
         </div>
 
-        <GovUKFeedback />
+        
       </main>
     );
   }
@@ -231,7 +231,7 @@ export default async function CoalitionsPage({
         </>
       )}
 
-      <GovUKFeedback />
+      
     </main>
   );
 }

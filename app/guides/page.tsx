@@ -1,7 +1,7 @@
 import Link from 'next/link';
 //import GovUKBackLink from '@/components/govuk/BackLink';
 import GovUKBreadcrumbs from '@/components/govuk/Breadcrumbs';
-import GovUKFeedback from '@/components/govuk/Feedback';
+
 import { getGuides } from '@/lib/sanity/client';
 
 export const metadata = {
@@ -92,7 +92,7 @@ export default async function GuidesPage() {
           )}
         </section>
 
-        <GovUKFeedback />
+        
       </main>
     </div>
   );

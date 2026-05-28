@@ -3,7 +3,7 @@
 import React, { useState, useMemo } from "react";
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-import GovUKFeedback from "@/components/govuk/Feedback";
+
 
 interface ActPayload {
   _id: string;
@@ -211,7 +211,7 @@ export default function ParliamentActsListClient({ initialActs }: ParliamentActs
           </div>
         </div>
 
-        <GovUKFeedback />
+       
       </main>
 
       {/* Global CSS Overrides for clean legislation element handling */}

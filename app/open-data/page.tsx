@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-import GovUKFeedback from "@/components/govuk/Feedback";
 
 export default function OpenDataPage() {
   return (
@@ -113,7 +112,6 @@ export default function OpenDataPage() {
               While data tables undergo rigorous validation cycles against gazetted notices before release, automated parsing updates may occasionally flag formatting discrepancies. If you identify a mismatched ward code or an unaligned expenditure figure within a CSV stream, please submit a structural data check on our <Link href="/contact" className="govuk-link">Contact page</Link> with the specific column reference.
             </p>
 
-            <GovUKFeedback />
           </div>
         </div>
       </main>

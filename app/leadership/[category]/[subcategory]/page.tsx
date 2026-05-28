@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 //import GovUKBackLink from '@/components/govuk/BackLink';
 import GovUKBreadcrumbs from '@/components/govuk/Breadcrumbs';
-import GovUKFeedback from '@/components/govuk/Feedback';
+
 import {
   LEADERSHIP_HIERARCHY,
   isValidLeadershipCategory,
@@ -151,7 +151,6 @@ export default async function LeadershipSubcategoryPage({ params }: PageProps) {
           </div>
         )}
 
-        <GovUKFeedback />
       </main>
     </div>
   );

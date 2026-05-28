@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-import GovUKFeedback from "@/components/govuk/Feedback";
 
 export default function TermsPage() {
   return (
@@ -95,7 +94,7 @@ export default function TermsPage() {
           </div>
         </div>
 
-        <GovUKFeedback />
+      
       </main>
     </div>
   );

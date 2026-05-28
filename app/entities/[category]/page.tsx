@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 //import GovUKBackLink from '@/components/govuk/BackLink';
 import GovUKBreadcrumbs from '@/components/govuk/Breadcrumbs';
-import GovUKFeedback from '@/components/govuk/Feedback';
+
 import {
   ENTITY_HIERARCHY,
   isValidEntityCategory,
@@ -144,7 +144,7 @@ export default async function EntitiesCategoryPage({ params }: PageProps) {
           </div>
         )}
 
-        <GovUKFeedback />
+       
       </main>
     </div>
   );

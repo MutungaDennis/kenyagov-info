@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 //import GovUKBackLink from '@/components/govuk/BackLink';
 import GovUKBreadcrumbs from '@/components/govuk/Breadcrumbs';
-import GovUKFeedback from '@/components/govuk/Feedback';
+
 import { ENTITY_HIERARCHY } from '@/lib/data/leadership-hierarchy';
 
 export const metadata: Metadata = {
@@ -84,7 +84,7 @@ export default function EntitiesPage() {
           </div>
         </div>
 
-        <GovUKFeedback />
+        
       </main>
     </div>
   );

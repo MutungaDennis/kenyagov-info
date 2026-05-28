@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 //import GovUKBackLink from "@/components/govuk/BackLink";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-import GovUKFeedback from "@/components/govuk/Feedback";
+
 import LastUpdated from "@/components/govuk/LastUpdated";
 import { createClient } from "@/lib/supabase/server";
 
@@ -101,7 +101,7 @@ export default async function IndependentBodyPage({
           published={body.created_at} 
         />
 
-        <GovUKFeedback />
+        
       </main>
     </div>
   );

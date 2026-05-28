@@ -1,7 +1,7 @@
 'use client';
 
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-import GovUKFeedback from "@/components/govuk/Feedback";
+
 
 export default function DevolutionPage() {
   return (
@@ -88,7 +88,7 @@ export default function DevolutionPage() {
               Devolution has completed over a decade of active implementation across Kenya. While local infrastructure deployment and healthcare access measurements have expanded across rural hubs, administrative challenges persist regarding local revenue collection gaps, capacity limits, and system inter-coordination.
             </p>
 
-            <GovUKFeedback />
+            
           </div>
         </div>
       </main>

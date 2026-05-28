@@ -1,6 +1,6 @@
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-import GovUKFeedback from "@/components/govuk/Feedback";
+
 
 export default function StartingBusiness() {
   return (
@@ -181,7 +181,7 @@ export default function StartingBusiness() {
           </div>
         </section>
 
-        <GovUKFeedback />
+        
       </main>
 
       {/* Global CSS Layout Overrides safe for Next App Architecture */}

@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-import GovUKFeedback from "@/components/govuk/Feedback";
+
 
 import { getConstitutionChapter } from "@/lib/sanity/client";
 
@@ -143,7 +143,7 @@ export default async function ConstitutionChapterPage({ params }: Props) {
 
         </div>
 
-        <GovUKFeedback />
+        
       </main>
 
       <style dangerouslySetInnerHTML={{__html: `

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import GovUKSummaryList from "@/components/govuk/SummaryList";
-import GovUKFeedback from "@/components/govuk/Feedback";
+
 
 export default function ExecutivePage() {
   return (
@@ -279,7 +279,7 @@ export default function ExecutivePage() {
               </p>
             </div>
 
-            <GovUKFeedback />
+            
           </div>
         </div>
       </main>

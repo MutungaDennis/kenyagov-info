@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-import GovUKFeedback from "@/components/govuk/Feedback";
+
 import { governors } from "@/data/governors";
 
 type SortField = 'code_number' | 'name' | 'county' | 'party' | 'region' | 'deputyGovernor';
@@ -289,7 +289,7 @@ export default function GovernorsPage() {
               Click on any Governor’s name to view the full county profile.
             </p>
 
-            <GovUKFeedback />
+            
           </div>
         </div>
       </main>

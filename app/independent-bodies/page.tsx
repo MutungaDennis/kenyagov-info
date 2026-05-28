@@ -1,7 +1,7 @@
 import Link from "next/link";
 //import GovUKBackLink from "@/components/govuk/BackLink";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-import GovUKFeedback from "@/components/govuk/Feedback";
+
 
 export default function IndependentBodies() {
   return (
@@ -225,7 +225,7 @@ export default function IndependentBodies() {
           </p>
         </div>
 
-        <GovUKFeedback />
+        
       </main>
     </div>
   );

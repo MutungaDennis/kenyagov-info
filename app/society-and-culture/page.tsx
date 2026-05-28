@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-import GovUKFeedback from "@/components/govuk/Feedback";
 import LastUpdated from "@/components/govuk/LastUpdated";
 
 export default function SocietyAndCulturePage() {
@@ -141,7 +140,7 @@ export default function SocietyAndCulturePage() {
               published="2026-05-22"
               lastUpdated="2026-05-22"
             />
-            <GovUKFeedback />
+          
           </div>
         </div>
 

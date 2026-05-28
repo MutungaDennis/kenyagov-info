@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import GovUKSummaryList from "@/components/govuk/SummaryList";
-import GovUKFeedback from "@/components/govuk/Feedback";
+
 
 type SessionalSection = 'overview' | 'restructuring' | 'cbc_foundations' | 'tvet' | 'legacy';
 
@@ -187,7 +187,7 @@ export default function SessionalPaper2012Page() {
           </div>
         </div>
 
-        <GovUKFeedback />
+        
       </main>
     </div>
   );

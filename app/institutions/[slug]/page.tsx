@@ -5,7 +5,7 @@ import Link from "next/link";
 
 //import GovUKBackLink from "@/components/govuk/BackLink";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-import GovUKFeedback from "@/components/govuk/Feedback";
+
 import GovUKSummaryList from "@/components/govuk/SummaryList";
 import PortableTextContent from "@/components/sanity/PortableTextContent";
 
@@ -340,7 +340,7 @@ export default async function InstitutionProfile({
               </div>
             )}
 
-            <GovUKFeedback />
+            
           </div>
 
           {/* Sidebar */}

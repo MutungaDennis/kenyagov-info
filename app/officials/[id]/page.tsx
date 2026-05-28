@@ -3,9 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-//import GovUKBackLink from '@/components/govuk/BackLink';
 import GovUKBreadcrumbs from '@/components/govuk/Breadcrumbs';
-import GovUKFeedback from '@/components/govuk/Feedback';
 import { OfficialDetail } from '@/components/officials/OfficialDetail';
 import { OfficialWithRelations } from '@/lib/supabase/officials';
 
@@ -133,7 +131,6 @@ export default function OfficialPage() {
           </div>
         </section>
 
-        <GovUKFeedback />
       </main>
     </div>
   );

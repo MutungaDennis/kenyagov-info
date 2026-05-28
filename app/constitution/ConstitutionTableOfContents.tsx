@@ -3,7 +3,7 @@
 import React, { useState, useMemo } from "react";
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-import GovUKFeedback from "@/components/govuk/Feedback";
+
 
 interface Article {
   _id: string;
@@ -273,7 +273,7 @@ export default function ConstitutionTableOfContents({
           </div>
         </div>
 
-        <GovUKFeedback />
+        
       </main>
 
       {/* CSS Overrides to hide default summary markers using a valid template string */}
