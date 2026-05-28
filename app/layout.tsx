@@ -1,18 +1,23 @@
 'use client';
 
+// 1. Core Framework Styles (Loaded first)
 import "govuk-frontend/govuk-frontend.min.css"; 
+
+// 2. Your Custom Global Overrides (Loaded second with a safe relative path)
+import "./globals.css"; 
+
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { Inter } from 'next/font/google'; // 1. Import Inter
+import { Lexend } from 'next/font/google';
 
 import GovUKHeader from "@/components/govuk/Header";
 import GovUKFooter from "@/components/govuk/Footer";
 
-// 2. Configure Inter
-const inter = Inter({
+// Configure Lexend Font Asset
+const lexend = Lexend({
   subsets: ['latin'],
   display: 'swap',
-  variable: '--font-inter', 
+  variable: '--font-lexend',
 });
 
 export default function RootLayout({
@@ -38,11 +43,18 @@ export default function RootLayout({
   }, []);
 
   return (
-    // 3. Inject inter.variable to pass the font variable down
-    <html lang="en-KE" className={`govuk-template ${inter.variable}`}>
+    <html lang="en-KE" className={`govuk-template ${lexend.variable}`}>
       <body className="govuk-template__body">
+        {/* Render header on internal subpages */}
         {!isHomePage && <GovUKHeader />}
-        {children}
+
+        {/* GOV.UK Layout grid and alignment wrapper */}
+        <div className="govuk-width-container">
+          <main className="govuk-main-wrapper" id="main-content" role="main">
+            {children}
+          </main>
+        </div>
+
         <GovUKFooter />
       </body>
     </html>
