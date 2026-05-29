@@ -34,7 +34,7 @@ export default function GovUKHeader() {
         boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
       }}
     >
-      {/* TIER 1: Adaptive Brand Identity & Action Controls Row */}
+      {/* TIER 1: Adaptive Brand Identity & Inline Controls Row */}
       <div 
         className="header-top-white-tier"
         style={{ borderBottom: '1px solid #e5e5e5' }}
@@ -59,7 +59,7 @@ export default function GovUKHeader() {
               <Image 
                 src="/logo.jpeg" 
                 alt="CitizenGuide.KE Logo" 
-                width={30} // Reduced signature width for mobile optimization
+                width={30} 
                 height={30} 
                 priority
                 style={{ marginRight: '8px', display: 'block', borderRadius: '4px', border: '1px solid #bfc1c3' }}
@@ -70,12 +70,12 @@ export default function GovUKHeader() {
             </Link>
           </div>
 
-          {/* Right Side: Dual Desktop/Mobile Accessible Control Node Cluster */}
+          {/* Right Side: Dual Desktop Inline Search Input / Mobile Icon Toggle Cluster */}
           <div 
             className="top-tier-action-group"
             style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
           >
-            {/* DESKTOP-ONLY SHORT SEARCH BAR (Positioned perfectly on the left of Support) */}
+            {/* DESKTOP-ONLY SHORT INLINE SEARCH BAR */}
             <div className="desktop-search-inline-container" style={{ marginRight: '4px' }}>
               <form action="/search" method="get" role="search" style={{ display: 'flex' }}>
                 <input 
@@ -100,7 +100,7 @@ export default function GovUKHeader() {
               </form>
             </div>
 
-            {/* MOBILE-ONLY SEARCH ICON TOGGLE (Sits cleanly right before Support button) */}
+            {/* MOBILE-ONLY QUICK SEARCH ICON TOGGLE */}
             <button
               type="button"
               onClick={toggleMobileSearch}
@@ -114,7 +114,7 @@ export default function GovUKHeader() {
                 color: '#0b0c0c',
                 cursor: 'pointer',
                 padding: '8px',
-                display: 'none', // Overridden to display on mobile viewports via CSS in Part 4
+                display: 'none', 
                 alignItems: 'center',
                 justifyContent: 'center'
               }}
@@ -125,7 +125,7 @@ export default function GovUKHeader() {
               </svg>
             </button>
 
-            {/* UNIVERSAL SUPPORT LINK: Scaled down via CSS on mobile to guarantee strict single line fit */}
+            {/* UNIVERSAL SUPPORT ACTION LINK BUTTON */}
             <Link 
               href="/support" 
               className="govuk-button universal-header-support-btn"
@@ -149,7 +149,7 @@ export default function GovUKHeader() {
           </div>
         </div>
       </div>
-      {/* MOBILE-ONLY SEARCH EXTENSION DRAWER (Slides open cleanly below the white tier line) */}
+      {/* MOBILE-ONLY DROPDOWN SEARCH DRAWER (Slides open under the white tier baseline) */}
       {mobileSearchOpen && (
         <div 
           id="mobile-dropdown-search-drawer"
@@ -159,7 +159,7 @@ export default function GovUKHeader() {
             borderBottom: '4px solid #004B23',
             width: '100%',
             position: 'absolute',
-            top: '53px', /* Sits flush under tight mobile branding line */
+            top: '53px',
             left: 0,
             zIndex: 99,
             boxShadow: '0 4px 10px rgba(0,0,0,0.15)'
@@ -170,7 +170,6 @@ export default function GovUKHeader() {
               <div style={{ display: 'flex', width: '100%' }}>
                 <label className="govuk-visually-hidden" htmlFor="mobile-search-input-field">Search CitizenGuide.KE</label>
                 
-                {/* HIGH-CONTRAST INJECTION: Forces clear placeholder text visibility inside white input canvas */}
                 <style dangerouslySetInnerHTML={{__html: `
                   #mobile-search-input-field { color: #000000 !important; }
                   #mobile-search-input-field::placeholder { color: #000000 !important; opacity: 1 !important; }
@@ -181,7 +180,7 @@ export default function GovUKHeader() {
                   id="mobile-search-input-field"
                   name="q" 
                   type="search" 
-                  placeholder="Search guidelines, services, laws..."
+                  placeholder="Search public services & laws..."
                   style={{
                     border: '3px solid #0b0c0c',
                     borderRight: 'none',
@@ -224,31 +223,37 @@ export default function GovUKHeader() {
             position: 'relative'
           }}
         >
-          {/* Navigation Category Nodes Block */}
+          {/* Navigation Category Ribbon: Automatically accommodates extra elements on desktop */}
           <nav 
             aria-label="Primary Site Sections" 
             style={{ display: 'flex', alignItems: 'center', gap: '2px' }}
           >
-            {/* Primary Node 1: Civil Services */}
+            {/* Primary Node 1: Civil Services (Visible on all viewports) */}
             <Link href="/services/id" className="ribbon-nav-link" style={{ color: '#ffffff', fontSize: '15px', fontWeight: 'bold', textDecoration: 'none', padding: '8px 10px', display: 'inline-flex' }}>
               Civil Services
             </Link>
             
-            {/* Primary Node 2: Passports */}
+            {/* Primary Node 2: Passports (Visible on all viewports) */}
             <Link href="/services/passport" className="ribbon-nav-link" style={{ color: '#ffffff', fontSize: '15px', fontWeight: 'bold', textDecoration: 'none', padding: '8px 10px', display: 'inline-flex' }}>
               Passports
             </Link>
 
-            {/* DESKTOP-ONLY EXTRA NAVIGATION NODES (Automatically hidden on mobile viewports to prevent screen overflow) */}
-            <Link href="/services/tax" className="ribbon-nav-link desktop-ribbon-extra" style={{ color: '#ffffff', fontSize: '15px', fontWeight: 'bold', textDecoration: 'none', padding: '8px 12px', display: 'inline-flex' }}>
+            {/* GAP FILLERS: Extra navigation nodes displayed natively on desktop to fill empty horizontal space */}
+            <Link href="/services/tax" className="ribbon-nav-link desktop-ribbon-extra" style={{ color: '#ffffff', fontSize: '15px', fontWeight: 'bold', textDecoration: 'none', padding: '8px 10px', display: 'inline-flex' }}>
               KRA &amp; Tax
             </Link>
-            <Link href="/services/driving" className="ribbon-nav-link desktop-ribbon-extra" style={{ color: '#ffffff', fontSize: '15px', fontWeight: 'bold', textDecoration: 'none', padding: '8px 12px', display: 'inline-flex' }}>
+            <Link href="/services/driving" className="ribbon-nav-link desktop-ribbon-extra" style={{ color: '#ffffff', fontSize: '15px', fontWeight: 'bold', textDecoration: 'none', padding: '8px 10px', display: 'inline-flex' }}>
               NTSA Transport
+            </Link>
+            <Link href="/executive" className="ribbon-nav-link desktop-ribbon-extra" style={{ color: '#ffffff', fontSize: '15px', fontWeight: 'bold', textDecoration: 'none', padding: '8px 10px', display: 'inline-flex' }}>
+              Government Arms
+            </Link>
+            <Link href="/executive/presidency/executive-orders" className="ribbon-nav-link desktop-ribbon-extra" style={{ color: '#ffffff', fontSize: '15px', fontWeight: 'bold', textDecoration: 'none', padding: '8px 10px', display: 'inline-flex' }}>
+              Official Records
             </Link>
           </nav>
 
-          {/* Collapsible Mega-Menu Toggle Button Container */}
+          {/* Collapsible Mega Menu Trigger Block */}
           <div>
             <button
               type="button"
@@ -322,7 +327,7 @@ export default function GovUKHeader() {
                 </ul>
               </div>
 
-              {/* Dropdown Column 2: Core Governance Architectures */}
+              {/* Dropdown Column 2: Governance Architectures & Frameworks */}
               <div className="mega-menu-column" style={{ flex: "1 1 260px" }}>
                 <h2 className="govuk-heading-s govuk-!-margin-bottom-3" style={{ color: '#0b0c0c', borderBottom: '3px solid #004B23', paddingBottom: '4px', margin: 0, fontSize: "16px" }}>
                   Arms of Government
@@ -383,7 +388,7 @@ export default function GovUKHeader() {
         .sub-drawer-link { color: #004B23 !important; }
         .sub-drawer-link:hover { text-decoration: underline !important; color: #002210 !important; }
         
-        /* Interactive element feedback animations */
+        /* Interactive element feedback states */
         .more-active { background-color: rgba(255, 255, 255, 0.2) !important; }
         .icon-active { background-color: rgba(0, 0, 0, 0.06) !important; border-radius: 4px; }
         .ribbon-nav-link:hover { background-color: rgba(255, 255, 255, 0.1) !important; text-decoration: underline !important; border-radius: 4px; }
@@ -397,7 +402,7 @@ export default function GovUKHeader() {
           .desktop-search-inline-container { display: none !important; }
           .desktop-ribbon-extra { display: none !important; }
           
-          /* Enforce active display configuration for the mobile search button */
+          /* Enforce active display configuration for the mobile search toggle icon */
           .mobile-search-toggle-btn { display: inline-flex !important; }
           
           /* Scale down padding tightly on mobile screens to stop horizontal wrapping */
@@ -423,6 +428,9 @@ export default function GovUKHeader() {
             padding: 8px 14px !important;
             font-size: 14px !important;
           }
+
+          /* Re-orient green ribbon parameters into a single horizontal block */
+          .header-bottom-green-tier .govuk-width-container { flex-direction: row !important; align-items: center; justify-content: space-between; }
         }
 
         /* Prevent mega-menu cutoff scenarios across small monitors and tablet forms */
