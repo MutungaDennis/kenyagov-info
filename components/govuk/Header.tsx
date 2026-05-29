@@ -6,9 +6,16 @@ import Image from "next/image";
 
 export default function GovUKHeader() {
   const [moreOpen, setMoreOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
   const toggleMore = () => {
     setMoreOpen(!moreOpen);
+    if (mobileSearchOpen) setMobileSearchOpen(false);
+  };
+
+  const toggleMobileSearch = () => {
+    setMobileSearchOpen(!mobileSearchOpen);
+    if (moreOpen) setMoreOpen(false);
   };
 
   return (
@@ -17,8 +24,8 @@ export default function GovUKHeader() {
       role="banner" 
       data-module="govuk-header"
       style={{ 
-        backgroundColor: '#ffffff', // Clean high-contrast white top base
-        borderBottom: '6px solid #CE1126', // Harambee Crimson bottom anchor line
+        backgroundColor: '#ffffff', // Clean crisp white top branding tier
+        borderBottom: '6px solid #CE1126', // Harambee Crimson baseline accent rule
         padding: '0',
         margin: '0',
         position: 'relative',
@@ -27,7 +34,7 @@ export default function GovUKHeader() {
         boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
       }}
     >
-      {/* TIER 1: Brand Identity & Desktop Dual-Button Layout */}
+      {/* TIER 1: Adaptive Brand Identity & Action Controls Row */}
       <div 
         className="header-top-white-tier"
         style={{ borderBottom: '1px solid #e5e5e5' }}
@@ -39,94 +46,167 @@ export default function GovUKHeader() {
             display: 'flex', 
             justifyContent: 'space-between', 
             alignItems: 'center',
-            paddingTop: '12px',
-            paddingBottom: '12px',
+            paddingTop: '10px',
+            paddingBottom: '10px',
+            paddingLeft: '16px',
+            paddingRight: '16px',
             boxSizing: 'border-box'
           }}
         >
-          {/* Left Side: Brand Logo and Title */}
+          {/* Left Side: Scaled Brand Logo and Responsive Domain Label */}
           <div className="govuk-header__logo" style={{ display: 'inline-flex', alignItems: 'center' }}>
             <Link href="/" className="govuk-header__link" style={{ display: 'inline-flex', alignItems: 'center', textDecoration: 'none' }}>
               <Image 
                 src="/logo.jpeg" 
                 alt="CitizenGuide.KE Logo" 
-                width={36} 
-                height={36} 
+                width={30} // Reduced signature width for mobile optimization
+                height={30} 
                 priority
-                style={{ marginRight: '10px', display: 'block', borderRadius: '4px', border: '1px solid #bfc1c3' }}
+                style={{ marginRight: '8px', display: 'block', borderRadius: '4px', border: '1px solid #bfc1c3' }}
               />
-              <span className="header-branding-title" style={{ fontWeight: '800', color: '#0b0c0c', letterSpacing: '-0.3px', lineHeight: '1.2' }}>
+              <span className="header-branding-title" style={{ fontWeight: '800', color: '#0b0c0c', letterSpacing: '-0.4px', lineHeight: '1.2' }}>
                 CitizenGuide.KE
               </span>
             </Link>
           </div>
 
-          {/* Right Side: GOV.UK Compliant Button Action Group */}
+          {/* Right Side: Dual Desktop/Mobile Accessible Control Node Cluster */}
           <div 
             className="top-tier-action-group"
-            style={{ display: 'flex', alignItems: 'center', gap: '10px' }}
+            style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
           >
-            {/* 
-              DESKTOP-ONLY SUPPORT NODE: Adheres strictly to GOV.UK 
-              Secondary Button standards (Clean dark text with outline borders).
-            */}
+            {/* DESKTOP-ONLY SHORT SEARCH BAR (Positioned perfectly on the left of Support) */}
+            <div className="desktop-search-inline-container" style={{ marginRight: '4px' }}>
+              <form action="/search" method="get" role="search" style={{ display: 'flex' }}>
+                <input 
+                  className="govuk-input" 
+                  name="q" 
+                  type="search" 
+                  placeholder="Search site..."
+                  style={{
+                    border: '2px solid #0b0c0c',
+                    borderRight: 'none',
+                    height: '34px',
+                    width: '180px',
+                    padding: '0 8px',
+                    fontSize: '14px',
+                    backgroundColor: '#ffffff',
+                    color: '#000000'
+                  }}
+                />
+                <button type="submit" aria-label="Search" style={{ backgroundColor: '#0b0c0c', border: 'none', color: '#ffffff', width: '36px', height: '34px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                </button>
+              </form>
+            </div>
+
+            {/* MOBILE-ONLY SEARCH ICON TOGGLE (Sits cleanly right before Support button) */}
+            <button
+              type="button"
+              onClick={toggleMobileSearch}
+              className={`mobile-search-toggle-btn ${mobileSearchOpen ? 'icon-active' : ''}`}
+              aria-controls="mobile-dropdown-search-drawer"
+              aria-label={mobileSearchOpen ? "Close search tool" : "Open search tool"}
+              aria-expanded={mobileSearchOpen}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#0b0c0c',
+                cursor: 'pointer',
+                padding: '8px',
+                display: 'none', // Overridden to display on mobile viewports via CSS in Part 4
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+            </button>
+
+            {/* UNIVERSAL SUPPORT LINK: Scaled down via CSS on mobile to guarantee strict single line fit */}
             <Link 
               href="/support" 
-              className="govuk-button govuk-button--secondary desktop-top-support-btn"
+              className="govuk-button universal-header-support-btn"
               style={{
                 color: '#0b0c0c',
                 backgroundColor: '#f3f2f1',
                 boxShadow: '0 2px 0 #0b0c0c',
-                fontSize: '14px',
+                fontSize: '13px',
                 fontWeight: 'bold',
                 textDecoration: 'none',
-                padding: '8px 14px',
+                padding: '6px 12px',
                 margin: '0',
                 display: 'inline-flex',
                 alignItems: 'center',
-                borderRadius: '0', /* Strict GOV.UK flat design language */
-                border: '2px solid #0b0c0c'
-              }}
-            >
-              Support
-            </Link>
-
-            {/* 
-              UNIVERSAL MY ACCOUNT NODE: Adheres strictly to GOV.UK 
-              Primary Button standards (High contrast solid dark fill).
-            */}
-            <Link 
-              href="/account" 
-              className="govuk-button top-account-primary-btn"
-              style={{
-                backgroundColor: '#0b0c0c',
-                color: '#ffffff',
-                boxShadow: '0 2px 0 #000000',
-                fontSize: '14px',
-                fontWeight: 'bold',
-                textDecoration: 'none',
-                padding: '10px 16px',
-                margin: '0',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
+                border: '2px solid #0b0c0c',
                 borderRadius: '0'
               }}
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block' }}>
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                <circle cx="12" cy="7" r="4"></circle>
-              </svg>
-              <span>My Account</span>
+              <span>Support</span>
             </Link>
           </div>
         </div>
       </div>
-      {/* TIER 2: Deep Emerald Navigation & Universal Utility Tier */}
+      {/* MOBILE-ONLY SEARCH EXTENSION DRAWER (Slides open cleanly below the white tier line) */}
+      {mobileSearchOpen && (
+        <div 
+          id="mobile-dropdown-search-drawer"
+          className="mobile-only-search-pane"
+          style={{
+            backgroundColor: '#f3f2f1',
+            borderBottom: '4px solid #004B23',
+            width: '100%',
+            position: 'absolute',
+            top: '53px', /* Sits flush under tight mobile branding line */
+            left: 0,
+            zIndex: 99,
+            boxShadow: '0 4px 10px rgba(0,0,0,0.15)'
+          }}
+        >
+          <div style={{ padding: '12px 16px' }}>
+            <form action="/search" method="get" role="search" style={{ display: 'flex', width: '100%' }}>
+              <div style={{ display: 'flex', width: '100%' }}>
+                <label className="govuk-visually-hidden" htmlFor="mobile-search-input-field">Search CitizenGuide.KE</label>
+                
+                {/* HIGH-CONTRAST INJECTION: Forces clear placeholder text visibility inside white input canvas */}
+                <style dangerouslySetInnerHTML={{__html: `
+                  #mobile-search-input-field { color: #000000 !important; }
+                  #mobile-search-input-field::placeholder { color: #000000 !important; opacity: 1 !important; }
+                `}} />
+
+                <input 
+                  className="govuk-input" 
+                  id="mobile-search-input-field"
+                  name="q" 
+                  type="search" 
+                  placeholder="Search guidelines, services, laws..."
+                  style={{
+                    border: '3px solid #0b0c0c',
+                    borderRight: 'none',
+                    height: '38px',
+                    padding: '0 10px',
+                    fontSize: '15px',
+                    flex: 1,
+                    backgroundColor: '#ffffff',
+                    color: '#000000'
+                  }}
+                />
+                <button type="submit" aria-label="Submit Search" style={{ backgroundColor: '#0b0c0c', border: 'none', color: '#ffffff', width: '42px', height: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* TIER 2: Deep Emerald Clean Navigation Ribbon */}
       <div 
         className="header-bottom-green-tier"
         style={{
-          backgroundColor: '#004B23', // Rich Deep Kenyan Emerald
+          backgroundColor: '#004B23', // Vibrant Deep Kenyan Emerald
           paddingTop: '6px',
           paddingBottom: '6px'
         }}
@@ -136,132 +216,64 @@ export default function GovUKHeader() {
           style={{
             margin: '0 auto',
             display: 'flex',
-            flexDirection: 'column', // Base stacked arrangement for mobile screens
-            gap: '8px',
-            boxSizing: 'border-box'
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            paddingLeft: '16px',
+            paddingRight: '16px',
+            boxSizing: 'border-box',
+            position: 'relative'
           }}
         >
-          {/* Prominent Mobile-Only Full-Width Search Input Row */}
-          <div className="mobile-search-embedded-row" style={{ width: '100%' }}>
-            <form action="/search" method="get" role="search" style={{ display: 'flex', width: '100%' }}>
-              <div style={{ display: 'flex', width: '100%' }}>
-                <label className="govuk-visually-hidden" htmlFor="mobile-search-input">Search CitizenGuide.KE</label>
-                <input 
-                  className="govuk-input" 
-                  id="mobile-search-input"
-                  name="q" 
-                  type="search" 
-                  placeholder="Search public services & laws..."
-                  style={{
-                    border: '2px solid #ffffff',
-                    borderRight: 'none',
-                    height: '36px',
-                    padding: '0 10px',
-                    fontSize: '15px',
-                    flex: 1,
-                    backgroundColor: '#ffffff',
-                    color: '#000000',
-                    borderRadius: '4px 0 0 4px'
-                  }}
-                />
-                <button type="submit" style={{ backgroundColor: '#0b0c0c', border: '2px solid #ffffff', borderLeft: 'none', color: '#ffffff', width: '40px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '0 4px 4px 0', cursor: 'pointer' }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                </button>
-              </div>
-            </form>
-          </div>
-
-          {/* Navigation Category Ribbon Row */}
-          <div 
-            className="navigation-ribbon-row"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              position: 'relative'
-            }}
+          {/* Navigation Category Nodes Block */}
+          <nav 
+            aria-label="Primary Site Sections" 
+            style={{ display: 'flex', alignItems: 'center', gap: '2px' }}
           >
-            <nav 
-              aria-label="Primary Site Sections" 
-              style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '2px' }}
+            {/* Primary Node 1: Civil Services */}
+            <Link href="/services/id" className="ribbon-nav-link" style={{ color: '#ffffff', fontSize: '15px', fontWeight: 'bold', textDecoration: 'none', padding: '8px 10px', display: 'inline-flex' }}>
+              Civil Services
+            </Link>
+            
+            {/* Primary Node 2: Passports */}
+            <Link href="/services/passport" className="ribbon-nav-link" style={{ color: '#ffffff', fontSize: '15px', fontWeight: 'bold', textDecoration: 'none', padding: '8px 10px', display: 'inline-flex' }}>
+              Passports
+            </Link>
+
+            {/* DESKTOP-ONLY EXTRA NAVIGATION NODES (Automatically hidden on mobile viewports to prevent screen overflow) */}
+            <Link href="/services/tax" className="ribbon-nav-link desktop-ribbon-extra" style={{ color: '#ffffff', fontSize: '15px', fontWeight: 'bold', textDecoration: 'none', padding: '8px 12px', display: 'inline-flex' }}>
+              KRA &amp; Tax
+            </Link>
+            <Link href="/services/driving" className="ribbon-nav-link desktop-ribbon-extra" style={{ color: '#ffffff', fontSize: '15px', fontWeight: 'bold', textDecoration: 'none', padding: '8px 12px', display: 'inline-flex' }}>
+              NTSA Transport
+            </Link>
+          </nav>
+
+          {/* Collapsible Mega-Menu Toggle Button Container */}
+          <div>
+            <button
+              type="button"
+              onClick={toggleMore}
+              className={`ribbon-more-toggle-btn ${moreOpen ? 'more-active' : ''}`}
+              aria-controls="expanded-more-mega-menu"
+              aria-label={moreOpen ? "Hide additional sections menu" : "Show additional sections menu"}
+              aria-expanded={moreOpen}
+              style={{
+                backgroundColor: 'transparent',
+                border: 'none',
+                color: '#ffffff',
+                fontSize: '15px',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                padding: '8px 12px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                borderRadius: '4px'
+              }}
             >
-              {/* Primary Node 1: Civil Registries */}
-              <Link href="/services/id" className="ribbon-nav-link" style={{ color: '#ffffff', fontSize: '15px', fontWeight: 'bold', textDecoration: 'none', padding: '8px 12px', display: 'inline-flex' }}>
-                Civil Services
-              </Link>
-              
-              {/* Primary Node 2: Travel and Identity */}
-              <Link href="/services/passport" className="ribbon-nav-link" style={{ color: '#ffffff', fontSize: '15px', fontWeight: 'bold', textDecoration: 'none', padding: '8px 12px', display: 'inline-flex' }}>
-                Passports
-              </Link>
-
-              {/* Primary Node 3: Revenue Node */}
-              <Link href="/services/tax" className="ribbon-nav-link" style={{ color: '#ffffff', fontSize: '15px', fontWeight: 'bold', textDecoration: 'none', padding: '8px 12px', display: 'inline-flex' }}>
-                KRA &amp; Tax
-              </Link>
-
-              {/* Primary Node 4: Transport Links */}
-              <Link href="/services/driving" className="ribbon-nav-link desktop-ribbon-extra" style={{ color: '#ffffff', fontSize: '15px', fontWeight: 'bold', textDecoration: 'none', padding: '8px 12px', display: 'inline-flex' }}>
-                NTSA Transport
-              </Link>
-
-              {/* Primary Node 5: Arms of Governance */}
-              <Link href="/executive" className="ribbon-nav-link desktop-ribbon-extra" style={{ color: '#ffffff', fontSize: '15px', fontWeight: 'bold', textDecoration: 'none', padding: '8px 12px', display: 'inline-flex' }}>
-                Government Arms
-              </Link>
-            </nav>
-
-            {/* Menu Dropdown Trigger and Mobile-Only Support Pill Group */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <button
-                type="button"
-                onClick={toggleMore}
-                className={`ribbon-more-toggle-btn ${moreOpen ? 'more-active' : ''}`}
-                aria-controls="expanded-more-mega-menu"
-                aria-label={moreOpen ? "Hide additional sections menu" : "Show additional sections menu"}
-                aria-expanded={moreOpen}
-                style={{
-                  backgroundColor: 'transparent',
-                  border: 'none',
-                  color: '#ffffff',
-                  fontSize: '15px',
-                  fontWeight: 'bold',
-                  cursor: 'pointer',
-                  padding: '8px 12px',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  borderRadius: '4px'
-                }}
-              >
-                <span>More</span>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" style={{ transform: moreOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }}><polyline points="6 9 12 15 18 9"></polyline></svg>
-              </button>
-
-              {/* 
-                MOBILE-ONLY CONDITIONAL SUPPORT NODE: Adheres strictly to GOV.UK 
-                Secondary Button layout constraints inside the lower menu bar context. 
-                Will be explicitly targeted and hidden via desktop media overrides in Part 4.
-              */}
-              <Link
-                href="/support"
-                className="govuk-link ribbon-support-pill mobile-only-support-pill"
-                style={{
-                  backgroundColor: '#ffffff',
-                  color: '#004B23',
-                  fontSize: '14px',
-                  fontWeight: 'bold',
-                  textDecoration: 'none',
-                  padding: '6px 14px',
-                  borderRadius: '4px',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.12)'
-                }}
-              >
-                Support
-              </Link>
-            </div>
+              <span>More</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" style={{ transform: moreOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }}><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
           </div>
 
         </div>
@@ -283,7 +295,7 @@ export default function GovUKHeader() {
             clear: 'both'
           }}
         >
-          <div className="govuk-width-container govuk-!-padding-top-5 govuk-!-padding-bottom-5">
+          <div className="govuk-width-container govuk-!-padding-top-5 govuk-!-padding-bottom-5" style={{ paddingLeft: '16px', paddingRight: '16px' }}>
             <div 
               className="mega-menu-flex-grid"
               style={{
@@ -293,7 +305,24 @@ export default function GovUKHeader() {
               }}
             >
               
-              {/* Dropdown Column 1: Core Governance Architectures */}
+              {/* Dropdown Column 1: Core Citizen Services (Mobile Fallbacks) */}
+              <div className="mega-menu-column mobile-only-menu-column" style={{ flex: "1 1 260px" }}>
+                <h2 className="govuk-heading-s govuk-!-margin-bottom-3" style={{ color: '#0b0c0c', borderBottom: '3px solid #004B23', paddingBottom: '4px', margin: 0, fontSize: "16px" }}>
+                  Additional Services
+                </h2>
+                <ul className="govuk-list govuk-list--spaced" style={{ margin: 0, padding: 0 }}>
+                  <li className="govuk-!-margin-bottom-2">
+                    <Link href="/services/tax" className="govuk-link sub-drawer-link" style={{ fontWeight: 'bold', fontSize: '16px', textDecoration: 'none' }}>Money, KRA &amp; Tax</Link>
+                    <p className="govuk-body-s govuk-!-margin-top-0 govuk-!-margin-bottom-0" style={{ color: "#505a5f" }}>Income filings, business licensing, and duties</p>
+                  </li>
+                  <li>
+                    <Link href="/services/driving" className="govuk-link sub-drawer-link" style={{ fontWeight: 'bold', fontSize: '16px', textDecoration: 'none' }}>Driving &amp; Transport</Link>
+                    <p className="govuk-body-s govuk-!-margin-top-0 govuk-!-margin-bottom-0" style={{ color: "#505a5f" }}>NTSA logbooks, license testing, and vehicle links</p>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Dropdown Column 2: Core Governance Architectures */}
               <div className="mega-menu-column" style={{ flex: "1 1 260px" }}>
                 <h2 className="govuk-heading-s govuk-!-margin-bottom-3" style={{ color: '#0b0c0c', borderBottom: '3px solid #004B23', paddingBottom: '4px', margin: 0, fontSize: "16px" }}>
                   Arms of Government
@@ -317,7 +346,7 @@ export default function GovUKHeader() {
                   </li>
                 </ul>
               </div>
-              {/* Dropdown Section Column 2: Official Gazettes & Policy Archives */}
+              {/* Dropdown Section Column 3: Official Gazettes & Policy Archives */}
               <div className="mega-menu-column" style={{ flex: "1 1 260px" }}>
                 <h2 className="govuk-heading-s govuk-!-margin-bottom-3" style={{ color: '#0b0c0c', borderBottom: '3px solid #004B23', paddingBottom: '4px', margin: 0, fontSize: "16px" }}>
                   Official Records
@@ -349,48 +378,51 @@ export default function GovUKHeader() {
 
       {/* Global CSS Responsive Core Layout Overrides */}
       <style dangerouslySetInnerHTML={{__html: `
-        /* Base typography font scaling configuration */
-        .header-branding-title { font-size: 19px; }
-        
-        /* Drawer context link setups */
+        /* Base typography and interactive link variables */
+        .header-branding-title { font-size: 15px; }
         .sub-drawer-link { color: #004B23 !important; }
         .sub-drawer-link:hover { text-decoration: underline !important; color: #002210 !important; }
         
-        /* Interactive dynamic active/hover state matrices */
+        /* Interactive element feedback animations */
         .more-active { background-color: rgba(255, 255, 255, 0.2) !important; }
+        .icon-active { background-color: rgba(0, 0, 0, 0.06) !important; border-radius: 4px; }
         .ribbon-nav-link:hover { background-color: rgba(255, 255, 255, 0.1) !important; text-decoration: underline !important; border-radius: 4px; }
-        
-        /* GOV.UK Button specific interaction updates */
-        .top-account-primary-btn:hover { background-color: #2b2c2c !important; }
-        .desktop-top-support-btn:hover { background-color: #dbdad9 !important; }
-        .ribbon-support-pill:hover { background-color: #f3f2f1 !important; color: #002210 !important; }
+        .universal-header-support-btn:hover { background-color: #dbdad9 !important; }
 
-        /* Absolute positioning parameters for mega-drawers */
+        /* Absolute placement layouts for expansion blocks */
         .more-dropdown-drawer-panel { position: absolute; top: 100%; left: 0; }
 
-        /* MOBILE/TABLET COMPACTNESS RESPONSIVE OVERRIDES */
+        /* SMARTPHONE VIEWPORT FLEX RULES */
         @media (max-width: 40.05rem) {
-          .desktop-top-support-btn { display: none !important; }
+          .desktop-search-inline-container { display: none !important; }
           .desktop-ribbon-extra { display: none !important; }
           
-          /* Enforce horizontal scrolling sub-ribbon on small devices to prevent wrapping chaos */
-          .navigation-ribbon-row nav { flex-wrap: nowrap !important; overflow-x: auto !important; scrollbar-width: none; }
-          .navigation-ribbon-row nav::-webkit-scrollbar { display: none; }
-          .ribbon-nav-link { white-space: nowrap !important; }
+          /* Enforce active display configuration for the mobile search button */
+          .mobile-search-toggle-btn { display: inline-flex !important; }
+          
+          /* Scale down padding tightly on mobile screens to stop horizontal wrapping */
+          .universal-header-support-btn {
+            padding: 4px 8px !important;
+            font-size: 12px !important;
+          }
+        }
+
+        /* EXTRA CRAMPED SCREEN PROFILE COMPRESSION (e.g. iPhone SE / 320px screens) */
+        @media (max-width: 23rem) {
+          .header-branding-title { font-size: 13px; }
         }
 
         /* ADVANCED DESKTOP FLEX VIEWPORT INTERFACES */
         @media (min-width: 40.0625rem) {
-          .header-branding-title { font-size: 25px; }
+          .header-branding-title { font-size: 24px; }
+          .mobile-only-menu-column { display: none !important; }
+          .mobile-only-search-pane { display: none !important; }
           
-          /* CRITICAL CROSS-RENDER FIX: Suppress ribbon-level support portal on wide screens */
-          .mobile-only-support-pill { display: none !important; }
-          
-          /* Re-orient green ribbon parameters into a single horizontal block */
-          .header-bottom-green-tier .govuk-width-container { flex-direction: row !important; align-items: center; justify-content: space-between; }
-          
-          /* Hide mobile full-width input container on large monitors */
-          .mobile-search-embedded-row { display: none !important; }
+          /* Expand padding allocations for clean desktop monitor presentations */
+          .universal-header-support-btn {
+            padding: 8px 14px !important;
+            font-size: 14px !important;
+          }
         }
 
         /* Prevent mega-menu cutoff scenarios across small monitors and tablet forms */
