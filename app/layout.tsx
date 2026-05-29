@@ -4,9 +4,9 @@ import "govuk-frontend/govuk-frontend.min.css";
 import "@/app/globals.css"; 
 
 import { useEffect } from "react";
-import { usePathname } from "next/navigation";
 import { Public_Sans } from 'next/font/google';
 
+// Use only the universal Header component
 import GovUKHeader from "@/components/govuk/Header";
 import GovUKFooter from "@/components/govuk/Footer";
 import GovUKFeedback from "@/components/govuk/Feedback";
@@ -24,8 +24,6 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const pathname = usePathname();
-  const isHomePage = pathname === "/";
 
   useEffect(() => {
     const initGovuk = async () => {
@@ -60,7 +58,8 @@ export default function RootLayout({
           }
         `}} />
 
-        {!isHomePage && <GovUKHeader />}
+        {/* Universal Header rendered across all pages */}
+        <GovUKHeader />
         
         <div className="govuk-width-container">
           <main className="govuk-main-wrapper" id="main-content" role="main">
