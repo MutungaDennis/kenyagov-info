@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import GovUKHomeHeader from "@/components/govuk/HomeHeader";
 
 export default function Home() {
   const router = useRouter();
@@ -18,9 +17,6 @@ export default function Home() {
 
   return (
     <>
-      {/* Home-page exclusive minimal brand bar header component */}
-      <GovUKHomeHeader />
-
       <div className="govuk-width-container">
         
         {/* GOV.UK Phase Banner (BETA Disclosure Panel) */}
