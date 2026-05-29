@@ -17,7 +17,7 @@ export default function GovUKHeader() {
       role="banner" 
       data-module="govuk-header"
       style={{ 
-        backgroundColor: '#ffffff', // High-contrast clean white top tier base
+        backgroundColor: '#ffffff', // Clean high-contrast white top base
         borderBottom: '6px solid #CE1126', // Harambee Crimson bottom anchor line
         padding: '0',
         margin: '0',
@@ -27,7 +27,7 @@ export default function GovUKHeader() {
         boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
       }}
     >
-      {/* TIER 1: Brand Identity & Account Gateway Row */}
+      {/* TIER 1: Brand Identity & Desktop Dual-Button Layout */}
       <div 
         className="header-top-white-tier"
         style={{ borderBottom: '1px solid #e5e5e5' }}
@@ -61,30 +61,62 @@ export default function GovUKHeader() {
             </Link>
           </div>
 
-          {/* Right Side: Accessible User Access Gate (Enforced with Clear Text) */}
-          <div className="top-tier-action-group">
+          {/* Right Side: GOV.UK Compliant Button Action Group */}
+          <div 
+            className="top-tier-action-group"
+            style={{ display: 'flex', alignItems: 'center', gap: '10px' }}
+          >
+            {/* 
+              DESKTOP-ONLY SUPPORT NODE: Adheres strictly to GOV.UK 
+              Secondary Button standards (Clean dark text with outline borders).
+            */}
             <Link 
-              href="/account" 
-              className="govuk-link header-account-pill-btn"
+              href="/support" 
+              className="govuk-button govuk-button--secondary desktop-top-support-btn"
               style={{
-                backgroundColor: '#0b0c0c',
-                color: '#ffffff',
+                color: '#0b0c0c',
+                backgroundColor: '#f3f2f1',
+                boxShadow: '0 2px 0 #0b0c0c',
                 fontSize: '14px',
                 fontWeight: 'bold',
                 textDecoration: 'none',
                 padding: '8px 14px',
-                borderRadius: '4px',
+                margin: '0',
+                display: 'inline-flex',
+                alignItems: 'center',
+                borderRadius: '0', /* Strict GOV.UK flat design language */
+                border: '2px solid #0b0c0c'
+              }}
+            >
+              Support
+            </Link>
+
+            {/* 
+              UNIVERSAL MY ACCOUNT NODE: Adheres strictly to GOV.UK 
+              Primary Button standards (High contrast solid dark fill).
+            */}
+            <Link 
+              href="/account" 
+              className="govuk-button top-account-primary-btn"
+              style={{
+                backgroundColor: '#0b0c0c',
+                color: '#ffffff',
+                boxShadow: '0 2px 0 #000000',
+                fontSize: '14px',
+                fontWeight: 'bold',
+                textDecoration: 'none',
+                padding: '10px 16px',
+                margin: '0',
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '6px',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                borderRadius: '0'
               }}
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block' }}>
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                 <circle cx="12" cy="7" r="4"></circle>
               </svg>
-              {/* GOV.UK Compliance: Text label remains completely readable on mobile screen profiles */}
               <span>My Account</span>
             </Link>
           </div>
@@ -179,7 +211,7 @@ export default function GovUKHeader() {
               </Link>
             </nav>
 
-            {/* Menu Dropdown Trigger and Explicitly Labeled Support Button Cluster */}
+            {/* Menu Dropdown Trigger and Mobile-Only Support Pill Group */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <button
                 type="button"
@@ -207,13 +239,13 @@ export default function GovUKHeader() {
               </button>
 
               {/* 
-                GOV.UK ALIGNMENT SOLUTION: Relocating Support button down into this 
-                lower menu block. Using a distinct white pill format with crisp text. 
-                This guarantees high visibility across phone, tablet, and desktop monitors.
+                MOBILE-ONLY CONDITIONAL SUPPORT NODE: Adheres strictly to GOV.UK 
+                Secondary Button layout constraints inside the lower menu bar context. 
+                Will be explicitly targeted and hidden via desktop media overrides in Part 4.
               */}
               <Link
                 href="/support"
-                className="govuk-link ribbon-support-pill"
+                className="govuk-link ribbon-support-pill mobile-only-support-pill"
                 style={{
                   backgroundColor: '#ffffff',
                   color: '#004B23',
@@ -327,7 +359,10 @@ export default function GovUKHeader() {
         /* Interactive dynamic active/hover state matrices */
         .more-active { background-color: rgba(255, 255, 255, 0.2) !important; }
         .ribbon-nav-link:hover { background-color: rgba(255, 255, 255, 0.1) !important; text-decoration: underline !important; border-radius: 4px; }
-        .header-account-pill-btn:hover { background-color: #2b2c2c !important; }
+        
+        /* GOV.UK Button specific interaction updates */
+        .top-account-primary-btn:hover { background-color: #2b2c2c !important; }
+        .desktop-top-support-btn:hover { background-color: #dbdad9 !important; }
         .ribbon-support-pill:hover { background-color: #f3f2f1 !important; color: #002210 !important; }
 
         /* Absolute positioning parameters for mega-drawers */
@@ -335,6 +370,7 @@ export default function GovUKHeader() {
 
         /* MOBILE/TABLET COMPACTNESS RESPONSIVE OVERRIDES */
         @media (max-width: 40.05rem) {
+          .desktop-top-support-btn { display: none !important; }
           .desktop-ribbon-extra { display: none !important; }
           
           /* Enforce horizontal scrolling sub-ribbon on small devices to prevent wrapping chaos */
@@ -346,6 +382,9 @@ export default function GovUKHeader() {
         /* ADVANCED DESKTOP FLEX VIEWPORT INTERFACES */
         @media (min-width: 40.0625rem) {
           .header-branding-title { font-size: 25px; }
+          
+          /* CRITICAL CROSS-RENDER FIX: Suppress ribbon-level support portal on wide screens */
+          .mobile-only-support-pill { display: none !important; }
           
           /* Re-orient green ribbon parameters into a single horizontal block */
           .header-bottom-green-tier .govuk-width-container { flex-direction: row !important; align-items: center; justify-content: space-between; }
