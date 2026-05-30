@@ -2,6 +2,9 @@ import type { NextConfig } from "next";
 import path from "path";
 
 const nextConfig: NextConfig = {
+  // 1. Tell Next.js to leave pdfjs-dist alone and resolve it directly from node_modules
+  serverExternalPackages: ['pdfjs-dist'],
+
   sassOptions: {
     quietDeps: true,
     silenceDeprecations: ["import", "if-function", "legacy-js-api"],
