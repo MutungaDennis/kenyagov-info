@@ -1,16 +1,12 @@
-'use client';
+// app/layout.tsx
+import { Metadata } from 'next';
+import { Public_Sans } from 'next/font/google';
 
 import "govuk-frontend/govuk-frontend.min.css"; 
 import "@/app/globals.css"; 
 
-import { useEffect } from "react";
-import { Public_Sans } from 'next/font/google';
-
-// Use only the universal Header component
-import GovUKHeader from "@/components/govuk/Header";
-import GovUKFooter from "@/components/govuk/Footer";
-import GovUKFeedback from "@/components/govuk/Feedback";
-import GovUKReportProblem from "@/components/govuk/ReportProblem";
+// Import your Client Component Wrapper defined at the bottom of this file
+import { ClientLayoutWrapper } from "./ClientLayoutWrapper";
 
 // Configure Public Sans Font
 const publicSans = Public_Sans({
@@ -19,25 +15,51 @@ const publicSans = Public_Sans({
   variable: '--font-public-sans',
 });
 
+// ==========================================
+// 1. GLOBAL SEO & WHATSAPP LINK PREVIEW
+// ==========================================
+export const metadata: Metadata = {
+  title: {
+    default: 'Citizen Guide Kenya - Informational Guide for Kenyans',
+    template: '%s | Citizen Guide Kenya',
+  },
+  description: 'Your comprehensive, easy-to-use informational guide to Kenyan governance, institutions, constitution, counties, and public services.',
+  metadataBase: new URL('https://citizenguide.ke'),
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    title: 'Citizen Guide Kenya - Informational Guide for Kenyans',
+    description: 'Access the Kenyan Constitution, County records, Parliamentary Acts, and step-by-step public service guides seamlessly.',
+    url: 'https://citizenguide.ke',
+    siteName: 'Citizen Guide Kenya',
+    locale: 'en_KE',
+    type: 'website',
+    images: [
+      {
+        url: '/og-image.png', // Place a 1200x630px image in your public/ folder
+        width: 1200,
+        height: 630,
+        alt: 'Citizen Guide Kenya Preview Image',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Citizen Guide Kenya',
+    description: 'Your ultimate informational dashboard for Kenyan governance and public services.',
+    images: ['/og-image.png'],
+  },
+};
+
+// ==========================================
+// 2. ROOT LAYOUT (SERVER SIDE)
+// ==========================================
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-
-  useEffect(() => {
-    const initGovuk = async () => {
-      try {
-        // @ts-expect-error - No types for minified JS
-        const { initAll } = await import("govuk-frontend/govuk-frontend.min.js");
-        initAll();
-      } catch (error) {
-        console.error("Failed to initialize GOV.UK Frontend:", error);
-      }
-    };
-    initGovuk();
-  }, []);
-
   return (
     <html lang="en-KE" className={`govuk-template ${publicSans.variable}`}>
       <head>
@@ -54,41 +76,8 @@ export default function RootLayout({
           }}
         />
       </head>
-      {/* 
-        CRITICAL FIX: Added suppressHydrationWarning to silence Grammarly extension flags,
-        and injected a style block to erase the default GOV.UK framework top margins/paddings.
-      */}
-      <body className="govuk-template__body" suppressHydrationWarning={true} style={{ margin: 0, padding: 0 }}>
-        
-        {/* Force an immediate top spacing reset to pull the header flush to the glass edge */}
-        <style dangerouslySetInnerHTML={{__html: `
-          html, body, html.govuk-template, body.govuk-template__body {
-            margin-top: 0 !important;
-            padding-top: 0 !important;
-          }
-          /* Removes legacy framework top offsets built for cookie banners */
-          .govuk-template__body {
-            top: 0 !important;
-          }
-        `}} />
-
-        {/* Universal Header rendered across all pages */}
-        <GovUKHeader />
-        
-        <div className="govuk-width-container">
-          <main className="govuk-main-wrapper" id="main-content" role="main">
-            {children}
-          </main>
-
-          {/* Global Feedback Section (Sits right above the footer boundary) */}
-          <div className="govuk-!-margin-top-9 govuk-!-margin-bottom-6">
-            <GovUKFeedback />
-            <GovUKReportProblem />
-          </div>
-        </div>
-
-        <GovUKFooter />
-      </body>
+      {/* Pass children down to the Client Components wrapper below */}
+      <ClientLayoutWrapper>{children}</ClientLayoutWrapper>
     </html>
   );
 }
