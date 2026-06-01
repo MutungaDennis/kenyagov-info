@@ -40,6 +40,20 @@ export default function RootLayout({
 
   return (
     <html lang="en-KE" className={`govuk-template ${publicSans.variable}`}>
+      <head>
+        {/* Google Analytics 4 Tag Setup */}
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-GG9GWN5J48"></script>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', 'G-GG9GWN5J48');
+            `,
+          }}
+        />
+      </head>
       {/* 
         CRITICAL FIX: Added suppressHydrationWarning to silence Grammarly extension flags,
         and injected a style block to erase the default GOV.UK framework top margins/paddings.
