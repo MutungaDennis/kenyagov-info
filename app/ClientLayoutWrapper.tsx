@@ -6,6 +6,7 @@ import GovUKHeader from "@/components/govuk/Header";
 import GovUKFooter from "@/components/govuk/Footer";
 import GovUKFeedback from "@/components/govuk/Feedback";
 import GovUKReportProblem from "@/components/govuk/ReportProblem";
+import CookieBanner from "@/components/govuk/CookieBanner";
 
 export function ClientLayoutWrapper({
   children,
@@ -27,6 +28,12 @@ export function ClientLayoutWrapper({
 
   return (
     <body className="govuk-template__body" suppressHydrationWarning={true} style={{ margin: 0, padding: 0 }}>
+      {/* 
+        GOV.UK standard placement: The cookie banner sits at the top level 
+        of the body, directly before the universal header banner component.
+      */}
+      <CookieBanner />
+
       {/* Force an immediate top spacing reset to pull the header flush to the glass edge */}
       <style dangerouslySetInnerHTML={{__html: `
         html, body, html.govuk-template, body.govuk-template__body {

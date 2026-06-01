@@ -63,19 +63,52 @@ export default function RootLayout({
   return (
     <html lang="en-KE" className={`govuk-template ${publicSans.variable}`}>
       <head>
-        {/* Google Analytics 4 Tag Setup */}
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-GG9GWN5J48"></script>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              window.dataLayer = window.dataLayer || [];
-              function gtag(){dataLayer.push(arguments);}
-              gtag('js', new Date());
-              gtag('config', 'G-GG9GWN5J48');
-            `,
-          }}
-        />
-      </head>
+  {/* 1. Initialize Google Consent Mode v2 (Default: Denied) */}
+  <script
+    dangerouslySetInnerHTML={{
+      __html: `
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        
+        // Check if user has previously saved consent choices
+        var consentChoice = null;
+        try {
+          consentChoice = localStorage.getItem('cookie-consent');
+        } catch(e) {}
+
+        if (consentChoice === 'accepted') {
+          gtag('consent', 'default', {
+            'ad_storage': 'granted',
+            'ad_user_data': 'granted',
+            'ad_personalization': 'granted',
+            'analytics_storage': 'granted'
+          });
+        } else {
+          gtag('consent', 'default', {
+            'ad_storage': 'denied',
+            'ad_user_data': 'denied',
+            'ad_personalization': 'denied',
+            'analytics_storage': 'denied'
+          });
+        }
+      `,
+    }}
+  />
+
+  {/* 2. Load the main Google Tag script */}
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-GG9GWN5J48"></script>
+  
+  {/* 3. Execute Google Analytics Configuration */}
+  <script
+    dangerouslySetInnerHTML={{
+      __html: `
+        gtag('js', new Date());
+        gtag('config', 'G-GG9GWN5J48');
+      `,
+    }}
+  />
+</head>
+
       {/* Pass children down to the Client Components wrapper below */}
       <ClientLayoutWrapper>{children}</ClientLayoutWrapper>
     </html>
