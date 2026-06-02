@@ -5,7 +5,7 @@ import { Public_Sans } from 'next/font/google';
 import "govuk-frontend/govuk-frontend.min.css"; 
 import "@/app/globals.css"; 
 
-// Import your Client Component Wrapper defined at the bottom of this file
+// Import your fixed Client Component Wrapper
 import { ClientLayoutWrapper } from "./ClientLayoutWrapper";
 
 // Configure Public Sans Font
@@ -16,7 +16,7 @@ const publicSans = Public_Sans({
 });
 
 // ==========================================
-// 1. GLOBAL SEO & WHATSAPP LINK PREVIEW
+// GLOBAL SEO & LINK PREVIEWS
 // ==========================================
 export const metadata: Metadata = {
   title: {
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
     type: 'website',
     images: [
       {
-        url: '/og-image.png', // Place a 1200x630px image in your public/ folder
+        url: '/og-image.png', 
         width: 1200,
         height: 630,
         alt: 'Citizen Guide Kenya Preview Image',
@@ -52,9 +52,6 @@ export const metadata: Metadata = {
   },
 };
 
-// ==========================================
-// 2. ROOT LAYOUT (SERVER SIDE)
-// ==========================================
 export default function RootLayout({
   children,
 }: {
@@ -62,54 +59,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en-KE" className={`govuk-template ${publicSans.variable}`}>
-      <head>
-  {/* 1. Initialize Google Consent Mode v2 (Default: Denied) */}
-  <script
-    dangerouslySetInnerHTML={{
-      __html: `
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        
-        // Check if user has previously saved consent choices
-        var consentChoice = null;
-        try {
-          consentChoice = localStorage.getItem('cookie-consent');
-        } catch(e) {}
-
-        if (consentChoice === 'accepted') {
-          gtag('consent', 'default', {
-            'ad_storage': 'granted',
-            'ad_user_data': 'granted',
-            'ad_personalization': 'granted',
-            'analytics_storage': 'granted'
-          });
-        } else {
-          gtag('consent', 'default', {
-            'ad_storage': 'denied',
-            'ad_user_data': 'denied',
-            'ad_personalization': 'denied',
-            'analytics_storage': 'denied'
-          });
-        }
-      `,
-    }}
-  />
-
-  {/* 2. Load the main Google Tag script */}
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-GG9GWN5J48"></script>
-  
-  {/* 3. Execute Google Analytics Configuration */}
-  <script
-    dangerouslySetInnerHTML={{
-      __html: `
-        gtag('js', new Date());
-        gtag('config', 'G-GG9GWN5J48');
-      `,
-    }}
-  />
-</head>
-
-      {/* Pass children down to the Client Components wrapper below */}
+      {/* 
+        No scripts or explicit body elements live here. 
+        Everything passes directly into the Client Layout wrapper to prevent script errors.
+      */}
       <ClientLayoutWrapper>{children}</ClientLayoutWrapper>
     </html>
   );
