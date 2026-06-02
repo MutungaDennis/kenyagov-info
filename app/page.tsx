@@ -104,58 +104,88 @@ export default function Home() {
           </div>
         </section>
         {/* Popular Services & Enhanced Featured Panel Section */}
-        <div className="govuk-grid-row">
-          <div className="govuk-grid-column-two-thirds-from-desktop govuk-grid-column-full">
-            <h2 className="govuk-heading-m govuk-!-margin-bottom-2" style={{ fontSize: "26px", fontWeight: 700, color: "#0b0c0c" }}>
-              Popular Services
-            </h2>
-            <p className="govuk-body-s govuk-!-margin-bottom-4" style={{ fontSize: "17px", color: "#3b4246", lineHeight: "1.4" }}>
-              Common public services accessed by citizens
-            </p>
+<div className="govuk-grid-row">
+  <div className="govuk-grid-column-two-thirds-from-desktop govuk-grid-column-full">
+    <h2 className="govuk-heading-m govuk-!-margin-bottom-2" style={{ fontSize: "26px", fontWeight: 700, color: "#0b0c0c" }}>
+      Popular Services
+    </h2>
+    <p className="govuk-body-s govuk-!-margin-bottom-4" style={{ fontSize: "17px", color: "#3b4246", lineHeight: "1.4" }}>
+      Common public services accessed by citizens
+    </p>
 
-            <ul className="govuk-list govuk-list--spaced" style={{ margin: 0, padding: 0 }}>
-              <li className="govuk-!-margin-bottom-4" style={{ listStyleType: "none" }}>
-                <Link href="/services/business" className="govuk-link govuk-link--no-underline" style={{ fontWeight: 700, fontSize: "20px", display: "inline-block", textDecoration: "underline", textDecorationThickness: "2px", textUnderlineOffset: "3px", color: "#1d70b8" }}>
-                  Starting a business
-                </Link>
-                <p className="govuk-body-s govuk-!-margin-top-1 govuk-!-margin-bottom-0" style={{ color: "#262c2e", fontSize: "17px", lineHeight: "1.5" }}>
-                  BRS company registrations, naming approvals, and trade licensing updates
-                </p>
-              </li>
-              <li className="govuk-!-margin-bottom-4" style={{ listStyleType: "none" }}>
-                <Link href="/services/national-id" className="govuk-link govuk-link--no-underline" style={{ fontWeight: 700, fontSize: "20px", display: "inline-block", textDecoration: "underline", textDecorationThickness: "2px", textUnderlineOffset: "3px", color: "#1d70b8" }}>
-                  National ID, Birth, Death &amp; Marriage Certificates
-                </Link>
-                <p className="govuk-body-s govuk-!-margin-top-1 govuk-!-margin-bottom-0" style={{ color: "#262c2e", fontSize: "17px", lineHeight: "1.5" }}>
-                  Civil registries, replacement application guidelines, and status lookups
-                </p>
-              </li>
-              <li className="govuk-!-margin-bottom-4" style={{ listStyleType: "none" }}>
-                <Link href="/services/driving" className="govuk-link govuk-link--no-underline" style={{ fontWeight: 700, fontSize: "20px", display: "inline-block", textDecoration: "underline", textDecorationThickness: "2px", textUnderlineOffset: "3px", color: "#1d70b8" }}>
-                  Driving Licence &amp; Vehicle Registration
-                </Link>
-                <p className="govuk-body-s govuk-!-margin-top-1 govuk-!-margin-bottom-0" style={{ color: "#262c2e", fontSize: "17px", lineHeight: "1.5" }}>
-                  NTSA logbooks, Smart DL renewals, and transfer verification checklists
-                </p>
-              </li>
-              <li className="govuk-!-margin-bottom-4" style={{ listStyleType: "none" }}>
-                <Link href="/services/passport" className="govuk-link govuk-link--no-underline" style={{ fontWeight: 700, fontSize: "20px", display: "inline-block", textDecoration: "underline", textDecorationThickness: "2px", textUnderlineOffset: "3px", color: "#1d70b8" }}>
-                  Passport Application
-                </Link>
-                <p className="govuk-body-s govuk-!-margin-top-1 govuk-!-margin-bottom-0" style={{ color: "#262c2e", fontSize: "17px", lineHeight: "1.5" }}>
-                  Immigration pathways, eCitizen scheduling, and dynamic visa regulations
-                </p>
-              </li>
-              <li style={{ listStyleType: "none" }}>
-                <Link href="/services/tax" className="govuk-link govuk-link--no-underline" style={{ fontWeight: 700, fontSize: "20px", display: "inline-block", textDecoration: "underline", textDecorationThickness: "2px", textUnderlineOffset: "3px", color: "#1d70b8" }}>
-                  Taxes and iTax Services
-                </Link>
-                <p className="govuk-body-s govuk-!-margin-top-1 govuk-!-margin-bottom-0" style={{ color: "#262c2e", fontSize: "17px", lineHeight: "1.5" }}>
-                  KRA dynamic filing timelines, PIN generation, and tax compliance certificates
-                </p>
-              </li>
-            </ul>
-          </div>
+    <ul className="govuk-list govuk-list--spaced" style={{ margin: 0, padding: 0 }}>
+      {/* 1. Businesses and self-employed */}
+      <li className="govuk-!-margin-bottom-4" style={{ listStyleType: "none" }}>
+        <Link href="/services?category=business-self-employed" className="govuk-link govuk-link--no-underline" style={{ fontWeight: 700, fontSize: "20px", display: "inline-block", textDecoration: "underline", textDecorationThickness: "2px", textUnderlineOffset: "3px", color: "#1d70b8" }}>
+          Businesses and self-employed
+        </Link>
+        <p className="govuk-body-s govuk-!-margin-top-1 govuk-!-margin-bottom-0" style={{ color: "#262c2e", fontSize: "17px", lineHeight: "1.5" }}>
+          Set up a business name or limited company, and file your company annual returns on BRS.
+        </p>
+      </li>
+
+      {/* 2. Births, deaths, marriages and care */}
+      <li className="govuk-!-margin-bottom-4" style={{ listStyleType: "none" }}>
+        <Link href="/services?category=civil-registration" className="govuk-link govuk-link--no-underline" style={{ fontWeight: 700, fontSize: "20px", display: "inline-block", textDecoration: "underline", textDecorationThickness: "2px", textUnderlineOffset: "3px", color: "#1d70b8" }}>
+          Births, deaths, marriages and care
+        </Link>
+        <p className="govuk-body-s govuk-!-margin-top-1 govuk-!-margin-bottom-0" style={{ color: "#262c2e", fontSize: "17px", lineHeight: "1.5" }}>
+          Register a birth or death, apply for a marriage certificate, or check police clearance procedures.
+        </p>
+      </li>
+
+      {/* 3. Driving and transport */}
+      <li className="govuk-!-margin-bottom-4" style={{ listStyleType: "none" }}>
+        <Link href="/services?category=driving-transport" className="govuk-link govuk-link--no-underline" style={{ fontWeight: 700, fontSize: "20px", display: "inline-block", textDecoration: "underline", textDecorationThickness: "2px", textUnderlineOffset: "3px", color: "#1d70b8" }}>
+          Driving and transport
+        </Link>
+        <p className="govuk-body-s govuk-!-margin-top-1 govuk-!-margin-bottom-0" style={{ color: "#262c2e", fontSize: "17px", lineHeight: "1.5" }}>
+          Apply for provisional licenses (PDL), renew your driving licence, or transfer vehicle ownership.
+        </p>
+      </li>
+
+      {/* 4. Passports, travel and living abroad */}
+      <li className="govuk-!-margin-bottom-4" style={{ listStyleType: "none" }}>
+        <Link href="/services?category=passports-travel" className="govuk-link govuk-link--no-underline" style={{ fontWeight: 700, fontSize: "20px", display: "inline-block", textDecoration: "underline", textDecorationThickness: "2px", textUnderlineOffset: "3px", color: "#1d70b8" }}>
+          Passports, travel and living abroad
+        </Link>
+        <p className="govuk-body-s govuk-!-margin-top-1 govuk-!-margin-bottom-0" style={{ color: "#262c2e", fontSize: "17px", lineHeight: "1.5" }}>
+          Apply for or renew a Kenyan passport, check visa regulations, and manage online immigration profiles.
+        </p>
+      </li>
+
+      {/* 5. Money and tax */}
+      <li className="govuk-!-margin-bottom-4" style={{ listStyleType: "none" }}>
+        <Link href="/services?category=money-tax" className="govuk-link govuk-link--no-underline" style={{ fontWeight: 700, fontSize: "20px", display: "inline-block", textDecoration: "underline", textDecorationThickness: "2px", textUnderlineOffset: "3px", color: "#1d70b8" }}>
+          Money and tax
+        </Link>
+        <p className="govuk-body-s govuk-!-margin-top-1 govuk-!-margin-bottom-0" style={{ color: "#262c2e", fontSize: "17px", lineHeight: "1.5" }}>
+          File your self-assessment tax returns, request KRA PIN variations, or check compliance statuses.
+        </p>
+      </li>
+
+      {/* 6. Land and property */}
+      <li className="govuk-!-margin-bottom-5" style={{ listStyleType: "none" }}>
+        <Link href="/services?category=land-property" className="govuk-link govuk-link--no-underline" style={{ fontWeight: 700, fontSize: "20px", display: "inline-block", textDecoration: "underline", textDecorationThickness: "2px", textUnderlineOffset: "3px", color: "#1d70b8" }}>
+          Land and property
+        </Link>
+        <p className="govuk-body-s govuk-!-margin-top-1 govuk-!-margin-bottom-0" style={{ color: "#262c2e", fontSize: "17px", lineHeight: "1.5" }}>
+          Search land and property records on Ardhisasa, settle land rates, or verify boundary title details.
+        </p>
+      </li>
+
+      {/* ENHANCED ACTION: Explore All Services Master Trigger Link */}
+      <li className="govuk-!-margin-top-6 border-t-2 border-[#b1b4b6] pt-4" style={{ listStyleType: "none" }}>
+        <Link href="/services" className="govuk-link govuk-link--no-underline" style={{ fontWeight: 700, fontSize: "19px", display: "inline-flex", alignItems: "center", color: "#1d70b8", textDecoration: "underline" }}>
+          Explore all services A–Z
+          <span style={{ marginLeft: "6px", fontSize: "15px", textDecoration: "none", display: "inline-block" }}>▶</span>
+        </Link>
+        <p className="govuk-body-s govuk-!-margin-top-1" style={{ color: "#505a5f", fontSize: "15px" }}>
+          Browse our complete comprehensive index of verified government information sheets.
+        </p>
+      </li>
+    </ul>
+  </div>
 
           {/* 100% GOV.UK Compliant Featured High-Focus Text Box */}
           <div className="govuk-grid-column-one-third-from-desktop govuk-grid-column-full govuk-!-margin-top-4">
