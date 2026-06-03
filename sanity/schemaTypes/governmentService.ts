@@ -1,4 +1,4 @@
-// sanity/schemaTypes/governmentService.ts
+// sanity/schemaTypes/governmentService.ts (Part 1 of 2)
 import { defineType, defineField } from 'sanity'
 
 export default defineType({
@@ -34,7 +34,15 @@ export default defineType({
       validation: Rule => Rule.required(),
     }),
 
-    // --- NEW: POPULARITY TRACKING ENGINE ---
+    // --- NEW GOV.UK FIELD: OWNER/PROVIDING AGENCY ---
+    defineField({
+      name: 'providingBody',
+      title: 'Providing Government Body / Department',
+      type: 'string',
+      description: 'The explicit state authority running the service. e.g., "Directorate of Immigration Services" or "National Transport and Safety Authority (NTSA)".',
+      validation: Rule => Rule.required(),
+    }),
+
     defineField({
       name: 'popularityWeight',
       title: 'Popularity Score / Weight',
@@ -98,6 +106,26 @@ export default defineType({
       validation: Rule => Rule.required().min(1),
     }),
 
+    // --- NEW GOV.UK FIELD: STEP BY STEP INSTRUCTIONS ---
+    defineField({
+      name: 'steps',
+      title: 'Step-by-Step Application Process',
+      type: 'array',
+      description: 'A chronological, clear roadmap mapping exactly how a citizen progresses from start to finish.',
+      of: [
+        {
+          type: 'object',
+          name: 'stepItem',
+          title: 'Procedural Stage',
+          fields: [
+            { name: 'stepNumber', title: 'Step Number', type: 'number', validation: Rule => Rule.required().min(1).integer() },
+            { name: 'stepTitle', title: 'Action Name / Heading', type: 'string', description: 'e.g., "Submit Application and Pay on eCitizen"', validation: Rule => Rule.required() },
+            { name: 'stepDescription', title: 'Explicit Process Guidelines', type: 'text', rows: 2, description: 'Explain options, URLs, or background background processing.', validation: Rule => Rule.required() }
+          ]
+        }
+      ]
+    }),
+
     // --- 4. EXPANDED FINANCIALS & LOCATIONS ---
     defineField({
       name: 'feesTable',
@@ -116,7 +144,7 @@ export default defineType({
         }
       ]
     }),
-    defineField({
+defineField({
       name: 'physicalVisits',
       title: 'Physical Attendance Steps',
       type: 'array',
@@ -189,12 +217,26 @@ export default defineType({
       ]
     }),
 
+    // --- NEW GOV.UK FIELD: SELF-REFERENTIAL RELATED SERVICES RELATIONSHIP ---
+    defineField({
+      name: 'relatedServices',
+      title: 'Related Services Links',
+      type: 'array',
+      description: 'Select other contextual services that sit adjacent to this one (e.g. linking "Replace a Lost ID" on a Passport application guide).',
+      of: [
+        {
+          type: 'reference',
+          to: [{ type: 'governmentService' }]
+        }
+      ]
+    }),
+
     // --- 7. TRANSACTION OUTBOUND REDIRECTION ---
     defineField({
       name: 'ecitizenUrl',
       title: 'Target Transaction Portal URL',
       type: 'url',
-      description: 'The exact external eCitizen agency link triggered when clicking "Start now ►". e.g., https://ecitizen.go.ke',
+      description: 'The exact external eCitizen agency link triggered when clicking "Start now". e.g., https://ecitizen.go.ke',
       validation: Rule => Rule.required().uri({
         scheme: ['http', 'https']
       })
@@ -207,9 +249,10 @@ export default defineType({
       title: 'title',
       slug: 'slug.current',
       mode: 'executionMode',
-      weight: 'popularityWeight'
+      weight: 'popularityWeight',
+      agency: 'providingBody'
     },
-    prepare({ title, slug, mode, weight }) {
+    prepare({ title, slug, mode, weight, agency }) {
       const modeLabels: Record<string, string> = {
         online: '⚡ Digital',
         hybrid: '🤝 Hybrid',
@@ -217,7 +260,7 @@ export default defineType({
       }
       return {
         title: title,
-        subtitle: `/${slug || ''} • ${modeLabels[mode] || mode || ''} (Score: ${weight || 0})`
+        subtitle: `${agency || 'No Agency Specified'} • ${modeLabels[mode] || mode || ''} (Score: ${weight || 0})`
       }
     }
   }
