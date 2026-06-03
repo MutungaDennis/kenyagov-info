@@ -1,5 +1,5 @@
 // app/services/page.tsx
-import React from "react";
+import React, { Suspense } from "react"; // Added Suspense import
 import { client } from "@/sanity/lib/client";
 import ServicesClientView from "./ServicesClientView";
 
@@ -10,7 +10,7 @@ export interface GovernmentServiceSummary {
   slug: string;
   popularityWeight: number;
   executionMode: string;
-  categorySlug: string | string[]; // FIXED: Removed '?' to perfectly match the client component interface
+  categorySlug: string | string[]; 
   subcategorySlug?: string;
   providingBody: string;
 }
@@ -21,7 +21,6 @@ export interface GovernmentCategoryFilter {
   subcategories?: Array<{ title: string; slug: string }>;
 }
 
-// Optimized GROQ query using coalesce to ensure an array fallback, avoiding 'undefined' errors
 const ALL_SERVICES_QUERY = `*[_type == "governmentService"]{
   _id,
   title,
@@ -56,7 +55,19 @@ export default async function ServicesHubPage() {
 
   return (
     <div className="govuk-width-container mx-auto px-4 py-6 max-w-5xl bg-white antialiased">
-      <ServicesClientView initialServices={services} categories={categories} />
+      {/* 
+        FIXED: Wrapped in a strict Suspense Boundary with a clean GOV.UK 
+        styled loading state to resolve the CSR Prerender Bailout.
+      */}
+      <Suspense 
+        fallback={
+          <div className="py-12 text-center text-base font-bold text-[#505a5f] font-sans">
+            Loading service directory...
+          </div>
+        }
+      >
+        <ServicesClientView initialServices={services} categories={categories} />
+      </Suspense>
     </div>
   );
 }
