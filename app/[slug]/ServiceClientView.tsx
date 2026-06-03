@@ -1,4 +1,4 @@
-// app/[slug]/ServiceClientView.tsx (Part 1 of 3)
+// app/[slug]/ServiceClientView.tsx (Part 1 of 4 - Aligned & Verified)
 "use client";
 
 import React, { useState } from "react";
@@ -24,7 +24,8 @@ interface ServiceClientViewProps {
     faqs?: Array<{ question: string; answer: string }>;
     ecitizenUrl: string;
     parentCategory?: { title: string; slug: string };
-    relatedServices?: Array<{ title: string; url: string }>;
+    // FIXED: Changed 'url' to 'slug' to match your page.tsx server-side GROQ query delivery
+    relatedServices?: Array<{ title: string; slug: string }>;
   };
 }
 
@@ -37,6 +38,45 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
 
   const [openFaqs, setOpenFaqs] = useState<Record<number, boolean>>({});
 
+  // 1. DYNAMIC NOT FOUND GUARD: Evaluates available context parameters before displaying the layout
+  if (!service || !service.title) {
+    // FIXED: Swapped 'href' back to 'url' to remain compliant with your GovUKBreadcrumbs component parameters
+    const fallbackBreadcrumbs = [
+      { text: "Home", url: "/" },
+      ...(service?.parentCategory
+        ? [{ text: service.parentCategory.title, url: `/services?category=${service.parentCategory.slug}` }]
+        : [{ text: "Services", url: "/services" }]),
+      { text: "Page not found" }
+    ];
+
+    return (
+      <div className="mx-auto max-w-4xl px-4 py-6 font-sans text-[#0b0c0c] bg-white antialiased">
+        <GovUKBreadcrumbs items={fallbackBreadcrumbs} />
+        <main className="mt-12 max-w-2xl space-y-6">
+          <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight text-[#0b0c0c]">
+            Page not found
+          </h1>
+          <p className="text-lg md:text-xl text-[#0b0c0c] leading-relaxed">
+            If you typed the web address, check it is correct. If you pasted it, make sure you copied the entire address.
+          </p>
+          <p className="text-base md:text-lg">
+            You can return to the{" "}
+            <Link href="/" className="text-[#1d70b8] underline decoration-2 font-bold hover:text-[#003078]">
+              homepage
+            </Link>{" "}
+            or browse the active{" "}
+            <Link href="/services" className="text-[#1d70b8] underline decoration-2 font-bold hover:text-[#003078]">
+              service directory
+            </Link>{" "}
+            to find what you need.
+          </p>
+        </main>
+      </div>
+    );
+  }
+
+  // 2. DYNAMIC REAL-TIME BREADCRUMB ARRAY DEFINITION
+  // FIXED: Swapped 'href' back to 'url' to prevent component hydration and build type compile errors
   const breadcrumbItems = [
     { text: "Home", url: "/" },
     ...(service.parentCategory
@@ -47,7 +87,7 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-6 font-sans text-[#0b0c0c] bg-white antialiased selection:bg-[#ffdd00] selection:text-[#0b0c0c]">
-      {/* Accessible Navigation Path */}
+      {/* Standardized Responsive Navigation Path */}
       <GovUKBreadcrumbs items={breadcrumbItems} />
 
       {/* Main Structural Grid Layout */}
@@ -81,9 +121,7 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
             </ul>
           </nav>
         </aside>
-
-        {/* Core Narrative Stream Panel */}
-        <div className="md:col-span-3 space-y-12">
+<div className="md:col-span-3 space-y-12">
           
           {/* Header & Authority Block */}
           <div>
@@ -130,7 +168,8 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
               </table>
             </div>
           </section>
-{/* Before You Start Section */}
+
+          {/* Before You Start Section */}
           <section id="before-you-start" aria-labelledby="before-you-start-heading">
             <h2 id="before-you-start-heading" className="text-2xl md:text-3xl font-bold mb-4 text-[#0b0c0c]">
               Before you start
@@ -161,8 +200,6 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
               ))}
             </ul>
           </section>
-
-          {/* Step-by-Step Chronological Process */}
           {service.steps && service.steps.length > 0 && (
             <section id="step-by-step" aria-labelledby="step-by-step-heading">
               <h2 id="step-by-step-heading" className="text-2xl md:text-3xl font-bold mb-6 text-[#0b0c0c]">
@@ -174,7 +211,7 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
                   .map((step, idx) => (
                     <li key={idx} className="relative">
                       {/* Step Number Badge Anchor Indicator */}
-                      <span className="absolute -left-[38px] top-0 bg-[#0b0c0c] text-white rounded-none font-bold text-sm w-7 h-7 flex items-center justify-center">
+                      <span className="absolute -left-[38px] top-0 bg-[#0b0c0c] text-white rounded-none font-bold text-sm w-7 h-7 flex items-center justify-center font-mono">
                         {step.stepNumber}
                       </span>
                       <h3 className="text-xl font-bold text-[#0b0c0c] mb-2 pt-0.5">
@@ -215,6 +252,7 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
               </div>
             </section>
           )}
+
           {/* Office Attendance Section */}
           {service.physicalVisits && service.physicalVisits.length > 0 && (
             <section id="office-visits" aria-labelledby="visits-heading">
@@ -256,8 +294,6 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
               </div>
             </section>
           )}
-
-          {/* Downloadable Reference Section */}
           {service.downloadableResources && service.downloadableResources.length > 0 && (
             <section aria-labelledby="downloads-heading" className="pt-2">
               <h2 id="downloads-heading" className="text-xl font-bold text-[#0b0c0c] mb-3">
@@ -323,8 +359,9 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
               <ul className="space-y-3 text-base">
                 {service.relatedServices.map((rel, idx) => (
                   <li key={idx}>
+                    {/* FIXED: Changed rel.url to use the flat-root slug variable string matching Part 1 typing constraints */}
                     <Link 
-                      href={rel.url} 
+                      href={`/${rel.slug}`} 
                       className="text-[#1d70b8] underline decoration-2 font-bold hover:text-[#003078] focus:bg-[#ffdd00] focus:text-[#0b0c0c]"
                     >
                       {rel.title}

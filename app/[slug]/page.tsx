@@ -9,15 +9,22 @@ interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
+// UPDATED GROQ QUERY: Added providingBody, sorted steps, and resolved relatedServices links
 const SERVICE_QUERY = `*[_type == "governmentService" && slug.current == $slug]{
   title,
   summary,
+  providingBody,
   processingTime,
   baseCostLabel,
   executionMode,
   timelineGuidance,
   beforeYouStart,
   requiredDocuments,
+  steps[] | order(stepNumber asc) {
+    stepNumber,
+    stepTitle,
+    stepDescription
+  },
   feesTable[],
   physicalVisits[],
   downloadableResources[]{
@@ -26,6 +33,10 @@ const SERVICE_QUERY = `*[_type == "governmentService" && slug.current == $slug]{
   },
   commonMistakes[],
   faqs[],
+  relatedServices[]->{
+    title,
+    "slug": slug.current
+  },
   ecitizenUrl,
   "parentCategory": *[_type == "governmentCategory" && references(^._id)]{
     title,
