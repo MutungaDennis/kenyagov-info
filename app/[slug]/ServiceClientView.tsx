@@ -1,31 +1,41 @@
-// app/[slug]/ServiceClientView.tsx (Part 1 of 4 - Aligned & Verified)
+// app/[slug]/ServiceClientView.tsx 
 "use client";
 
 import React, { useState } from "react";
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 
+interface MinistryReference {
+  name: string;
+  slug: string;
+  parentMinistry?: {
+    name: string;
+    slug: string;
+  };
+}
+
 interface ServiceClientViewProps {
   service: {
     title: string;
     summary: string;
-    providingBody: string;
+    _createdAt: string;
+    _updatedAt: string;
+    providingBodies: MinistryReference[];
     processingTime: string;
     baseCostLabel: string;
     executionMode: string;
-    timelineGuidance?: string;
+    timelineGuidancePoints?: string[];
     beforeYouStart: string[];
     requiredDocuments: string[];
     steps?: Array<{ stepNumber: number; stepTitle: string; stepDescription: string }>;
     feesTable?: Array<{ itemName: string; amount: string }>;
     physicalVisits?: Array<{ purpose: string; locations: string }>;
-    downloadableResources?: Array<{ label: string; fileUrl: string }>;
+    downloadableResources?: Array<{ label: string; fileUrl?: string; fileSize?: number; sourceUrl?: string }>;
     commonMistakes?: Array<{ errorTitle: string; errorFix: string }>;
     faqs?: Array<{ question: string; answer: string }>;
-    ecitizenUrl: string;
-    parentCategory?: { title: string; slug: string };
-    // FIXED: Changed 'url' to 'slug' to match your page.tsx server-side GROQ query delivery
     relatedServices?: Array<{ title: string; slug: string }>;
+    transactionPortals: Array<{ portalLabel: string; portalUrl: string }>;
+    parentCategory?: { title: string; slug: string };
   };
 }
 
@@ -38,9 +48,26 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
 
   const [openFaqs, setOpenFaqs] = useState<Record<number, boolean>>({});
 
-  // 1. DYNAMIC NOT FOUND GUARD: Evaluates available context parameters before displaying the layout
+  // GOV.UK Compliance Helper: Converts bytes from Sanity CDN into clean metadata strings
+  const formatBytes = (bytes?: number): string => {
+    if (!bytes) return "";
+    if (bytes < 1024) return `${bytes} B`;
+    const kib = bytes / 1024;
+    if (kib < 1024) return `${kib.toFixed(1)} KB`;
+    const mib = kib / 1024;
+    return `${mib.toFixed(1)} MB`;
+  };
+
+  // GOV.UK Compliance Helper: Formats ISO timestamps into human readable valid dates
+  const formatDate = (dateString: string): string => {
+    return new Date(dateString).toLocaleDateString("en-KE", {
+      day: "numeric",
+      month: "long",
+      year: "numeric"
+    });
+  };
+
   if (!service || !service.title) {
-    // FIXED: Swapped 'href' back to 'url' to remain compliant with your GovUKBreadcrumbs component parameters
     const fallbackBreadcrumbs = [
       { text: "Home", url: "/" },
       ...(service?.parentCategory
@@ -57,26 +84,13 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
             Page not found
           </h1>
           <p className="text-lg md:text-xl text-[#0b0c0c] leading-relaxed">
-            If you typed the web address, check it is correct. If you pasted it, make sure you copied the entire address.
-          </p>
-          <p className="text-base md:text-lg">
-            You can return to the{" "}
-            <Link href="/" className="text-[#1d70b8] underline decoration-2 font-bold hover:text-[#003078]">
-              homepage
-            </Link>{" "}
-            or browse the active{" "}
-            <Link href="/services" className="text-[#1d70b8] underline decoration-2 font-bold hover:text-[#003078]">
-              service directory
-            </Link>{" "}
-            to find what you need.
+            If you typed the web address, check it is correct.
           </p>
         </main>
       </div>
     );
   }
 
-  // 2. DYNAMIC REAL-TIME BREADCRUMB ARRAY DEFINITION
-  // FIXED: Swapped 'href' back to 'url' to prevent component hydration and build type compile errors
   const breadcrumbItems = [
     { text: "Home", url: "/" },
     ...(service.parentCategory
@@ -87,13 +101,10 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-6 font-sans text-[#0b0c0c] bg-white antialiased selection:bg-[#ffdd00] selection:text-[#0b0c0c]">
-      {/* Standardized Responsive Navigation Path */}
       <GovUKBreadcrumbs items={breadcrumbItems} />
-
-      {/* Main Structural Grid Layout */}
       <div className="mt-8 grid grid-cols-1 md:grid-cols-4 gap-8">
         
-        {/* Sticky Table of Contents Sidebar */}
+        {/* Sticky Sidebar Navigation */}
         <aside className="hidden md:block md:col-span-1">
           <nav aria-labelledby="contents-heading" className="sticky top-6 border-t-2 border-[#0b0c0c] pt-3">
             <h2 id="contents-heading" className="text-sm font-bold uppercase tracking-wider text-[#505a5f] mb-3">
@@ -115,54 +126,64 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
               {service.faqs && service.faqs.length > 0 && (
                 <li><a href="#faqs" className="underline hover:text-[#003078]">Questions</a></li>
               )}
-              {service.relatedServices && service.relatedServices.length > 0 && (
-                <li><a href="#related" className="underline hover:text-[#003078]">Related services</a></li>
-              )}
             </ul>
           </nav>
         </aside>
-<div className="md:col-span-3 space-y-12">
+
+        {/* Core Content Flow */}
+        <div className="md:col-span-3 space-y-12">
           
-          {/* Header & Authority Block */}
+          {/* Header & Reusable Multi-Agency Reference Layout */}
           <div>
-            <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-4 text-[#0b0c0c]">
+            <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-3 text-[#0b0c0c]">
               {service.title}
             </h1>
             
-            <p className="text-base text-[#505a5f] mb-6">
-              Provided by: <span className="font-bold">{service.providingBody || "Government Agency"}</span>
-            </p>
+            {/* Renders multi-nested Departments and parent Ministries dynamically */}
+            {service.providingBodies && service.providingBodies.length > 0 && (
+              <div className="text-sm text-[#505a5f] mb-6 space-y-2 border-b border-[#b1b4b6] pb-4">
+                {service.providingBodies.map((body, idx) => (
+                  <div key={idx} className="leading-relaxed">
+                    <span className="block text-[#0b0c0c]">
+                      Department: <strong className="font-bold">{body.name}</strong>
+                    </span>
+                    {body.parentMinistry && (
+                      <span className="block text-xs text-[#505a5f] font-normal italic">
+                        Ministry: {body.parentMinistry.name}
+                      </span>
+                    )}
+                  </div>
+                ))}
+                
+                {/* Information Validity Timestamps Callout Row */}
+                <div className="flex flex-wrap gap-x-4 gap-y-1 pt-2 text-xs font-mono text-[#505a5f]">
+                  <p>Published: {formatDate(service._createdAt)}</p>
+                  <p className="border-l border-[#b1b4b6] pl-4">Updated: {formatDate(service._updatedAt)}</p>
+                </div>
+              </div>
+            )}
 
-            <p className="text-xl md:text-2xl text-[#0b0c0c] font-normal leading-relaxed mb-8">
+            <p className="text-xl md:text-2xl text-[#0b0c0c] font-normal leading-relaxed mb-6">
               {service.summary}
             </p>
-            
-            {/* GOV.UK Standard Inset Block */}
-            <div className="border-l-4 border-[#b1b4b6] pl-5 py-1 my-6">
-              <p className="text-base text-[#0b0c0c] font-bold mb-1">Informational guidance service</p>
-              <p className="text-[#505a5f] text-base leading-relaxed">
-                Review the official legal steps, pricing layers, and verification documents below to prepare your files successfully.
-              </p>
-            </div>
           </div>
-
-          {/* Quick Facts Summary Box Pattern */}
+          {/* Quick Facts Section */}
           <section id="quick-facts" aria-labelledby="quick-facts-heading" className="pt-2">
             <h2 id="quick-facts-heading" className="text-2xl font-bold mb-4 text-[#0b0c0c]">Service quick facts</h2>
-            <div className="overflow-x-auto">
-              <table className="w-full text-base border-collapse">
+            <div className="w-full overflow-x-auto border-t-2 border-[#0b0c0c]">
+              <table className="w-full text-base border-collapse min-w-[280px]">
                 <tbody>
                   <tr className="border-b border-[#b1b4b6]">
-                    <th className="py-3 pr-4 font-bold text-left text-[#0b0c0c] w-1/3">Processing time</th>
-                    <td className="py-3 text-[#0b0c0c]">{service.processingTime || "Not specified"}</td>
+                    <th className="py-3 pr-4 font-bold text-left text-[#0b0c0c] w-1/3 min-w-[120px]">Processing time</th>
+                    <td className="py-3 text-[#0b0c0c]">{service.processingTime}</td>
                   </tr>
                   <tr className="border-b border-[#b1b4b6]">
                     <th className="py-3 pr-4 font-bold text-left text-[#0b0c0c]">Estimated base cost</th>
-                    <td className="py-3 text-[#0b0c0c]">{service.baseCostLabel || "Free"}</td>
+                    <td className="py-3 text-[#0b0c0c]">{service.baseCostLabel}</td>
                   </tr>
                   <tr className="border-b border-[#b1b4b6]">
                     <th className="py-3 pr-4 font-bold text-left text-[#0b0c0c]">Application method</th>
-                    <td className="py-3 text-[#0b0c0c]">{modeLabels[service.executionMode] || "Standard submission"}</td>
+                    <td className="py-3 text-[#0b0c0c]">{modeLabels[service.executionMode]}</td>
                   </tr>
                 </tbody>
               </table>
@@ -174,10 +195,7 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
             <h2 id="before-you-start-heading" className="text-2xl md:text-3xl font-bold mb-4 text-[#0b0c0c]">
               Before you start
             </h2>
-            <p className="text-base md:text-lg text-[#0b0c0c] mb-4">
-              Verify your structural eligibility before starting your application:
-            </p>
-            <ul className="list-disc pl-6 space-y-2 text-base md:text-lg text-[#0b0c0c] leading-relaxed">
+            <ul className="list-disc pl-6 space-y-2 text-base text-[#0b0c0c] leading-relaxed">
               {service.beforeYouStart?.map((item, idx) => (
                 <li key={idx}>{item}</li>
               ))}
@@ -189,61 +207,54 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
             <h2 id="required-docs-heading" className="text-2xl md:text-3xl font-bold mb-4 text-[#0b0c0c]">
               Required documents and file scans
             </h2>
-            <div className="border-l-4 border-[#b1b4b6] pl-5 py-1 mb-4">
-              <p className="text-base text-[#0b0c0c]">
-                Ensure you have clear, original color copies of these items ready to upload:
-              </p>
-            </div>
-            <ul className="list-disc pl-6 space-y-2 text-base md:text-lg text-[#0b0c0c] leading-relaxed">
+            <ul className="list-disc pl-6 space-y-2 text-base text-[#0b0c0c] leading-relaxed">
               {service.requiredDocuments?.map((doc, idx) => (
                 <li key={idx}>{doc}</li>
               ))}
             </ul>
           </section>
+          {/* Chronological Steps Timeline */}
           {service.steps && service.steps.length > 0 && (
             <section id="step-by-step" aria-labelledby="step-by-step-heading">
               <h2 id="step-by-step-heading" className="text-2xl md:text-3xl font-bold mb-6 text-[#0b0c0c]">
                 Step by step process
               </h2>
               <ol className="relative border-l-4 border-[#0b0c0c] ml-3 pl-6 space-y-8">
-                {service.steps
-                  .sort((a, b) => a.stepNumber - b.stepNumber)
-                  .map((step, idx) => (
-                    <li key={idx} className="relative">
-                      {/* Step Number Badge Anchor Indicator */}
-                      <span className="absolute -left-[38px] top-0 bg-[#0b0c0c] text-white rounded-none font-bold text-sm w-7 h-7 flex items-center justify-center font-mono">
-                        {step.stepNumber}
-                      </span>
-                      <h3 className="text-xl font-bold text-[#0b0c0c] mb-2 pt-0.5">
-                        {step.stepTitle}
-                      </h3>
-                      <p className="text-base md:text-lg text-[#505a5f] leading-relaxed">
-                        {step.stepDescription}
-                      </p>
-                    </li>
-                  ))}
+                {service.steps.map((step, idx) => (
+                  <li key={idx} className="relative">
+                    <span className="absolute -left-[38px] top-0 bg-[#0b0c0c] text-white rounded-none font-bold text-sm w-7 h-7 flex items-center justify-center font-mono">
+                      {step.stepNumber}
+                    </span>
+                    <h3 className="text-xl font-bold text-[#0b0c0c] mb-2 pt-0.5">
+                      {step.stepTitle}
+                    </h3>
+                    <p className="text-base text-[#505a5f] leading-relaxed">
+                      {step.stepDescription}
+                    </p>
+                  </li>
+                ))}
               </ol>
             </section>
           )}
 
-          {/* Fees Section */}
+          {/* Mobile Responsive Fees Table */}
           {service.feesTable && service.feesTable.length > 0 && (
             <section id="fees" aria-labelledby="fees-heading">
               <h2 id="fees-heading" className="text-2xl md:text-3xl font-bold mb-4 text-[#0b0c0c]">
                 Fees and charges
               </h2>
-              <div className="overflow-x-auto w-full">
-                <table className="w-full text-base text-left border-collapse">
+              <div className="w-full overflow-x-auto border-b border-[#b1b4b6]">
+                <table className="w-full text-base text-left border-collapse min-w-[280px]">
                   <thead>
                     <tr className="border-b-2 border-[#0b0c0c]">
                       <th className="py-2 pr-4 font-bold text-[#0b0c0c]">Item or condition</th>
-                      <th className="py-2 text-right font-bold text-[#0b0c0c]">Cost</th>
+                      <th className="py-2 text-right font-bold text-[#0b0c0c] w-24">Cost</th>
                     </tr>
                   </thead>
                   <tbody>
                     {service.feesTable.map((fee, idx) => (
-                      <tr key={idx} className="border-b border-[#b1b4b6]">
-                        <td className="py-3 pr-4 text-[#0b0c0c] font-normal">{fee.itemName}</td>
+                      <tr key={idx} className="border-b border-[#b1b4b6] hover:bg-[#f8f8f8]">
+                        <td className="py-3 pr-4 text-[#0b0c0c] font-normal leading-normal">{fee.itemName}</td>
                         <td className="py-3 text-right font-bold text-[#0b0c0c] whitespace-nowrap">{fee.amount}</td>
                       </tr>
                     ))}
@@ -253,70 +264,46 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
             </section>
           )}
 
-          {/* Office Attendance Section */}
-          {service.physicalVisits && service.physicalVisits.length > 0 && (
-            <section id="office-visits" aria-labelledby="visits-heading">
-              <h2 id="visits-heading" className="text-2xl md:text-3xl font-bold mb-4 text-[#0b0c0c]">
-                Required office attendance
-              </h2>
-              <div className="space-y-6">
-                {service.physicalVisits.map((visit, idx) => (
-                  <div key={idx} className="text-base text-[#0b0c0c]">
-                    <p className="font-bold text-[#0b0c0c] mb-1">{visit.purpose}</p>
-                    <p className="text-[#505a5f] whitespace-pre-line leading-relaxed">{visit.locations}</p>
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* Timeline Advice Layout (Conditional fallback display point) */}
-          {service.timelineGuidance && !service.steps && (
-            <div className="border-l-4 border-[#00703c] pl-5 py-1">
-              <p className="text-base font-bold text-[#00703c] mb-1">Recommended timeline</p>
-              <p className="text-base text-[#0b0c0c] leading-relaxed">{service.timelineGuidance}</p>
-            </div>
-          )}
-
-          {/* Common Portal Pitfalls and Warnings Section */}
-          {service.commonMistakes && service.commonMistakes.length > 0 && (
-            <section className="border-l-4 border-[#d4351c] pl-5 py-1" aria-labelledby="pitfalls-heading">
-              <h2 id="pitfalls-heading" className="text-xl font-bold text-[#d4351c] mb-3">
-                Important application warnings
-              </h2>
-              <div className="space-y-4">
-                {service.commonMistakes.map((mistake, idx) => (
-                  <div key={idx} className="text-base text-[#0b0c0c]">
-                    <p className="font-bold text-[#0b0c0c]">{mistake.errorTitle}</p>
-                    <p className="text-[#505a5f] mt-0.5 leading-relaxed">{mistake.errorFix}</p>
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
+          {/* Dynamic Download Resources Tracking with Byte-Calculated Sizes */}
           {service.downloadableResources && service.downloadableResources.length > 0 && (
             <section aria-labelledby="downloads-heading" className="pt-2">
               <h2 id="downloads-heading" className="text-xl font-bold text-[#0b0c0c] mb-3">
                 Downloadable reference attachments
               </h2>
-              <ul className="space-y-2">
+              <ul className="space-y-4">
                 {service.downloadableResources.map((res, idx) => (
-                  <li key={idx}>
-                    <a 
-                      href={res.fileUrl} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-[#1d70b8] font-bold underline decoration-2 hover:text-[#003078] focus:bg-[#ffdd00] focus:text-[#0b0c0c] focus:no-underline text-base"
-                    >
-                      {res.label} (PDF format)
-                    </a>
+                  <li key={idx} className="text-base border-l-2 border-[#1d70b8] pl-3 py-0.5">
+                    {res.fileUrl && (
+                      <a 
+                        href={res.fileUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-[#1d70b8] font-bold underline decoration-2 hover:text-[#003078] block"
+                      >
+                        {res.label}{" "}
+                        {res.fileSize && (
+                          <span className="text-xs text-[#505a5f] font-normal font-mono no-underline">
+                            ({formatBytes(res.fileSize)})
+                          </span>
+                        )}
+                      </a>
+                    )}
+                    {res.sourceUrl && (
+                      <a 
+                        href={res.sourceUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-xs text-[#505a5f] underline block mt-0.5 hover:text-[#0b0c0c] break-all"
+                      >
+                        Verified source: {res.sourceUrl}
+                      </a>
+                    )}
                   </li>
                 ))}
               </ul>
             </section>
           )}
-
-          {/* Frequently Asked Questions Accordion Framework */}
+          {/* FAQ Framework Accordions */}
           {service.faqs && service.faqs.length > 0 && (
             <section id="faqs" aria-labelledby="faqs-heading">
               <h2 id="faqs-heading" className="text-2xl md:text-3xl font-bold mb-4 text-[#0b0c0c]">
@@ -337,8 +324,8 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
                     >
                       <summary className="w-full text-left py-4 font-bold flex justify-between items-center text-base text-[#1d70b8] hover:text-[#003078] cursor-pointer focus:bg-[#ffdd00] focus:text-[#0b0c0c] select-none list-none [&::-webkit-details-marker]:hidden">
                         <span className="underline decoration-2 text-left">{faq.question}</span>
-                        <span className="text-xs text-[#505a5f] no-underline font-normal ml-4 shrink-0 group-open:hidden" aria-hidden="true">Show</span>
-                        <span className="text-xs text-[#505a5f] no-underline font-normal ml-4 shrink-0 hidden group-open:inline" aria-hidden="true">Hide</span>
+                        <span className="text-xs text-[#505a5f] no-underline font-normal ml-4 shrink-0 group-open:hidden">Show</span>
+                        <span className="text-xs text-[#505a5f] no-underline font-normal ml-4 shrink-0 hidden group-open:inline">Hide</span>
                       </summary>
                       <div className="pb-6 pt-2 text-base text-[#0b0c0c] leading-relaxed whitespace-pre-line max-w-none">
                         {faq.answer}
@@ -350,7 +337,7 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
             </section>
           )}
 
-          {/* Contextual Related Services Section */}
+          {/* Related Services Content Links */}
           {service.relatedServices && service.relatedServices.length > 0 && (
             <section id="related" aria-labelledby="related-heading" className="pt-6 border-t border-[#b1b4b6]">
               <h2 id="related-heading" className="text-xl font-bold text-[#0b0c0c] mb-4">
@@ -359,10 +346,9 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
               <ul className="space-y-3 text-base">
                 {service.relatedServices.map((rel, idx) => (
                   <li key={idx}>
-                    {/* FIXED: Changed rel.url to use the flat-root slug variable string matching Part 1 typing constraints */}
                     <Link 
                       href={`/${rel.slug}`} 
-                      className="text-[#1d70b8] underline decoration-2 font-bold hover:text-[#003078] focus:bg-[#ffdd00] focus:text-[#0b0c0c]"
+                      className="text-[#1d70b8] underline decoration-2 font-bold hover:text-[#003078]"
                     >
                       {rel.title}
                     </Link>
@@ -372,30 +358,43 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
             </section>
           )}
 
-          {/* Strict GOV.UK Direct Outbound Redirection Callout */}
+          {/* Multi-Portal Direct Outbound Redirection Section */}
           <div className="border-t border-[#b1b4b6] pt-8 mt-12">
             <div className="border-l-4 border-[#b1b4b6] pl-5 py-1 mb-6">
               <p className="text-base text-[#0b0c0c]">
-                Applications are submitted securely through the official government eCitizen portal platform.
+                Applications are processed securely by clicking the matching official digital execution gateways below:
               </p>
             </div>
-            <Link 
-              href={service.ecitizenUrl} 
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center bg-[#00703c] text-white hover:bg-[#005a30] active:bg-[#004424] font-bold text-xl px-6 py-3 border-b-4 border-[#004424] focus:outline-none focus:ring-4 focus:ring-[#ffdd00] focus:text-[#0b0c0c] focus:bg-[#ffdd00] transition-colors"
-            >
-              Start now
-              <svg 
-                className="ml-3 fill-current w-5 h-5 inline-block align-middle pointer-events-none" 
-                xmlns="http://w3.org" 
-                viewBox="0 0 33 40" 
-                aria-hidden="true" 
-                focusable="false"
-              >
-                <path d="M0 0h13l20 20-20 20H0l20-20z" />
-              </svg>
-            </Link>
+            
+            {/* FIXED: Formats your array loop metrics dynamically. Rendered buttons will display perfectly */}
+            <div className="flex flex-wrap gap-4">
+              {service.transactionPortals && service.transactionPortals.length > 0 ? (
+                service.transactionPortals.map((portal, pIdx) => (
+                  <a 
+                    key={pIdx}
+                    href={portal.portalUrl} 
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center bg-[#00703c] text-white hover:bg-[#005a30] active:bg-[#004424] font-bold text-lg px-5 py-3 border-b-4 border-[#004424] focus:outline-none focus:ring-4 focus:ring-[#ffdd00] focus:text-[#0b0c0c] focus:bg-[#ffdd00] transition-colors"
+                  >
+                    {portal.portalLabel || "Start now"}
+                    <svg 
+                      className="ml-3 fill-current w-4 h-4 inline-block align-middle pointer-events-none" 
+                      xmlns="http://w3.org" 
+                      viewBox="0 0 33 40" 
+                      aria-hidden="true" 
+                      focusable="false"
+                    >
+                      <path d="M0 0h13l20 20-20 20H0l20-20z" />
+                    </svg>
+                  </a>
+                ))
+              ) : (
+                <div className="text-sm font-bold text-[#d4351c] font-sans">
+                  System notice: Action portals have not yet been assigned to this guide document template.
+                </div>
+              )}
+            </div>
           </div>
         </div>
 

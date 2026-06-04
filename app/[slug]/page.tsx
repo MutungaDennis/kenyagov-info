@@ -9,15 +9,24 @@ interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
-// UPDATED GROQ QUERY: Added providingBody, sorted steps, and resolved relatedServices links
+// ALIGNED GROQ QUERY: Fetches metadata sizes, timestamps, structural portals, and nested ministries
 const SERVICE_QUERY = `*[_type == "governmentService" && slug.current == $slug]{
   title,
   summary,
-  providingBody,
+  _createdAt,
+  _updatedAt,
+  "providingBodies": providingBodies[]->{
+    name,
+    "slug": slug.current,
+    parentMinistry->{
+      name,
+      "slug": slug.current
+    }
+  },
   processingTime,
   baseCostLabel,
   executionMode,
-  timelineGuidance,
+  timelineGuidancePoints,
   beforeYouStart,
   requiredDocuments,
   steps[] | order(stepNumber asc) {
@@ -29,7 +38,9 @@ const SERVICE_QUERY = `*[_type == "governmentService" && slug.current == $slug]{
   physicalVisits[],
   downloadableResources[]{
     label,
-    "fileUrl": fileUpload.asset->url
+    "fileUrl": fileUpload.asset->url,
+    "fileSize": fileUpload.asset->size, // Fetches raw bytes for dynamic conversion
+    sourceUrl
   },
   commonMistakes[],
   faqs[],
@@ -37,7 +48,10 @@ const SERVICE_QUERY = `*[_type == "governmentService" && slug.current == $slug]{
     title,
     "slug": slug.current
   },
-  ecitizenUrl,
+  transactionPortals[]{
+    portalLabel,
+    portalUrl
+  },
   "parentCategory": *[_type == "governmentCategory" && references(^._id)]{
     title,
     "slug": slug.current
