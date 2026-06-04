@@ -8,9 +8,10 @@ import actOfParliament from './actOfParliament';
 import courtPronouncement from './courtPronouncement';
 import reportMandate from './reportMandate';
 
-// Import the two new schemas
+// Import your government navigation schemas
 import governmentCategory from './governmentCategory';
-import governmentService from './governmentService'; // We will create this file next
+import governmentService from './governmentService'; 
+import governmentMinistry from './governmentMinistry'; // NEW: Added reusable Ministry reference file
 
 export const schema: { types: SchemaTypeDefinition[] } = {
   types: [
@@ -20,7 +21,8 @@ export const schema: { types: SchemaTypeDefinition[] } = {
     actOfParliament,
     courtPronouncement,
     reportMandate,
-    governmentCategory,  // Added
-    governmentService,   // Added
+    governmentCategory,  
+    governmentService,
+    governmentMinistry, // NEW: Enlisted into Sanity Core configuration matrix
   ],
 };

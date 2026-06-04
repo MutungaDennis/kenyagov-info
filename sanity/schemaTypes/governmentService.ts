@@ -1,4 +1,4 @@
-// sanity/schemaTypes/governmentService.ts (Part 1 of 2)
+// sanity/schemaTypes/governmentService.ts 
 import { defineType, defineField } from 'sanity'
 
 export default defineType({
@@ -34,14 +34,20 @@ export default defineType({
       validation: Rule => Rule.required(),
     }),
 
-    // --- NEW GOV.UK FIELD: OWNER/PROVIDING AGENCY ---
+    // --- ENHANCED GOV.UK FIELD: MULTIPLE PROVIDING AGENCIES ---
     defineField({
-      name: 'providingBody',
-      title: 'Providing Government Body / Department',
-      type: 'string',
-      description: 'The explicit state authority running the service. e.g., "Directorate of Immigration Services" or "National Transport and Safety Authority (NTSA)".',
-      validation: Rule => Rule.required(),
-    }),
+  name: 'providingBodies',
+  title: 'Providing Government Bodies / Departments',
+  type: 'array',
+  description: 'Select the specific State Departments or Umbrella Ministries co-managing this service. Every department you enter under the Ministries tab is reusable here.',
+  of: [
+    {
+      type: 'reference',
+      to: [{ type: 'governmentMinistry' }]
+    }
+  ],
+  validation: Rule => Rule.required().min(1),
+}),
 
     defineField({
       name: 'popularityWeight',
@@ -82,12 +88,13 @@ export default defineType({
       validation: Rule => Rule.required(),
     }),
 
-    // --- 3. TIMELINE & CRITICAL PREREQUISITES ---
+    // --- ENHANCED GOV.UK FIELD: MULTI-POINT TIMELINE PLANNING ---
     defineField({
-      name: 'timelineGuidance',
-      title: 'Application Timeline Planning',
-      type: 'string',
-      description: 'When should they start? e.g., "At least 1 to 3 months before your wedding day" or "Before starting driving lessons".',
+      name: 'timelineGuidancePoints',
+      title: 'Application Timeline Planning Points',
+      type: 'array',
+      description: 'Chronological or conditional milestone guidelines. e.g., ["Submit notice 21 days before wedding", "Execute within 90 days of approval"].',
+      of: [{ type: 'string' }],
     }),
     defineField({
       name: 'beforeYouStart',
@@ -105,8 +112,7 @@ export default defineType({
       of: [{ type: 'string' }],
       validation: Rule => Rule.required().min(1),
     }),
-
-    // --- NEW GOV.UK FIELD: STEP BY STEP INSTRUCTIONS ---
+// --- STEP BY STEP INSTRUCTIONS ---
     defineField({
       name: 'steps',
       title: 'Step-by-Step Application Process',
@@ -120,7 +126,7 @@ export default defineType({
           fields: [
             { name: 'stepNumber', title: 'Step Number', type: 'number', validation: Rule => Rule.required().min(1).integer() },
             { name: 'stepTitle', title: 'Action Name / Heading', type: 'string', description: 'e.g., "Submit Application and Pay on eCitizen"', validation: Rule => Rule.required() },
-            { name: 'stepDescription', title: 'Explicit Process Guidelines', type: 'text', rows: 2, description: 'Explain options, URLs, or background background processing.', validation: Rule => Rule.required() }
+            { name: 'stepDescription', title: 'Explicit Process Guidelines', type: 'text', rows: 2, description: 'Explain options, URLs, or background processing.', validation: Rule => Rule.required() }
           ]
         }
       ]
@@ -144,7 +150,7 @@ export default defineType({
         }
       ]
     }),
-defineField({
+    defineField({
       name: 'physicalVisits',
       title: 'Physical Attendance Steps',
       type: 'array',
@@ -162,20 +168,27 @@ defineField({
       ]
     }),
 
-    // --- 5. REFERENCE FILES & DOCUMENT DOWNLOADS ---
+    // --- ENHANCED FIELD: DOWNLOADABLE RESOURCES WITH SOURCE URL OPTION ---
     defineField({
       name: 'downloadableResources',
       title: 'Downloadable Forms & Reference Templates',
       type: 'array',
-      description: 'Option to attach official PDFs, layout blueprints, or sample blank affidavits for reference.',
+      description: 'Attach official PDFs or provide external verification links for reference layouts.',
       of: [
         {
           type: 'object',
           name: 'downloadableFile',
           title: 'Reference Document',
           fields: [
-            { name: 'label', title: 'Document Download Label', type: 'string', description: 'e.g., "Download Blank C24 Fingerprint Sheet Template"' },
-            { name: 'fileUpload', title: 'Upload PDF File', type: 'file', options: { accept: '.pdf' } }
+            { name: 'label', title: 'Document Download Label', type: 'string', description: 'e.g., "Download Blank C24 Fingerprint Sheet Template"', validation: Rule => Rule.required() },
+            { name: 'fileUpload', title: 'Upload PDF File', type: 'file', options: { accept: '.pdf' } },
+            { 
+              name: 'sourceUrl', 
+              title: 'Original Document Source URL (Optional)', 
+              type: 'url', 
+              description: 'The official governmental page where this resource was originally obtained from. e.g., https://lands.go.ke',
+              validation: Rule => Rule.uri({ scheme: ['http', 'https'] })
+            }
           ]
         }
       ]
@@ -216,8 +229,7 @@ defineField({
         }
       ]
     }),
-
-    // --- NEW GOV.UK FIELD: SELF-REFERENTIAL RELATED SERVICES RELATIONSHIP ---
+    // --- SELF-REFERENTIAL RELATED SERVICES RELATIONSHIP ---
     defineField({
       name: 'relatedServices',
       title: 'Related Services Links',
@@ -231,15 +243,36 @@ defineField({
       ]
     }),
 
-    // --- 7. TRANSACTION OUTBOUND REDIRECTION ---
+    // --- ENHANCED FIELD: MULTIPLE TARGET TRANSACTION PORTAL URLS ---
     defineField({
-      name: 'ecitizenUrl',
-      title: 'Target Transaction Portal URL',
-      type: 'url',
-      description: 'The exact external eCitizen agency link triggered when clicking "Start now". e.g., https://ecitizen.go.ke',
-      validation: Rule => Rule.required().uri({
-        scheme: ['http', 'https']
-      })
+      name: 'transactionPortals',
+      title: 'Target Transaction Portal Links',
+      type: 'array',
+      description: 'The official digital destinations triggered for execution. Provide at least one transaction link.',
+      of: [
+        {
+          type: 'object',
+          name: 'portalItem',
+          title: 'Portal Access Destination',
+          fields: [
+            { 
+              name: 'portalLabel', 
+              title: 'Button or Link Label', 
+              type: 'string', 
+              description: 'e.g., "Start on Ardhisasa", "Pay on Nairobi eCitizen"', 
+              validation: Rule => Rule.required() 
+            },
+            { 
+              name: 'portalUrl', 
+              title: 'Direct Portal URL', 
+              type: 'url', 
+              description: 'e.g., https://lands.go.ke', 
+              validation: Rule => Rule.required().uri({ scheme: ['http', 'https'] }) 
+            }
+          ]
+        }
+      ],
+      validation: Rule => Rule.required().min(1)
     })
   ],
 
@@ -250,17 +283,23 @@ defineField({
       slug: 'slug.current',
       mode: 'executionMode',
       weight: 'popularityWeight',
-      agency: 'providingBody'
+      agencies: 'providingBodies' // Updated to track your new string array field key
     },
-    prepare({ title, slug, mode, weight, agency }) {
+    prepare({ title, slug, mode, weight, agencies }) {
       const modeLabels: Record<string, string> = {
         online: '⚡ Digital',
         hybrid: '🤝 Hybrid',
         manual: '📄 Manual'
       }
+      
+      // Formats array elements neatly inside the studio sidebar subtitles segment
+      const bodiesLabel = agencies && agencies.length > 0 
+        ? agencies.join(', ') 
+        : 'No Agencies Specified';
+
       return {
         title: title,
-        subtitle: `${agency || 'No Agency Specified'} • ${modeLabels[mode] || mode || ''} (Score: ${weight || 0})`
+        subtitle: `${bodiesLabel} • ${modeLabels[mode] || mode || ''} (Score: ${weight || 0})`
       }
     }
   }
