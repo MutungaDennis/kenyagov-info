@@ -1,0 +1,163 @@
+// sanity/schemaTypes/presidentialTrip.ts
+import { defineType, defineField } from 'sanity'
+
+export default defineType({
+  name: 'presidentialTrip',
+  title: "President's Foreign Trips",
+  type: 'document',
+  fields: [
+    // ==========================================
+    // MANDATORY FIELDS (Compulsory)
+    // ==========================================
+    defineField({
+      name: 'title',
+      title: 'Trip Title / Event Name',
+      type: 'string',
+      description: 'e.g. "State Visit to the United States" or "UN Climate Change Conference (COP31)"',
+      validation: Rule => Rule.required(),
+    }),
+    defineField({
+      name: 'slug',
+      title: 'Slug',
+      type: 'slug',
+      options: { source: 'title', maxLength: 96 },
+      validation: Rule => Rule.required(),
+    }),
+    defineField({
+      name: 'destinationCountry',
+      title: 'Destination Country',
+      type: 'string',
+      description: 'The primary host nation visited',
+      validation: Rule => Rule.required(),
+    }),
+    defineField({
+      name: 'tripType',
+      title: 'Trip Type',
+      type: 'string',
+      options: {
+        list: [
+          { title: 'State Visit', value: 'state-visit' },
+          { title: 'Official Visit', value: 'official-visit' },
+          { title: 'Working Visit', value: 'working-visit' },
+          { title: 'Summit / International Conference', value: 'summit' },
+          { title: 'Regional / EAC Mission', value: 'regional-mission' },
+        ]
+      },
+      validation: Rule => Rule.required(),
+    }),
+    defineField({
+      name: 'departureDate',
+      title: 'Departure Date',
+      type: 'date',
+      description: 'The date the President departed Kenya',
+      validation: Rule => Rule.required(),
+    }),
+
+    // ==========================================
+    // OPTIONAL FIELDS
+    // ==========================================
+    defineField({
+      name: 'returnDate',
+      title: 'Return Date',
+      type: 'date',
+      description: 'The date the President returned to Kenya',
+      validation: Rule => Rule.custom((returnDate, context) => {
+        const departureDate = (context.document as any)?.departureDate;
+        if (returnDate && departureDate && new Date(returnDate) < new Date(departureDate)) {
+          return 'Return date cannot be earlier than the departure date';
+        }
+        return true;
+      }),
+    }),
+    defineField({
+      name: 'destinationCities',
+      title: 'Destination Cities',
+      type: 'array',
+      of: [{ type: 'string' }],
+      description: 'Specific cities visited during the trip (e.g. Washington D.C., New York)',
+    }),
+    defineField({
+      name: 'purpose',
+      title: 'Purpose & Objectives',
+      type: 'array',
+      of: [{ type: 'block' }],
+      description: 'Detailed explanation of the dynamic goals of this visit',
+    }),
+    defineField({
+      name: 'focusSectors',
+      title: 'Focus Sectors',
+      type: 'array',
+      of: [{ type: 'string' }],
+      options: {
+        list: [
+          'Trade & Investment',
+          'Climate Change & Environment',
+          'Regional Security & Defense',
+          'Technology & Innovation',
+          'Education & Bilateral Bilts',
+          'Healthcare Support',
+          'Infrastructure & Energy',
+        ]
+      }
+    }),
+    defineField({
+      name: 'accompanyingMinistries',
+      title: 'Accompanying Ministries',
+      type: 'array',
+      description: 'Link to the ministries that travelled in the presidential delegation',
+      of: [{ type: 'reference', to: [{ type: 'governmentMinistry' }] }],
+    }),
+    defineField({
+      name: 'outcomes',
+      title: 'Key Outcomes & MoUs Signed',
+      type: 'array',
+      of: [
+        {
+          type: 'object',
+          name: 'agreement',
+          title: 'Agreement / MoU',
+          fields: [
+            { name: 'title', title: 'Agreement Title', type: 'string' },
+            { name: 'details', title: 'Brief Summary', type: 'text', rows: 2 }
+          ]
+        }
+      ],
+      description: 'List bilateral frameworks, treaties, or MoUs formalised during the trip',
+    }),
+    defineField({
+      name: 'financialCommitments',
+      title: 'Financial Commitments Secured (KES/USD)',
+      type: 'string',
+      description: 'Value of any loans, grants, or investments officially signed (e.g. "$250 Million Grant")',
+    }),
+    defineField({
+      name: 'officialLink',
+      title: 'Official Press Release / Statement Link',
+      type: 'url',
+      description: 'Link to the state house brief or official communiqué',
+    }),
+    defineField({
+      name: 'tripDocument',
+      title: 'Official Report / Joint Communiqué (PDF)',
+      type: 'file',
+      options: { accept: '.pdf' },
+      description: 'Upload the text or reports submitted post-visit',
+    }),
+  ],
+
+  preview: {
+    select: {
+      title: 'title',
+      country: 'destinationCountry',
+      date: 'departureDate',
+    },
+    prepare(selection: any) {
+      const { title, country, date } = selection;
+      const year = date ? ` (${new Date(date).getFullYear()})` : '';
+      return {
+        title: title,
+        subtitle: `${country}${year}`,
+      };
+    },
+  },
+})
