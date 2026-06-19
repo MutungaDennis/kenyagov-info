@@ -15,10 +15,12 @@ export default function GeneralFeedbackPage() {
 
   const [isPending, startTransition] = useTransition();
   
+  // FIXED: Adjusted to capture and track the returned database UUID safely
   const [submissionState, setSubmissionState] = useState<{ 
     success?: boolean; 
     error?: string; 
     errorType?: "security" | "validation" | "server";
+    recordId?: string;
   } | null>(null);
   
   const [feedbackValue, setFeedbackValue] = useState("");
@@ -74,7 +76,8 @@ export default function GeneralFeedbackPage() {
     startTransition(async () => {
       const result = await handleGeneralFeedback(formData, implicitToken);
       if (result.success) {
-        setSubmissionState({ success: true });
+        // FIXED: Passes the concrete database UUID straight into the state system
+        setSubmissionState({ success: true, recordId: result.recordId });
         setFeedbackValue("");
         targetForm.reset();
       } else {
@@ -88,7 +91,9 @@ export default function GeneralFeedbackPage() {
   }
   // GOV.UK Standard Success Panel and Confirmation Layout Pattern
   if (submissionState?.success) {
-    const referenceNumber = `CG-${Math.floor(100000 + Math.random() * 900000)}`;
+    // FIXED: Isolates the first structural block of the primary key UUID to generate a true reference code
+    const rawUuid = submissionState.recordId || "00000000";
+    const referenceNumber = `CG-${rawUuid.split("-")[0].toUpperCase()}`;
 
     return (
       <div className="govuk-grid-row govuk-!-margin-top-4">

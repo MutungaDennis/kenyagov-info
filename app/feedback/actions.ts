@@ -107,17 +107,22 @@ export async function handleFeedbackSubmission(formData: FormData, turnstileToke
   try {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { error } = await supabase.from("citizen_feedback").insert([
-      {
-        what_were_you_doing: doing,
-        what_went_wrong: wrong,
-        email_address: email || null,
-        page_path: pagePath || "/unknown",
-      }
-    ]);
+    // FIXED: Selects the newly created record ID upon insert to return to frontend
+    const { data, error } = await supabase
+      .from("citizen_feedback")
+      .insert([
+        {
+          what_were_you_doing: doing,
+          what_went_wrong: wrong,
+          email_address: email || null,
+          page_path: pagePath || "/unknown",
+        }
+      ])
+      .select("id")
+      .single();
 
     if (error) return { success: false, error: `Database Error: ${error.message}` };
-    return { success: true };
+    return { success: true, recordId: data.id };
   } catch (err: any) {
     return { success: false, error: `Server Exception: ${err.message || err}` };
   }
@@ -162,16 +167,21 @@ export async function handleGeneralFeedback(formData: FormData, turnstileToken: 
   try {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { error } = await supabase.from("general_feedback").insert([
-      {
-        feedback_text: feedbackText,
-        full_name: fullName || null,
-        email_address: email || null,
-      }
-    ]);
+    // FIXED: Selects the newly created record ID upon insert to return to frontend
+    const { data, error } = await supabase
+      .from("general_feedback")
+      .insert([
+        {
+          feedback_text: feedbackText,
+          full_name: fullName || null,
+          email_address: email || null,
+        }
+      ])
+      .select("id")
+      .single();
 
     if (error) return { success: false, error: `Database Error: ${error.message}` };
-    return { success: true };
+    return { success: true, recordId: data.id };
   } catch (err: any) {
     return { success: false, error: `Server Exception: ${err.message || err}` };
   }
