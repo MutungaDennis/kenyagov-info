@@ -19,6 +19,7 @@
     "date-fns": "^4.2.1",
     "govuk-frontend": "^6.1.0",
     "next": "16.2.4",
+    "next-auth": "^4.24.14",
     "next-sanity": "^12.4.5",
     "pdf-parse": "^2.4.5",
     "pdf-parse-fork": "^1.2.0",

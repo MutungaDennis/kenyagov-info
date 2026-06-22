@@ -14,21 +14,21 @@ export default defineType({
       title: 'Trip Title / Event Name',
       type: 'string',
       description: 'e.g. "State Visit to the United States" or "UN Climate Change Conference (COP31)"',
-      validation: Rule => Rule.required(),
+      validation: (Rule: any) => Rule.required(),
     }),
     defineField({
       name: 'slug',
       title: 'Slug',
       type: 'slug',
       options: { source: 'title', maxLength: 96 },
-      validation: Rule => Rule.required(),
+      validation: (Rule: any) => Rule.required(),
     }),
     defineField({
       name: 'destinationCountry',
       title: 'Destination Country',
       type: 'string',
       description: 'The primary host nation visited',
-      validation: Rule => Rule.required(),
+      validation: (Rule: any) => Rule.required(),
     }),
     defineField({
       name: 'tripType',
@@ -43,14 +43,14 @@ export default defineType({
           { title: 'Regional / EAC Mission', value: 'regional-mission' },
         ]
       },
-      validation: Rule => Rule.required(),
+      validation: (Rule: any) => Rule.required(),
     }),
     defineField({
       name: 'departureDate',
       title: 'Departure Date',
       type: 'date',
       description: 'The date the President departed Kenya',
-      validation: Rule => Rule.required(),
+      validation: (Rule: any) => Rule.required(),
     }),
 
     // ==========================================
@@ -61,7 +61,7 @@ export default defineType({
       title: 'Return Date',
       type: 'date',
       description: 'The date the President returned to Kenya',
-      validation: Rule => Rule.custom((returnDate, context) => {
+      validation: (Rule: any) => Rule.custom((returnDate: any, context: any) => {
         const departureDate = (context.document as any)?.departureDate;
         if (returnDate && departureDate && new Date(returnDate) < new Date(departureDate)) {
           return 'Return date cannot be earlier than the departure date';
@@ -94,7 +94,7 @@ export default defineType({
           'Climate Change & Environment',
           'Regional Security & Defense',
           'Technology & Innovation',
-          'Education & Bilateral Bilts',
+          'Education & Bilateral Relations',
           'Healthcare Support',
           'Infrastructure & Energy',
         ]
@@ -117,8 +117,17 @@ export default defineType({
           name: 'agreement',
           title: 'Agreement / MoU',
           fields: [
-            { name: 'title', title: 'Agreement Title', type: 'string' },
-            { name: 'details', title: 'Brief Summary', type: 'text', rows: 2 }
+            { 
+              name: 'title', 
+              title: 'Agreement Title', 
+              type: 'string' 
+            },
+            { 
+              name: 'details', 
+              title: 'Brief Summary', 
+              type: 'text', 
+              rows: 2 
+            }
           ]
         }
       ],
