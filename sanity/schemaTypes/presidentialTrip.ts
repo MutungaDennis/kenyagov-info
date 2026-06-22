@@ -69,6 +69,70 @@ export default defineType({
         return true;
       }),
     }),
+
+    // === NEW: Speeches Delivered During the Trip ===
+    defineField({
+      name: 'speeches',
+      title: 'Speeches Delivered During the Trip',
+      type: 'array',
+      description: 'List out individual addresses, remarks, and statements made during this itinerary',
+      of: [
+        {
+          type: 'object',
+          name: 'speechItem',
+          title: 'Speech / Statement',
+          fields: [
+            {
+              name: 'title',
+              title: 'Speech Title',
+              type: 'string',
+              description: 'e.g., "Remarks at the Launch of African Carbon Markets Initiative (ACMI)"',
+              validation: (Rule: any) => Rule.required(),
+            },
+            {
+              name: 'deliveryDate',
+              title: 'Date Delivered',
+              type: 'date',
+              initialValue: (context: any) => (context.document as any)?.departureDate,
+            },
+            {
+              name: 'forum',
+              title: 'Forum / Panel / Group Addressed',
+              type: 'string',
+              description: 'e.g., "Inauguration Summit of the International High Level Panel on Water Investment for Africa"',
+            },
+            {
+              name: 'speechText',
+              title: 'Speech Summary / Full Text Outline',
+              type: 'text',
+              rows: 4,
+              description: 'A brief breakdown or text extract of the primary points spoken',
+            },
+            {
+              name: 'speechDocument',
+              title: 'Official Speech PDF',
+              type: 'file',
+              options: { accept: '.pdf' },
+              description: 'Upload the official transcript PDF file for this specific address',
+            }
+          ],
+          preview: {
+            select: {
+              title: 'title',
+              forum: 'forum',
+            },
+            prepare(selection: any) {
+              const { title, forum } = selection;
+              return {
+                title: title || 'Untitled Speech',
+                subtitle: forum ? `Forum: ${forum}` : 'General Plenary Address',
+              };
+            }
+          }
+        }
+      ]
+    }),
+
     defineField({
       name: 'destinationCities',
       title: 'Destination Cities',
