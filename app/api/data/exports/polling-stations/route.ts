@@ -56,6 +56,13 @@ export async function GET(request: Request) {
 
   const csvContent = csvHeaders + csvRows;
 
+  const format = new URL(request.url).searchParams.get("format");
+  if (format === "json") {
+    return Response.json(stations || [], {
+      headers: { "Content-Disposition": `attachment; filename="filtered-kenya-polling-stations-2022.json"` }
+    });
+  }
+
   return new NextResponse(csvContent, {
     headers: {
       "Content-Type": "text/csv; charset=utf-8",

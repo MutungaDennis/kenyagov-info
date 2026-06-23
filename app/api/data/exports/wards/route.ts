@@ -52,6 +52,13 @@ export async function GET(request: NextRequest) {
     const csvContent = [csvHeaders.join(","), ...csvRows.map((row) => row.join(","))].join("\n");
 
     // Return the generated data payload spreadsheet specifying explicit text attachment properties
+    const format = new URL(request.url).searchParams.get("format");
+    if (format === "json") {
+      return Response.json(wards || [], {
+        headers: { "Content-Disposition": `attachment; filename="citizen_guide_wards_${new Date().toISOString().slice(0,10)}.json"` }
+      });
+    }
+
     return new NextResponse(csvContent, {
       status: 200,
       headers: {

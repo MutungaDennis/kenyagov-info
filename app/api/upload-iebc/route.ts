@@ -1,14 +1,33 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { createClient as createServerSupabase } from '@/lib/supabase/server';
 
 const parsePdf = require('pdf-parse-fork');
 
-const supabase = createClient(
+// Use service role ONLY for the privileged bulk insert (RLS bypass is intentional here)
+const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
 export async function POST(request: Request) {
+  // Enforce admin role on the API itself (defense in depth)
+  const supabase = await createServerSupabase();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('is_admin')
+    .eq('id', user.id)
+    .single();
+
+  if (!profile?.is_admin) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File;
@@ -100,7 +119,7 @@ export async function POST(request: Request) {
     const chunkSize = 2000;
     for (let i = 0; i < records.length; i += chunkSize) {
       const chunk = records.slice(i, i + chunkSize);
-      const { error } = await supabase.rpc('bulk_insert_polling_stations', {
+      const { error } = await supabaseAdmin.rpc('bulk_insert_polling_stations', {
         station_data: chunk
       });
       
