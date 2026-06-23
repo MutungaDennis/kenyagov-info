@@ -411,3 +411,90 @@ items[] {
     { slug }
   );
 }
+
+// ==========================================
+// UNIFIED SANITY SEARCH (for /search page)
+// Strong support for rich text content in Sanity (constitution, acts, guides, descriptions etc.)
+// Uses pt::text() to search inside Portable Text blocks.
+// Combined with Supabase structured data results for balanced full-site search.
+// ==========================================
+export async function searchSanityContent(query: string, limit = 25) {
+  if (!query || query.trim().length < 2) return [];
+
+  const term = query.toLowerCase().trim();
+  const words = term.split(/\s+/).filter(w => w.length > 2);
+
+  // Build a more tolerant filter: match on any significant word (prefix) in titles or rich text.
+  // This gives broader candidates even for typos/misspellings, then JS fuzzy filters/ranks them.
+  const wordFilters = words.length > 0 
+    ? words.map(w => `lower(title) match "${w}*" || lower(name) match "${w}*" || pt::text(officialText) match "${w}*" || pt::text(amplifiedText) match "${w}*" || pt::text(content) match "${w}*"`).join(' || ')
+    : `lower(title) match $term + "*" || pt::text(officialText) match $term + "*" || pt::text(content) match $term + "*"`;
+
+  // Comprehensive GROQ across entire Sanity schema.
+  // Covers guides, services, news, pages, constitution (parts/articles), acts/laws, institutionContent,
+  // presidential trips, court pronouncements, report mandates, ministries, categories.
+  // Uses pt::text() for all Portable Text rich content + strings + numbers (for "part 2", "article 35").
+  return sanityClient.fetch(
+    `
+    *[
+      _type in [
+        "guide", "service", "news", "page", "constitutionArticle", 
+        "actOfParliament", "institutionContent", "presidentialTrip",
+        "courtPronouncement", "reportMandate", "governmentMinistry", "governmentCategory"
+      ]
+      && (
+        ${wordFilters} ||
+        // Raw for phrases
+        pt::text(officialText) match $term ||
+        pt::text(content) match $term
+      )
+    ] {
+      _id,
+      _type,
+      title,
+      name,
+      shortTitle,
+      articleTitle,
+      chapter,
+      articleNumber,
+      partNumber,
+      partTitle,
+      chapterTitle,
+      caseName,
+      caseNumber,
+      court,
+      destinationCountry,
+      tripType,
+      departureDate,
+      "slug": coalesce(slug.current, slug),
+      "snippet": coalesce(
+        pt::text(amplifiedText)[0...200], 
+        pt::text(officialText)[0...200], 
+        pt::text(content)[0...200],
+        pt::text(purpose)[0...200],
+        description, 
+        excerpt, 
+        globalSummary, 
+        speechText,
+        " "
+      ),
+      "base_route": select(
+        _type == "guide" => "/guides",
+        _type == "service" => "/services",
+        _type == "news" => "/news",
+        _type == "constitutionArticle" => "/constitution",
+        _type == "actOfParliament" => "/acts/parliament",
+        _type == "page" => "/",
+        _type == "institutionContent" => "/institutions",
+        _type == "presidentialTrip" => "/executive/presidency/international-visits",
+        _type == "courtPronouncement" => "/judiciary",
+        _type == "reportMandate" => "/documents",
+        _type == "governmentMinistry" => "/executive/ministries",
+        _type == "governmentCategory" => "/services",
+        "/"
+      )
+    } | order(_score desc, _createdAt desc) [0...$limit]
+    `,
+    { term, limit }
+  );
+}
