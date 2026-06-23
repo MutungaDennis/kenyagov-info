@@ -8,7 +8,13 @@ The admin dashboard (`/admin`) allows you to manage all government data stored i
 
 Navigate to: `/admin`
 
-**Note:** Admin functionality currently has no authentication. In production, add authentication via Supabase Auth or NextAuth.js.
+**Authentication:** Admins must have a Supabase Auth account + a matching row in the `public.profiles` table where `is_admin = true`.
+
+1. Create the user account via Supabase Dashboard (Authentication → Add user) or allow a controlled signup.
+2. Run the SQL in `lib/supabase/migrations/create_profiles_table.sql` (or use the helper in `lib/supabase/admin.ts`) to set `is_admin = true` for that user's UUID.
+3. Go to `/admin/login` and sign in with the admin credentials.
+
+After login you are redirected to `/admin`. All `/admin/*` routes are protected by the proxy + server layout (using Supabase sessions and a profiles.is_admin flag).
 
 ## Main Sections
 
