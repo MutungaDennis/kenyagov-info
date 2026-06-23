@@ -86,6 +86,14 @@ export default function GeneralFeedbackPage() {
           error: result.error || "Could not save feedback.", 
           errorType: isLengthError ? "validation" : "server" 
         });
+        // Reset the Turnstile widget for retry
+        try {
+          // @ts-ignore
+          if ((window as any).turnstile) {
+            const widget = targetForm.querySelector('.cf-turnstile');
+            if (widget) (window as any).turnstile.reset(widget);
+          }
+        } catch (e) {}
       }
     });
   }
@@ -161,7 +169,7 @@ export default function GeneralFeedbackPage() {
 
   return (
     <>
-      <Script src="https://cloudflare.com" async defer />
+      {/* Turnstile script loaded once globally in ClientLayoutWrapper to prevent duplicate loads and widget conflicts */}
       
       <GovUKBreadcrumbs items={[{ text: "Home", href: "/" }, { text: "Give feedback", href: "/feedback" }]} />
 
