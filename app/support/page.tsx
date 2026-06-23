@@ -22,8 +22,7 @@ export default function SupportPage() {
 
   return (
     <>
-      {/* Load Turnstile challenge dependencies globally across the DOM structure */}
-      <Script src="https://cloudflare.com" async defer />
+      {/* Turnstile script loaded once globally in ClientLayoutWrapper to prevent duplicate loads */}
 
       <GovUKBreadcrumbs
         items={[
