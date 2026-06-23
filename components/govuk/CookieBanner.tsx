@@ -9,8 +9,21 @@ export default function CookieBanner() {
   useEffect(() => {
     // Check if user has already made a selection
     const savedConsent = localStorage.getItem('cookie-consent');
-    if (!savedConsent) {
+    if (savedConsent === 'accepted') {
+      // Update consent immediately for GA4 (GOV.UK pattern)
+      if (typeof window !== 'undefined' && (window as any).gtag) {
+        (window as any).gtag('consent', 'update', {
+          'ad_storage': 'granted',
+          'ad_user_data': 'granted',
+          'ad_personalization': 'granted',
+          'analytics_storage': 'granted'
+        });
+      }
+      setConsentStatus('hidden'); // Don't show banner if previously accepted
+    } else if (!savedConsent) {
       setConsentStatus('unanswered');
+    } else if (savedConsent === 'rejected') {
+      setConsentStatus('hidden');
     }
   }, []);
 

@@ -59,8 +59,7 @@ export default function GovUKReportProblem() {
 
   return (
     <div className="govuk-width-container govuk-!-margin-top-4">
-      {/* Safe global inclusion of Turnstile script logic without complex dynamic handlers */}
-      <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer />
+      {/* Turnstile script loaded globally once via ClientLayoutWrapper.tsx */}
 
       <div className="govuk-grid-row">
         <div className="govuk-grid-column-two-thirds">

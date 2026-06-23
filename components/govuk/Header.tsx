@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import SearchAutocomplete from "./SearchAutocomplete";
 
 export default function GovUKHeader() {
   const [moreOpen, setMoreOpen] = useState(false);
@@ -75,29 +76,12 @@ export default function GovUKHeader() {
             className="top-tier-action-group"
             style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
           >
-            {/* DESKTOP-ONLY SHORT INLINE SEARCH BAR */}
+            {/* DESKTOP-ONLY SHORT INLINE SEARCH BAR with autocomplete */}
             <div className="desktop-search-inline-container" style={{ marginRight: '4px' }}>
-              <form action="/search" method="get" role="search" style={{ display: 'flex' }}>
-                <input 
-                  className="govuk-input" 
-                  name="q" 
-                  type="search" 
-                  placeholder="Search site..."
-                  style={{
-                    border: '2px solid #0b0c0c',
-                    borderRight: 'none',
-                    height: '34px',
-                    width: '180px',
-                    padding: '0 8px',
-                    fontSize: '14px',
-                    backgroundColor: '#ffffff',
-                    color: '#000000'
-                  }}
-                />
-                <button type="submit" aria-label="Search" style={{ backgroundColor: '#0b0c0c', border: 'none', color: '#ffffff', width: '36px', height: '34px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                </button>
-              </form>
+              <SearchAutocomplete 
+                placeholder="Search institutions, leaders..." 
+                compact={true}
+              />
             </div>
 
             {/* MOBILE-ONLY QUICK SEARCH ICON TOGGLE */}
@@ -166,37 +150,10 @@ export default function GovUKHeader() {
           }}
         >
           <div style={{ padding: '12px 16px' }}>
-            <form action="/search" method="get" role="search" style={{ display: 'flex', width: '100%' }}>
-              <div style={{ display: 'flex', width: '100%' }}>
-                <label className="govuk-visually-hidden" htmlFor="mobile-search-input-field">Search CitizenGuide.KE</label>
-                
-                <style dangerouslySetInnerHTML={{__html: `
-                  #mobile-search-input-field { color: #000000 !important; }
-                  #mobile-search-input-field::placeholder { color: #000000 !important; opacity: 1 !important; }
-                `}} />
-
-                <input 
-                  className="govuk-input" 
-                  id="mobile-search-input-field"
-                  name="q" 
-                  type="search" 
-                  placeholder="Search public services & laws..."
-                  style={{
-                    border: '3px solid #0b0c0c',
-                    borderRight: 'none',
-                    height: '38px',
-                    padding: '0 10px',
-                    fontSize: '15px',
-                    flex: 1,
-                    backgroundColor: '#ffffff',
-                    color: '#000000'
-                  }}
-                />
-                <button type="submit" aria-label="Submit Search" style={{ backgroundColor: '#0b0c0c', border: 'none', color: '#ffffff', width: '42px', height: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                </button>
-              </div>
-            </form>
+            <SearchAutocomplete 
+              placeholder="Search public services & laws..." 
+              compact={true}
+            />
           </div>
         </div>
       )}
