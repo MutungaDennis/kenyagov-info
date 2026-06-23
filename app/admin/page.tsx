@@ -1,168 +1,71 @@
 'use client';
 
 import Link from 'next/link';
-import GovUKBackLink from '@/components/govuk/BackLink';
-
 
 export default function AdminDashboard() {
   return (
-    <div className="govuk-width-container">
-      <GovUKBackLink href="/" />
+    <div>
+      <h1 className="govuk-heading-xl">Admin Dashboard</h1>
+      <p className="govuk-body-l">
+        Manage data stored in Supabase. Changes appear live on the public site.
+      </p>
 
-      <main className="govuk-main-wrapper">
-        <div className="govuk-grid-row">
-          <div className="govuk-grid-column-two-thirds">
-            <h1 className="govuk-heading-xl">Admin Dashboard</h1>
-            <p className="govuk-body-l">
-              Manage content, institutions, leaders and data for KenyaGovInfo.KE
-            </p>
+      <div className="govuk-inset-text">
+        All management actions require admin authentication via Supabase.
+      </div>
 
-            <div className="govuk-inset-text govuk-!-margin-top-6">
-              All changes made here are saved in Supabase and will appear live on the website.
-            </div>
+      <h2 className="govuk-heading-l">Data Management</h2>
 
-            <h2 className="govuk-heading-l govuk-!-margin-top-9">Core Management</h2>
-
-            <div className="govuk-grid-row">
-              {/* Government Institutions */}
-              <div className="govuk-grid-column-one-half govuk-!-margin-bottom-6">
-                <div className="govuk-card govuk-card--clickable">
-                  <div className="govuk-card__content">
-                    <h3 className="govuk-card__title">
-                      <Link href="/admin/institutions" className="govuk-link">
-                        Government Institutions
-                      </Link>
-                    </h3>
-                    <p className="govuk-card__description">
-                      Manage ministries, state departments, SAGAs, commissions and all public bodies
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Current Leaders */}
-              <div className="govuk-grid-column-one-half govuk-!-margin-bottom-6">
-                <div className="govuk-card govuk-card--clickable">
-                  <div className="govuk-card__content">
-                    <h3 className="govuk-card__title">
-                      <Link href="/admin/leaders" className="govuk-link">
-                        Current Leaders
-                      </Link>
-                    </h3>
-                    <p className="govuk-card__description">
-                      Manage President, Cabinet Secretaries, Governors, MPs, Senators and other leaders
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Services */}
-              <div className="govuk-grid-column-one-half govuk-!-margin-bottom-6">
-                <div className="govuk-card govuk-card--clickable">
-                  <div className="govuk-card__content">
-                    <h3 className="govuk-card__title">
-                      <Link href="/admin/services" className="govuk-link">
-                        Public Services
-                      </Link>
-                    </h3>
-                    <p className="govuk-card__description">
-                      Manage popular services, guides and how-to information
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Counties */}
-              <div className="govuk-grid-column-one-half govuk-!-margin-bottom-6">
-                <div className="govuk-card govuk-card--clickable">
-                  <div className="govuk-card__content">
-                    <h3 className="govuk-card__title">
-                      <Link href="/admin/counties" className="govuk-link">
-                        County Governments
-                      </Link>
-                    </h3>
-                    <p className="govuk-card__description">
-                      Manage 47 counties, governors and county institutions
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <h2 className="govuk-heading-l govuk-!-margin-top-9">Additional Management</h2>
-
-            <div className="govuk-grid-row">
-              <div className="govuk-grid-column-one-third govuk-!-margin-bottom-6">
-                <div className="govuk-card">
-                  <div className="govuk-card__content">
-                    <h3 className="govuk-card__title">
-                      <Link href="/admin/constitutional-bodies" className="govuk-link">
-                        Constitutional Bodies
-                      </Link>
-                    </h3>
-                    <p className="govuk-card__description">IEBC, EACC, CRA, PSC, etc.</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="govuk-grid-column-one-third govuk-!-margin-bottom-6">
-                <div className="govuk-card">
-                  <div className="govuk-card__content">
-                    <h3 className="govuk-card__title">
-                      <Link href="/admin/security" className="govuk-link">
-                        Security Agencies
-                      </Link>
-                    </h3>
-                    <p className="govuk-card__description">KDF, NPS, NIS and related bodies</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="govuk-grid-column-one-third govuk-!-margin-bottom-6">
-                <div className="govuk-card">
-                  <div className="govuk-card__content">
-                    <h3 className="govuk-card__title">
-                      <Link href="/admin/public-finance" className="govuk-link">
-                        Public Finance
-                      </Link>
-                    </h3>
-                    <p className="govuk-card__description">Budget, MTEF sectors and reports</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <hr className="govuk-section-break govuk-section-break--xl govuk-section-break--visible govuk-!-margin-top-9" />
-
-            <h2 className="govuk-heading-m">System Overview</h2>
-            <div className="govuk-grid-row">
-              <div className="govuk-grid-column-one-third">
-                <div className="govuk-panel">
-                  <strong>Institutions:</strong> <span className="govuk-!-font-size-24">142</span>
-                </div>
-              </div>
-              <div className="govuk-grid-column-one-third">
-                <div className="govuk-panel">
-                  <strong>Leaders:</strong> <span className="govuk-!-font-size-24">218</span>
-                </div>
-              </div>
-              <div className="govuk-grid-column-one-third">
-                <div className="govuk-panel">
-                  <strong>Services:</strong> <span className="govuk-!-font-size-24">87</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="govuk-button-group govuk-!-margin-top-9">
-              <button className="govuk-button">Export All Data</button>
-              <button className="govuk-button govuk-button--secondary">Run Data Sync</button>
-              <button className="govuk-button govuk-button--warning">Clear Cache</button>
-            </div>
+      <div className="govuk-grid-row">
+        <div className="govuk-grid-column-one-half govuk-!-margin-bottom-6">
+          <div className="govuk-card govuk-card--clickable" style={{ border: "1px solid #b1b4b6", padding: "16px" }}>
+            <h3 className="govuk-heading-m">
+              <Link href="/admin/institutions" className="govuk-link">Government Institutions</Link>
+            </h3>
+            <p className="govuk-body-s">Manage ministries, departments, agencies and public bodies from Supabase.</p>
           </div>
         </div>
-      </main>
 
-      
+        <div className="govuk-grid-column-one-half govuk-!-margin-bottom-6">
+          <div className="govuk-card govuk-card--clickable" style={{ border: "1px solid #b1b4b6", padding: "16px" }}>
+            <h3 className="govuk-heading-m">
+              <Link href="/admin/officials" className="govuk-link">Government Officials</Link>
+            </h3>
+            <p className="govuk-body-s">Add and manage officials data.</p>
+          </div>
+        </div>
+
+        <div className="govuk-grid-column-one-half govuk-!-margin-bottom-6">
+          <div className="govuk-card govuk-card--clickable" style={{ border: "1px solid #b1b4b6", padding: "16px" }}>
+            <h3 className="govuk-heading-m">
+              <Link href="/admin/feedback" className="govuk-link">General Feedback</Link>
+            </h3>
+            <p className="govuk-body-s">View citizen feedback submissions stored in Supabase.</p>
+          </div>
+        </div>
+
+        <div className="govuk-grid-column-one-half govuk-!-margin-bottom-6">
+          <div className="govuk-card govuk-card--clickable" style={{ border: "1px solid #b1b4b6", padding: "16px" }}>
+            <h3 className="govuk-heading-m">
+              <Link href="/admin/bug-reports" className="govuk-link">Bug Reports</Link>
+            </h3>
+            <p className="govuk-body-s">Review system bug reports from citizens.</p>
+          </div>
+        </div>
+
+        <div className="govuk-grid-column-one-half govuk-!-margin-bottom-6">
+          <div className="govuk-card govuk-card--clickable" style={{ border: "1px solid #b1b4b6", padding: "16px" }}>
+            <h3 className="govuk-heading-m">
+              <Link href="/admin/polling-stations/upload" className="govuk-link">Polling Stations Upload</Link>
+            </h3>
+            <p className="govuk-body-s">Upload and process IEBC polling station PDF data into Supabase.</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="govuk-inset-text govuk-!-margin-top-6">
+        <strong>Note:</strong> Additional management sections (leaders, services, counties, etc.) can be added as needed from Supabase data. Current focus is on core institutional and user-submitted data.
+      </div>
     </div>
   );
 }
