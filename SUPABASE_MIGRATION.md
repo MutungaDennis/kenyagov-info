@@ -58,7 +58,7 @@ Categories include: Executive, Legislature, Judiciary, County Executive, County 
 ### New Files Created
 - `/lib/supabase/client.ts` - Browser-safe Supabase client
 - `/lib/supabase/server.ts` - Server-safe Supabase client for SSR
-- `/lib/supabase/proxy.ts` - Token refresh and session management for middleware
+- `/lib/supabase/auth.ts` - Token refresh and session management for the proxy (called from root proxy.ts)
 - `/lib/supabase/leaders.ts` - Utility functions for leaders queries and TypeScript types
 
 ### Updated Files
