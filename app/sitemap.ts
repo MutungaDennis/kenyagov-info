@@ -130,7 +130,9 @@ async function getSupabaseUrls(): Promise<SitemapEntry[]> {
 async function getSanityUrls(): Promise<SitemapEntry[]> {
   const urls: SitemapEntry[] = [];
 
-  // Guides
+  // ==========================================
+  // GUIDES
+  // ==========================================
   try {
     const guides = await sanityClient.fetch(
       `*[_type == "guide" && defined(slug.current)]{ "slug": slug.current, _updatedAt }`
@@ -145,22 +147,56 @@ async function getSanityUrls(): Promise<SitemapEntry[]> {
     });
   } catch (e) { /* ignore */ }
 
-  // Constitution Articles
+  // ==========================================
+  // CONSTITUTION - Chapters + Articles (NEW STRUCTURE)
+  // ==========================================
   try {
     const articles = await sanityClient.fetch(
-      `*[_type == "constitutionArticle" && defined(chapter) && defined(articleNumber)]{ chapter, articleNumber, _updatedAt }`
+      `*[_type == "constitutionArticle" && defined(chapter) && defined(articleNumber)]{ 
+        chapter, 
+        articleNumber, 
+        _updatedAt,
+        chapterTitle 
+      }`
     );
-    articles?.forEach((a: any) => {
-      urls.push({
-        url: `${BASE_URL}/constitution/${a.chapter}/${a.articleNumber}`,
-        lastModified: a._updatedAt ? new Date(a._updatedAt) : undefined,
-        changeFrequency: 'monthly',
-        priority: 0.8,
-      });
-    });
-  } catch (e) { /* ignore */ }
 
-  // Acts of Parliament
+    if (articles && articles.length > 0) {
+      // 1. Generate unique Chapter pages
+      const uniqueChapters = new Map<number, any>();
+      
+      articles.forEach((a: any) => {
+        if (!uniqueChapters.has(a.chapter)) {
+          uniqueChapters.set(a.chapter, a);
+        }
+      });
+
+      // Add Chapter pages (e.g. /constitution/chapter/1)
+      uniqueChapters.forEach((chapterData, chapterNum) => {
+        urls.push({
+          url: `${BASE_URL}/constitution/chapter/${chapterNum}`,
+          lastModified: chapterData._updatedAt ? new Date(chapterData._updatedAt) : undefined,
+          changeFrequency: 'monthly',
+          priority: 0.7,
+        });
+      });
+
+      // 2. Add individual Article pages (NEW URL STRUCTURE)
+      articles.forEach((a: any) => {
+        urls.push({
+          url: `${BASE_URL}/constitution/chapter/${a.chapter}/article/${a.articleNumber}`,
+          lastModified: a._updatedAt ? new Date(a._updatedAt) : undefined,
+          changeFrequency: 'monthly',
+          priority: 0.8,
+        });
+      });
+    }
+  } catch (e) {
+    console.error("Error generating Constitution sitemap entries:", e);
+  }
+
+  // ==========================================
+  // ACTS OF PARLIAMENT
+  // ==========================================
   try {
     const acts = await sanityClient.fetch(
       `*[_type == "actOfParliament" && defined(slug.current)]{ "slug": slug.current, _updatedAt }`
@@ -175,7 +211,9 @@ async function getSanityUrls(): Promise<SitemapEntry[]> {
     });
   } catch (e) { /* ignore */ }
 
-  // Presidential International Visits
+  // ==========================================
+  // PRESIDENTIAL INTERNATIONAL VISITS
+  // ==========================================
   try {
     const trips = await sanityClient.fetch(
       `*[_type == "presidentialTrip" && defined(slug.current)]{ "slug": slug.current, _updatedAt }`
