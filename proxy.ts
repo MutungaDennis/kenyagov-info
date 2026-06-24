@@ -15,6 +15,7 @@ export const config = {
   matcher: [
     '/admin/:path*',
     '/protected/:path*',
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    // Added sitemap.xml and robots.txt to the exclusion list below
+    '/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }
