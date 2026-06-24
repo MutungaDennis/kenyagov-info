@@ -1,4 +1,3 @@
-// sanity/schemaTypes/index.ts
 import { type SchemaTypeDefinition } from 'sanity';
 
 import { page } from './page';
@@ -8,11 +7,16 @@ import actOfParliament from './actOfParliament';
 import courtPronouncement from './courtPronouncement';
 import reportMandate from './reportMandate';
 
-// Import your government navigation schemas
 import governmentCategory from './governmentCategory';
-import governmentService from './governmentService'; 
-import governmentMinistry from './governmentMinistry'; 
-import presidentialTrip from './presidentialTrip'; // 1. IMPORT THE NEW SCHEMA HERE
+import governmentService from './governmentService';
+import governmentMinistry from './governmentMinistry';
+import presidentialTrip from './presidentialTrip';
+
+// NEW HANSARD & LEGISLATIVE SCHEMAS
+import hansardSitting from './hansardSitting';
+import hansardSpeech from './hansardSpeech';
+import legislativeItem from './legislativeItem';
+import hansardDivision from './hansardDivision';
 
 export const schema: { types: SchemaTypeDefinition[] } = {
   types: [
@@ -22,9 +26,15 @@ export const schema: { types: SchemaTypeDefinition[] } = {
     actOfParliament,
     courtPronouncement,
     reportMandate,
-    governmentCategory,  
+    governmentCategory,
     governmentService,
-    governmentMinistry, 
-    presidentialTrip, // 2. ENLIST IT INTO THE CORE ARRAY
+    governmentMinistry,
+    presidentialTrip,
+
+    // Hansard & Legislative Tracker
+    hansardSitting,
+    hansardSpeech,
+    legislativeItem,
+    hansardDivision,
   ],
 };
