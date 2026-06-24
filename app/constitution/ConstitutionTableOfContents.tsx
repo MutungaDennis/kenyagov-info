@@ -3,7 +3,7 @@
 import React, { useState, useMemo } from "react";
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-
+import { JsonLd } from "@/components/JsonLd";
 
 interface Article {
   _id: string;
@@ -92,7 +92,34 @@ export default function ConstitutionTableOfContents({
     }, {});
   }, [filteredData.articles]);
 
-    return (
+  // ==========================================
+  // SCHEMA.ORG
+  // ==========================================
+  const constitutionSchema = {
+    "@context": "https://schema.org",
+    "@type": "Legislation",
+    "name": "Constitution of Kenya, 2010",
+    "legislationIdentifier": "Constitution of Kenya 2010",
+    "legislationType": "Constitution",
+    "jurisdiction": {
+      "@type": "Country",
+      "name": "Kenya"
+    },
+    "url": "https://www.citizenguide.ke/constitution",
+    "description": "The supreme law of the Republic of Kenya. Searchable, readable, and explained in plain language.",
+    "inLanguage": "en-KE"
+  };
+
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.citizenguide.ke" },
+      { "@type": "ListItem", "position": 2, "name": "Constitution of Kenya 2010", "item": "https://www.citizenguide.ke/constitution" }
+    ]
+  };
+
+  return (
     <div className="govuk-width-container">
       <GovUKBreadcrumbs
         items={[
@@ -101,8 +128,12 @@ export default function ConstitutionTableOfContents({
         ]}
       />
 
+      {/* Schema.org Structured Data */}
+      <JsonLd data={constitutionSchema} />
+      <JsonLd data={breadcrumbSchema} />
+
       <main className="govuk-main-wrapper" id="main-content" role="main">
-        {/* Document Header Panel - Compacted typography */}
+        {/* Header */}
         <div className="govuk-!-margin-bottom-4">
           <h1 className="govuk-heading-l govuk-!-margin-bottom-2">
             The Constitution of Kenya 2010
@@ -112,7 +143,7 @@ export default function ConstitutionTableOfContents({
           </p>
         </div>
 
-        {/* Live Search Form Group */}
+        {/* Search */}
         <div className="govuk-form-group govuk-!-margin-bottom-4">
           <label className="govuk-label govuk-label--s" htmlFor="constitution-search">
             Search the Constitution
@@ -133,7 +164,7 @@ export default function ConstitutionTableOfContents({
 
         <hr className="govuk-section-break govuk-section-break--visible govuk-section-break--s" />
 
-        {/* Compact Legislation Index Bar */}
+        {/* Arrangement Header */}
         <div className="govuk-!-margin-top-3 govuk-!-margin-bottom-3">
           <div>
             <h2 className="govuk-heading-m govuk-!-margin-bottom-1">
@@ -158,19 +189,22 @@ export default function ConstitutionTableOfContents({
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-two-thirds-from-desktop govuk-grid-column-full">
             
+            {/* Preamble */}
             {(!searchQuery || "preamble".includes(searchQuery.toLowerCase())) && (
               <div className="govuk-!-padding-top-2 govuk-!-padding-bottom-2" style={{ borderBottom: "1px solid #b1b4b6" }}>
                 <h3 className="govuk-heading-s govuk-!-margin-0">
-                  <Link href="/constitution/0" className="govuk-link">
+                  <Link href="/constitution/chapter/0" className="govuk-link">
                     Preamble
                   </Link>
                 </h3>
               </div>
             )}
 
+            {/* Chapters with improved UX */}
             {filteredData.chapters.length > 0 ? (
               filteredData.chapters.map((chapter) => {
                 const isOpen = !!openChapters[chapter.chapter];
+                
                 return (
                   <details 
                     key={chapter.chapter} 
@@ -181,12 +215,25 @@ export default function ConstitutionTableOfContents({
                     <summary 
                       className="govuk-details__summary govuk-!-margin-bottom-0" 
                       onClick={(e) => {
-                        e.preventDefault();
-                        handleToggleChapter(chapter.chapter, isOpen);
+                        // Only toggle if user didn't click on the link
+                        const target = e.target as HTMLElement;
+                        if (!target.closest('a')) {
+                          handleToggleChapter(chapter.chapter, isOpen);
+                        }
                       }}
                     >
                       <span className="govuk-details__summary-text">
-                        Chapter {chapter.chapter} — {chapter.chapterTitle}
+                        {/* Chapter title is now a clickable link */}
+                        <Link 
+                          href={`/constitution/chapter/${chapter.chapter}`}
+                          className="govuk-link"
+                          onClick={(e) => {
+                            // Prevent the details toggle when clicking the link
+                            e.stopPropagation();
+                          }}
+                        >
+                          Chapter {chapter.chapter} — {chapter.chapterTitle}
+                        </Link>
                       </span>
                     </summary>
                     
@@ -194,7 +241,10 @@ export default function ConstitutionTableOfContents({
                       <ul className="govuk-list govuk-!-margin-bottom-0">
                         {articlesByChapter[chapter.chapter]?.map((article) => (
                           <li key={article._id} className="govuk-!-margin-bottom-1">
-                            <Link href={`/constitution/${chapter.chapter}/${article.articleNumber}`} className="govuk-link">
+                            <Link 
+                              href={`/constitution/chapter/${chapter.chapter}/article/${article.articleNumber}`} 
+                              className="govuk-link"
+                            >
                               {article.articleNumber}. {article.articleTitle}
                             </Link>
                           </li>
@@ -218,23 +268,24 @@ export default function ConstitutionTableOfContents({
 
         <hr className="govuk-section-break govuk-section-break--visible govuk-section-break--l govuk-!-margin-top-6" />
 
+        {/* Most Accessed Articles */}
         <div className="govuk-!-margin-top-4">
           <h2 className="govuk-heading-m govuk-!-margin-bottom-2">Most Accessed Articles</h2>
           <div className="govuk-grid-row">
             <div className="govuk-grid-column-two-thirds-from-desktop govuk-grid-column-full">
               <ul className="govuk-list">
                 <li className="govuk-!-margin-bottom-1">
-                  <Link href="/constitution/4/35" className="govuk-link govuk-link--no-underline">
+                  <Link href="/constitution/chapter/4/article/35" className="govuk-link govuk-link--no-underline">
                     Article 35 – Access to Information
                   </Link>
                 </li>
                 <li className="govuk-!-margin-bottom-1">
-                  <Link href="/constitution/4/40" className="govuk-link govuk-link--no-underline">
+                  <Link href="/constitution/chapter/4/article/40" className="govuk-link govuk-link--no-underline">
                     Article 40 – Protection of Right to Property
                   </Link>
                 </li>
                 <li className="govuk-!-margin-bottom-1">
-                  <Link href="/constitution/4/43" className="govuk-link govuk-link--no-underline">
+                  <Link href="/constitution/chapter/4/article/43" className="govuk-link govuk-link--no-underline">
                     Article 43 – Economic and Social Rights
                   </Link>
                 </li>
@@ -243,26 +294,15 @@ export default function ConstitutionTableOfContents({
           </div>
         </div>
 
-        
       </main>
 
-      {/* CSS Overrides to hide default summary markers using a valid template string */}
+      {/* CSS */}
       <style dangerouslySetInnerHTML={{
         __html: `
-          summary::-webkit-details-marker { 
-            display: none !important; 
-          } 
-          summary { 
-            list-style: none !important; 
-          } 
-          .govuk-link--no-underline { 
-            text-decoration: none !important; 
-            color: #1d70b8 !important; 
-          } 
-          .govuk-link--no-underline:hover { 
-            text-decoration: underline !important; 
-            color: #003078 !important; 
-          }
+          summary::-webkit-details-marker { display: none !important; } 
+          summary { list-style: none !important; } 
+          .govuk-link--no-underline { text-decoration: none !important; color: #1d70b8 !important; } 
+          .govuk-link--no-underline:hover { text-decoration: underline !important; color: #003078 !important; }
         `
       }} />
     </div>

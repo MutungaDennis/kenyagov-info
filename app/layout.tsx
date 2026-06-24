@@ -5,33 +5,28 @@ import { Public_Sans } from 'next/font/google';
 import "govuk-frontend/govuk-frontend.min.css"; 
 import "@/app/globals.css"; 
 
-// Import your fixed Client Component Wrapper
 import { ClientLayoutWrapper } from "./ClientLayoutWrapper";
 
-// Configure Public Sans Font
 const publicSans = Public_Sans({
   subsets: ['latin'],
   display: 'swap',
   variable: '--font-public-sans',
 });
 
-// ==========================================
-// GLOBAL SEO & LINK PREVIEWS
-// ==========================================
 export const metadata: Metadata = {
   title: {
     default: 'Citizen Guide Kenya - Informational Guide for Kenyans',
     template: '%s | Citizen Guide Kenya',
   },
   description: 'Your comprehensive, easy-to-use informational guide to Kenyan governance, institutions, constitution, counties, and public services.',
-  metadataBase: new URL('https://citizenguide.ke'),
+  metadataBase: new URL('https://www.citizenguide.ke'),
   alternates: {
     canonical: '/',
   },
   openGraph: {
     title: 'Citizen Guide Kenya - Informational Guide for Kenyans',
     description: 'Access the Kenyan Constitution, County records, Parliamentary Acts, and step-by-step public service guides seamlessly.',
-    url: 'https://citizenguide.ke',
+    url: 'https://www.citizenguide.ke',
     siteName: 'Citizen Guide Kenya',
     locale: 'en_KE',
     type: 'website',
@@ -59,10 +54,6 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en-KE" className={`govuk-template ${publicSans.variable}`}>
-      {/* 
-        No scripts or explicit body elements live here. 
-        Everything passes directly into the Client Layout wrapper to prevent script errors.
-      */}
       <ClientLayoutWrapper>{children}</ClientLayoutWrapper>
     </html>
   );

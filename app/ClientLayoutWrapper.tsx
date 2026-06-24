@@ -3,7 +3,7 @@
 
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
-import Script from "next/script"; // Import the optimized Next.js Script component
+import Script from "next/script";
 import GovUKHeader from "@/components/govuk/Header";
 import GovUKFooter from "@/components/govuk/Footer";
 import GovUKFeedback from "@/components/govuk/Feedback";
@@ -32,9 +32,7 @@ export function ClientLayoutWrapper({
     initGovuk();
   }, []);
 
-  // Log page view for admin analytics (GOV.UK style - simple page view tracking)
-  // Only track public pages (not /admin). Only log if analytics cookies accepted.
-  // Capture referrer hostname (for "top entry / acquisition" analysis) — sanitized, no query strings.
+  // Analytics tracking
   useEffect(() => {
     if (pathname && !isAdminRoute) {
       const consent = localStorage.getItem('cookie-consent');
@@ -45,7 +43,7 @@ export function ClientLayoutWrapper({
             const u = new URL(document.referrer);
             refHost = u.hostname;
           } catch {
-            // ignore bad referrer
+            // ignore
           }
         }
         logPageView(pathname, refHost);
@@ -53,18 +51,30 @@ export function ClientLayoutWrapper({
     }
   }, [pathname, isAdminRoute]);
 
+  // ==========================================
+  // GLOBAL SCHEMA.ORG - WebSite + Organization
+  // This applies to the entire site
+  // ==========================================
+  const globalSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "CitizenGuide.KE",
+    "url": "https://www.citizenguide.ke",
+    "description": "An independent civic technology platform providing structured information on Kenya's Constitution, government institutions, counties, and public services.",
+    "publisher": {
+      "@type": "Organization",
+      "name": "CitizenGuide.KE",
+      "url": "https://www.citizenguide.ke"
+    }
+  };
+
   return (
     <body className="govuk-template__body" suppressHydrationWarning={true}>
-      {/* 
-        1. Initialize Google Consent Mode v2 (Default: Denied)
-        Always deny by default, before any other scripts.
-      */}
+      {/* Google Consent Mode */}
       <Script id="google-consent-mode" strategy="afterInteractive">
         {`
           window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}
-          
-          // Always set default to denied (GOV.UK best practice + Consent Mode v2)
           gtag('consent', 'default', {
             'ad_storage': 'denied',
             'ad_user_data': 'denied',
@@ -74,13 +84,11 @@ export function ClientLayoutWrapper({
         `}
       </Script>
 
-      {/* 2. Load the primary third-party Google Tag script library */}
       <Script
         src="https://www.googletagmanager.com/gtag/js?id=G-GG9GWN5J48"
         strategy="afterInteractive"
       />
       
-      {/* 3. Execute Global Google Analytics App Configuration */}
       <Script id="google-analytics-config" strategy="afterInteractive">
         {`
           window.dataLayer = window.dataLayer || [];
@@ -90,26 +98,28 @@ export function ClientLayoutWrapper({
         `}
       </Script>
 
-      {/* Force an immediate top spacing reset to pull the header flush to the glass edge */}
+      {/* Global Schema.org - placed early in body */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(globalSchema) }}
+      />
+
       <style dangerouslySetInnerHTML={{__html: `
         html, body, html.govuk-template, body.govuk-template__body {
           margin-top: 0 !important;
           padding-top: 0 !important;
         }
-        /* Removes legacy framework top offsets built for cookie banners */
         .govuk-template__body {
           top: 0 !important;
         }
       `}} />
 
-      {/* Global Cloudflare Turnstile script - loaded once for all widgets (feedback, support, report) */}
       <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer />
 
       {!isAdminRoute && <CookieBanner />}
 
       {!isAdminRoute && (
         <>
-          {/* Universal Header rendered across all pages */}
           <GovUKHeader />
           
           <div className="govuk-width-container">
@@ -117,7 +127,6 @@ export function ClientLayoutWrapper({
               {children}
             </main>
 
-            {/* Global Feedback Section (Sits right above the footer boundary) */}
             <div className="govuk-!-margin-top-9 govuk-!-margin-bottom-6">
               <GovUKFeedback />
               <GovUKReportProblem />
