@@ -40,7 +40,7 @@ export default function EntitiesPage() {
             <div className="govuk-grid-row">
               {categories.map(([categoryKey, categoryData]) => (
                 <div key={categoryKey} className="govuk-grid-column-one-half govuk-!-margin-bottom-6">
-                  <div className="govuk-card" style={{ height: '100%' }}>
+                  <div className="govuk-card govuk-!-height-full">
                     <div className="govuk-card__content">
                       <h3 className="govuk-heading-m govuk-!-margin-top-0">
                         <Link href={`/entities/${categoryKey}`} className="govuk-link">

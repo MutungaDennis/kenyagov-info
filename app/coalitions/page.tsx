@@ -136,13 +136,7 @@ export default async function CoalitionsPage({
           Filter by alphabet
         </p>
 
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap: 8,
-          }}
-        >
+        <div className="govuk-!-display-flex govuk-!-flex-wrap-wrap govuk-!-gap-2">
           <Link className="govuk-link" href="/coalitions">
             All
           </Link>
@@ -151,11 +145,7 @@ export default async function CoalitionsPage({
             <Link
               key={l}
               href={`/coalitions?letter=${l}`}
-              className="govuk-link"
-              style={{
-                fontWeight:
-                  letter === l ? "bold" : "normal",
-              }}
+              className={`govuk-link ${letter === l ? 'govuk-!-font-weight-bold' : ''}`}
             >
               {l}
             </Link>

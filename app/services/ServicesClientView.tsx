@@ -121,56 +121,63 @@ export default function ServicesClientView({ initialServices, categories }: Serv
   };
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-4 font-sans text-[#0b0c0c] bg-white antialiased selection:bg-[#ffdd00] selection:text-[#0b0c0c]">
-      {/* GOV.UK Home Breadcrumb Rule */}
+    <div>
       <GovUKBreadcrumbs items={[{ text: "Home", href: "/" }]} />
 
-      <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight mt-6 mb-8 text-[#0b0c0c]">
-        Services and guidance
-      </h1>
+      <main className="govuk-main-wrapper govuk-!-padding-top-2" id="main-content" role="main">
+        <div className="govuk-grid-row">
+          <div className="govuk-grid-column-two-thirds">
+            <h1 className="govuk-heading-xl govuk-!-margin-bottom-4">
+              Services and guidance
+            </h1>
+            <p className="govuk-body-l govuk-!-margin-bottom-6">
+              Find services from across government. Search or filter by topic.
+            </p>
+          </div>
+        </div>
 
       {/* Top Controller Search Bar & Sort Toggle Header Node */}
-      <div className="border-b-2 border-[#b1b4b6] pb-6 mb-8 grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
-        <div className="md:col-span-2">
-          <label htmlFor="search-input" className="block text-base font-bold text-[#0b0c0c] mb-2">
-            Search services
-          </label>
-          <input
-            id="search-input"
-            type="text"
-            value={searchQuery}
-            onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-            placeholder="e.g. passport, driving license"
-            className="w-full bg-white text-base border-2 border-[#0b0c0c] px-3 py-2 text-[#0b0c0c] focus:outline-none focus:ring-4 focus:ring-[#ffdd00] rounded-none appearance-none"
-          />
+      {/* Search and sort controls - using GOV.UK form patterns */}
+      <div className="govuk-grid-row govuk-!-margin-bottom-6">
+        <div className="govuk-grid-column-two-thirds">
+          <div className="govuk-form-group">
+            <label className="govuk-label" htmlFor="search-input">Search services</label>
+            <input
+              id="search-input"
+              type="text"
+              value={searchQuery}
+              onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+              placeholder="e.g. passport, driving license"
+              className="govuk-input"
+            />
+          </div>
         </div>
-
-        <div className="md:col-span-2 md:justify-self-end w-full max-w-xs">
-          <label htmlFor="sort-select" className="block text-sm font-normal text-[#505a5f] mb-1">
-            Sort by
-          </label>
-          <select
-            id="sort-select"
-            value={sortOrder}
-            onChange={(e) => { setSortOrder(e.target.value as "popular" | "az"); setCurrentPage(1); }}
-            className="w-full bg-white text-base border-2 border-[#0b0c0c] px-2 py-1.5 text-[#0b0c0c] focus:outline-none focus:ring-4 focus:ring-[#ffdd00] rounded-none h-[40px]"
-          >
-            <option value="popular">Most viewed</option>
-            <option value="az">A to Z</option>
-          </select>
+        <div className="govuk-grid-column-one-third">
+          <div className="govuk-form-group">
+            <label className="govuk-label" htmlFor="sort-select">Sort by</label>
+            <select
+              id="sort-select"
+              value={sortOrder}
+              onChange={(e) => { setSortOrder(e.target.value as "popular" | "az"); setCurrentPage(1); }}
+              className="govuk-select"
+            >
+              <option value="popular">Most viewed</option>
+              <option value="az">A to Z</option>
+            </select>
+          </div>
         </div>
       </div>
-{/* Main Core Layout: 1/3 Sidebar Filter + 2/3 Stream Column Container */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+      {/* Main layout: filters in one-third sidebar, results in two-thirds (GOV.UK grid pattern) */}
+      <div className="govuk-grid-row">
         
-        {/* SIDEBAR FILTER INTERACTIVE SUITE */}
-        <aside className="space-y-6 md:col-span-1">
+        {/* SIDEBAR FILTERS */}
+        <div className="govuk-grid-column-one-third">
           
           {/* 1. TOPICS & SUBTOPICS DROPDOWN FILTER SEGMENT */}
 <div className="border-b border-[#b1b4b6] pb-4 space-y-4">
   {/* Main Topic Level Selection Dropdown */}
   <div className="govuk-form-group">
-    <label htmlFor="category-select" className="block text-base font-bold text-[#0b0c0c] mb-2">
+    <label htmlFor="category-select" className="govuk-label">
       Topic
     </label>
     <div className="relative">
@@ -204,7 +211,7 @@ export default function ServicesClientView({ initialServices, categories }: Serv
 
     return (
       <div className="govuk-form-group pl-4 border-l-2 border-[#b1b4b6] animate-fadeIn">
-        <label htmlFor="subcategory-select" className="block text-sm font-bold uppercase tracking-wider text-[#505a5f] mb-1.5">
+        <label htmlFor="subcategory-select" className="govuk-label govuk-label--s">
           Subtopic
         </label>
         <div className="relative">
@@ -240,13 +247,11 @@ export default function ServicesClientView({ initialServices, categories }: Serv
             <button
               type="button"
               onClick={() => setOrgsOpen(!orgsOpen)}
-              className="w-full text-left font-bold text-lg text-[#0b0c0c] py-2 flex justify-between items-center focus:outline-none focus:bg-[#ffdd00]"
+              className="govuk-link w-full text-left govuk-!-font-weight-bold"
               aria-expanded={orgsOpen}
             >
-              <span>Organization</span>
-              <span className="text-sm text-[#1d70b8] font-normal" aria-hidden="true">
-                {orgsOpen ? "Hide" : "Show"}
-              </span>
+              <span>Organisation</span>
+              <span className="govuk-body-s govuk-!-margin-left-1">({orgsOpen ? "hide" : "show"})</span>
             </button>
 
             {orgsOpen && (
@@ -266,7 +271,7 @@ export default function ServicesClientView({ initialServices, categories }: Serv
                         }}
                         className="w-5 h-5 border-2 border-[#0b0c0c] accent-[#0b0c0c] rounded-none focus:ring-4 focus:ring-[#ffdd00] mt-0.5 shrink-0"
                       />
-                      <label htmlFor={`org-${org}`} className="ml-2 text-sm text-[#0b0c0c] cursor-pointer leading-tight">
+                      <label htmlFor={`org-${org}`} className="govuk-body-s govuk-!-margin-left-1">
                         {org}
                       </label>
                     </div>
@@ -275,85 +280,75 @@ export default function ServicesClientView({ initialServices, categories }: Serv
               </div>
             )}
           </div>
-        </aside>
-        {/* STREAM FEED SELECTION PORTION */}
-        <div className="md:col-span-3 space-y-6">
-          
-          {/* Results Summary Metadata Row */}
-          <div className="text-base text-[#0b0c0c] border-b border-[#b1b4b6] pb-3 font-bold flex justify-between items-center">
-            <span>{totalServicesCount.toLocaleString()} service{totalServicesCount === 1 ? '' : 's'} verified</span>
-            <span className="text-sm font-normal text-[#505a5f]">Page {currentPage} of {totalPages}</span>
-          </div>
+        </div>
 
-          {/* Empty Lookup Fallback */}
+        {/* RESULTS LIST (two-thirds) */}
+        <div className="govuk-grid-column-two-thirds">
+          
+          {/* Results count */}
+          <p className="govuk-body govuk-!-margin-bottom-2">
+            <strong>{totalServicesCount.toLocaleString()}</strong> service{totalServicesCount === 1 ? '' : 's'} found
+            <span className="govuk-body-s govuk-!-margin-left-2 govuk-!-color-grey">— page {currentPage} of {totalPages}</span>
+          </p>
+
+          {/* No results */}
           {totalServicesCount === 0 ? (
-            <div className="border-l-4 border-[#d4351c] pl-5 py-2 mt-8" role="alert">
-              <h3 className="text-xl font-bold text-[#0b0c0c] mb-2">No results found</h3>
-              <p className="text-base text-[#505a5f] leading-relaxed max-w-xl">
-                Try removing sidebar filters, modifying your search text keywords, or selecting another high-level topic.
-              </p>
+            <div className="govuk-inset-text" role="alert">
+              <p className="govuk-body">No results found.</p>
+              <p className="govuk-body-s">Try clearing some filters or using different search words.</p>
             </div>
           ) : (
-            /* Document Results Display Array Feed */
-            <div className="divide-y divide-[#b1b4b6]">
+            <ul className="govuk-list govuk-list--spaced">
               {paginatedServices.map((service) => (
-                <div key={service._id} className="py-6 first:pt-0 last:pb-0">
-                  <h3 className="text-xl md:text-2xl font-bold mb-2">
-                    <Link 
-                      href={`/${service.slug}`}
-                      className="text-[#1d70b8] underline decoration-2 font-bold hover:text-[#003078] focus:bg-[#ffdd00] focus:text-[#0b0c0c] focus:no-underline"
-                    >
+                <li key={service._id} className="govuk-!-padding-bottom-4 govuk-!-border-bottom-1">
+                  <h3 className="govuk-heading-m govuk-!-margin-bottom-1">
+                    <Link href={`/${service.slug}`} className="govuk-link govuk-!-font-weight-bold">
                       {service.title}
                     </Link>
                   </h3>
-                  <p className="text-sm text-[#505a5f] mb-2 font-medium">
-                    {service.providingBody}
-                  </p>
-                  <p className="text-base md:text-lg text-[#0b0c0c] leading-relaxed max-w-3xl">
-                    {service.summary}
-                  </p>
-                </div>
+                  <p className="govuk-body-s govuk-!-color-grey govuk-!-margin-bottom-1">{service.providingBody}</p>
+                  <p className="govuk-body">{service.summary}</p>
+                </li>
               ))}
-            </div>
+            </ul>
           )}
 
-          {/* Stepped Clean Navigation Toggles */}
+          {/* Pagination */}
           {totalPages > 1 && (
-            <nav className="border-t-2 border-[#b1b4b6] pt-4 mt-8 flex items-center justify-between font-bold" aria-label="Pagination Navigation">
-              <div className="w-1/3 text-left">
+            <nav className="govuk-!-margin-top-6" aria-label="Pagination">
+              <ul className="govuk-list govuk-list--inline govuk-!-margin-bottom-0">
                 {currentPage > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => setCurrentPage((prev) => prev - 1)}
-                    className="text-base text-[#1d70b8] hover:text-[#003078] focus:outline-none focus:bg-[#ffdd00] focus:text-[#0b0c0c] py-2"
-                  >
-                    <span className="block text-xs font-normal text-[#505a5f] uppercase mb-0.5">Previous</span>
-                    <span>Page {currentPage - 1}</span>
-                  </button>
+                  <li>
+                    <button
+                      type="button"
+                      onClick={() => setCurrentPage((prev) => prev - 1)}
+                      className="govuk-link"
+                    >
+                      Previous page
+                    </button>
+                  </li>
                 )}
-              </div>
-
-              <div className="w-1/3 text-center text-sm font-normal text-[#505a5f]">
-                Page {currentPage} of {totalPages}
-              </div>
-
-              <div className="w-1/3 text-right">
+                <li className="govuk-body-s govuk-!-margin-left-2 govuk-!-color-grey">
+                  Page {currentPage} of {totalPages}
+                </li>
                 {currentPage < totalPages && (
-                  <button
-                    type="button"
-                    onClick={() => setCurrentPage((prev) => prev + 1)}
-                    className="text-base text-[#1d70b8] hover:text-[#003078] focus:outline-none focus:bg-[#ffdd00] focus:text-[#0b0c0c] py-2"
-                  >
-                    <span className="block text-xs font-normal text-[#505a5f] uppercase mb-0.5">Next</span>
-                    <span>Page {currentPage + 1}</span>
-                  </button>
+                  <li className="govuk-!-margin-left-2">
+                    <button
+                      type="button"
+                      onClick={() => setCurrentPage((prev) => prev + 1)}
+                      className="govuk-link"
+                    >
+                      Next page
+                    </button>
+                  </li>
                 )}
-              </div>
+              </ul>
             </nav>
           )}
 
         </div>
       </div>
+      </main>
     </div>
   );
 }

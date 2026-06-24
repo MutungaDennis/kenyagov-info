@@ -63,7 +63,7 @@ export default async function LeadershipCategoryPage({ params }: PageProps) {
             <div className="govuk-grid-row">
               {subcategories.map(([subcatKey, subcatData]) => (
                 <div key={subcatKey} className="govuk-grid-column-one-third govuk-!-margin-bottom-6">
-                  <div className="govuk-card" style={{ height: '100%' }}>
+                  <div className="govuk-card govuk-!-height-full">
                     <div className="govuk-card__content">
                       <h3 className="govuk-heading-m govuk-!-margin-top-0">
                         <Link

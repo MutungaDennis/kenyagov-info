@@ -64,7 +64,7 @@ export default function LicensedPetroleumOperatorChecker() {
   };
 
   return (
-    <div className="govuk-!-margin-top-6" style={{ background: '#ffffff', padding: '25px', border: '1px solid #bfc1c3' }}>
+    <div className="govuk-!-margin-top-6 govuk-!-background-white govuk-!-padding-5 govuk-!-border-1">
       <p className="govuk-body">
         Search public compliance safety enforcement logs. Verify if an area petrol station, LPG packaging depot, or transporter has been red-flagged or penalized by EPRA for fuel adulteration or operating without a statutory license.
       </p>
@@ -111,7 +111,7 @@ export default function LicensedPetroleumOperatorChecker() {
       {hasSearched && (
         <div className="govuk-!-margin-top-6">
           {records.length === 0 ? (
-            <div className="govuk-inset-text" style={{ borderColor: '#00703c', background: '#f3f2f1' }}>
+            <div className="govuk-inset-text govuk-!-border-color-green govuk-!-background-grey">
               <h3 className="govuk-heading-s govuk-!-margin-0">No Safety Infractions Recorded</h3>
               <p className="govuk-body-s govuk-!-margin-top-2">
                 No active regulatory alerts, contamination shutdowns, or enforcement penalties match your exact parameters. The tracked vendor currently holds a clean operational profile.
@@ -124,14 +124,9 @@ export default function LicensedPetroleumOperatorChecker() {
               {records.map((record) => (
                 <div 
                   key={record.id} 
-                  className="govuk-!-padding-4 govuk-!-margin-bottom-4" 
-                  style={{ 
-                    border: '1px solid #bfc1c3', 
-                    borderLeft: '10px solid #d4351c',
-                    background: '#f8f8f8' 
-                  }}
+                  className="govuk-!-padding-4 govuk-!-margin-bottom-4 govuk-!-border-1 epra-offence-card" 
                 >
-                  <span className="govuk-caption-m" style={{ color: '#505a5f' }}>
+                  <span className="govuk-caption-m govuk-!-text-colour-secondary">
                     Inspection Date: {new Date(record.inspection_date).toLocaleDateString('en-KE', { day: 'numeric', month: 'long', year: 'numeric' })}
                   </span>
                   <h4 className="govuk-heading-s govuk-!-margin-top-1 govuk-!-margin-bottom-2">
@@ -139,19 +134,13 @@ export default function LicensedPetroleumOperatorChecker() {
                   </h4>
                   
                   <ul className="govuk-list govuk-!-margin-0 govuk-!-font-size-16">
-                    <li><strong>Offence Triggered:</strong> <span style={{ color: '#d4351c', fontWeight: 'bold' }}>{record.offence_type}</span></li>
+                    <li><strong>Offence Triggered:</strong> <span className="govuk-!-text-colour-red govuk-!-font-weight-bold">{record.offence_type}</span></li>
                     <li className="govuk-!-margin-top-1"><strong>Technical Details:</strong> {record.offence_details}</li>
                     <li className="govuk-!-margin-top-1"><strong>EPRA Penalty Sanction:</strong> {record.penalty_imposed}</li>
                     <li className="govuk-!-margin-top-2">
                       <strong>Current Legal Status:</strong>{' '}
                       <span 
-                        className="govuk-!-font-weight-bold" 
-                        style={{ 
-                          color: record.current_status.toLowerCase().includes('reopened') ? '#00703c' : '#d4351c',
-                          background: '#ffffff',
-                          padding: '2px 6px',
-                          border: '1px solid #bfc1c3'
-                        }}
+                        className={`govuk-!-font-weight-bold ${record.current_status.toLowerCase().includes('reopened') ? 'govuk-!-text-colour-green' : 'govuk-!-text-colour-red'} govuk-!-background-white govuk-!-padding-1 govuk-!-border-1`}
                       >
                         {record.current_status}
                       </span>

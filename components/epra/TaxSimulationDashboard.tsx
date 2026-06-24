@@ -36,7 +36,7 @@ export default function TaxSimulationDashboard({
   };
 
   return (
-    <div className="govuk-!-margin-bottom-8" style={{ background: '#f3f2f1', border: '3px solid #ffbf47', padding: '25px' }}>
+    <div className="govuk-!-margin-bottom-8 govuk-!-background-grey govuk-!-border-3 govuk-!-padding-5 epra-tax-sim">
       <h3 className="govuk-heading-m govuk-!-margin-bottom-2">💡 Policy Tax Reduction Simulator</h3>
       <p className="govuk-body-s">
         Uncheck specific fiscal options below to calculate how low local retail pump prices would drop if Parliament or the National Treasury eliminated individual tax pools.
@@ -113,20 +113,20 @@ export default function TaxSimulationDashboard({
               
               <div className="govuk-checkboxes govuk-checkboxes--small">
                 {hasRoadMaint && (
-                  <div className="govuk-checkboxes__item" style={{ opacity: 0.65 }}>
+                  <div className="govuk-checkboxes__item govuk-!-opacity-65">
                     <input className="govuk-checkboxes__input" id="lock-road-debt" type="checkbox" checked disabled />
                     <label className="govuk-label govuk-!-font-weight-bold govuk-checkboxes__label" htmlFor="lock-road-debt">Road Maintenance Levy (Securitized Debt)</label>
                     <span className="govuk-hint govuk-checkboxes__hint govuk-!-font-size-12">KSh 7.00 is legally ring-fenced to amortize outstanding sovereign road infrastructure bonds.</span>
                   </div>
                 )}
 
-                <div className="govuk-checkboxes__item" style={{ opacity: 0.65 }}>
+                <div className="govuk-checkboxes__item govuk-!-opacity-65">
                   <input className="govuk-checkboxes__input" id="lock-pipeline" type="checkbox" checked disabled />
                   <label className="govuk-label govuk-!-font-weight-bold govuk-checkboxes__label" htmlFor="lock-pipeline">Pipeline Logistics &amp; Transport Tariffs</label>
                   <span className="govuk-hint govuk-checkboxes__hint govuk-!-font-size-12">Fixed operational service fees required by KPC to pump fuel through the network.</span>
                 </div>
 
-                <div className="govuk-checkboxes__item" style={{ opacity: 0.65 }}>
+                <div className="govuk-checkboxes__item govuk-!-opacity-65">
                   <input className="govuk-checkboxes__input" id="lock-regulatory" type="checkbox" checked disabled />
                   <label className="govuk-label govuk-!-font-weight-bold govuk-checkboxes__label" htmlFor="lock-regulatory">EPRA Regulatory Levy</label>
                   <span className="govuk-hint govuk-checkboxes__hint govuk-!-font-size-12">Statutory oversight fee financing quality testing and consumer safety protocols.</span>
@@ -139,14 +139,14 @@ export default function TaxSimulationDashboard({
       </div>
 
       {/* OUTCOME FORECAST BENCHMARK BOXES */}
-      <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap', marginTop: '25px', borderTop: '1px solid #bfc1c3', paddingTop: '20px' }}>
-        <div style={{ background: '#ffffff', padding: '15px', border: '1px solid #bfc1c3', flex: '1', minWidth: '160px' }}>
-          <span className="govuk-hint" style={{ fontSize: '13px' }}>Current Official Price</span>
-          <strong style={{ display: 'block', fontSize: '22px', color: '#0b0c0c' }}>KSh {originalPrice.toFixed(2)} / L</strong>
+      <div className="govuk-!-display-flex govuk-!-flex-wrap-wrap govuk-!-margin-top-5 govuk-!-border-top-1 govuk-!-padding-top-4">
+        <div className="govuk-!-background-white govuk-!-padding-3 govuk-!-border-1 epra-flex-item">
+          <span className="govuk-hint govuk-!-font-size-13">Current Official Price</span>
+          <strong className="govuk-!-display-block govuk-!-font-size-22 govuk-!-text-colour-primary">KSh {originalPrice.toFixed(2)} / L</strong>
         </div>
-        <div style={{ background: '#ffffff', padding: '15px', border: '1px solid #bfc1c3', flex: '1', minWidth: '160px', borderLeft: '5px solid #00703c' }}>
-          <span className="govuk-hint" style={{ fontSize: '13px', color: '#00703c', fontWeight: 'bold' }}>Simulated Price Under Configuration</span>
-          <strong style={{ display: 'block', fontSize: '22px', color: '#00703c' }}>KSh {simulatedPrice.toFixed(2)} / L</strong>
+        <div className="govuk-!-background-white govuk-!-padding-3 govuk-!-border-1 epra-sim-box epra-flex-item">
+          <span className="govuk-hint govuk-!-font-size-13 govuk-!-text-colour-green govuk-!-font-weight-bold">Simulated Price Under Configuration</span>
+          <strong className="govuk-!-display-block govuk-!-font-size-22 govuk-!-text-colour-green">KSh {simulatedPrice.toFixed(2)} / L</strong>
         </div>
       </div>
     </div>

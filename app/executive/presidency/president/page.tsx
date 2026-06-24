@@ -89,12 +89,12 @@ export default function PresidentProfilePage() {
         <div className="govuk-grid-row">
           {/* Navigation Sidebar */}
           <div className="govuk-grid-column-one-third print-hide govuk-!-margin-bottom-6">
-            <nav style={{ borderTop: '2px solid #1d70b8', padding: '15px 0' }} aria-label="Office Secondary Navigation">
-              <ul className="govuk-list govuk-list--spaced" style={{ margin: 0, padding: 0 }}>
-                <li style={{ paddingLeft: '12px', borderLeft: '4px solid #1d70b8', fontWeight: 'bold', color: '#1d70b8' }}>
+            <nav className="society-top-border" aria-label="Office Secondary Navigation">
+              <ul className="govuk-list govuk-list--spaced">
+                <li className="current-nav-item">
                   Profile & Addresses
                 </li>
-                <li style={{ paddingLeft: '16px' }}>
+                <li className="govuk-!-padding-left-4">
                   <Link href="/executive/presidency/state-house-administration" className="govuk-link govuk-!-font-size-19" style={{ textDecoration: 'none', display: 'block' }}>
                     Advisers & Secretariat
                   </Link>

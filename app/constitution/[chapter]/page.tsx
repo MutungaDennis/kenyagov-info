@@ -43,30 +43,27 @@ export default async function ConstitutionChapterPage({ params }: Props) {
         
         {/* Document Context Header Panel */}
         <div className="govuk-!-margin-bottom-4">
-          <span className="govuk-caption-m" style={{ color: "#505a5f", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+          <span className="govuk-caption-m">
             The Constitution of Kenya 2010
           </span>
-          <h1 className="govuk-heading-l govuk-!-margin-bottom-1" style={{ fontSize: "28px" }}>
-            CHAPTER {chapter}: {chapterTitle.toUpperCase()}
+          <h1 className="govuk-heading-l govuk-!-margin-bottom-1">
+            Chapter {chapter}: {chapterTitle}
           </h1>
         </div>
 
         {/* 📱 MOBILE QUICK NAVIGATION TOGGLE (Hidden on Desktop via CSS) */}
-        <details 
-          className="govuk-details mobile-only-navigation govuk-!-margin-bottom-4" 
-          style={{ backgroundColor: "#f3f2f1", padding: "10px", borderLeft: "4px solid #1d70b8" }}
-        >
-          <summary className="govuk-details__summary" style={{ cursor: "pointer" }}>
-            <span className="govuk-details__summary-text govuk-!-font-weight-bold" style={{ fontSize: "15px", color: "#1d70b8" }}>
-              Navigate this Chapter ({articles.length} Articles)
+        <details className="govuk-details mobile-only-navigation govuk-!-margin-bottom-4">
+          <summary className="govuk-details__summary">
+            <span className="govuk-details__summary-text govuk-!-font-weight-bold">
+              Navigate this chapter ({articles.length} articles)
             </span>
           </summary>
-          <div className="govuk-details__text" style={{ borderLeft: "none", paddingLeft: 0, paddingTop: "10px" }}>
-            <ul className="govuk-list" style={{ margin: 0, padding: 0 }}>
+          <div className="govuk-details__text">
+            <ul className="govuk-list">
               {articles.map((article: any) => (
-                <li key={article._id} style={{ fontSize: "14px", padding: "4px 0", borderBottom: "1px solid #e5e5e5" }}>
-                  <Link href={`/constitution/${chapter}/${article.articleNumber}`} className="govuk-link govuk-link--no-underline">
-                    <strong>{article.articleNumber}.</strong> {article.articleTitle}
+                <li className="govuk-!-font-size-14">
+                  <Link href={`/constitution/${chapter}/${article.articleNumber}`} className="govuk-link">
+                    {article.articleNumber}. {article.articleTitle}
                   </Link>
                 </li>
               ))}
@@ -81,19 +78,16 @@ export default async function ConstitutionChapterPage({ params }: Props) {
           
           {/* Left Navigation Sidebar - Displayed first on Desktop, pushed to bottom on Mobile */}
           <div className="legislation-sidebar-column">
-            <div style={{ borderTop: "2px solid #1d70b8", paddingTop: "8px" }}>
-              <h2 className="govuk-heading-s govuk-!-margin-bottom-2" style={{ fontSize: "15px", color: "#1d70b8" }}>
-                Chapter Contents
+            <div className="govuk-!-border-top-2 govuk-!-padding-top-2">
+              <h2 className="govuk-heading-s govuk-!-margin-bottom-2">
+                Chapter contents
               </h2>
               <nav aria-label="Chapter directory links pagination">
-                <ul className="govuk-list govuk-!-margin-bottom-0" style={{ paddingLeft: 0, margin: 0 }}>
+                <ul className="govuk-list govuk-!-margin-bottom-0">
                   {articles.map((article: any) => (
-                    <li key={article._id} className="govuk-!-margin-bottom-1" style={{ fontSize: "14px", display: "flex", alignItems: "baseline" }}>
-                      <span style={{ fontWeight: "bold", minWidth: "24px", display: "inline-block", color: "#505a5f" }}>
-                        {article.articleNumber}
-                      </span>
-                      <Link href={`/constitution/${chapter}/${article.articleNumber}`} className="govuk-link govuk-link--no-underline">
-                        {article.articleTitle}
+                    <li key={article._id} className="govuk-!-margin-bottom-1">
+                      <Link href={`/constitution/${chapter}/${article.articleNumber}`} className="govuk-link">
+                        <strong>{article.articleNumber}.</strong> {article.articleTitle}
                       </Link>
                     </li>
                   ))}
@@ -104,7 +98,7 @@ export default async function ConstitutionChapterPage({ params }: Props) {
 
           {/* Right Main Focus Area - Content Index Entries */}
           <div className="legislation-content-column">
-            <div style={{ borderTop: "1px solid #b1b4b6" }}>
+            <div className="govuk-!-border-top-1">
               {articles.map((article: any) => {
                 let previewText = "";
                 if (typeof article.officialText === "string") {
@@ -115,17 +109,14 @@ export default async function ConstitutionChapterPage({ params }: Props) {
                 }
 
                 return (
-                  <div key={article._id} className="govuk-!-padding-top-2 govuk-!-padding-bottom-2" style={{ borderBottom: "1px solid #b1b4b6" }}>
-                    <h3 className="govuk-heading-s govuk-!-margin-bottom-1" style={{ display: "flex", alignItems: "baseline", margin: 0 }}>
-                      <span className="govuk-body-s govuk-!-font-weight-bold" style={{ minWidth: "35px", display: "inline-block", flexShrink: 0 }}>
-                        {article.articleNumber}.
-                      </span>
-                      <Link href={`/constitution/${chapter}/${article.articleNumber}`} className="govuk-link govuk-link--no-underline" style={{ fontSize: "16px" }}>
-                        {article.articleTitle}
+                  <div key={article._id} className="govuk-!-padding-top-2 govuk-!-padding-bottom-2 govuk-!-border-bottom-1">
+                    <h3 className="govuk-heading-s govuk-!-margin-bottom-1">
+                      <Link href={`/constitution/${chapter}/${article.articleNumber}`} className="govuk-link">
+                        {article.articleNumber}. {article.articleTitle}
                       </Link>
                     </h3>
                     {previewText && (
-                      <p className="govuk-body-s govuk-!-text-colour-dark-grey govuk-!-margin-bottom-0 govuk-!-margin-top-1" style={{ paddingLeft: "35px" }}>
+                      <p className="govuk-body-s govuk-!-text-colour-dark-grey govuk-!-margin-bottom-0 govuk-!-margin-top-1 govuk-!-margin-left-4">
                         {previewText}
                       </p>
                     )}

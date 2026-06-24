@@ -36,7 +36,7 @@ export default function FuelTaxBreakdownTable({ rates, computedLiters, pumpPrice
           </tr>
         </thead>
         <tbody className="govuk-table__body">
-          <tr className="govuk-table__row" style={{ background: '#f3f2f1' }}>
+          <tr className="govuk-table__row epra-section-row">
             <td className="govuk-table__cell" colSpan={3}><strong>Base Product Logistics &amp; Margins</strong></td>
           </tr>
           <tr className="govuk-table__row">
@@ -45,25 +45,25 @@ export default function FuelTaxBreakdownTable({ rates, computedLiters, pumpPrice
             <td className="govuk-table__cell govuk-table__cell--numeric">KSh {(computedLiters * (rates.landed + rates.storage + rates.margins + rates.subsidy)).toFixed(2)}</td>
           </tr>
           
-          <tr className="govuk-table__row" style={{ background: '#f3f2f1' }}>
+          <tr className="govuk-table__row epra-section-row">
             <td className="govuk-table__cell" colSpan={3}><strong>Itemized Fiscal Levy Framework</strong></td>
           </tr>
           {rowItems.map((item, idx) => item.rate > 0 && (
             <tr key={idx} className="govuk-table__row">
               <td className="govuk-table__cell">
-                <span style={{ fontWeight: '500', display: 'block' }}>{item.name}</span>
-                <span className="govuk-hint" style={{ fontSize: '13px', display: 'block', marginTop: '2px', lineHeight: '1.3' }}>{item.desc}</span>
+                <span className="govuk-!-font-weight-bold govuk-!-display-block">{item.name}</span>
+                <span className="govuk-hint govuk-!-font-size-13 govuk-!-display-block govuk-!-margin-top-1 govuk-!-line-height-1-3">{item.desc}</span>
               </td>
               <td className="govuk-table__cell govuk-table__cell--numeric">KSh {(item.rate * simFactor).toFixed(2)}</td>
               <td className="govuk-table__cell govuk-table__cell--numeric">KSh {(computedLiters * item.rate * simFactor).toFixed(2)}</td>
             </tr>
           ))}
-          <tr className="govuk-table__row" style={{ borderTop: '2px solid #0b0c0c', fontWeight: 'bold' }}>
+          <tr className="govuk-table__row epra-total-row govuk-!-border-top-2">
             <th scope="row" className="govuk-table__header">Aggregated Taxes Paid</th>
-            <td className="govuk-table__cell govuk-table__cell--numeric" style={{ color: '#d4351c' }}>KSh {totalSimulatedTaxes.toFixed(2)}</td>
-            <td className="govuk-table__cell govuk-table__cell--numeric" style={{ color: '#d4351c' }}>KSh {(computedLiters * totalSimulatedTaxes).toFixed(2)}</td>
+            <td className="govuk-table__cell govuk-table__cell--numeric govuk-!-text-colour-red">KSh {totalSimulatedTaxes.toFixed(2)}</td>
+            <td className="govuk-table__cell govuk-table__cell--numeric govuk-!-text-colour-red">KSh {(computedLiters * totalSimulatedTaxes).toFixed(2)}</td>
           </tr>
-          <tr className="govuk-table__row" style={{ background: '#f3f2f1', fontWeight: 'bold', fontSize: '18px' }}>
+          <tr className="govuk-table__row epra-total-row">
             <th scope="row" className="govuk-table__header">Final Consumer Price Tag</th>
             <td className="govuk-table__cell govuk-table__cell--numeric">KSh {simulatedPrice.toFixed(2)}</td>
             <td className="govuk-table__cell govuk-table__cell--numeric">KSh {(computedLiters * simulatedPrice).toFixed(2)}</td>

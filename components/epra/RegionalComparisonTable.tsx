@@ -21,9 +21,9 @@ export default function RegionalComparisonTable({ kePrice, fuelType }: { kePrice
           </tr>
         </thead>
         <tbody className="govuk-table__body">
-          <tr className="govuk-table__row" style={{ fontWeight: 'bold', background: '#f8f8f8' }}>
+          <tr className="govuk-table__row epra-taxes-row">
             <td className="govuk-table__cell">🇰🇪 Kenya (Your Current Configured View)</td>
-            <td className="govuk-table__cell govuk-table__cell--numeric" style={{ color: '#005ea5' }}>KSh {kePrice.toFixed(2)}</td>
+            <td className="govuk-table__cell govuk-table__cell--numeric govuk-!-text-colour-blue">KSh {kePrice.toFixed(2)}</td>
           </tr>
           <tr className="govuk-table__row">
             <td className="govuk-table__cell">🇺🇬 Uganda (Deregulated Open Market Imports)</td>

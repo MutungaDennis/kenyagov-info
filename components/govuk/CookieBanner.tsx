@@ -56,11 +56,10 @@ export default function CookieBanner() {
 
   return (
     <div 
-      className="govuk-cookie-banner" 
+      className="govuk-cookie-banner cookie-banner-style"
       data-nosnippet 
       role="region" 
       aria-label="Cookies on Citizen Guide Kenya"
-      style={{ background: '#f3f2f1', padding: '20px 0', borderBottom: '3px solid #1d70b8' }}
     >
       <div className="govuk-width-container">
         
@@ -68,7 +67,7 @@ export default function CookieBanner() {
         {consentStatus === 'unanswered' && (
           <div className="govuk-grid-row">
             <div className="govuk-grid-column-two-thirds">
-              <h2 className="govuk-cookie-banner__heading govuk-heading-m" style={{ marginTop: 0 }}>
+              <h2 className="govuk-cookie-banner__heading govuk-heading-m govuk-!-margin-top-0">
                 Cookies on Citizen Guide Kenya
               </h2>
               <div className="govuk-cookie-banner__content">
@@ -77,20 +76,18 @@ export default function CookieBanner() {
                   to make the website work as well as possible and improve our informational services for citizens.
                 </p>
               </div>
-              <div className="govuk-button-group" style={{ display: 'flex', gap: '15px', marginTop: '20px' }}>
+              <div className="govuk-button-group govuk-!-display-flex govuk-!-gap-3 govuk-!-margin-top-4">
                 <button 
                   type="button" 
-                  className="govuk-button" 
+                  className="govuk-button cookie-accept-btn"
                   onClick={handleAccept}
-                  style={{ background: '#00703c', color: '#fff', padding: '10px 20px', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}
                 >
                   Accept analytics cookies
                 </button>
                 <button 
                   type="button" 
-                  className="govuk-button" 
+                  className="govuk-button cookie-reject-btn"
                   onClick={handleReject}
-                  style={{ background: '#00703c', color: '#fff', padding: '10px 20px', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}
                 >
                   Reject analytics cookies
                 </button>

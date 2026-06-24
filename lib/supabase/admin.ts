@@ -44,7 +44,8 @@ export async function promoteUserToAdmin(userId?: string | null, email?: string)
     const { data: users, error: lookupError } = await admin.auth.admin.listUsers();
     if (lookupError) throw lookupError;
 
-    const found = users?.users?.find(u => u.email?.toLowerCase() === targetEmail.toLowerCase());
+    const emailToSearch = targetEmail; // narrowed to string by the if guard
+    const found = users?.users?.find(u => u.email?.toLowerCase() === emailToSearch.toLowerCase());
     if (!found) {
       throw new Error(`No auth user found with email: ${targetEmail}`);
     }

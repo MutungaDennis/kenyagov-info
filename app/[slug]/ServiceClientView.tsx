@@ -4,6 +4,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
+import GovUKSummaryList from "@/components/govuk/SummaryList";
 
 interface MinistryReference {
   name: string;
@@ -77,15 +78,17 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
     ];
 
     return (
-      <div className="mx-auto max-w-4xl px-4 py-6 font-sans text-[#0b0c0c] bg-white antialiased">
+      <div className="govuk-width-container">
         <GovUKBreadcrumbs items={fallbackBreadcrumbs} />
-        <main className="mt-12 max-w-2xl space-y-6">
-          <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight text-[#0b0c0c]">
-            Page not found
-          </h1>
-          <p className="text-lg md:text-xl text-[#0b0c0c] leading-relaxed">
-            If you typed the web address, check it is correct.
-          </p>
+        <main className="govuk-main-wrapper">
+          <div className="govuk-grid-row">
+            <div className="govuk-grid-column-two-thirds">
+              <h1 className="govuk-heading-xl">Page not found</h1>
+              <p className="govuk-body">
+                If you typed the web address, check it is correct.
+              </p>
+            </div>
+          </div>
         </main>
       </div>
     );
@@ -100,167 +103,138 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
   ];
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-6 font-sans text-[#0b0c0c] bg-white antialiased selection:bg-[#ffdd00] selection:text-[#0b0c0c]">
+    <div className="govuk-width-container">
       <GovUKBreadcrumbs items={breadcrumbItems} />
-      <div className="mt-8 grid grid-cols-1 md:grid-cols-4 gap-8">
-        
-        {/* Sticky Sidebar Navigation */}
-        <aside className="hidden md:block md:col-span-1">
-          <nav aria-labelledby="contents-heading" className="sticky top-6 border-t-2 border-[#0b0c0c] pt-3">
-            <h2 id="contents-heading" className="text-sm font-bold uppercase tracking-wider text-[#505a5f] mb-3">
-              Contents
-            </h2>
-            <ul className="space-y-3 text-sm font-bold text-[#1d70b8]">
-              <li><a href="#quick-facts" className="underline hover:text-[#003078]">Quick facts</a></li>
-              <li><a href="#before-you-start" className="underline hover:text-[#003078]">Before you start</a></li>
-              <li><a href="#required-documents" className="underline hover:text-[#003078]">Required documents</a></li>
+
+      <main className="govuk-main-wrapper" id="main-content" role="main">
+        <div className="govuk-grid-row">
+          {/* Sidebar (one-third) - sticky contents nav like GOV.UK */}
+          <div className="govuk-grid-column-one-third">
+            <nav aria-labelledby="contents-heading" className="govuk-!-margin-bottom-6 govuk-!-padding-top-2" style={{ position: 'sticky', top: '20px' }}>
+              <h2 id="contents-heading" className="govuk-heading-s govuk-!-margin-bottom-2">Contents</h2>
+              <ul className="govuk-list govuk-list--bullet">
+              <li><a href="#quick-facts" className="govuk-link">Quick facts</a></li>
+              <li><a href="#before-you-start" className="govuk-link">Before you start</a></li>
+              <li><a href="#required-documents" className="govuk-link">Documents you need</a></li>
               {service.steps && service.steps.length > 0 && (
-                <li><a href="#step-by-step" className="underline hover:text-[#003078]">Step by step process</a></li>
+                <li><a href="#step-by-step" className="govuk-link">Step by step</a></li>
               )}
               {service.feesTable && service.feesTable.length > 0 && (
-                <li><a href="#fees" className="underline hover:text-[#003078]">Fees and charges</a></li>
+                <li><a href="#fees" className="govuk-link">Fees</a></li>
               )}
               {service.physicalVisits && service.physicalVisits.length > 0 && (
-                <li><a href="#office-visits" className="underline hover:text-[#003078]">Office visits</a></li>
+                <li><a href="#office-visits" className="govuk-link">Office visits</a></li>
               )}
               {service.faqs && service.faqs.length > 0 && (
-                <li><a href="#faqs" className="underline hover:text-[#003078]">Questions</a></li>
+                <li><a href="#faqs" className="govuk-link">Questions</a></li>
               )}
             </ul>
           </nav>
-        </aside>
+        </div>
 
-        {/* Core Content Flow */}
-        <div className="md:col-span-3 space-y-12">
+        {/* Main article content (two-thirds) */}
+        <div className="govuk-grid-column-two-thirds">
           
-          {/* Header & Reusable Multi-Agency Reference Layout */}
+          {/* Header */}
           <div>
-            <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-3 text-[#0b0c0c]">
+            <h1 className="govuk-heading-xl govuk-!-margin-bottom-4">
               {service.title}
             </h1>
             
-            {/* Renders multi-nested Departments and parent Ministries dynamically */}
+            {/* Responsible bodies */}
             {service.providingBodies && service.providingBodies.length > 0 && (
-              <div className="text-sm text-[#505a5f] mb-6 space-y-2 border-b border-[#b1b4b6] pb-4">
+              <div className="govuk-body-s govuk-!-margin-bottom-4 govuk-!-color-grey">
                 {service.providingBodies.map((body, idx) => (
-                  <div key={idx} className="leading-relaxed">
-                    <span className="block text-[#0b0c0c]">
-                      Department: <strong className="font-bold">{body.name}</strong>
-                    </span>
-                    {body.parentMinistry && (
-                      <span className="block text-xs text-[#505a5f] font-normal italic">
-                        Ministry: {body.parentMinistry.name}
-                      </span>
-                    )}
+                  <div key={idx} className="govuk-!-margin-bottom-1">
+                    <strong className="govuk-!-font-weight-bold">{body.name}</strong>
+                    {body.parentMinistry && <> (under {body.parentMinistry.name})</>}
                   </div>
                 ))}
-                
-                {/* Information Validity Timestamps Callout Row */}
-                <div className="flex flex-wrap gap-x-4 gap-y-1 pt-2 text-xs font-mono text-[#505a5f]">
-                  <p>Published: {formatDate(service._createdAt)}</p>
-                  <p className="border-l border-[#b1b4b6] pl-4">Updated: {formatDate(service._updatedAt)}</p>
+                <div className="govuk-!-margin-top-2 govuk-body-s">
+                  Published: {formatDate(service._createdAt)} · Updated: {formatDate(service._updatedAt)}
                 </div>
               </div>
             )}
 
-            <p className="text-xl md:text-2xl text-[#0b0c0c] font-normal leading-relaxed mb-6">
+            <p className="govuk-body-l govuk-!-margin-bottom-6">
               {service.summary}
             </p>
           </div>
-          {/* Quick Facts Section */}
-          <section id="quick-facts" aria-labelledby="quick-facts-heading" className="pt-2">
-            <h2 id="quick-facts-heading" className="text-2xl font-bold mb-4 text-[#0b0c0c]">Service quick facts</h2>
-            <div className="w-full overflow-x-auto border-t-2 border-[#0b0c0c]">
-              <table className="w-full text-base border-collapse min-w-[280px]">
-                <tbody>
-                  <tr className="border-b border-[#b1b4b6]">
-                    <th className="py-3 pr-4 font-bold text-left text-[#0b0c0c] w-1/3 min-w-[120px]">Processing time</th>
-                    <td className="py-3 text-[#0b0c0c]">{service.processingTime}</td>
-                  </tr>
-                  <tr className="border-b border-[#b1b4b6]">
-                    <th className="py-3 pr-4 font-bold text-left text-[#0b0c0c]">Estimated base cost</th>
-                    <td className="py-3 text-[#0b0c0c]">{service.baseCostLabel}</td>
-                  </tr>
-                  <tr className="border-b border-[#b1b4b6]">
-                    <th className="py-3 pr-4 font-bold text-left text-[#0b0c0c]">Application method</th>
-                    <td className="py-3 text-[#0b0c0c]">{modeLabels[service.executionMode]}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+          {/* Quick facts - using GOV.UK summary list for scannability */}
+          <section id="quick-facts" aria-labelledby="quick-facts-heading" className="govuk-!-margin-bottom-6">
+            <h2 id="quick-facts-heading" className="govuk-heading-m govuk-!-margin-bottom-3">Quick facts</h2>
+            <GovUKSummaryList
+              items={[
+                {
+                  key: "Processing time",
+                  value: service.processingTime || "Not specified",
+                },
+                {
+                  key: "Base cost",
+                  value: service.baseCostLabel || "Free or not specified",
+                },
+                {
+                  key: "How to apply",
+                  value: modeLabels[service.executionMode] || "Check official guidance",
+                },
+              ]}
+            />
           </section>
 
-          {/* Before You Start Section */}
-          <section id="before-you-start" aria-labelledby="before-you-start-heading">
-            <h2 id="before-you-start-heading" className="text-2xl md:text-3xl font-bold mb-4 text-[#0b0c0c]">
-              Before you start
-            </h2>
-            <ul className="list-disc pl-6 space-y-2 text-base text-[#0b0c0c] leading-relaxed">
+          {/* Before you start */}
+          <section id="before-you-start" aria-labelledby="before-you-start-heading" className="govuk-!-margin-bottom-6">
+            <h2 id="before-you-start-heading" className="govuk-heading-m">Before you start</h2>
+            <ul className="govuk-list govuk-list--bullet">
               {service.beforeYouStart?.map((item, idx) => (
                 <li key={idx}>{item}</li>
               ))}
             </ul>
           </section>
 
-          {/* Required Documents Section */}
-          <section id="required-documents" aria-labelledby="required-docs-heading">
-            <h2 id="required-docs-heading" className="text-2xl md:text-3xl font-bold mb-4 text-[#0b0c0c]">
-              Required documents and file scans
-            </h2>
-            <ul className="list-disc pl-6 space-y-2 text-base text-[#0b0c0c] leading-relaxed">
+          {/* Required documents */}
+          <section id="required-documents" aria-labelledby="required-docs-heading" className="govuk-!-margin-bottom-6">
+            <h2 id="required-docs-heading" className="govuk-heading-m">Documents you need</h2>
+            <ul className="govuk-list govuk-list--bullet">
               {service.requiredDocuments?.map((doc, idx) => (
                 <li key={idx}>{doc}</li>
               ))}
             </ul>
           </section>
-          {/* Chronological Steps Timeline */}
+          {/* Step by step */}
           {service.steps && service.steps.length > 0 && (
-            <section id="step-by-step" aria-labelledby="step-by-step-heading">
-              <h2 id="step-by-step-heading" className="text-2xl md:text-3xl font-bold mb-6 text-[#0b0c0c]">
-                Step by step process
-              </h2>
-              <ol className="relative border-l-4 border-[#0b0c0c] ml-3 pl-6 space-y-8">
+            <section id="step-by-step" aria-labelledby="step-by-step-heading" className="govuk-!-margin-bottom-6">
+              <h2 id="step-by-step-heading" className="govuk-heading-m">Step by step</h2>
+              <ol className="govuk-list govuk-list--number">
                 {service.steps.map((step, idx) => (
-                  <li key={idx} className="relative">
-                    <span className="absolute -left-[38px] top-0 bg-[#0b0c0c] text-white rounded-none font-bold text-sm w-7 h-7 flex items-center justify-center font-mono">
-                      {step.stepNumber}
-                    </span>
-                    <h3 className="text-xl font-bold text-[#0b0c0c] mb-2 pt-0.5">
-                      {step.stepTitle}
-                    </h3>
-                    <p className="text-base text-[#505a5f] leading-relaxed">
-                      {step.stepDescription}
-                    </p>
+                  <li key={idx} className="govuk-!-margin-bottom-3">
+                    <span className="govuk-!-font-weight-bold">{step.stepTitle}</span>
+                    {step.stepDescription && <p className="govuk-body-s govuk-!-margin-top-1 govuk-!-margin-bottom-0">{step.stepDescription}</p>}
                   </li>
                 ))}
               </ol>
             </section>
           )}
 
-          {/* Mobile Responsive Fees Table */}
+          {/* Fees table */}
           {service.feesTable && service.feesTable.length > 0 && (
-            <section id="fees" aria-labelledby="fees-heading">
-              <h2 id="fees-heading" className="text-2xl md:text-3xl font-bold mb-4 text-[#0b0c0c]">
-                Fees and charges
-              </h2>
-              <div className="w-full overflow-x-auto border-b border-[#b1b4b6]">
-                <table className="w-full text-base text-left border-collapse min-w-[280px]">
-                  <thead>
-                    <tr className="border-b-2 border-[#0b0c0c]">
-                      <th className="py-2 pr-4 font-bold text-[#0b0c0c]">Item or condition</th>
-                      <th className="py-2 text-right font-bold text-[#0b0c0c] w-24">Cost</th>
+            <section id="fees" aria-labelledby="fees-heading" className="govuk-!-margin-bottom-6">
+              <h2 id="fees-heading" className="govuk-heading-m">Fees and charges</h2>
+              <table className="govuk-table">
+                <thead className="govuk-table__head">
+                  <tr className="govuk-table__row">
+                    <th scope="col" className="govuk-table__header">Item</th>
+                    <th scope="col" className="govuk-table__header govuk-table__header--numeric">Cost</th>
+                  </tr>
+                </thead>
+                <tbody className="govuk-table__body">
+                  {service.feesTable.map((fee, idx) => (
+                    <tr key={idx} className="govuk-table__row">
+                      <td className="govuk-table__cell">{fee.itemName}</td>
+                      <td className="govuk-table__cell govuk-table__cell--numeric">{fee.amount}</td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {service.feesTable.map((fee, idx) => (
-                      <tr key={idx} className="border-b border-[#b1b4b6] hover:bg-[#f8f8f8]">
-                        <td className="py-3 pr-4 text-[#0b0c0c] font-normal leading-normal">{fee.itemName}</td>
-                        <td className="py-3 text-right font-bold text-[#0b0c0c] whitespace-nowrap">{fee.amount}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                  ))}
+                </tbody>
+              </table>
             </section>
           )}
 
@@ -303,71 +277,54 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
               </ul>
             </section>
           )}
-          {/* FAQ Framework Accordions */}
+          {/* FAQs using GOV.UK details component */}
           {service.faqs && service.faqs.length > 0 && (
-            <section id="faqs" aria-labelledby="faqs-heading">
-              <h2 id="faqs-heading" className="text-2xl md:text-3xl font-bold mb-4 text-[#0b0c0c]">
-                Frequently asked questions
-              </h2>
-              <div className="space-y-1">
-                {service.faqs.map((faq, idx) => {
-                  const isOpen = !!openFaqs[idx];
-                  return (
-                    <details 
-                      key={idx} 
-                      open={isOpen}
-                      onToggle={(e) => {
-                        const target = e.target as HTMLDetailsElement;
-                        setOpenFaqs(prev => ({ ...prev, [idx]: target.open }));
-                      }}
-                      className="border-b border-[#b1b4b6] group"
-                    >
-                      <summary className="w-full text-left py-4 font-bold flex justify-between items-center text-base text-[#1d70b8] hover:text-[#003078] cursor-pointer focus:bg-[#ffdd00] focus:text-[#0b0c0c] select-none list-none [&::-webkit-details-marker]:hidden">
-                        <span className="underline decoration-2 text-left">{faq.question}</span>
-                        <span className="text-xs text-[#505a5f] no-underline font-normal ml-4 shrink-0 group-open:hidden">Show</span>
-                        <span className="text-xs text-[#505a5f] no-underline font-normal ml-4 shrink-0 hidden group-open:inline">Hide</span>
-                      </summary>
-                      <div className="pb-6 pt-2 text-base text-[#0b0c0c] leading-relaxed whitespace-pre-line max-w-none">
-                        {faq.answer}
-                      </div>
-                    </details>
-                  );
-                })}
-              </div>
+            <section id="faqs" aria-labelledby="faqs-heading" className="govuk-!-margin-bottom-6">
+              <h2 id="faqs-heading" className="govuk-heading-m">Questions</h2>
+              {service.faqs.map((faq, idx) => {
+                const isOpen = !!openFaqs[idx];
+                return (
+                  <details
+                    key={idx}
+                    open={isOpen}
+                    onToggle={(e) => {
+                      const target = e.target as HTMLDetailsElement;
+                      setOpenFaqs(prev => ({ ...prev, [idx]: target.open }));
+                    }}
+                    className="govuk-details"
+                  >
+                    <summary className="govuk-details__summary">
+                      <span className="govuk-details__summary-text">{faq.question}</span>
+                    </summary>
+                    <div className="govuk-details__text">
+                      {faq.answer}
+                    </div>
+                  </details>
+                );
+              })}
             </section>
           )}
 
-          {/* Related Services Content Links */}
+          {/* Related services */}
           {service.relatedServices && service.relatedServices.length > 0 && (
-            <section id="related" aria-labelledby="related-heading" className="pt-6 border-t border-[#b1b4b6]">
-              <h2 id="related-heading" className="text-xl font-bold text-[#0b0c0c] mb-4">
-                Related services
-              </h2>
-              <ul className="space-y-3 text-base">
+            <section id="related" aria-labelledby="related-heading" className="govuk-!-margin-bottom-6">
+              <h2 id="related-heading" className="govuk-heading-m">Related services</h2>
+              <ul className="govuk-list">
                 {service.relatedServices.map((rel, idx) => (
                   <li key={idx}>
-                    <Link 
-                      href={`/${rel.slug}`} 
-                      className="text-[#1d70b8] underline decoration-2 font-bold hover:text-[#003078]"
-                    >
-                      {rel.title}
-                    </Link>
+                    <Link href={`/${rel.slug}`} className="govuk-link">{rel.title}</Link>
                   </li>
                 ))}
               </ul>
             </section>
           )}
 
-          {/* Multi-Portal Direct Outbound Redirection Section */}
-          <div className="border-t border-[#b1b4b6] pt-8 mt-12">
-            <div className="border-l-4 border-[#b1b4b6] pl-5 py-1 mb-6">
-              <p className="text-base text-[#0b0c0c]">
-                Applications are processed securely by clicking the matching official digital execution gateways below:
-              </p>
-            </div>
-            
-            {/* FIXED: Formats your array loop metrics dynamically. Rendered buttons will display perfectly */}
-            <div className="flex flex-wrap gap-4">
+          {/* Start your application */}
+          <div className="govuk-!-margin-top-8">
+            <p className="govuk-body">
+              Apply on the official government site:
+            </p>
+            <div className="govuk-button-group">
               {service.transactionPortals && service.transactionPortals.length > 0 ? (
                 service.transactionPortals.map((portal, pIdx) => (
                   <a 
@@ -375,30 +332,19 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
                     href={portal.portalUrl} 
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center bg-[#00703c] text-white hover:bg-[#005a30] active:bg-[#004424] font-bold text-lg px-5 py-3 border-b-4 border-[#004424] focus:outline-none focus:ring-4 focus:ring-[#ffdd00] focus:text-[#0b0c0c] focus:bg-[#ffdd00] transition-colors"
+                    className="govuk-button"
                   >
                     {portal.portalLabel || "Start now"}
-                    <svg 
-                      className="ml-3 fill-current w-4 h-4 inline-block align-middle pointer-events-none" 
-                      xmlns="http://w3.org" 
-                      viewBox="0 0 33 40" 
-                      aria-hidden="true" 
-                      focusable="false"
-                    >
-                      <path d="M0 0h13l20 20-20 20H0l20-20z" />
-                    </svg>
                   </a>
                 ))
               ) : (
-                <div className="text-sm font-bold text-[#d4351c] font-sans">
-                  System notice: Action portals have not yet been assigned to this guide document template.
-                </div>
+                <p className="govuk-body-s">No direct link is available yet. Search for this service on eCitizen or the relevant ministry website.</p>
               )}
             </div>
           </div>
         </div>
-
-      </div>
+        </div>
+      </main>
     </div>
   );
 }

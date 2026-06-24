@@ -231,11 +231,11 @@ export default async function SearchResultsPage({
             <h1 className="govuk-heading-l govuk-!-margin-bottom-4">Search Results</h1>
 
             {/* GOV.UK-style search with autocomplete */}
-            <div className="govuk-form-group govuk-!-margin-bottom-6" style={{ background: '#f3f2f1', padding: '15px', borderLeft: '4px solid #002147' }}>
+            <div className="govuk-inset-text govuk-!-margin-bottom-6">
               <label className="govuk-label govuk-!-font-weight-bold">
                 Search government entities, services or laws
               </label>
-              <div style={{ maxWidth: '600px', marginTop: '6px' }}>
+              <div className="govuk-!-max-width-600 govuk-!-margin-top-2">
                 <SearchAutocomplete 
                   initialQuery={q} 
                   placeholder="Try 'ministry', 'governor', 'IEBC' or a county..." 
@@ -244,7 +244,7 @@ export default async function SearchResultsPage({
               {selectedType && (
                 <input type="hidden" name="type" value={selectedType} />
               )}
-              <p className="govuk-body-s govuk-!-margin-top-1" style={{ color: '#505a5f' }}>
+              <p className="govuk-body-s govuk-!-margin-top-1 govuk-!-text-colour-secondary">
                 Typo tolerant • Supports alternate names, aliases and partial matches across government data + guides/services
               </p>
             </div>
@@ -256,69 +256,69 @@ export default async function SearchResultsPage({
           <div className="govuk-grid-column-one-third print-hide govuk-!-margin-bottom-4">
             <h2 className="govuk-heading-s govuk-!-margin-bottom-2">Filter by type</h2>
             
-              <ul className="govuk-list govuk-list--spaced" style={{ margin: 0, padding: 0 }}>
+              <ul className="govuk-list govuk-list--spaced govuk-!-margin-0 govuk-!-padding-0">
                 <li>
-                  <Link href={getFilterUrl("")} className="govuk-link" style={{ fontWeight: selectedType === "" ? "bold" : "normal", textDecoration: selectedType === "" ? "none" : "underline" }}>
+                  <Link href={getFilterUrl("")} className={`govuk-link ${selectedType === "" ? 'govuk-!-font-weight-bold' : ''}`}>
                     All results
                   </Link>
                 </li>
                 <li>
-                  <Link href={getFilterUrl("Institution")} className="govuk-link" style={{ fontWeight: selectedType === "Institution" ? "bold" : "normal", textDecoration: selectedType === "Institution" ? "none" : "underline" }}>
+                  <Link href={getFilterUrl("Institution")} className={`govuk-link ${selectedType === "Institution" ? 'govuk-!-font-weight-bold' : ''}`}>
                     Institutions &amp; Bodies
                   </Link>
                 </li>
                 <li>
-                  <Link href={getFilterUrl("Leader")} className="govuk-link" style={{ fontWeight: selectedType === "Leader" ? "bold" : "normal", textDecoration: selectedType === "Leader" ? "none" : "underline" }}>
+                  <Link href={getFilterUrl("Leader")} className={`govuk-link ${selectedType === "Leader" ? 'govuk-!-font-weight-bold' : ''}`}>
                     Leaders &amp; Profiles
                   </Link>
                 </li>
                 <li>
-                  <Link href={getFilterUrl("Official")} className="govuk-link" style={{ fontWeight: selectedType === "Official" ? "bold" : "normal", textDecoration: selectedType === "Official" ? "none" : "underline" }}>
+                  <Link href={getFilterUrl("Official")} className={`govuk-link ${selectedType === "Official" ? 'govuk-!-font-weight-bold' : ''}`}>
                     Public Officials
                   </Link>
                 </li>
                 <li>
-                  <Link href={getFilterUrl("County")} className="govuk-link" style={{ fontWeight: selectedType === "County" ? "bold" : "normal", textDecoration: selectedType === "County" ? "none" : "underline" }}>
+                  <Link href={getFilterUrl("County")} className={`govuk-link ${selectedType === "County" ? 'govuk-!-font-weight-bold' : ''}`}>
                     Counties
                   </Link>
                 </li>
                 <li>
-                  <Link href={getFilterUrl("Constituency")} className="govuk-link" style={{ fontWeight: selectedType === "Constituency" ? "bold" : "normal", textDecoration: selectedType === "Constituency" ? "none" : "underline" }}>
+                  <Link href={getFilterUrl("Constituency")} className={`govuk-link ${selectedType === "Constituency" ? 'govuk-!-font-weight-bold' : ''}`}>
                     Constituencies
                   </Link>
                 </li>
                 <li>
-                  <Link href={getFilterUrl("Ward")} className="govuk-link" style={{ fontWeight: selectedType === "Ward" ? "bold" : "normal", textDecoration: selectedType === "Ward" ? "none" : "underline" }}>
+                  <Link href={getFilterUrl("Ward")} className={`govuk-link ${selectedType === "Ward" ? 'govuk-!-font-weight-bold' : ''}`}>
                     Wards
                   </Link>
                 </li>
                 <li>
-                  <Link href={getFilterUrl("Political Party")} className="govuk-link" style={{ fontWeight: selectedType === "Political Party" ? "bold" : "normal", textDecoration: selectedType === "Political Party" ? "none" : "underline" }}>
+                  <Link href={getFilterUrl("Political Party")} className={`govuk-link ${selectedType === "Political Party" ? 'govuk-!-font-weight-bold' : ''}`}>
                     Political Parties
                   </Link>
                 </li>
                 <li>
-                  <Link href={getFilterUrl("Guide")} className="govuk-link" style={{ fontWeight: selectedType === "Guide" ? "bold" : "normal", textDecoration: selectedType === "Guide" ? "none" : "underline" }}>
+                  <Link href={getFilterUrl("Guide")} className={`govuk-link ${selectedType === "Guide" ? 'govuk-!-font-weight-bold' : ''}`}>
                     Guides &amp; How-to
                   </Link>
                 </li>
                 <li>
-                  <Link href={getFilterUrl("Service")} className="govuk-link" style={{ fontWeight: selectedType === "Service" ? "bold" : "normal", textDecoration: selectedType === "Service" ? "none" : "underline" }}>
+                  <Link href={getFilterUrl("Service")} className={`govuk-link ${selectedType === "Service" ? 'govuk-!-font-weight-bold' : ''}`}>
                     Public Services
                   </Link>
                 </li>
                 <li>
-                  <Link href={getFilterUrl("News")} className="govuk-link" style={{ fontWeight: selectedType === "News" ? "bold" : "normal", textDecoration: selectedType === "News" ? "none" : "underline" }}>
+                  <Link href={getFilterUrl("News")} className={`govuk-link ${selectedType === "News" ? 'govuk-!-font-weight-bold' : ''}`}>
                     News &amp; Updates
                   </Link>
                 </li>
                 <li>
-                  <Link href={getFilterUrl("Presidential Trip")} className="govuk-link" style={{ fontWeight: selectedType === "Presidential Trip" ? "bold" : "normal", textDecoration: selectedType === "Presidential Trip" ? "none" : "underline" }}>
+                  <Link href={getFilterUrl("Presidential Trip")} className={`govuk-link ${selectedType === "Presidential Trip" ? 'govuk-!-font-weight-bold' : ''}`}>
                     Presidential Trips
                   </Link>
                 </li>
                 <li>
-                  <Link href={getFilterUrl("Act of Parliament")} className="govuk-link" style={{ fontWeight: selectedType === "Act of Parliament" ? "bold" : "normal", textDecoration: selectedType === "Act of Parliament" ? "none" : "underline" }}>
+                  <Link href={getFilterUrl("Act of Parliament")} className={`govuk-link ${selectedType === "Act of Parliament" ? 'govuk-!-font-weight-bold' : ''}`}>
                     Acts &amp; Laws
                   </Link>
                 </li>
@@ -348,16 +348,16 @@ export default async function SearchResultsPage({
 
                 {/* Enhanced low-confidence "Did you mean" banner (GOV.UK style) - only for really poor matches */}
                 {results.length > 0 && results[0]?.rank != null && results[0].rank < 0.3 && !didYouMean && (
-                  <div className="govuk-inset-text govuk-!-margin-bottom-4" style={{ background: '#f3f2f1', padding: '10px 12px', borderLeft: '4px solid #00703c' }}>
+                  <div className="govuk-inset-text govuk-!-margin-bottom-4">
                     Showing lower confidence matches for “{q}”. Try a different spelling or more specific term.
                   </div>
                 )}
 
                 {results.length > 0 ? (
-                  <ul className="govuk-list" style={{ borderTop: '1px solid #bfc1c3', padding: 0, margin: 0 }}>
+                  <ul className="govuk-list govuk-!-margin-top-0">
                     {results.map((item, idx) => (
-                      <li key={`${item.id || item.slug}-${idx}`} style={{ padding: '16px 0', borderBottom: '1px solid #e6e6e6' }}>
-                        <span className="govuk-caption-m govuk-!-font-size-14 govuk-!-font-weight-bold" style={{ textTransform: 'uppercase', color: '#505a5f', display: 'block', marginBottom: '2px' }}>
+                      <li key={`${item.id || item.slug}-${idx}`} className="govuk-!-padding-top-3 govuk-!-padding-bottom-3 govuk-!-border-bottom-1">
+                        <span className="govuk-caption-m govuk-!-font-size-14 govuk-!-font-weight-bold govuk-!-text-colour-secondary govuk-!-display-block govuk-!-margin-bottom-1">
                           {item.entity_type}
                         </span>
                         <h3 className="govuk-heading-m govuk-!-margin-0">
@@ -367,8 +367,7 @@ export default async function SearchResultsPage({
                         </h3>
                         {item.snippet && (
                           <p 
-                            className="govuk-body-s govuk-!-margin-top-1 govuk-!-margin-bottom-0" 
-                            style={{ color: '#353c3f', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}
+                            className="govuk-body-s govuk-!-margin-top-1 govuk-!-margin-bottom-0 govuk-!-text-colour-secondary truncate-2-lines"
                             dangerouslySetInnerHTML={{ __html: highlight(item.snippet, q) }}
                           />
                         )}

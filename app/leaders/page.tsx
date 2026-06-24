@@ -6,6 +6,7 @@ import { useState, useMemo, useEffect } from "react";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import { createClient } from "@/lib/supabase/client";
 
+
 type Leader = {
   id: string;
   name: string;
@@ -83,7 +84,7 @@ export default function LeadersPage() {
       <main className="govuk-main-wrapper">
         <h1 className="govuk-heading-xl">Current Leaders</h1>
         <p className="govuk-body-l">
-          Elected and appointed public office holders across all arms and levels of government.
+          Find elected and appointed leaders: the President, ministers, governors, senators, MPs and MCAs.
         </p>
 
         {/* Category Cards */}
@@ -94,13 +95,9 @@ export default function LeadersPage() {
               const slug = cat.toLowerCase().replace(/\s+/g, '-');
               return (
                 <div key={cat} className="govuk-grid-column-one-third govuk-!-margin-bottom-4">
-                  <Link href={`/leaders/${slug}`} className="govuk-link">
-                    <div className="govuk-card govuk-card--clickable">
-                      <div className="govuk-card__content">
-                        <h3 className="govuk-card__title">{cat}</h3>
-                        <p className="govuk-body-s">View all {cat} leaders</p>
-                      </div>
-                    </div>
+                  <Link href={`/leaders/${slug}`} className="govuk-link govuk-!-display-block govuk-!-padding-3 govuk-!-border-1 govuk-!-margin-bottom-2">
+                    <h3 className="govuk-heading-s govuk-!-margin-bottom-1">{cat}</h3>
+                    <p className="govuk-body-s">View all {cat} leaders</p>
                   </Link>
                 </div>
               );

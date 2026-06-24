@@ -34,20 +34,8 @@ export default function DeleteModal({
   if (!isOpen) return null;
 
   return (
-    <div className="govuk-modal" style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: 'rgba(0, 0, 0, 0.6)',
-      zIndex: 1000,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-    }}>
-      <div className="govuk-modal__dialog" style={{
-        background: 'white',
+    <div className="govuk-modal modal-overlay">
+      <div className="govuk-modal__dialog modal-dialog" style={{
         maxWidth: '500px',
         width: '90%',
         padding: '24px',

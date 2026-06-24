@@ -4,12 +4,22 @@ import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import GovUKFeedback from "@/components/govuk/Feedback";
 import PrintPageButton from "@/components/govuk/PrintPageButton";
 import { getActOfParliamentBySlug } from "@/lib/sanity/client";
+import type { Metadata } from 'next';
 
 type Props = {
   params: Promise<{ slug: string }>;
 };
 
 export const revalidate = 60;
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params;
+  const title = slug.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
+  return {
+    title: `${title} Act of Parliament`,
+    description: `Full details, arrangement and text of the ${title} Act passed by the Parliament of Kenya.`,
+  };
+}
 
 export default async function ActTableOfContentsPage({ params }: Props) {
   const { slug } = await params;

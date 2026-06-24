@@ -103,14 +103,7 @@ export default function ElectionsPage() {
                 key={section.href}
                 className="govuk-grid-column-one-half govuk-!-margin-bottom-6"
               >
-                <div
-                  className="govuk-!-padding-5"
-                  style={{
-                    border: "1px solid #b1b4b6",
-                    backgroundColor: "#ffffff",
-                    height: "100%",
-                  }}
-                >
+                <div className="govuk-!-padding-5 govuk-!-border-1 govuk-!-background-white govuk-!-height-full">
                   <h3 className="govuk-heading-m">
                     <Link
                       href={section.href}

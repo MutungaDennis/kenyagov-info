@@ -74,6 +74,13 @@ export default function AllCountiesPage() {
       });
   }, [searchTerm, selectedRegion, sortField, sortOrder]);
 
+  // Client-side execution tracking summary stats based on filtered scopes
+  const statisticsBannerData = useMemo(() => {
+    const total = filteredCounties.length;
+    const uniqueRegions = new Set(filteredCounties.map(c => c.region)).size;
+    return { total, uniqueRegions };
+  }, [filteredCounties]);
+
   const hasActiveFilters = searchTerm !== "" || selectedRegion !== "All Regions";
 
   const clearAllFilters = () => {
@@ -81,11 +88,10 @@ export default function AllCountiesPage() {
     setSelectedRegion("All Regions");
   };
 
-  // Safe client-side spreadsheet compilation mapping values strictly to valid tabular footprints
   const handleExportCSV = () => {
     const headers = ["County Code", "County Name", "County Capital", "Current Governor", "Geographic Region"];
     const rows = filteredCounties.map((county) => [
-      county.code.toString(),
+      county.code.toString().padStart(2, '0'),
       `"${county.name.replace(/"/g, '""')}"`,
       `"${county.capital.replace(/"/g, '""')}"`,
       `"${county.governor.replace(/"/g, '""')}"`,
@@ -104,7 +110,6 @@ export default function AllCountiesPage() {
     document.body.removeChild(link);
   };
 
-  // Helper to render explicit visual layout indicators for active sort column states
   const renderSortIndicator = (field: SortField) => {
     if (sortField !== field) return " ↕";
     return sortOrder === 'asc' ? " ▲" : " ▼";
@@ -122,37 +127,61 @@ export default function AllCountiesPage() {
 
       <main className="govuk-main-wrapper govuk-!-padding-top-2" id="main-content" role="main">
         <div className="govuk-grid-row">
-          <div className="govuk-grid-column-full">
-            <h1 className="govuk-heading-l govuk-!-margin-bottom-2">Counties of Kenya</h1>
-            <p className="govuk-body govuk-!-margin-bottom-4">
-              Profiles, service listings, and administrative details for all 47 devolved county governments.
+          <div className="govuk-grid-column-two-thirds">
+            <h1 className="govuk-heading-xl govuk-!-margin-bottom-4">Counties of Kenya</h1>
+            <p className="govuk-body-l">
+              Profiles, assembly mappings, service channels, and administrative frameworks for all 47 devolved county governments.
             </p>
           </div>
         </div>
 
-        {/* Filters Grid Layout adjusted for quick scannability */}
-        <div className="govuk-grid-row govuk-!-margin-bottom-2">
-          <div className="govuk-grid-column-one-half govuk-!-margin-bottom-3">
+        {/* Enhanced Analytics Banner Panel (GOV.UK Highlight Layout) */}
+        <div className="govuk-grid-row govuk-!-margin-bottom-6">
+          <div className="govuk-grid-column-full">
+            <div className="bg-blue-50 p-6 border-l-4 border-blue-800 flex flex-wrap gap-6 justify-between items-center shadow-sm">
+              <div>
+                <h2 className="govuk-heading-s govuk-!-margin-bottom-1 text-blue-900">National Register Framework Summary</h2>
+                <p className="govuk-body-s govuk-!-margin-bottom-0 text-gray-700">
+                  Tracking devolved units, regional distributions, and active legislative county-assembly boundaries.
+                </p>
+              </div>
+              <div className="flex gap-6">
+                <div className="text-center">
+                  <span className="block govuk-heading-xl font-bold text-blue-800 govuk-!-margin-0">{statisticsBannerData.total}</span>
+                  <span className="govuk-body-s text-xs font-semibold text-gray-600 uppercase tracking-wider">Counties Listed</span>
+                </div>
+                <div className="text-center border-l border-blue-200 pl-6">
+                  <span className="block govuk-heading-xl font-bold text-blue-800 govuk-!-margin-0">{statisticsBannerData.uniqueRegions}</span>
+                  <span className="govuk-body-s text-xs font-semibold text-gray-600 uppercase tracking-wider font-medium">Regions Active</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Filters Grid Layout */}
+        <div className="govuk-grid-row govuk-!-margin-bottom-4">
+          <div className="govuk-grid-column-one-half govuk-!-margin-bottom-2">
             <div className="govuk-form-group govuk-!-margin-bottom-0">
               <label className="govuk-label govuk-!-font-weight-bold" htmlFor="search">
-                Search
+                Filter by Keyword
               </label>
               <input
                 className="govuk-input"
                 id="search"
                 name="search"
                 type="search"
-                placeholder="County name, capital, or governor..."
+                placeholder="e.g. Mombasa, Johnson Sakaja, Capital..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
           </div>
 
-          <div className="govuk-grid-column-one-half govuk-!-margin-bottom-3">
+          <div className="govuk-grid-column-one-half govuk-!-margin-bottom-2">
             <div className="govuk-form-group govuk-!-margin-bottom-0">
               <label className="govuk-label govuk-!-font-weight-bold" htmlFor="region">
-                Region
+                Filter by Region
               </label>
               <select 
                 className="govuk-select govuk-!-width-full" 
@@ -173,49 +202,46 @@ export default function AllCountiesPage() {
 
         {/* Custom Filter Tags Panel Layout */}
         {hasActiveFilters && (
-          <div className="govuk-!-margin-bottom-4" style={{ background: '#f8f8f8', padding: '12px', border: '1px solid #bfc1c3' }}>
+          <div className="govuk-!-margin-bottom-6 p-4 border-2 border-gray-200 bg-gray-50">
             <p className="govuk-body-s govuk-!-font-weight-bold govuk-!-margin-bottom-2">Active filters:</p>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
+            <div className="flex flex-wrap gap-2 items-center">
               {searchTerm && (
                 <button 
                   type="button"
                   onClick={() => setSearchTerm("")}
-                  style={{ background: '#fff', border: '1px solid #1d70b8', padding: '4px 8px', cursor: 'pointer', fontSize: '14px', display: 'inline-flex', alignItems: 'center', borderStyle: 'solid' }}
+                  className="bg-white border-2 border-blue-700 hover:border-red-600 px-3 py-1 font-semibold text-sm cursor-pointer transition-colors inline-flex items-center gap-2"
                 >
-                  Search: &ldquo;{searchTerm}&rdquo; <span style={{ marginLeft: '8px', color: '#d4351c', fontWeight: 'bold' }}>&times;</span>
+                  Search: &ldquo;{searchTerm}&rdquo; <span className="text-red-600 font-bold">&times;</span>
                 </button>
               )}
               {selectedRegion !== "All Regions" && (
                 <button 
                   type="button"
                   onClick={() => setSelectedRegion("All Regions")}
-                  style={{ background: '#fff', border: '1px solid #1d70b8', padding: '4px 8px', cursor: 'pointer', fontSize: '14px', display: 'inline-flex', alignItems: 'center', borderStyle: 'solid' }}
+                  className="bg-white border-2 border-blue-700 hover:border-red-600 px-3 py-1 font-semibold text-sm cursor-pointer transition-colors inline-flex items-center gap-2"
                 >
-                  Region: {selectedRegion} <span style={{ marginLeft: '8px', color: '#d4351c', fontWeight: 'bold' }}>&times;</span>
+                  Region: {selectedRegion} <span className="text-red-600 font-bold">&times;</span>
                 </button>
               )}
               <button 
                 type="button"
                 onClick={clearAllFilters}
-                className="govuk-link govuk-!-font-size-16"
-                style={{ background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', padding: '4px' }}
+                className="govuk-link govuk-!-font-size-16 ml-2 cursor-pointer bg-transparent border-0 underline p-1 font-medium"
               >
                 Clear all filters
               </button>
             </div>
           </div>
         )}
-
         {/* Open Data Download Utility Bar Panel (GOV.UK Compliant) */}
-        <div className="govuk-!-margin-bottom-4" style={{ background: '#f3f2f1', padding: '12px 15px', border: '1px solid #bfc1c3', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-          <span className="govuk-body-s govuk-!-margin-0">
+        <div className="govuk-!-margin-bottom-6 p-4 border border-gray-300 bg-gray-100 flex justify-between items-center flex-wrap gap-3">
+          <span className="govuk-body-s govuk-!-margin-0 text-gray-700">
             Machine-readable data access framework aligned with national open information disclosure guidelines.
           </span>
           <button 
             type="button" 
             onClick={handleExportCSV}
-            className="govuk-link govuk-!-font-size-16 govuk-!-font-weight-bold"
-            style={{ background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', padding: 0 }}
+            className="govuk-link govuk-!-font-size-16 govuk-!-font-weight-bold bg-transparent border-0 cursor-pointer underline p-0"
           >
             Download filtered list as CSV text spreadsheet
           </button>
@@ -230,66 +256,78 @@ export default function AllCountiesPage() {
 
             {filteredCounties.length > 0 ? (
               /* GOV.UK Mobile Responsive Layout Table with Active Sort Buttons */
-              <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', marginBottom: '25px' }}>
-                <table className="govuk-table" style={{ minWidth: '750px' }}>
+              <div className="w-full overflow-x-auto scrolling-touch mb-8 border-b-2 border-gray-200 shadow-sm">
+                <table className="govuk-table min-w-[850px] w-full mb-0">
                   <caption className="govuk-table__caption govuk-visually-hidden">
                     List of Kenyan counties with active data sorting controls.
                   </caption>
-                  <thead className="govuk-table__head">
+                  <thead className="govuk-table__head bg-gray-50 border-b-2 border-black">
                     <tr className="govuk-table__row">
-                      <th scope="col" className="govuk-table__header govuk-body-s" style={{ width: '80px' }}>
-                        <button type="button" onClick={() => handleSort('code')} style={{ background: 'none', border: 'none', font: 'inherit', fontWeight: 'bold', cursor: 'pointer', padding: 0, color: '#1d70b8', textDecoration: 'underline' }}>
+                      <th scope="col" className="govuk-table__header govuk-body-s py-3 px-3 w-[100px]">
+                        <button type="button" onClick={() => handleSort('code')} className="bg-transparent border-0 font-bold cursor-pointer p-0 text-blue-700 underline text-left hover:text-blue-900 transition-colors">
                           Code{renderSortIndicator('code')}
                         </button>
                       </th>
-                      <th scope="col" className="govuk-table__header govuk-body-s">
-                        <button type="button" onClick={() => handleSort('name')} style={{ background: 'none', border: 'none', font: 'inherit', fontWeight: 'bold', cursor: 'pointer', padding: 0, color: '#1d70b8', textDecoration: 'underline' }}>
+                      <th scope="col" className="govuk-table__header govuk-body-s py-3 px-2">
+                        <button type="button" onClick={() => handleSort('name')} className="bg-transparent border-0 font-bold cursor-pointer p-0 text-blue-700 underline text-left hover:text-blue-900 transition-colors">
                           County Name{renderSortIndicator('name')}
                         </button>
                       </th>
-                      <th scope="col" className="govuk-table__header govuk-body-s" style={{ width: '160px' }}>
-                        <button type="button" onClick={() => handleSort('capital')} style={{ background: 'none', border: 'none', font: 'inherit', fontWeight: 'bold', cursor: 'pointer', padding: 0, color: '#1d70b8', textDecoration: 'underline' }}>
+                      <th scope="col" className="govuk-table__header govuk-body-s py-3 px-2 w-[180px]">
+                        <button type="button" onClick={() => handleSort('capital')} className="bg-transparent border-0 font-bold cursor-pointer p-0 text-blue-700 underline text-left hover:text-blue-900 transition-colors">
                           Capital{renderSortIndicator('capital')}
                         </button>
                       </th>
-                      <th scope="col" className="govuk-table__header govuk-body-s" style={{ width: '220px' }}>
-                        <button type="button" onClick={() => handleSort('governor')} style={{ background: 'none', border: 'none', font: 'inherit', fontWeight: 'bold', cursor: 'pointer', padding: 0, color: '#1d70b8', textDecoration: 'underline' }}>
+                      <th scope="col" className="govuk-table__header govuk-body-s py-3 px-2 w-[240px]">
+                        <button type="button" onClick={() => handleSort('governor')} className="bg-transparent border-0 font-bold cursor-pointer p-0 text-blue-700 underline text-left hover:text-blue-900 transition-colors">
                           Current Governor{renderSortIndicator('governor')}
                         </button>
                       </th>
-                      <th scope="col" className="govuk-table__header govuk-body-s" style={{ width: '160px' }}>
-                        <button type="button" onClick={() => handleSort('region')} style={{ background: 'none', border: 'none', font: 'inherit', fontWeight: 'bold', cursor: 'pointer', padding: 0, color: '#1d70b8', textDecoration: 'underline' }}>
+                      <th scope="col" className="govuk-table__header govuk-body-s py-3 px-2 w-[180px]">
+                        <button type="button" onClick={() => handleSort('region')} className="bg-transparent border-0 font-bold cursor-pointer p-0 text-blue-700 underline text-left hover:text-blue-900 transition-colors">
                           Region{renderSortIndicator('region')}
                         </button>
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="govuk-table__body">
+                  <tbody className="govuk-table__body divide-y divide-gray-200">
                     {filteredCounties.map((county) => (
-                      <tr key={county.code} className="govuk-table__row">
-                        <td className="govuk-table__cell govuk-body-s govuk-!-font-weight-bold">
+                      <tr key={county.code} className="govuk-table__row hover:bg-gray-50 transition-colors">
+                        <td className="govuk-table__cell govuk-body-s govuk-!-font-weight-bold py-3 px-3 text-gray-600 font-mono">
                           {county.code.toString().padStart(2, '0')}
                         </td>
-                        <th scope="row" className="govuk-table__header govuk-body-s" style={{ fontWeight: 'normal' }}>
-                          <Link href={`/counties/${county.slug}`} className="govuk-link govuk-!-font-weight-bold">
+                        <th scope="row" className="govuk-table__header govuk-body-s py-3 px-2 text-left font-normal">
+                          <Link href={`/counties/${county.slug}`} className="govuk-link govuk-!-font-weight-bold text-blue-700 font-bold hover:text-blue-900 transition-colors">
                             {county.name}
                           </Link>
                         </th>
-                        <td className="govuk-table__cell govuk-body-s">{county.capital}</td>
-                        <td className="govuk-table__cell govuk-body-s">{county.governor}</td>
-                        <td className="govuk-table__cell govuk-body-s">{county.region}</td>
+                        <td className="govuk-table__cell govuk-body-s py-3 px-2 text-gray-700 font-medium">
+                          {county.capital}
+                        </td>
+                        <td className="govuk-table__cell govuk-body-s py-3 px-2 text-gray-800">
+                          {county.governor}
+                        </td>
+                        <td className="govuk-table__cell govuk-body-s py-3 px-2">
+                          <span className="inline-block text-xs font-semibold px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-800 border border-gray-200 font-medium">
+                            {county.region}
+                          </span>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
             ) : (
-              <div className="govuk-body govuk-!-margin-top-4">
-                <p>No county boundaries or registers match your active filter search parameters.</p>
+              <div className="govuk-inset-text govuk-!-margin-top-4">
+                <p className="govuk-body mb-0 italic text-gray-600">
+                  No county boundaries, capitals, or governors match your active keyword filter parameters.
+                </p>
               </div>
             )}
 
-            <GovUKFeedback />
+            <div className="govuk-!-margin-top-8">
+              <GovUKFeedback />
+            </div>
           </div>
         </div>
       </main>

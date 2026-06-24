@@ -27,7 +27,7 @@ const policyDocumentsData: PolicyDocument[] = [
     datePublished: "June 2008",
     category: "Vision",
     era: "Constitution 2010",
-    summary: "The long-term economic development blueprint seeking to transform Kenya into a newly industrializing, middle-income nation structured across Economic, Social, and Political pillars.",
+    summary: "Kenya's main long-term plan to become a middle-income industrial country by 2030. It covers economic growth, social services and better governance.",
     fileUrl: "/documents/policies/vision-2030-main.pdf",
     fileSize: "4.8MB",
     slug: "vision-2030"
@@ -39,7 +39,7 @@ const policyDocumentsData: PolicyDocument[] = [
     datePublished: "March 2024",
     category: "MTP",
     era: "Constitution 2010",
-    summary: "The active statutory MTP implementing macro-fiscal policies, agricultural value chains, and universal healthcare digitizations mapped directly to bottom-up economic strategies.",
+    summary: "The current 5-year plan (2023-2027) for economic growth, farming improvements and digital healthcare.",
     fileUrl: "/documents/policies/mtp-iv-2023-2027.pdf",
     fileSize: "8.2MB",
     slug: "mtp-iv"
@@ -51,7 +51,7 @@ const policyDocumentsData: PolicyDocument[] = [
     datePublished: "April 1965",
     category: "Sessional Paper",
     era: "Post-Independence",
-    summary: "The fundamental post-independence macro-economic policy blueprint establishing a mixed economy model and prioritizing public investments within high-potential regional zones.",
+    summary: "The key 1965 policy that set Kenya's mixed economy approach and focused investment in key regions after independence.",
     fileUrl: "/documents/policies/sessional-paper-1965-no-10.pdf",
     fileSize: "3.1MB",
     slug: "sessional-paper-1965-no-10"
@@ -63,7 +63,7 @@ const policyDocumentsData: PolicyDocument[] = [
     datePublished: "March 1986",
     category: "Sessional Paper",
     era: "Liberalization",
-    summary: "A milestone economic redirection instrument shifting state policy toward privatization, budget austerity, market liberalization, and structural adjustment execution fields.",
+    summary: "1986 policy that moved Kenya toward privatization, smaller government budgets and opening markets to private business.",
     fileUrl: "/documents/policies/sessional-paper-1986-no-1.pdf",
     fileSize: "2.7MB",
     slug: "sessional-paper-1986-no-1"
@@ -75,7 +75,7 @@ const policyDocumentsData: PolicyDocument[] = [
     datePublished: "August 2012",
     category: "Sessional Paper",
     era: "Constitution 2010",
-    summary: "The master educational re-alignment framework providing the early structural legislative alignments that initiated the phase-out of the legacy 8-4-4 model toward CBC.",
+    summary: "2012 policy that started the change from the old 8-4-4 school system to the new Competency Based Curriculum (CBC).",
     fileUrl: "/documents/policies/sessional-paper-2012-no-1.pdf",
     fileSize: "1.9MB",
     slug: "sessional-paper-2012-no-1"
@@ -124,7 +124,7 @@ export default function NationalPolicyIndexPage() {
           <div className="govuk-grid-column-full">
             <h1 className="govuk-heading-l govuk-!-margin-bottom-2">National Policy &amp; Strategy Register</h1>
             <p className="govuk-body-l govuk-!-margin-bottom-6">
-              The official public repository of sessional papers, long-term visions, medium-term planning documents, and macroeconomic frameworks of the Republic of Kenya.
+              Key government plans and policies. Read the main vision for 2030, medium-term plans and important sessional papers.
             </p>
           </div>
         </div>
@@ -188,34 +188,34 @@ export default function NationalPolicyIndexPage() {
 
         {/* Filter Clear Tags Panel */}
         {hasActiveFilters && (
-          <div className="govuk-!-margin-bottom-4" style={{ background: '#f8f8f8', padding: '12px', border: '1px solid #bfc1c3' }}>
+          <div className="govuk-!-margin-bottom-4 govuk-inset-text">
             <p className="govuk-body-s govuk-!-font-weight-bold govuk-!-margin-bottom-2">Active filters:</p>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
+            <div className="govuk-!-display-flex govuk-!-flex-wrap-wrap govuk-!-gap-2">
               {searchTerm && (
                 <button 
                   type="button" 
                   onClick={() => setSearchTerm("")} 
-                  style={{ background: '#fff', border: '1px solid #1d70b8', padding: '4px 8px', cursor: 'pointer', fontSize: '14px', display: 'inline-flex', alignItems: 'center', borderStyle: 'solid' }}
+                  className="govuk-button govuk-button--secondary govuk-!-font-size-14 govuk-!-padding-1 govuk-!-margin-0" style={{ background: '#fff', borderColor: '#1d70b8', color: '#1d70b8' }}
                 >
-                  Search: &ldquo;{searchTerm}&rdquo; <span style={{ marginLeft: '8px', color: '#d4351c', fontWeight: 'bold' }}>&times;</span>
+                  Search: &ldquo;{searchTerm}&rdquo; <span className="govuk-!-font-weight-bold" style={{ marginLeft: '8px', color: '#d4351c' }}>&times;</span>
                 </button>
               )}
               {selectedCategory && (
                 <button 
                   type="button" 
                   onClick={() => setSelectedCategory("")} 
-                  style={{ background: '#fff', border: '1px solid #1d70b8', padding: '4px 8px', cursor: 'pointer', fontSize: '14px', display: 'inline-flex', alignItems: 'center', borderStyle: 'solid' }}
+                  className="govuk-button govuk-button--secondary govuk-!-font-size-14 govuk-!-padding-1 govuk-!-margin-0" style={{ background: '#fff', borderColor: '#1d70b8', color: '#1d70b8' }}
                 >
-                  Type: {selectedCategory} <span style={{ marginLeft: '8px', color: '#d4351c', fontWeight: 'bold' }}>&times;</span>
+                  Type: {selectedCategory} <span className="govuk-!-font-weight-bold" style={{ marginLeft: '8px', color: '#d4351c' }}>&times;</span>
                 </button>
               )}
               {selectedEra && (
                 <button 
                   type="button" 
                   onClick={() => setSelectedEra("")} 
-                  style={{ background: '#fff', border: '1px solid #1d70b8', padding: '4px 8px', cursor: 'pointer', fontSize: '14px', display: 'inline-flex', alignItems: 'center', borderStyle: 'solid' }}
+                  className="govuk-button govuk-button--secondary govuk-!-font-size-14 govuk-!-padding-1 govuk-!-margin-0" style={{ background: '#fff', borderColor: '#1d70b8', color: '#1d70b8' }}
                 >
-                  Era: {selectedEra} <span style={{ marginLeft: '8px', color: '#d4351c', fontWeight: 'bold' }}>&times;</span>
+                  Era: {selectedEra} <span className="govuk-!-font-weight-bold" style={{ marginLeft: '8px', color: '#d4351c' }}>&times;</span>
                 </button>
               )}
               <button 
@@ -234,17 +234,17 @@ export default function NationalPolicyIndexPage() {
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-full">
             <h2 className="govuk-heading-m govuk-!-margin-bottom-4" aria-live="polite">
-              Showing {filteredDocuments.length} registered strategic papers
+              {filteredDocuments.length} key policy documents
             </h2>
 
             {filteredDocuments.length > 0 ? (
               /* GOV.UK Clean Stack Publication List Layout */
-              <ul className="govuk-list" style={{ borderTop: '1px solid #bfc1c3', padding: 0, margin: 0 }}>
+              <ul className="govuk-list govuk-!-margin-top-0">
                 {filteredDocuments.map((doc) => (
-                  <li key={doc.id} style={{ borderBottom: '1px solid #bfc1c3', padding: '20px 0', margin: 0 }}>
+                  <li key={doc.id} className="govuk-!-padding-top-3 govuk-!-padding-bottom-3 govuk-!-border-bottom-1">
                     <div className="govuk-grid-row">
                       <div className="govuk-grid-column-two-thirds">
-                        <span className="govuk-caption-m govuk-!-font-size-14 govuk-!-font-weight-bold" style={{ textTransform: 'uppercase', color: '#505a5f', display: 'block', marginBottom: '4px' }}>
+                        <span className="govuk-caption-m govuk-!-font-size-14 govuk-!-font-weight-bold govuk-!-text-colour-secondary govuk-!-display-block govuk-!-margin-bottom-1">
                           {doc.reference} &bull; Published {doc.datePublished}
                         </span>
                         
@@ -254,26 +254,26 @@ export default function NationalPolicyIndexPage() {
                           </Link>
                         </h3>
 
-                        <p className="govuk-body-s govuk-!-margin-top-2 govuk-!-margin-bottom-3" style={{ color: '#353c3f' }}>
+                        <p className="govuk-body-s govuk-!-margin-top-2 govuk-!-margin-bottom-3 govuk-!-text-colour-secondary">
                           {doc.summary}
                         </p>
 
-                        <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                        <div className="govuk-!-display-flex govuk-!-gap-3 govuk-!-align-items-center">
                           <Link href={`/documents/${doc.slug}`} className="govuk-link govuk-!-font-weight-bold govuk-!-font-size-14">
                             View structured analysis guide &rarr;
                           </Link>
-                          <a href={doc.fileUrl} className="govuk-link govuk-!-font-size-14" style={{ color: '#505a5f', textDecoration: 'underline' }}>
+                          <a href={doc.fileUrl} className="govuk-link govuk-!-font-size-14 govuk-!-text-colour-secondary">
                             Download original official document PDF ({doc.fileSize})
                           </a>
                         </div>
                       </div>
 
                       {/* Right Sidebar Metadata Badges */}
-                      <div className="govuk-grid-column-one-third" style={{ textAlign: 'right' }}>
-                        <span className={`govuk-tag ${doc.category === 'Vision' ? 'govuk-tag--blue' : doc.category === 'Sessional Paper' ? 'govuk-tag--purple' : 'govuk-tag--green'}`} style={{ display: 'inline-block', marginBottom: '8px' }}>
+                      <div className="govuk-grid-column-one-third govuk-!-text-align-right">
+                        <span className={`govuk-tag ${doc.category === 'Vision' ? 'govuk-tag--blue' : doc.category === 'Sessional Paper' ? 'govuk-tag--purple' : 'govuk-tag--green'} govuk-!-display-inline-block govuk-!-margin-bottom-2`}>
                           {doc.category}
                         </span>
-                        <span className="govuk-body-s d-block" style={{ color: '#505a5f', fontSize: '13px' }}>
+                        <span className="govuk-body-s govuk-!-display-block govuk-!-text-colour-secondary govuk-!-font-size-13">
                           Era: {doc.era}
                         </span>
                       </div>

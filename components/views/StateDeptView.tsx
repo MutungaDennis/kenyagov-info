@@ -62,7 +62,7 @@ export default function StateDeptView({ department, segments, cms }: StateDeptVi
 
             {/* LAYER 2: Public Service Delivery Charter (Sanity Rich Text Optional Addition) */}
             {cms?.servicesCharter && (
-              <div className="govuk-!-margin-bottom-6" style={{ borderTop: "1px solid #b1b4b6", paddingTop: "20px" }}>
+              <div className="govuk-!-margin-bottom-6 govuk-!-border-top-1 govuk-!-padding-top-4">
                 <h2 className="govuk-heading-m govuk-!-margin-bottom-3">Departmental Service Charter</h2>
                 <PortableText value={cms.servicesCharter} components={govukPortableTextComponents} />
               </div>
@@ -112,7 +112,7 @@ export default function StateDeptView({ department, segments, cms }: StateDeptVi
 
             {/* LAYER 4: Governing Statutory Legislation (Sanity References Bridge) */}
             {cms?.governingActs && cms.governingActs.length > 0 && (
-              <div className="govuk-!-margin-top-6 govuk-!-margin-bottom-8" style={{ border: "1px solid #b1b4b6", padding: "15px", backgroundColor: "#f3f4f5" }}>
+              <div className="govuk-!-margin-top-6 govuk-!-margin-bottom-8 govuk-inset-text govuk-!-background-grey">
                 <h3 className="govuk-heading-s govuk-!-margin-bottom-2">Enabling Legislative Framework</h3>
                 <p className="govuk-body-s govuk-!-margin-bottom-3">This state department carries out its regulatory and operational mandates under:</p>
                 <ul className="govuk-list govuk-!-margin-bottom-0">

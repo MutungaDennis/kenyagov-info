@@ -85,11 +85,10 @@ export default function PrivacyPage() {
               </Link>
             </p>
 
-            <div style={{ borderTop: '1px solid #bfc1c3', paddingTop: '15px' }} className="govuk-!-margin-top-8">
-              <p className="govuk-body-s govuk-text-secondary">
-                This privacy statement is subject to statutory reviews following amendments in national data compliance laws. Structural adjustments will be displayed transparently on this registry page.
-              </p>
-            </div>
+            <hr className="govuk-section-break govuk-section-break--visible govuk-!-margin-top-8" />
+            <p className="govuk-body-s govuk-text-secondary">
+              This privacy statement is subject to statutory reviews following amendments in national data compliance laws. Structural adjustments will be displayed transparently on this registry page.
+            </p>
 
           </div>
         </div>

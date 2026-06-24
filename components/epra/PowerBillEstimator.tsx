@@ -102,7 +102,7 @@ for (let i = 0; i < 20; i++) {
   }
 
   return (
-    <div className="govuk-!-margin-top-6" style={{ background: '#ffffff', padding: '25px', border: '1px solid #bfc1c3' }}>
+    <div className="govuk-!-margin-top-6 govuk-!-background-white govuk-!-padding-5 govuk-!-border-1">
       
       <div className="govuk-form-group">
         <fieldset className="govuk-fieldset">
@@ -130,7 +130,7 @@ for (let i = 0; i < 20; i++) {
       {displayKwh > 0 && breakdown && (
         <div className="govuk-!-margin-top-6">
           
-          <div className="govuk-inset-text" style={{ borderColor: '#005ea5', background: '#f3f2f1' }}>
+          <div className="govuk-inset-text govuk-!-border-color-blue govuk-!-background-grey">
             <h3 className="govuk-heading-s govuk-!-margin-0">Electricity Billing Forecast</h3>
             <p className="govuk-body-m govuk-!-margin-top-2">
               {calcMode === 'tokens' ? (
@@ -139,7 +139,7 @@ for (let i = 0; i < 20; i++) {
                 <>Consuming <strong>{targetedKwh.toFixed(2)} Units</strong> results in an estimated bill of <strong>KSh {breakdown.totalBillAmount.toFixed(2)}</strong>.</>
               )}
             </p>
-            <p className="govuk-body-s govuk-!-margin-bottom-0" style={{ color: '#505a5f' }}>
+            <p className="govuk-body-s govuk-!-margin-bottom-0 govuk-!-text-colour-secondary">
               Current Tier: {displayKwh <= 30 ? 'Domestic Lifeline (Subsidized)' : displayKwh <= 100 ? 'Domestic Ordinary' : 'Domestic Premium (High Usage)'}
             </p>
           </div>
@@ -155,58 +155,58 @@ for (let i = 0; i < 20; i++) {
             </thead>
             <tbody className="govuk-table__body">
               <tr className="govuk-table__row">
-                <th scope="row" className="govuk-table__header" style={{ fontWeight: 'normal' }}>Base Energy Consumption Charge</th>
+                <th scope="row" className="govuk-table__header">Base Energy Consumption Charge</th>
                 <td className="govuk-table__cell govuk-table__cell--numeric">{displayKwh.toFixed(1)} kWh × KSh {breakdown.baseRate.toFixed(2)}</td>
                 <td className="govuk-table__cell govuk-table__cell--numeric">KSh {breakdown.baseCost.toFixed(2)}</td>
               </tr>
               
               {/* EPRA Pass-Through Section */}
               <tr className="govuk-table__row">
-                <th scope="row" className="govuk-table__header" style={{ fontWeight: 'normal' }}>Fuel Energy Cost Charge (FCC)</th>
+                <th scope="row" className="govuk-table__header">Fuel Energy Cost Charge (FCC)</th>
                 <td className="govuk-table__cell govuk-table__cell--numeric">{displayKwh.toFixed(1)} kWh × KSh {FCC.toFixed(2)}</td>
                 <td className="govuk-table__cell govuk-table__cell--numeric">KSh {breakdown.fuelCost.toFixed(2)}</td>
               </tr>
               <tr className="govuk-table__row">
-                <th scope="row" className="govuk-table__header" style={{ fontWeight: 'normal' }}>Forex Fluctuation Adjustment (FX)</th>
+                <th scope="row" className="govuk-table__header">Forex Fluctuation Adjustment (FX)</th>
                 <td className="govuk-table__cell govuk-table__cell--numeric">{displayKwh.toFixed(1)} kWh × KSh {FX.toFixed(2)}</td>
                 <td className="govuk-table__cell govuk-table__cell--numeric">KSh {breakdown.forexCost.toFixed(2)}</td>
               </tr>
               <tr className="govuk-table__row">
-                <th scope="row" className="govuk-table__header" style={{ fontWeight: 'normal' }}>Inflation &amp; WRA Levies</th>
+                <th scope="row" className="govuk-table__header">Inflation &amp; WRA Levies</th>
                 <td className="govuk-table__cell govuk-table__cell--numeric">{displayKwh.toFixed(1)} kWh × KSh {(INFLATION + WRA).toFixed(2)}</td>
                 <td className="govuk-table__cell govuk-table__cell--numeric">KSh {(breakdown.inflationCost + breakdown.wraCost).toFixed(2)}</td>
               </tr>
 
               {/* Taxes Section */}
               <tr className="govuk-table__row">
-                <th scope="row" className="govuk-table__header" style={{ fontWeight: 'normal' }}>Rural Electrification (REP) Levy</th>
+                <th scope="row" className="govuk-table__header">Rural Electrification (REP) Levy</th>
                 <td className="govuk-table__cell govuk-table__cell--numeric">5% of Base Energy Cost</td>
                 <td className="govuk-table__cell govuk-table__cell--numeric">KSh {breakdown.repCost.toFixed(2)}</td>
               </tr>
               <tr className="govuk-table__row">
-                <th scope="row" className="govuk-table__header" style={{ fontWeight: 'normal' }}>EPRA Regulatory Oversight Levy</th>
+                <th scope="row" className="govuk-table__header">EPRA Regulatory Oversight Levy</th>
                 <td className="govuk-table__cell govuk-table__cell--numeric">{displayKwh.toFixed(1)} kWh × KSh {EPRA_LEVY.toFixed(2)}</td>
                 <td className="govuk-table__cell govuk-table__cell--numeric">KSh {breakdown.epraCost.toFixed(2)}</td>
               </tr>
               <tr className="govuk-table__row">
-                <th scope="row" className="govuk-table__header" style={{ fontWeight: 'normal' }}>Value Added Tax (VAT)</th>
+                <th scope="row" className="govuk-table__header">Value Added Tax (VAT)</th>
                 <td className="govuk-table__cell govuk-table__cell--numeric">16% on Energy &amp; Pass-throughs</td>
                 <td className="govuk-table__cell govuk-table__cell--numeric">KSh {breakdown.vatCost.toFixed(2)}</td>
               </tr>
 
               {/* Total Summary */}
               <tr className="govuk-table__row">
-                <th scope="row" className="govuk-table__header" style={{ fontSize: '19px' }}>Total Out-of-Pocket Cost</th>
+                <th scope="row" className="govuk-table__header govuk-!-font-size-19">Total Out-of-Pocket Cost</th>
                 <td className="govuk-table__cell govuk-table__cell--numeric"></td>
-                <td className="govuk-table__cell govuk-table__cell--numeric" style={{ fontWeight: 'bold', fontSize: '19px', borderBottom: '2px double #0b0c0c' }}>
+                <td className="govuk-table__cell govuk-table__cell--numeric govuk-!-font-weight-bold govuk-!-font-size-19 govuk-!-border-bottom-2">
                   KSh {(calcMode === 'tokens' ? monetarySpend : breakdown.totalBillAmount).toFixed(2)}
                 </td>
               </tr>
             </tbody>
           </table>
 
-          <div className="govuk-inset-text" style={{ padding: '10px 15px', marginTop: '15px' }}>
-            <p className="govuk-body-s govuk-!-margin-0" style={{ color: '#505a5f' }}>
+          <div className="govuk-inset-text govuk-!-padding-2 govuk-!-margin-top-3">
+            <p className="govuk-body-s govuk-!-margin-0 govuk-!-text-colour-secondary">
               <strong>Notice:</strong> This calculation uses the gazetted multi-year electricity tariffs and baseline monthly adjustments regulated by EPRA. Actual token strings might slightly vary based on KPLC administrative reconciliation windows.
             </p>
           </div>

@@ -76,21 +76,11 @@ export default function GovUKAccordion({
                   onClick={() => toggle(item.id)}
                   aria-expanded={isOpen}
                   aria-controls={`${id}-content-${index}`}
-                  className="govuk-accordion__section-button govuk-!-text-align-left"
-                  style={{
-                    display: "block",
-                    width: "100%",
-                  }}
+                  className="govuk-accordion__section-button govuk-!-text-align-left accordion-button-full"
                 >
                   
                   {/* TITLE BAR ONLY (YELLOW) */}
-                  <div
-                    style={{
-                      backgroundColor: "#FFEB3B",
-                      padding: "10px 14px",
-                      borderRadius: "6px 6px 0 0",
-                    }}
-                  >
+                  <div className="accordion-title-bar">
                     <div className="govuk-heading-m govuk-!-margin-bottom-1">
                       {item.title}
                     </div>

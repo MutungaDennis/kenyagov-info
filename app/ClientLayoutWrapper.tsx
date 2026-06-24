@@ -54,7 +54,7 @@ export function ClientLayoutWrapper({
   }, [pathname, isAdminRoute]);
 
   return (
-    <body className="govuk-template__body" suppressHydrationWarning={true} style={{ margin: 0, padding: 0 }}>
+    <body className="govuk-template__body" suppressHydrationWarning={true}>
       {/* 
         1. Initialize Google Consent Mode v2 (Default: Denied)
         Always deny by default, before any other scripts.

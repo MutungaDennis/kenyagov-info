@@ -128,7 +128,7 @@ export default function IndividualMissionView({ mission, segments, cms }: Indivi
             
             {/* Multi-Personnel Leadership Registry Panel */}
             {currentLeaders.length > 0 && (
-              <div className="govuk-!-margin-bottom-6" style={{ borderLeft: "4px solid #00703c", paddingLeft: "15px", backgroundColor: "#f3f4f5", padding: "12px" }}>
+              <div className="govuk-!-margin-bottom-6 govuk-!-border-left-4 govuk-!-padding-left-3 govuk-!-background-grey govuk-!-padding-2">
                 <h3 className="govuk-heading-s govuk-!-margin-bottom-2">Active Diplomatic Leadership</h3>
                 {currentLeaders.map((leader: any, idx: number) => (
                   <div key={idx} className="govuk-!-margin-bottom-2">
@@ -157,7 +157,7 @@ export default function IndividualMissionView({ mission, segments, cms }: Indivi
               
               {/* Maps out dynamic P.O. Box arrays cleanly from your Supabase aliases schema */}
               {mission.aliases && mission.aliases.length > 0 && (
-                <span className="govuk-!-margin-top-2" style={{ display: "block" }}>
+                <span className="govuk-!-margin-top-2 govuk-!-display-block">
                   <strong>Postal Delivery Channels:</strong>
                   <ul className="govuk-list govuk-list--bullet govuk-!-margin-top-1 govuk-!-margin-bottom-0">
                     {mission.aliases.map((box: string, i: number) => (
@@ -173,12 +173,12 @@ export default function IndividualMissionView({ mission, segments, cms }: Indivi
             <table className="govuk-table govuk-!-margin-bottom-6">
               <tbody className="govuk-table__body">
                 <tr className="govuk-table__row">
-                  <th scope="row" className="govuk-table__header" style={{ width: "35%" }}>Official Email</th>
+                  <th scope="row" className="govuk-table__header">Official Email</th>
                   <td className="govuk-table__cell">{mission.email || "Not available"}</td>
                 </tr>
                 <tr className="govuk-table__row">
                   <th scope="row" className="govuk-table__header">Telephone Network</th>
-                  <td className="govuk-table__cell" style={{ whiteSpace: "pre-line" }}>{mission.phone || "Not available"}</td>
+                  <td className="govuk-table__cell">{mission.phone || "Not available"}</td>
                 </tr>
                 <tr className="govuk-table__row">
                   <th scope="row" className="govuk-table__header">External Website</th>

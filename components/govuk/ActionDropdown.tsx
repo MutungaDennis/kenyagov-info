@@ -20,10 +20,9 @@ export default function ActionDropdown({ actions, buttonText = "Actions" }: Acti
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="govuk-dropdown" style={{ position: 'relative', display: 'inline-block' }}>
+    <div className="govuk-dropdown dropdown-relative">
       <button
-        className="govuk-button govuk-button--secondary"
-        style={{ padding: '6px 12px', fontSize: '0.9rem' }}
+        className="govuk-button govuk-button--secondary dropdown-button"
         onClick={() => setIsOpen(!isOpen)}
         aria-expanded={isOpen}
       >
@@ -32,18 +31,7 @@ export default function ActionDropdown({ actions, buttonText = "Actions" }: Acti
 
       {isOpen && (
         <div 
-          className="govuk-dropdown__content"
-          style={{
-            position: 'absolute',
-            top: '100%',
-            left: 0,
-            background: 'white',
-            border: '1px solid #b1b4b6',
-            boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
-            zIndex: 100,
-            minWidth: '180px',
-            marginTop: '4px'
-          }}
+          className="govuk-dropdown__content dropdown-content"
           onMouseLeave={() => setIsOpen(false)}
         >
           {actions.map((action, index) => (

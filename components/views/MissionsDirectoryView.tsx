@@ -59,8 +59,7 @@ export default function MissionsDirectoryView({ items, parentName, category, seg
                 <li className={`govuk-tabs__list-item ${activeTab === "outbound" ? "govuk-tabs__list-item--selected" : ""}`}>
                   <button 
                     onClick={() => setActiveTab("outbound")} 
-                    className="govuk-tabs__tab" 
-                    style={{ background: "none", border: "none", cursor: "pointer", font: "inherit" }}
+                    className="govuk-tabs__tab govuk-link" style={{ background: "none", border: "none", cursor: "pointer", font: "inherit" }}
                   >
                     Kenya's Missions Abroad ({outboundMissions.length})
                   </button>
@@ -68,8 +67,7 @@ export default function MissionsDirectoryView({ items, parentName, category, seg
                 <li className={`govuk-tabs__list-item ${activeTab === "inbound" ? "govuk-tabs__list-item--selected" : ""}`}>
                   <button 
                     onClick={() => setActiveTab("inbound")} 
-                    className="govuk-tabs__tab" 
-                    style={{ background: "none", border: "none", cursor: "pointer", font: "inherit" }}
+                    className="govuk-tabs__tab govuk-link" style={{ background: "none", border: "none", cursor: "pointer", font: "inherit" }}
                   >
                     Foreign Presence in Kenya ({inboundMissions.length})
                   </button>
@@ -85,7 +83,7 @@ export default function MissionsDirectoryView({ items, parentName, category, seg
                         <p className="govuk-body govuk-text-secondary">No outbound missions recorded for this sector.</p>
                       ) : (
                         outboundMissions.map(m => (
-                          <li key={m.id} className="govuk-!-padding-bottom-2" style={{ borderBottom: "1px solid #b1b4b6" }}>
+                          <li key={m.id} className="govuk-!-padding-bottom-2 govuk-!-border-bottom-1">
                             <Link href={`${parentPath}/${m.slug}`} className="govuk-link govuk-!-font-weight-bold">
                               {m.name}
                             </Link>
@@ -105,8 +103,8 @@ export default function MissionsDirectoryView({ items, parentName, category, seg
                         <p className="govuk-body govuk-text-secondary">No hosted foreign representations recorded for this sector.</p>
                       ) : (
                         inboundMissions.map(m => (
-                          <li key={m.id} className="govuk-!-padding-bottom-2" style={{ borderBottom: "1px solid #b1b4b6" }}>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <li key={m.id} className="govuk-!-padding-bottom-2 govuk-!-border-bottom-1">
+                            <div className="govuk-!-display-flex govuk-!-justify-content-space-between govuk-!-align-items-center">
                               <Link href={`${parentPath}/${m.slug}`} className="govuk-link govuk-!-font-weight-bold">
                                 {m.name}
                               </Link>

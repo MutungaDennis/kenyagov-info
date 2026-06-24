@@ -130,10 +130,10 @@ export default function InstitutionsPage() {
       <main className="govuk-main-wrapper" id="main-content" role="main">
         {/* Compact Typography Header Section */}
         <div className="govuk-!-margin-bottom-4">
-          <h1 className="govuk-heading-l govuk-!-margin-bottom-2" style={{ fontSize: "32px" }}>
+          <h1 className="govuk-heading-l govuk-!-margin-bottom-2">
             Government Institutions
           </h1>
-          <p className="govuk-body" style={{ fontSize: "17px", color: "#2b2b2b", margin: 0 }}>
+          <p className="govuk-body govuk-!-font-size-17 govuk-!-text-colour-secondary govuk-!-margin-0">
             Complete directory of Kenyan public institutions — currently indexing {institutions.length} active public entities.
           </p>
         </div>
@@ -141,8 +141,8 @@ export default function InstitutionsPage() {
         {/* Downscaled Summary Stats Grid Banner */}
         <div className="govuk-grid-row govuk-!-margin-bottom-4">
           <div className="govuk-grid-column-one-third govuk-!-margin-bottom-2">
-            <div style={{ backgroundColor: "#f3f2f1", borderLeft: "4px solid #1d70b8", padding: "12px 15px" }}>
-              <span className="govuk-body govuk-!-font-weight-bold" style={{ fontSize: "24px", color: "#1d70b8", display: "block", lineHeight: "1" }}>
+            <div className="govuk-inset-text">
+              <span className="govuk-body govuk-!-font-weight-bold govuk-!-font-size-24 govuk-!-text-colour-blue govuk-!-display-block govuk-!-line-height-1">
                 {loading ? "..." : filteredInstitutions.length}
               </span>
               <span className="govuk-body-s" style={{ color: "#505a5f" }}>

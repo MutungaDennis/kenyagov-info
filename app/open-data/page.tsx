@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
+import GovUKSummaryList from "@/components/govuk/SummaryList";
 
 export const dynamic = 'force-dynamic';
 
@@ -39,7 +40,7 @@ export default async function OpenDataPage() {
             <h1 className="govuk-heading-xl govuk-!-margin-bottom-2">Open data</h1>
 
             <p className="govuk-body-l">
-              We publish data to help citizens, researchers, journalists and developers understand and improve public services in Kenya.
+              Download government data in open formats. Use it to build tools, do research or check facts.
             </p>
 
             <div className="govuk-inset-text">
@@ -47,54 +48,28 @@ export default async function OpenDataPage() {
             </div>
 
             {/* Licence - prominent GOV.UK style */}
-            <h2 className="govuk-heading-m govuk-!-margin-top-6">Licence and reuse</h2>
+            <h2 className="govuk-heading-m govuk-!-margin-top-6">Licence</h2>
             <p className="govuk-body">
-              Unless otherwise stated, the data on this page is licensed under the{" "}
+              Data is released under the{" "}
               <a href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/" className="govuk-link" target="_blank" rel="noopener noreferrer">
                 Open Government Licence v3.0
               </a>{" "}
-              (adapted for use in Kenya).
+              (Kenya version).
             </p>
-            <p className="govuk-body govuk-!-margin-bottom-4">
-              You are free to:
-            </p>
-            <ul className="govuk-list govuk-list--bullet govuk-!-margin-bottom-6">
-              <li>copy, publish, distribute and transmit the information</li>
-              <li>adapt the information</li>
-              <li>exploit the information commercially and non-commercially</li>
-            </ul>
             <p className="govuk-body">
-              You must acknowledge the source as <strong>CitizenGuide.KE</strong> and, where possible, provide a link back to this page.
+              You can copy, share, change and use the data — even for commercial work. Credit “CitizenGuide.KE”.
             </p>
 
             {/* Current data holdings - shows the data is live */}
-            <h2 className="govuk-heading-m govuk-!-margin-top-8">Current data holdings</h2>
-            <div className="govuk-grid-row govuk-!-margin-bottom-6">
-              <div className="govuk-grid-column-one-half">
-                <p className="govuk-body govuk-!-margin-bottom-1">
-                  <strong className="govuk-heading-m govuk-!-margin-bottom-0">{stats.counties.toLocaleString()}</strong><br />
-                  Counties
-                </p>
-              </div>
-              <div className="govuk-grid-column-one-half">
-                <p className="govuk-body govuk-!-margin-bottom-1">
-                  <strong className="govuk-heading-m govuk-!-margin-bottom-0">{stats.wards.toLocaleString()}</strong><br />
-                  Wards
-                </p>
-              </div>
-              <div className="govuk-grid-column-one-half">
-                <p className="govuk-body govuk-!-margin-bottom-1">
-                  <strong className="govuk-heading-m govuk-!-margin-bottom-0">{stats.institutions.toLocaleString()}</strong><br />
-                  Government institutions &amp; agencies
-                </p>
-              </div>
-              <div className="govuk-grid-column-one-half">
-                <p className="govuk-body">
-                  <strong className="govuk-heading-m govuk-!-margin-bottom-0">{stats.pollingStations.toLocaleString()}</strong><br />
-                  Polling stations (2022)
-                </p>
-              </div>
-            </div>
+            <h2 className="govuk-heading-m govuk-!-margin-top-8">What data is available</h2>
+            <GovUKSummaryList
+              items={[
+                { key: "Counties", value: stats.counties.toLocaleString() },
+                { key: "Wards", value: stats.wards.toLocaleString() },
+                { key: "Institutions and agencies", value: stats.institutions.toLocaleString() },
+                { key: "Polling stations (2022)", value: stats.pollingStations.toLocaleString() },
+              ]}
+            />
 
             <p className="govuk-body-s govuk-!-margin-bottom-6">
               Data last refreshed: {lastUpdated}. All exports are generated on demand from live public records.
@@ -108,34 +83,34 @@ export default async function OpenDataPage() {
             <p className="govuk-body">
               A machine-readable catalogue of all open datasets is available at:
             </p>
-            <pre className="govuk-body-s" style={{ background: "#f3f2f1", padding: "8px" }}>
+            <pre className="govuk-body-s govuk-!-background-color-light-grey govuk-!-padding-2">
 https://citizenguide.ke/api/data/datasets
             </pre>
 
             {/* Datasets - clear GOV.UK list style */}
             <h2 className="govuk-heading-m">Available datasets</h2>
             <p className="govuk-body govuk-!-margin-bottom-4">
-              All files are provided in <strong>CSV</strong> (UTF-8) and <strong>JSON</strong> formats. Use <code>?format=json</code> on any endpoint. Machine-readable and ready for Excel, Python, R, GIS tools, etc.
+              Files are available as CSV and JSON. Add <code>?format=json</code> to any link.
             </p>
 
             <p className="govuk-body-s govuk-!-margin-bottom-6">
-              For a machine-readable list of all available datasets: <a href="/api/data/datasets?format=json" className="govuk-link">/api/data/datasets</a>
+              Full catalogue: <a href="/api/data/datasets?format=json" className="govuk-link">/api/data/datasets</a>
             </p>
 
             <div className="govuk-!-margin-bottom-6">
               {/* Counties */}
-              <div className="govuk-!-margin-bottom-4" style={{ borderBottom: "1px solid #b1b4b6", paddingBottom: "12px" }}>
+              <div className="govuk-!-margin-bottom-4" >
                 <h3 className="govuk-heading-s govuk-!-margin-bottom-1">
                   Counties of Kenya
                 </h3>
                 <p className="govuk-body-s govuk-!-margin-bottom-1">
-                  Names, codes, regions, headquarters, population and area for all 47 counties. Includes governor and senator names where available.
+                  All 47 counties with names, codes, population, area and some leaders.
                 </p>
                 <p className="govuk-body-s govuk-!-margin-bottom-2">
-                  <a href="/api/data/exports/counties?format=csv" className="govuk-button govuk-button--secondary govuk-!-margin-bottom-0" style={{ padding: "6px 12px", fontSize: "14px" }} download>
+                  <a href="/api/data/exports/counties?format=csv" className="govuk-button govuk-button--secondary govuk-!-margin-bottom-0"  download>
                     Download CSV
                   </a>
-                  <a href="/api/data/exports/counties?format=json" className="govuk-button govuk-button--secondary govuk-!-margin-bottom-0 govuk-!-margin-left-1" style={{ padding: "6px 12px", fontSize: "14px" }} download>
+                  <a href="/api/data/exports/counties?format=json" className="govuk-button govuk-button--secondary govuk-!-margin-bottom-0 govuk-!-margin-left-1"  download>
                     Download JSON
                   </a>
                   <span className="govuk-body-s govuk-!-margin-left-2">Updated daily</span>
@@ -143,18 +118,18 @@ https://citizenguide.ke/api/data/datasets
               </div>
 
               {/* Wards */}
-              <div className="govuk-!-margin-bottom-4" style={{ borderBottom: "1px solid #b1b4b6", paddingBottom: "12px" }}>
+              <div className="govuk-!-margin-bottom-4" >
                 <h3 className="govuk-heading-s govuk-!-margin-bottom-1">
                   Wards, Constituencies and Counties
                 </h3>
                 <p className="govuk-body-s govuk-!-margin-bottom-1">
-                  Complete mapping of all wards to their parent constituencies and counties, including 2022 registered voter numbers.
+                  Wards linked to constituencies and counties, plus 2022 voter numbers.
                 </p>
                 <p className="govuk-body-s govuk-!-margin-bottom-2">
-                  <a href="/api/data/exports/wards?format=csv" className="govuk-button govuk-button--secondary govuk-!-margin-bottom-0" style={{ padding: "6px 12px", fontSize: "14px" }} download>
+                  <a href="/api/data/exports/wards?format=csv" className="govuk-button govuk-button--secondary govuk-!-margin-bottom-0"  download>
                     Download CSV
                   </a>
-                  <a href="/api/data/exports/wards?format=json" className="govuk-button govuk-button--secondary govuk-!-margin-bottom-0 govuk-!-margin-left-1" style={{ padding: "6px 12px", fontSize: "14px" }} download>
+                  <a href="/api/data/exports/wards?format=json" className="govuk-button govuk-button--secondary govuk-!-margin-bottom-0 govuk-!-margin-left-1"  download>
                     Download JSON
                   </a>
                   <span className="govuk-body-s govuk-!-margin-left-2">Supports ?county= and ?constituency= filters</span>
@@ -162,36 +137,36 @@ https://citizenguide.ke/api/data/datasets
               </div>
 
               {/* Institutions */}
-              <div className="govuk-!-margin-bottom-4" style={{ borderBottom: "1px solid #b1b4b6", paddingBottom: "12px" }}>
+              <div className="govuk-!-margin-bottom-4" >
                 <h3 className="govuk-heading-s govuk-!-margin-bottom-1">
                   Government Institutions and Agencies
                 </h3>
                 <p className="govuk-body-s govuk-!-margin-bottom-1">
-                  National and county-level institutions, ministries, state departments and agencies with type, level and high-level description.
+                  National and county institutions with type and level.
                 </p>
                 <p className="govuk-body-s govuk-!-margin-bottom-2">
-                  <a href="/api/data/exports/institutions?format=csv" className="govuk-button govuk-button--secondary govuk-!-margin-bottom-0" style={{ padding: "6px 12px", fontSize: "14px" }} download>
+                  <a href="/api/data/exports/institutions?format=csv" className="govuk-button govuk-button--secondary govuk-!-margin-bottom-0"  download>
                     Download CSV
                   </a>
-                  <a href="/api/data/exports/institutions?format=json" className="govuk-button govuk-button--secondary govuk-!-margin-bottom-0 govuk-!-margin-left-1" style={{ padding: "6px 12px", fontSize: "14px" }} download>
+                  <a href="/api/data/exports/institutions?format=json" className="govuk-button govuk-button--secondary govuk-!-margin-bottom-0 govuk-!-margin-left-1"  download>
                     Download JSON
                   </a>
                 </p>
               </div>
 
               {/* Polling Stations */}
-              <div className="govuk-!-margin-bottom-4" style={{ borderBottom: "1px solid #b1b4b6", paddingBottom: "12px" }}>
+              <div className="govuk-!-margin-bottom-4" >
                 <h3 className="govuk-heading-s govuk-!-margin-bottom-1">
                   Polling Stations (IEBC 2022)
                 </h3>
                 <p className="govuk-body-s govuk-!-margin-bottom-1">
-                  Official polling station codes, names, registration centres and voter numbers. Filterable by county, constituency and ward.
+                  Polling stations with codes, names and voter numbers. Filter by area.
                 </p>
                 <p className="govuk-body-s govuk-!-margin-bottom-2">
-                  <a href="/api/data/exports/polling-stations?format=csv" className="govuk-button govuk-button--secondary govuk-!-margin-bottom-0" style={{ padding: "6px 12px", fontSize: "14px" }} download>
+                  <a href="/api/data/exports/polling-stations?format=csv" className="govuk-button govuk-button--secondary govuk-!-margin-bottom-0"  download>
                     Download CSV
                   </a>
-                  <a href="/api/data/exports/polling-stations?format=json" className="govuk-button govuk-button--secondary govuk-!-margin-bottom-0 govuk-!-margin-left-1" style={{ padding: "6px 12px", fontSize: "14px" }} download>
+                  <a href="/api/data/exports/polling-stations?format=json" className="govuk-button govuk-button--secondary govuk-!-margin-bottom-0 govuk-!-margin-left-1"  download>
                     Download JSON
                   </a>
                   <span className="govuk-body-s govuk-!-margin-left-2">Useful for election analysis</span>
@@ -204,13 +179,13 @@ https://citizenguide.ke/api/data/datasets
                   National and County Leaders
                 </h3>
                 <p className="govuk-body-s govuk-!-margin-bottom-1">
-                  Key leaders including governors, senators, MPs and other constitutional office holders with roles and organizations.
+                  Governors, MPs, senators and other office holders.
                 </p>
                 <p className="govuk-body-s">
-                  <a href="/api/data/exports/leaders?format=csv" className="govuk-button govuk-button--secondary govuk-!-margin-bottom-0" style={{ padding: "6px 12px", fontSize: "14px" }} download>
+                  <a href="/api/data/exports/leaders?format=csv" className="govuk-button govuk-button--secondary govuk-!-margin-bottom-0"  download>
                     Download CSV
                   </a>
-                  <a href="/api/data/exports/leaders?format=json" className="govuk-button govuk-button--secondary govuk-!-margin-bottom-0 govuk-!-margin-left-1" style={{ padding: "6px 12px", fontSize: "14px" }} download>
+                  <a href="/api/data/exports/leaders?format=json" className="govuk-button govuk-button--secondary govuk-!-margin-bottom-0 govuk-!-margin-left-1"  download>
                     Download JSON
                   </a>
                 </p>
@@ -222,7 +197,7 @@ https://citizenguide.ke/api/data/datasets
             <p className="govuk-body">
               All datasets above are also available via simple HTTP GET requests. No API key required.
             </p>
-            <pre className="govuk-body-s" style={{ background: "#f3f2f1", padding: "12px", overflowX: "auto" }}>
+            <pre className="govuk-body-s" >
 {`# CSV (default)
 curl "https://citizenguide.ke/api/data/exports/wards"
 

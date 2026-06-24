@@ -121,7 +121,8 @@ export default function ContactPage() {
               </li>
             </ul>
 
-            <p className="govuk-body govuk-!-font-size-16" style={{ borderTop: '1px solid #bfc1c3', paddingTop: '15px' }}>
+            <hr className="govuk-section-break govuk-section-break--visible govuk-!-margin-top-6" />
+            <p className="govuk-body">
               <strong>Important:</strong> We cannot provide official state services, immigration credentials, or legal processing support. To process applications or execute official payments, visit the authorized national portal directly via the <a href="https://www.ecitizen.go.ke" target="_blank" rel="noreferrer" className="govuk-link">eCitizen Gateway</a>.
             </p>
 

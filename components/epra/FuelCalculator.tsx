@@ -101,7 +101,7 @@ export default function FuelCalculator({ towns, breakdown }: { towns: TownPrice[
     <div className="govuk-!-margin-top-4">
       
       {/* CONTROL DASHBOARD: Toggles mapped to the top matching GOV.UK usability frameworks */}
-      <div style={{ background: '#ffffff', border: '1px solid #bfc1c3', padding: '25px', marginBottom: '30px' }}>
+      <div className="govuk-!-background-white govuk-!-border-1 govuk-!-padding-5 govuk-!-margin-bottom-6">
         <div className="govuk-form-group">
           <fieldset className="govuk-fieldset">
             <legend className="govuk-fieldset__legend govuk-!-font-weight-bold">Choose Input Metric</legend>
@@ -132,7 +132,7 @@ export default function FuelCalculator({ towns, breakdown }: { towns: TownPrice[
           </select>
         </div>
 
-        <div className="govuk-form-group" style={{ marginBottom: 0 }}>
+        <div className="govuk-form-group govuk-!-margin-bottom-0">
           <fieldset className="govuk-fieldset">
             <legend className="govuk-fieldset__legend govuk-!-font-weight-bold">Select Fuel Variant</legend>
             <div className="govuk-radios govuk-radios--inline govuk-radios--small">
@@ -156,8 +156,8 @@ export default function FuelCalculator({ towns, breakdown }: { towns: TownPrice[
       {/* RESULTS DISPLAY HUB */}
       {computedLiters > 0 && (
         <div>
-          <div className="govuk-inset-text" style={{ borderColor: '#005ea5', background: '#f3f2f1', marginTop: '20px', marginBottom: '30px' }}>
-            <p className="govuk-body" style={{ margin: 0 }}>{getInclusiveLanguageStatement()}</p>
+          <div className="govuk-inset-text govuk-!-border-color-blue govuk-!-background-grey govuk-!-margin-top-4 govuk-!-margin-bottom-6">
+            <p className="govuk-body govuk-!-margin-0">{getInclusiveLanguageStatement()}</p>
           </div>
 
           {/* ITEMP 1: COMPREHENSIVE DISAGGREGATED BREAKDOWN MATRIX */}
@@ -211,64 +211,64 @@ function FuelTaxBreakdownTable({ rates, computedLiters, simulatedPrice, taxCutPe
         <tbody className="govuk-table__body">
           
           {/* Baseline Landed Indicator Block */}
-          <tr className="govuk-table__row" style={{ background: '#f8f8f8' }}>
+          <tr className="govuk-table__row epra-section-row">
             <th scope="row" className="govuk-table__header" colSpan={3}>1. Base Import Logistics (Mombasa Port Landing Price)</th>
           </tr>
-          <tr className="govuk-table__row" style={{ borderLeft: '4px solid #005ea5' }}>
-            <td className="govuk-table__cell" style={{ paddingLeft: '15px' }}>
+          <tr className="govuk-table__row epra-landed">
+            <td className="govuk-table__cell govuk-!-padding-left-3">
               <strong>Weighted Average Landed Cost (a)</strong>
-              <span className="govuk-hint" style={{ fontSize: '12px', display: 'block', marginTop: '2px' }}>The baseline product procurement cost on the international market before offloading</span>
+              <span className="govuk-hint govuk-!-font-size-12 govuk-!-display-block govuk-!-margin-top-1">The baseline product procurement cost on the international market before offloading</span>
             </td>
-            <td className="govuk-table__cell govuk-table__cell--numeric" style={{ fontWeight: 'bold' }}>KSh {rates.landed.toFixed(2)}</td>
-            <td className="govuk-table__cell govuk-table__cell--numeric" style={{ fontWeight: 'bold' }}>KSh {(computedLiters * rates.landed).toFixed(2)}</td>
+            <td className="govuk-table__cell govuk-table__cell--numeric govuk-!-font-weight-bold">KSh {rates.landed.toFixed(2)}</td>
+            <td className="govuk-table__cell govuk-table__cell--numeric govuk-!-font-weight-bold">KSh {(computedLiters * rates.landed).toFixed(2)}</td>
           </tr>
 
           {/* Storage & Transit Rows Disaggregation */}
-          <tr className="govuk-table__row" style={{ background: '#f8f8f8' }}>
+          <tr className="govuk-table__row epra-section-row">
             <th scope="row" className="govuk-table__header" colSpan={3}>2. Storage &amp; Distribution Details (b)</th>
           </tr>
           <tr className="govuk-table__row">
-            <td className="govuk-table__cell" style={{ paddingLeft: '20px' }}>Pipeline Transport Tariff (Mombasa port to Nairobi main depot network)</td>
+            <td className="govuk-table__cell govuk-!-padding-left-4">Pipeline Transport Tariff (Mombasa port to Nairobi main depot network)</td>
             <td className="govuk-table__cell govuk-table__cell--numeric">KSh {rates.pipeline.toFixed(2)}</td>
             <td className="govuk-table__cell govuk-table__cell--numeric">KSh {(computedLiters * rates.pipeline).toFixed(2)}</td>
           </tr>
           <tr className="govuk-table__row">
-            <td className="govuk-table__cell" style={{ paddingLeft: '20px' }}>Pipeline Operational Volumetric Shrinkage Losses</td>
+            <td className="govuk-table__cell govuk-!-padding-left-4">Pipeline Operational Volumetric Shrinkage Losses</td>
             <td className="govuk-table__cell govuk-table__cell--numeric">KSh {rates.pipeLoss.toFixed(2)}</td>
             <td className="govuk-table__cell govuk-table__cell--numeric">KSh {(computedLiters * rates.pipeLoss).toFixed(2)}</td>
           </tr>
           <tr className="govuk-table__row">
-            <td className="govuk-table__cell" style={{ paddingLeft: '20px' }}>Primary Storage Depot Transshipment Handling Losses</td>
+            <td className="govuk-table__cell govuk-!-padding-left-4">Primary Storage Depot Transshipment Handling Losses</td>
             <td className="govuk-table__cell govuk-table__cell--numeric">KSh {rates.depotLoss.toFixed(2)}</td>
             <td className="govuk-table__cell govuk-table__cell--numeric">KSh {(computedLiters * rates.depotLoss).toFixed(2)}</td>
           </tr>
           <tr className="govuk-table__row">
-            <td className="govuk-table__cell" style={{ paddingLeft: '20px' }}>Local Truck Tanker Distribution (within 40km station radius)</td>
+            <td className="govuk-table__cell govuk-!-padding-left-4">Local Truck Tanker Distribution (within 40km station radius)</td>
             <td className="govuk-table__cell govuk-table__cell--numeric">KSh {rates.delivery.toFixed(2)}</td>
             <td className="govuk-table__cell govuk-table__cell--numeric">KSh {(computedLiters * rates.delivery).toFixed(2)}</td>
           </tr>
-          <tr className="govuk-table__row" style={{ fontWeight: '500' }}>
-            <td className="govuk-table__cell" style={{ paddingLeft: '20px' }}><em>Subtotal Storage &amp; Distribution Cost</em></td>
+          <tr className="govuk-table__row epra-subtotal-row">
+            <td className="govuk-table__cell govuk-!-padding-left-4"><em>Subtotal Storage &amp; Distribution Cost</em></td>
             <td className="govuk-table__cell govuk-table__cell--numeric"><em>KSh {totalStorageDist.toFixed(2)}</em></td>
             <td className="govuk-table__cell govuk-table__cell--numeric"><em>KSh {(computedLiters * totalStorageDist).toFixed(2)}</em></td>
           </tr>
 
           {/* Margins Disaggregation */}
-          <tr className="govuk-table__row" style={{ background: '#f8f8f8' }}>
+          <tr className="govuk-table__row epra-section-row">
             <th scope="row" className="govuk-table__header" colSpan={3}>3. Wholesale &amp; Retail Marketing Margins (c)</th>
           </tr>
           <tr className="govuk-table__row">
-            <td className="govuk-table__cell" style={{ paddingLeft: '20px' }}>Wholesale Sourcing Importer Margin</td>
+            <td className="govuk-table__cell govuk-!-padding-left-4">Wholesale Sourcing Importer Margin</td>
             <td className="govuk-table__cell govuk-table__cell--numeric">KSh {rates.importer.toFixed(2)}</td>
             <td className="govuk-table__cell govuk-table__cell--numeric">KSh {(computedLiters * rates.importer).toFixed(2)}</td>
           </tr>
           <tr className="govuk-table__row">
-            <td className="govuk-table__cell" style={{ paddingLeft: '20px' }}>Retail Station Operator Investment &amp; Overhead Margin</td>
+            <td className="govuk-table__cell govuk-!-padding-left-4">Retail Station Operator Investment &amp; Overhead Margin</td>
             <td className="govuk-table__cell govuk-table__cell--numeric">KSh {rates.dealer.toFixed(2)}</td>
             <td className="govuk-table__cell govuk-table__cell--numeric">KSh {(computedLiters * rates.dealer).toFixed(2)}</td>
           </tr>
-          <tr className="govuk-table__row" style={{ fontWeight: '500' }}>
-            <td className="govuk-table__cell" style={{ paddingLeft: '20px' }}><em>Subtotal Oil Marketing Companies Margins</em></td>
+          <tr className="govuk-table__row epra-subtotal-row">
+            <td className="govuk-table__cell govuk-!-padding-left-4"><em>Subtotal Oil Marketing Companies Margins</em></td>
             <td className="govuk-table__cell govuk-table__cell--numeric"><em>KSh {totalMargins.toFixed(2)}</em></td>
             <td className="govuk-table__cell govuk-table__cell--numeric"><em>KSh {(computedLiters * totalMargins).toFixed(2)}</em></td>
           </tr>
@@ -276,26 +276,26 @@ function FuelTaxBreakdownTable({ rates, computedLiters, simulatedPrice, taxCutPe
           {/* Subsidy Overlay */}
           {rates.subsidy !== 0 && (
             <>
-              <tr className="govuk-table__row" style={{ background: '#f8f8f8' }}>
+              <tr className="govuk-table__row epra-section-row">
                 <th scope="row" className="govuk-table__header" colSpan={3}>4. Price Stabilization Framework (d)</th>
               </tr>
               <tr className="govuk-table__row">
-                <td className="govuk-table__cell" style={{ paddingLeft: '20px', color: '#00703c', fontWeight: 'bold' }}>Petroleum Development Fund State Cushion Offset</td>
-                <td className="govuk-table__cell govuk-table__cell--numeric" style={{ color: '#00703c' }}>KSh {rates.subsidy.toFixed(2)}</td>
-                <td className="govuk-table__cell govuk-table__cell--numeric" style={{ color: '#00703c' }}>KSh {(computedLiters * rates.subsidy).toFixed(2)}</td>
+                <td className="govuk-table__cell govuk-!-padding-left-4 govuk-!-text-colour-green govuk-!-font-weight-bold">Petroleum Development Fund State Cushion Offset</td>
+                <td className="govuk-table__cell govuk-table__cell--numeric govuk-!-text-colour-green">KSh {rates.subsidy.toFixed(2)}</td>
+                <td className="govuk-table__cell govuk-table__cell--numeric govuk-!-text-colour-green">KSh {(computedLiters * rates.subsidy).toFixed(2)}</td>
               </tr>
             </>
           )}
 
           {/* Taxes Rows */}
-          <tr className="govuk-table__row" style={{ background: '#f8f8f8' }}>
+          <tr className="govuk-table__row epra-section-row">
             <th scope="row" className="govuk-table__header" colSpan={3}>5. Statutory Fiscal Taxes &amp; Levies (e)</th>
           </tr>
           {taxItems.map((item, idx) => item.rate > 0 && (
             <tr key={idx} className="govuk-table__row">
-              <td className="govuk-table__cell" style={{ paddingLeft: '20px' }}>
-                <span style={{ fontWeight: '500', display: 'block' }}>{item.name}</span>
-                <span className="govuk-hint" style={{ fontSize: '12px', display: 'block', marginTop: '1px', lineHeight: '1.2' }}>{item.desc}</span>
+              <td className="govuk-table__cell govuk-!-padding-left-4">
+                <span className="govuk-!-font-weight-bold govuk-!-display-block">{item.name}</span>
+                <span className="govuk-hint govuk-!-font-size-12 govuk-!-display-block govuk-!-margin-top-1 govuk-!-line-height-1-2">{item.desc}</span>
               </td>
               <td className="govuk-table__cell govuk-table__cell--numeric">KSh {(item.rate * simFactor).toFixed(2)}</td>
               <td className="govuk-table__cell govuk-table__cell--numeric">KSh {(computedLiters * item.rate * simFactor).toFixed(2)}</td>
@@ -303,12 +303,12 @@ function FuelTaxBreakdownTable({ rates, computedLiters, simulatedPrice, taxCutPe
           ))}
 
           {/* Totals Summary */}
-          <tr className="govuk-table__row" style={{ borderTop: '2px solid #0b0c0c', fontWeight: 'bold' }}>
+          <tr className="govuk-table__row epra-total-row govuk-!-border-top-2">
             <th scope="row" className="govuk-table__header">Total Fiscal Taxes &amp; Levies Contribution</th>
-            <td className="govuk-table__cell govuk-table__cell--numeric" style={{ color: '#d4351c' }}>KSh {totalTaxesPerLitre.toFixed(2)}</td>
-            <td className="govuk-table__cell govuk-table__cell--numeric" style={{ color: '#d4351c' }}>KSh {(computedLiters * totalTaxesPerLitre).toFixed(2)}</td>
+            <td className="govuk-table__cell govuk-table__cell--numeric govuk-!-text-colour-red">KSh {totalTaxesPerLitre.toFixed(2)}</td>
+            <td className="govuk-table__cell govuk-table__cell--numeric govuk-!-text-colour-red">KSh {(computedLiters * totalTaxesPerLitre).toFixed(2)}</td>
           </tr>
-          <tr className="govuk-table__row" style={{ background: '#f3f2f1', fontWeight: 'bold', fontSize: '19px' }}>
+          <tr className="govuk-table__row epra-total-row">
             <th scope="row" className="govuk-table__header">Final Consumer Pump Retail Cap</th>
             <td className="govuk-table__cell govuk-table__cell--numeric">KSh {simulatedPrice.toFixed(2)}</td>
             <td className="govuk-table__cell govuk-table__cell--numeric">KSh {(computedLiters * simulatedPrice).toFixed(2)}</td>
@@ -378,9 +378,9 @@ function RegionalComparisonTable({ kePrice, fuelType }: { kePrice: number; fuelT
           </tr>
         </thead>
         <tbody className="govuk-table__body">
-          <tr className="govuk-table__row" style={{ fontWeight: 'bold', background: '#f8f8f8' }}>
+          <tr className="govuk-table__row epra-taxes-row">
             <td className="govuk-table__cell">🇰🇪 Kenya (Simulated Configuration Model)</td>
-            <td className="govuk-table__cell govuk-table__cell--numeric" style={{ color: '#005ea5' }}>KSh {kePrice.toFixed(2)} / L</td>
+            <td className="govuk-table__cell govuk-table__cell--numeric govuk-!-text-colour-blue">KSh {kePrice.toFixed(2)} / L</td>
           </tr>
           <tr className="govuk-table__row">
             <td className="govuk-table__cell">🇺🇬 Uganda (Deregulated Imports Network)</td>

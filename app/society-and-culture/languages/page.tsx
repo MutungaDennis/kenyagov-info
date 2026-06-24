@@ -122,7 +122,7 @@ export default function LanguagesPage() {
 
           {/* SIDEBAR NAVIGATION COLUMN */}
           <aside className="govuk-grid-column-one-third" role="complementary">
-            <div style={{ borderTop: "2px solid #1d70b8", paddingTop: "15px" }}>
+            <div className="society-top-border">
               <h2 className="govuk-heading-m govuk-!-margin-bottom-3">Related Guidance</h2>
               <ul className="govuk-list govuk-body-s">
                 <li className="govuk-!-margin-bottom-3">

@@ -144,17 +144,17 @@ export default function GovernorsPage() {
 
             {/* Custom Filter Tags Row Block */}
             {hasActiveFilters && (
-              <div className="govuk-!-margin-bottom-6" style={{ background: '#f8f8f8', padding: '15px', border: '1px solid #bfc1c3' }}>
+              <div className="govuk-!-margin-bottom-6 govuk-!-background-grey govuk-!-padding-2 govuk-!-border-1">
                 <p className="govuk-body-s govuk-!-font-weight-bold govuk-!-margin-bottom-2">Active filters:</p>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
+                <div className="govuk-!-display-flex govuk-!-flex-wrap-wrap govuk-!-gap-2 govuk-!-align-items-center">
                   
                   {searchTerm && (
                     <button 
                       type="button"
                       onClick={() => setSearchTerm("")}
-                      style={{ background: '#fff', border: '1px solid #1d70b8', padding: '5px 10px', cursor: 'pointer', fontSize: '14px', display: 'inline-flex', alignItems: 'center' }}
+                      className="govuk-link govuk-!-font-size-14 filter-tag" 
                     >
-                      Search: &ldquo;{searchTerm}&rdquo; <span style={{ marginLeft: '8px', color: '#d4351c', fontWeight: 'bold' }}>&times;</span>
+                      Search: &ldquo;{searchTerm}&rdquo; <span className="govuk-!-font-weight-bold govuk-!-text-colour-red close-x">&times;</span>
                     </button>
                   )}
 
@@ -162,9 +162,9 @@ export default function GovernorsPage() {
                     <button 
                       type="button"
                       onClick={() => setSelectedParty("")}
-                      style={{ background: '#fff', border: '1px solid #1d70b8', padding: '5px 10px', cursor: 'pointer', fontSize: '14px', display: 'inline-flex', alignItems: 'center' }}
+                      className="govuk-link govuk-!-font-size-14 filter-tag" 
                     >
-                      Party: {selectedParty} <span style={{ marginLeft: '8px', color: '#d4351c', fontWeight: 'bold' }}>&times;</span>
+                      Party: {selectedParty} <span className="govuk-!-font-weight-bold govuk-!-text-colour-red close-x">&times;</span>
                     </button>
                   )}
 
@@ -172,17 +172,16 @@ export default function GovernorsPage() {
                     <button 
                       type="button"
                       onClick={() => setSelectedRegion("")}
-                      style={{ background: '#fff', border: '1px solid #1d70b8', padding: '5px 10px', cursor: 'pointer', fontSize: '14px', display: 'inline-flex', alignItems: 'center' }}
+                      className="govuk-link govuk-!-font-size-14 filter-tag" 
                     >
-                      Region: {selectedRegion} <span style={{ marginLeft: '8px', color: '#d4351c', fontWeight: 'bold' }}>&times;</span>
+                      Region: {selectedRegion} <span className="govuk-!-font-weight-bold govuk-!-text-colour-red close-x">&times;</span>
                     </button>
                   )}
 
                   <button 
                     type="button"
                     onClick={clearAllFilters}
-                    className="govuk-link govuk-!-font-size-16"
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', padding: '5px' }}
+                    className="govuk-link govuk-!-font-size-16 govuk-!-padding-left-1" 
                   >
                     Clear all filters
                   </button>
@@ -195,8 +194,8 @@ export default function GovernorsPage() {
             </h2>
 
             {filteredGovernors.length > 0 ? (
-              <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', marginBottom: '25px' }}>
-                <table className="govuk-table" style={{ minWidth: '850px' }}>
+              <div className="govuk-!-overflow-x-auto govuk-!-margin-bottom-5">
+                <table className="govuk-table">
                   <caption className="govuk-table__caption govuk-visually-hidden">
                     List of current county governors and deputies with sorting toggles.
                   </caption>
@@ -207,7 +206,7 @@ export default function GovernorsPage() {
                         <button 
                           type="button" 
                           onClick={() => handleSort('code_number')}
-                          style={{ background: 'none', border: 'none', boxShadow: 'none', padding: '0', textAlign: 'left', fontWeight: 'bold', fontSize: '18px', color: '#1d70b8', cursor: 'pointer', textDecoration: 'underline' }}
+                          className="govuk-link govuk-!-font-weight-bold govuk-!-font-size-18 sort-header" 
                         >
                           No. {sortField === 'code_number' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
                         </button>
@@ -216,7 +215,7 @@ export default function GovernorsPage() {
                         <button 
                           type="button" 
                           onClick={() => handleSort('name')}
-                          style={{ background: 'none', border: 'none', boxShadow: 'none', padding: '0', textAlign: 'left', fontWeight: 'bold', fontSize: '18px', color: '#1d70b8', cursor: 'pointer', textDecoration: 'underline' }}
+                          className="govuk-link govuk-!-font-weight-bold govuk-!-font-size-18 sort-header" 
                         >
                           Governor {sortField === 'name' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
                         </button>
@@ -225,7 +224,7 @@ export default function GovernorsPage() {
                         <button 
                           type="button" 
                           onClick={() => handleSort('county')}
-                          style={{ background: 'none', border: 'none', boxShadow: 'none', padding: '0', textAlign: 'left', fontWeight: 'bold', fontSize: '18px', color: '#1d70b8', cursor: 'pointer', textDecoration: 'underline' }}
+                          className="govuk-link govuk-!-font-weight-bold govuk-!-font-size-18 sort-header" 
                         >
                           County {sortField === 'county' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
                         </button>
@@ -234,7 +233,7 @@ export default function GovernorsPage() {
                         <button 
                           type="button" 
                           onClick={() => handleSort('party')}
-                          style={{ background: 'none', border: 'none', boxShadow: 'none', padding: '0', textAlign: 'left', fontWeight: 'bold', fontSize: '18px', color: '#1d70b8', cursor: 'pointer', textDecoration: 'underline' }}
+                          className="govuk-link govuk-!-font-weight-bold govuk-!-font-size-18 sort-header" 
                         >
                           Party {sortField === 'party' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
                         </button>
@@ -243,7 +242,7 @@ export default function GovernorsPage() {
                         <button 
                           type="button" 
                           onClick={() => handleSort('region')}
-                          style={{ background: 'none', border: 'none', boxShadow: 'none', padding: '0', textAlign: 'left', fontWeight: 'bold', fontSize: '18px', color: '#1d70b8', cursor: 'pointer', textDecoration: 'underline' }}
+                          className="govuk-link govuk-!-font-weight-bold govuk-!-font-size-18 sort-header" 
                         >
                           Region {sortField === 'region' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
                         </button>
@@ -252,7 +251,7 @@ export default function GovernorsPage() {
                         <button 
                           type="button" 
                           onClick={() => handleSort('deputyGovernor')}
-                          style={{ background: 'none', border: 'none', boxShadow: 'none', padding: '0', textAlign: 'left', fontWeight: 'bold', fontSize: '18px', color: '#1d70b8', cursor: 'pointer', textDecoration: 'underline' }}
+                          className="govuk-link govuk-!-font-weight-bold govuk-!-font-size-18 sort-header" 
                         >
                           Deputy Governor {sortField === 'deputyGovernor' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
                         </button>
@@ -263,7 +262,7 @@ export default function GovernorsPage() {
                     {filteredGovernors.map((g, index) => (
                       <tr key={g.id} className="govuk-table__row">
                         <td className="govuk-table__cell govuk-body-s">{index + 1}</td>
-                        <th scope="row" className="govuk-table__header" style={{ fontWeight: 'normal' }}>
+                        <th scope="row" className="govuk-table__header">
                           <Link href={`/counties/${g.countySlug}`} className="govuk-link govuk-!-font-weight-bold">
                             {g.name}
                           </Link>

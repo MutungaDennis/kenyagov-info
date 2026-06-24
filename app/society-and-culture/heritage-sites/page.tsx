@@ -27,7 +27,7 @@ export default function HeritageSitesPage() {
       metaText: "UNESCO World Heritage Site (Cultural)",
       region: "Coastal",
       category: "unesco",
-      description: "The oldest and best-preserved Swahili settlement in East Africa, maintaining its traditional functions and unique coral stone structures for over 700 years.",
+      description: "Oldest well-preserved Swahili town in East Africa. It has kept its traditional life and coral buildings for over 700 years.",
     },
     {
       title: "Fort Jesus, Mombasa",
@@ -35,7 +35,7 @@ export default function HeritageSitesPage() {
       metaText: "UNESCO World Heritage Site (Cultural)",
       region: "Coastal",
       category: "unesco",
-      description: "Built by the Portuguese between 1593 and 1596, this fort stands as a monumental reflection of 16th-century European military architecture and global Indian Ocean trade history.",
+      description: "Portuguese fort built 1593-1596. It shows 16th century military design and the history of Indian Ocean trade.",
     },
     {
       title: "Sacred Mijikenda Kaya Forests",
@@ -43,7 +43,7 @@ export default function HeritageSitesPage() {
       metaText: "UNESCO World Heritage Site (Cultural)",
       region: "Coastal",
       category: "unesco",
-      description: "A network of distinct forested sites spread across the Kenyan coast, containing the remains of fortified villages (Kayas) revered as ancestral groves by Mijikenda elders.",
+      description: "Coastal forests with old fortified villages (Kayas). Mijikenda people see them as sacred ancestral sites.",
     },
     {
       title: "Thimlich Ohinga Archaeological Site",
@@ -371,7 +371,7 @@ export default function HeritageSitesPage() {
 
           {/* SIDEBAR NAVIGATION COLUMN */}
           <aside className="govuk-grid-column-one-third" role="complementary">
-            <div style={{ borderTop: "2px solid #1d70b8", paddingTop: "15px" }}>
+            <div className="society-top-border">
               <h2 className="govuk-heading-m govuk-!-margin-bottom-3">Related Guidance</h2>
               <ul className="govuk-list govuk-body-s">
                 <li className="govuk-!-margin-bottom-3">

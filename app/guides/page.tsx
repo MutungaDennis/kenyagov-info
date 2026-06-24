@@ -5,8 +5,8 @@ import GovUKBreadcrumbs from '@/components/govuk/Breadcrumbs';
 import { getGuides } from '@/lib/sanity/client';
 
 export const metadata = {
-  title: 'Government Guides',
-  description: 'Procedural guides and how-to information for government services',
+  title: 'Government Guides and How-to',
+  description: 'Step-by-step plain English guides to Kenyan government services, processes and citizen rights.',
 };
 
 export default async function GuidesPage() {
@@ -44,8 +44,8 @@ export default async function GuidesPage() {
             <div className="govuk-grid-row">
               {featuredGuides.map((guide: any) => (
                 <div key={guide._id} className="govuk-grid-column-one-third govuk-!-margin-bottom-4">
-                  <div className="govuk-!-padding-4 border border-gray-200">
-                    <h3 className="govuk-heading-s">
+                  <div className="govuk-inset-text govuk-!-padding-3">
+                    <h3 className="govuk-heading-s govuk-!-margin-bottom-1">
                       <Link
                         href={`/guides/${guide.slug.current}`}
                         className="govuk-link"
@@ -53,7 +53,7 @@ export default async function GuidesPage() {
                         {guide.title}
                       </Link>
                     </h3>
-                    <p className="govuk-body-s">{guide.description}</p>
+                    {guide.description && <p className="govuk-body-s">{guide.description}</p>}
                   </div>
                 </div>
               ))}

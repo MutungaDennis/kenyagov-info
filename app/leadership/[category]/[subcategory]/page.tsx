@@ -108,7 +108,7 @@ export default async function LeadershipSubcategoryPage({ params }: PageProps) {
                     key={leader.id}
                     className="govuk-grid-column-one-half govuk-!-margin-bottom-6"
                   >
-                    <div className="govuk-card" style={{ height: '100%' }}>
+                    <div className="govuk-card govuk-!-height-full">
                       <div className="govuk-card__content">
                         <h3 className="govuk-heading-m govuk-!-margin-top-0">
                           <Link
@@ -120,7 +120,7 @@ export default async function LeadershipSubcategoryPage({ params }: PageProps) {
                         </h3>
 
                         {leader.title && (
-                          <p className="govuk-body-s" style={{ marginTop: '0.5rem' }}>
+                          <p className="govuk-body-s govuk-!-margin-top-1">
                             <strong>{leader.title}</strong>
                           </p>
                         )}
@@ -131,7 +131,7 @@ export default async function LeadershipSubcategoryPage({ params }: PageProps) {
 
                         {leader.organization && (
                           <p className="govuk-body-s">
-                            <span style={{ backgroundColor: '#e3e3e3', padding: '2px 6px' }}>
+                            <span className="govuk-!-background-grey govuk-!-padding-1">
                               {leader.organization}
                             </span>
                           </p>

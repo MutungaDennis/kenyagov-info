@@ -23,14 +23,31 @@ export default function Vision2030Page() {
 
       {/* Reduced padding wrapper to optimize vertical height for smartphone layouts */}
       <main className="govuk-main-wrapper govuk-!-padding-top-2" id="main-content" role="main">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "GovernmentPolicy",
+              "name": "Kenya Vision 2030",
+              "description": "Kenya's long-term national development blueprint to create a globally competitive and prosperous nation by 2030.",
+              "url": "https://citizenguide.ke/documents/vision-2030",
+              "datePublished": "2008-06",
+              "publisher": {
+                "@type": "GovernmentOrganization",
+                "name": "Government of Kenya"
+              }
+            })
+          }}
+        />
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-full">
-            <span className="govuk-caption-l govuk-!-font-weight-bold" style={{ textTransform: 'uppercase', color: '#505a5f' }}>
+            <span className="govuk-caption-l govuk-!-font-weight-bold govuk-!-text-colour-secondary">
               Sessional Paper No. 10 of 2012
             </span>
-            <h1 className="govuk-heading-l govuk-!-margin-bottom-2">Kenya Vision 2030 Blueprint</h1>
+            <h1 className="govuk-heading-l govuk-!-margin-bottom-2">Kenya Vision 2030</h1>
             <p className="govuk-body-l govuk-!-margin-bottom-6">
-              A comprehensive guide to Kenya&apos;s long-term national development blueprint launched in 2008, aiming to create a globally competitive and prosperous nation.
+              Kenya&apos;s main plan (launched 2008) to become a competitive middle-income country by 2030.
             </p>
           </div>
         </div>
@@ -40,33 +57,26 @@ export default function Vision2030Page() {
           
           {/* Left Sidebar Sub-Navigation Menu */}
           <div className="govuk-grid-column-one-third print-hide govuk-!-margin-bottom-6">
-            <nav style={{ borderTop: '2px solid #1d70b8', paddingTop: '15px' }} aria-label="Vision 2030 Sections">
-              <ul className="govuk-list" style={{ lineHeight: '2.4', margin: 0, padding: 0 }}>
-                <li style={{ paddingLeft: '12px', borderLeft: activeSection === 'overview' ? '4px solid #1d70b8' : 'none', fontWeight: activeSection === 'overview' ? 'bold' : 'normal' }}>
-                  <button type="button" onClick={() => setActiveSection('overview')} className="govuk-link govuk-!-font-size-19" style={{ background: 'none', border: 'none', cursor: 'pointer', textDecoration: activeSection === 'overview' ? 'none' : 'underline', color: '#1d70b8', textAlign: 'left', padding: 0 }}>
-                    1. Overview &amp; Mandate
-                  </button>
-                </li>
-                <li style={{ paddingLeft: '12px', borderLeft: activeSection === 'economic' ? '4px solid #1d70b8' : 'none', fontWeight: activeSection === 'economic' ? 'bold' : 'normal' }}>
-                  <button type="button" onClick={() => setActiveSection('economic')} className="govuk-link govuk-!-font-size-19" style={{ background: 'none', border: 'none', cursor: 'pointer', textDecoration: activeSection === 'economic' ? 'none' : 'underline', color: '#1d70b8', textAlign: 'left', padding: 0 }}>
-                    2. Economic Pillar
-                  </button>
-                </li>
-                <li style={{ paddingLeft: '12px', borderLeft: activeSection === 'social' ? '4px solid #1d70b8' : 'none', fontWeight: activeSection === 'social' ? 'bold' : 'normal' }}>
-                  <button type="button" onClick={() => setActiveSection('social')} className="govuk-link govuk-!-font-size-19" style={{ background: 'none', border: 'none', cursor: 'pointer', textDecoration: activeSection === 'social' ? 'none' : 'underline', color: '#1d70b8', textAlign: 'left', padding: 0 }}>
-                    3. Social Pillar
-                  </button>
-                </li>
-                <li style={{ paddingLeft: '12px', borderLeft: activeSection === 'political' ? '4px solid #1d70b8' : 'none', fontWeight: activeSection === 'political' ? 'bold' : 'normal' }}>
-                  <button type="button" onClick={() => setActiveSection('political')} className="govuk-link govuk-!-font-size-19" style={{ background: 'none', border: 'none', cursor: 'pointer', textDecoration: activeSection === 'political' ? 'none' : 'underline', color: '#1d70b8', textAlign: 'left', padding: 0 }}>
-                    4. Political Pillar
-                  </button>
-                </li>
-                <li style={{ paddingLeft: '12px', borderLeft: activeSection === 'mtps' ? '4px solid #1d70b8' : 'none', fontWeight: activeSection === 'mtps' ? 'bold' : 'normal' }}>
-                  <button type="button" onClick={() => setActiveSection('mtps')} className="govuk-link govuk-!-font-size-19" style={{ background: 'none', border: 'none', cursor: 'pointer', textDecoration: activeSection === 'mtps' ? 'none' : 'underline', color: '#1d70b8', textAlign: 'left', padding: 0 }}>
-                    5. Medium Term Plans (MTPs)
-                  </button>
-                </li>
+            <nav className="govuk-!-border-top-2 govuk-!-border-colour-blue govuk-!-padding-top-3" aria-label="Vision 2030 Sections">
+              <ul className="govuk-list">
+                {[
+                  { key: 'overview', label: '1. Overview and mandate' },
+                  { key: 'economic', label: '2. Economic pillar' },
+                  { key: 'social', label: '3. Social pillar' },
+                  { key: 'political', label: '4. Political pillar' },
+                  { key: 'mtps', label: '5. Medium term plans' },
+                ].map((item) => (
+                  <li key={item.key} className={`govuk-!-padding-left-3 ${activeSection === item.key ? 'govuk-!-border-left-4 govuk-!-border-colour-blue' : ''}`}>
+                    <button
+                      type="button"
+                      onClick={() => setActiveSection(item.key as any)}
+                      className={`govuk-link ${activeSection === item.key ? 'govuk-!-font-weight-bold' : ''}`}
+                      aria-current={activeSection === item.key ? 'true' : undefined}
+                    >
+                      {item.label}
+                    </button>
+                  </li>
+                ))}
               </ul>
             </nav>
           </div>
@@ -92,7 +102,7 @@ export default function Vision2030Page() {
                 />
 
                 <div className="govuk-inset-text govuk-!-margin-top-6 govuk-!-margin-bottom-6">
-                  The primary goal is to guide national resource distribution toward maintaining a sustained 10% gross domestic product (GDP) growth matrix annually.
+                  The main aim is steady 10% yearly economic growth across the country.
                 </div>
               </>
             )}
@@ -105,25 +115,13 @@ export default function Vision2030Page() {
                   The objective of the economic pillar is to distribute prosperity across all regions of Kenya by adding value within high-performance economic priority sectors:
                 </p>
                 
-                <ul className="govuk-list govuk-list--spaced" style={{ paddingLeft: '15px', borderLeft: '4px solid #00703c' }}>
-                  <li>
-                    <strong>Tourism Expansion</strong> &mdash; Targeting a high-volume, premium service infrastructure layout through the development of localized resort cities.
-                  </li>
-                  <li>
-                    <strong>Agricultural Value Chains</strong> &mdash; Shifting smallholder production lines toward automated agro-processing, structural input subsidies, and legal land consolidation protocols.
-                  </li>
-                  <li>
-                    <strong>Wholesale and Retail Infrastructure</strong> &mdash; Constructing formal, sanitary wholesale market hubs to replace highly fragmented logistical distribution channels.
-                  </li>
-                  <li>
-                    <strong>Manufacturing Diversification</strong> &mdash; Developing Special Economic Zones (SEZs) and local assembly terminals to expand net export performance scores.
-                  </li>
-                  <li>
-                    <strong>Business Process Outsourcing (BPO)</strong> &mdash; Laying digital fibers and establishing technology cities (e.g., Konza Technopolis) to capture global IT demand vectors.
-                  </li>
-                  <li>
-                    <strong>Financial Services Deepening</strong> &mdash; Consolidating regulatory reporting frameworks to transform Nairobi into a regional commercial capital.
-                  </li>
+                <ul className="govuk-list govuk-list--bullet">
+                  <li><strong>Tourism:</strong> Build resort cities and grow high-end tourism.</li>
+                  <li><strong>Agriculture:</strong> Help small farmers process and sell more crops with better support.</li>
+                  <li><strong>Trade:</strong> Build proper wholesale markets instead of scattered trading spots.</li>
+                  <li><strong>Manufacturing:</strong> Set up special zones to make and export more goods.</li>
+                  <li><strong>IT services:</strong> Develop tech hubs like Konza to attract global business.</li>
+                  <li><strong>Finance:</strong> Make Nairobi a stronger regional finance centre.</li>
                 </ul>
               </>
             )}

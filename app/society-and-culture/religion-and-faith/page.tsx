@@ -145,18 +145,18 @@ export default function ReligionAndFaithPage() {
         </div>
 
         {/* CONTROLS FILTERS BAR COMPONENT */}
-        <div style={{ backgroundColor: "#f3f2f1", padding: "20px", marginBottom: "30px", borderLeft: "5px solid #1d70b8" }}>
+        <div className="govuk-inset-text">
           <div className="govuk-grid-row">
             <div className="govuk-grid-column-one-half">
-              <div className="govuk-form-group" style={{ marginBottom: 0 }}>
+              <div className="govuk-form-group govuk-!-margin-bottom-0">
                 <label className="govuk-label" htmlFor="census-year-select"><strong>Select Census Cycle Year</strong></label>
-                <select className="govuk-select" id="census-year-select" style={{ width: "100%" }} value={selectedYearId || ""} onChange={(e) => setSelectedYearId(Number(e.target.value))}>
+                <select className="govuk-select govuk-!-width-full" id="census-year-select" value={selectedYearId || ""} onChange={(e) => setSelectedYearId(Number(e.target.value))}>
                   {years.map(y => <option key={y.id} value={y.id}>KNBS Statistics Cycle: {y.census_year}</option>)}
                 </select>
               </div>
             </div>
             <div className="govuk-grid-column-one-half">
-              <div className="govuk-form-group" style={{ marginBottom: 0 }}>
+              <div className="govuk-form-group govuk-!-margin-bottom-0">
                 <label className="govuk-label" htmlFor="regional-filter-select"><strong>Select Regional Location Filter</strong></label>
                 <select className="govuk-select" id="regional-filter-select" style={{ width: "100%" }} value={activeViewId} onChange={(e) => setActiveViewId(e.target.value)}>
                   <option value="NATIONAL">Entire Republic (Kenya Macro Total)</option>
@@ -196,63 +196,63 @@ export default function ReligionAndFaithPage() {
                 </h2>
 
                 {/* ACCESSIBLE VERTICAL COMPARISON TABLE OVERLAY */}
-                <table className="govuk-table" style={{ width: "100%" }}>
+                <table className="govuk-table">
                   <caption className="govuk-table__caption govuk-table__caption--m">
                     Affiliation Breakdown Distribution Matrix (Total Tracked: {formatNum(activeDisplayRecord.population_total)})
                   </caption>
                   <thead className="govuk-table__head">
                     <tr className="govuk-table__row">
-                      <th scope="col" className="govuk-table__header" style={{ width: "65%" }}>Religious Group / Denominational Affiliation</th>
-                      <th scope="col" className="govuk-table__header govuk-table__header--numeric" style={{ width: "35%" }}>Enumerated Population</th>
+                      <th scope="col" className="govuk-table__header">Religious Group / Denominational Affiliation</th>
+                      <th scope="col" className="govuk-table__header govuk-table__header--numeric">Enumerated Population</th>
                     </tr>
                   </thead>
                   <tbody className="govuk-table__body">
-                    <tr className="govuk-table__row"><th scope="row" className="govuk-table__header" style={{ fontWeight: "normal" }}>Protestant Denominations</th><td className="govuk-table__cell govuk-table__cell--numeric">{formatNum(activeDisplayRecord.protestant)}</td></tr>
-                    <tr className="govuk-table__row"><th scope="row" className="govuk-table__header" style={{ fontWeight: "normal" }}>Roman Catholic Church</th><td className="govuk-table__cell govuk-table__cell--numeric">{formatNum(activeDisplayRecord.catholic)}</td></tr>
-                    <tr className="govuk-table__row"><th scope="row" className="govuk-table__header" style={{ fontWeight: "normal" }}>Evangelical Churches</th><td className="govuk-table__cell govuk-table__cell--numeric">{formatNum(activeDisplayRecord.evangelical)}</td></tr>
-                    <tr className="govuk-table__row"><th scope="row" className="govuk-table__header" style={{ fontWeight: "normal" }}>Islam</th><td className="govuk-table__cell govuk-table__cell--numeric">{formatNum(activeDisplayRecord.islam)}</td></tr>
+                    <tr className="govuk-table__row"><th scope="row" className="govuk-table__header" >Protestant Denominations</th><td className="govuk-table__cell govuk-table__cell--numeric">{formatNum(activeDisplayRecord.protestant)}</td></tr>
+                    <tr className="govuk-table__row"><th scope="row" className="govuk-table__header" >Roman Catholic Church</th><td className="govuk-table__cell govuk-table__cell--numeric">{formatNum(activeDisplayRecord.catholic)}</td></tr>
+                    <tr className="govuk-table__row"><th scope="row" className="govuk-table__header" >Evangelical Churches</th><td className="govuk-table__cell govuk-table__cell--numeric">{formatNum(activeDisplayRecord.evangelical)}</td></tr>
+                    <tr className="govuk-table__row"><th scope="row" className="govuk-table__header" >Islam</th><td className="govuk-table__cell govuk-table__cell--numeric">{formatNum(activeDisplayRecord.islam)}</td></tr>
                     <tr className="govuk-table__row">
-                      <th scope="row" className="govuk-table__header" style={{ fontWeight: "normal" }}>African Instituted Churches (AICs)</th>
+                      <th scope="row" className="govuk-table__header" >African Instituted Churches (AICs)</th>
                       <td className="govuk-table__cell govuk-table__cell--numeric">{formatNum(activeDisplayRecord.african_instituted)}</td>
                     </tr>
                     <tr className="govuk-table__row">
-                      <th scope="row" className="govuk-table__header" style={{ fontWeight: "normal" }}>Other Christian Variants</th>
+                      <th scope="row" className="govuk-table__header" >Other Christian Variants</th>
                       <td className="govuk-table__cell govuk-table__cell--numeric">{formatNum(activeDisplayRecord.other_christian)}</td>
                     </tr>
                     <tr className="govuk-table__row">
-                      <th scope="row" className="govuk-table__header" style={{ fontWeight: "normal" }}>No Religion / Atheists</th>
+                      <th scope="row" className="govuk-table__header" >No Religion / Atheists</th>
                       <td className="govuk-table__cell govuk-table__cell--numeric">{formatNum(activeDisplayRecord.no_religion_atheist)}</td>
                     </tr>
                     <tr className="govuk-table__row">
-                      <th scope="row" className="govuk-table__header" style={{ fontWeight: "normal" }}>Orthodox Church</th>
+                      <th scope="row" className="govuk-table__header" >Orthodox Church</th>
                       <td className="govuk-table__cell govuk-table__cell--numeric">{formatNum(activeDisplayRecord.orthodox)}</td>
                     </tr>
                     <tr className="govuk-table__row">
-                      <th scope="row" className="govuk-table__header" style={{ fontWeight: "normal" }}>Traditionists</th>
+                      <th scope="row" className="govuk-table__header" >Traditionists</th>
                       <td className="govuk-table__cell govuk-table__cell--numeric">{formatNum(activeDisplayRecord.traditionists)}</td>
                     </tr>
                     <tr className="govuk-table__row">
-                      <th scope="row" className="govuk-table__header" style={{ fontWeight: "normal" }}>Hinduism</th>
+                      <th scope="row" className="govuk-table__header" >Hinduism</th>
                       <td className="govuk-table__cell govuk-table__cell--numeric">{formatNum(activeDisplayRecord.hindu)}</td>
                     </tr>
                     <tr className="govuk-table__row">
-                      <th scope="row" className="govuk-table__header" style={{ fontWeight: "normal" }}>Other Unlisted Religions</th>
+                      <th scope="row" className="govuk-table__header" >Other Unlisted Religions</th>
                       <td className="govuk-table__cell govuk-table__cell--numeric">{formatNum(activeDisplayRecord.other_religion)}</td>
                     </tr>
                     <tr className="govuk-table__row">
-                      <th scope="row" className="govuk-table__header" style={{ fontWeight: "normal" }}>Do Not Know</th>
+                      <th scope="row" className="govuk-table__header" >Do Not Know</th>
                       <td className="govuk-table__cell govuk-table__cell--numeric">{formatNum(activeDisplayRecord.dont_know)}</td>
                     </tr>
                     <tr className="govuk-table__row">
-                      <th scope="row" className="govuk-table__header" style={{ fontWeight: "normal" }}>Not Stated Parameters</th>
+                      <th scope="row" className="govuk-table__header" >Not Stated Parameters</th>
                       <td className="govuk-table__cell govuk-table__cell--numeric">{formatNum(activeDisplayRecord.not_stated)}</td>
                     </tr>
                   </tbody>
                 </table>
 
                 {/* STATUTORY CENSUS LIMITATION FOOTNOTE */}
-                <div style={{ backgroundColor: "#ffffff", border: "1px solid #b1b4b6", padding: "15px", marginTop: "20px" }}>
-                  <p className="govuk-body-s" style={{ color: "#505a5f", margin: 0 }}>
+                <div className="govuk-!-background-white govuk-!-border-1 govuk-!-padding-3 govuk-!-margin-top-4">
+                  <p className="govuk-body-s govuk-!-text-colour-secondary govuk-!-margin-0">
                     <strong>Official Statistical Footnote Note:</strong> Pursuant to KNBS methodological rules, the religious affiliation question was explicitly omitted for institutional populations residing within hotels/lodges, hospitals, prison/police custody cells, children&apos;s rescue homes, short-term travelers, and outdoor unsheltered sleepers.
                   </p>
                 </div>
@@ -262,7 +262,7 @@ export default function ReligionAndFaithPage() {
 
           {/* SIDEBAR NAVIGATION COLUMN */}
           <aside className="govuk-grid-column-one-third" role="complementary">
-            <div style={{ borderTop: "2px solid #1d70b8", paddingTop: "15px" }}>
+            <div className="society-top-border">
               <h2 className="govuk-heading-m govuk-!-margin-bottom-3">Related Guidance</h2>
               <ul className="govuk-list govuk-body-s">
                 <li className="govuk-!-margin-bottom-3">

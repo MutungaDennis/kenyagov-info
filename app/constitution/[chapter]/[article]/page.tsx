@@ -45,40 +45,37 @@ export default async function ConstitutionArticlePage({ params }: Props) {
         
         {/* Top Header Identity Map */}
         <div className="govuk-!-margin-bottom-4">
-          <span className="govuk-caption-m" style={{ color: "#505a5f", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-            CHAPTER {chapter}: {articleData.chapterTitle?.toUpperCase()}
+          <span className="govuk-caption-m">
+            Chapter {chapter}: {articleData.chapterTitle}
           </span>
           {articleData.partNumber && articleData.partTitle && (
-            <span className="govuk-caption-s govuk-!-margin-top-1" style={{ display: "block", color: "#505a5f", fontWeight: "bold" }}>
-              PART {articleData.partNumber} — {articleData.partTitle.toUpperCase()}
+            <span className="govuk-caption-s govuk-!-margin-top-1 govuk-!-display-block">
+              Part {articleData.partNumber} — {articleData.partTitle}
             </span>
           )}
-          <h1 className="govuk-heading-l govuk-!-margin-top-1 govuk-!-margin-bottom-2" style={{ fontSize: "28px" }}>
-            {articleData.articleNumber}. {articleData.articleTitle}
+          <h1 className="govuk-heading-l govuk-!-margin-top-1 govuk-!-margin-bottom-2">
+            Article {articleData.articleNumber}. {articleData.articleTitle}
           </h1>
         </div>
 
         {/* 📱 MOBILE QUICK NAVIGATION TOGGLE COMPONENT */}
-        <details 
-          className="govuk-details mobile-only-navigation govuk-!-margin-bottom-4" 
-          style={{ backgroundColor: "#f3f2f1", padding: "10px", borderLeft: "4px solid #1d70b8" }}
-        >
-          <summary className="govuk-details__summary" style={{ cursor: "pointer" }}>
-            <span className="govuk-details__summary-text govuk-!-font-weight-bold" style={{ fontSize: "15px", color: "#1d70b8" }}>
-              Navigate this Chapter ({articlesInChapter.length} Articles)
+        <details className="govuk-details mobile-only-navigation govuk-!-margin-bottom-4">
+          <summary className="govuk-details__summary">
+            <span className="govuk-details__summary-text govuk-!-font-weight-bold">
+              Navigate this chapter ({articlesInChapter.length} articles)
             </span>
           </summary>
-          <div className="govuk-details__text" style={{ borderLeft: "none", paddingLeft: 0, paddingTop: "10px" }}>
-            <ul className="govuk-list" style={{ margin: 0, padding: 0 }}>
+          <div className="govuk-details__text">
+            <ul className="govuk-list">
               {articlesInChapter.map((art: any) => {
                 const isCurrent = art.articleNumber === articleNum;
                 return (
-                  <li key={art._id} style={{ fontSize: "14px", padding: "5px 6px", backgroundColor: isCurrent ? "#e5e5e5" : "transparent" }}>
+                  <li key={art._id} className={isCurrent ? "govuk-!-font-weight-bold" : ""}>
                     {isCurrent ? (
-                      <strong>{art.articleNumber}. {art.articleTitle} (Current)</strong>
+                      <span>{art.articleNumber}. {art.articleTitle} (current)</span>
                     ) : (
-                      <Link href={`/constitution/${chapter}/${art.articleNumber}`} className="govuk-link govuk-link--no-underline">
-                        <strong>{art.articleNumber}.</strong> {art.articleTitle}
+                      <Link href={`/constitution/${chapter}/${art.articleNumber}`} className="govuk-link">
+                        {art.articleNumber}. {art.articleTitle}
                       </Link>
                     )}
                   </li>
@@ -95,21 +92,21 @@ export default async function ConstitutionArticlePage({ params }: Props) {
           
           {/* Side Panel Index - Loaded first on Desktop layout, wraps underneath on mobile viewport screens */}
           <div className="legislation-sidebar-column">
-            <div style={{ borderTop: "2px solid #1d70b8", paddingTop: "8px" }}>
-              <h2 className="govuk-heading-s govuk-!-margin-bottom-2" style={{ fontSize: "15px", color: "#1d70b8" }}>
+            <div className="society-top-border">
+              <h2 className="govuk-heading-s govuk-!-margin-bottom-2 govuk-!-text-colour-blue">
                 In this Chapter
               </h2>
               <nav aria-label="Articles within this chapter navigation">
-                <ul className="govuk-list govuk-!-margin-bottom-0" style={{ paddingLeft: 0, margin: 0 }}>
+                <ul className="govuk-list govuk-!-margin-bottom-0 govuk-!-padding-left-0">
                   {articlesInChapter.map((art: any) => {
                     const isCurrent = art.articleNumber === articleNum;
                     return (
-                      <li key={art._id} className="govuk-!-margin-bottom-1" style={{ fontSize: "14px", lineHeight: "1.3", display: "flex", alignItems: "baseline", backgroundColor: isCurrent ? "#f3f2f1" : "transparent", padding: isCurrent ? "4px 6px" : "2px 0", borderLeft: isCurrent ? "3px solid #1d70b8" : "none" }}>
-                        <span style={{ fontWeight: "bold", minWidth: "24px", display: "inline-block", color: isCurrent ? "#1d70b8" : "#505a5f" }}>
+                      <li key={art._id} className={`govuk-!-margin-bottom-1 ${isCurrent ? 'govuk-!-background-color-light-grey govuk-!-padding-1 govuk-!-border-left-3' : ''}`}>
+                        <span className={`govuk-!-font-weight-bold govuk-!-min-width-24 govuk-!-display-inline-block ${isCurrent ? 'govuk-!-text-colour-blue' : 'govuk-!-text-colour-secondary'}`}>
                           {art.articleNumber}
                         </span>
                         {isCurrent ? (
-                          <span className="govuk-body-s govuk-!-font-weight-bold" style={{ margin: 0 }}>{art.articleTitle}</span>
+                          <span className="govuk-body-s govuk-!-font-weight-bold">{art.articleTitle}</span>
                         ) : (
                           <Link href={`/constitution/${chapter}/${art.articleNumber}`} className="govuk-link govuk-link--no-underline">{art.articleTitle}</Link>
                         )}
@@ -125,28 +122,28 @@ export default async function ConstitutionArticlePage({ params }: Props) {
           <div className="legislation-content-column">
             
             {/* Source text entry rendering */}
-            <div className="govuk-!-margin-bottom-4" style={{ borderTop: "1px solid #b1b4b6", paddingTop: "12px" }}>
-              <h2 className="govuk-heading-s govuk-!-text-colour-dark-grey govuk-!-margin-bottom-2" style={{ fontSize: "13px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+            <div className="govuk-!-margin-bottom-4 govuk-!-border-top-1 govuk-!-padding-top-3">
+              <h2 className="govuk-heading-s govuk-!-text-colour-dark-grey govuk-!-margin-bottom-2 govuk-!-font-size-13">
                 Official Constitutional Text
               </h2>
-              <div className="govuk-body" style={{ fontSize: "16px", lineHeight: "1.5" }}>
+              <div className="govuk-body">
                 <PortableTextContent content={articleData.officialText} />
               </div>
             </div>
 
             {/* Plain English Details Toggle */}
-            <details className="govuk-details govuk-!-margin-bottom-4" style={{ backgroundColor: "#f3f2f1", padding: "12px", borderLeft: "4px solid #1d70b8" }}>
-              <summary className="govuk-details__summary" style={{ cursor: "pointer" }}>
-                <span className="govuk-details__summary-text govuk-!-font-weight-bold" style={{ fontSize: "16px", color: "#1d70b8" }}>
+            <details className="govuk-details govuk-!-margin-bottom-4 govuk-!-background-grey govuk-!-padding-2 govuk-!-border-left-4">
+              <summary className="govuk-details__summary">
+                <span className="govuk-details__summary-text govuk-!-font-weight-bold govuk-!-text-colour-blue">
                   Plain English Explanation
                 </span>
               </summary>
-              <div className="govuk-details__text" style={{ borderLeft: "none", paddingLeft: 0, paddingTop: "10px", paddingBottom: 0 }}>
-                <p className="govuk-body-s govuk-!-margin-bottom-3" style={{ color: "#505a5f", fontStyle: "italic" }}>
+              <div className="govuk-details__text">
+                <p className="govuk-body-s govuk-!-margin-bottom-3 govuk-!-text-colour-secondary govuk-!-font-style-italic">
                   This is a simplified summary prepared by legal scholars to explain this article in clear language. It is not the legal text of the Constitution.
                 </p>
                 {articleData.amplifiedText ? (
-                  <div className="govuk-body-s" style={{ lineHeight: "1.5" }}>
+                  <div className="govuk-body-s">
                     <PortableTextContent content={articleData.amplifiedText} />
                   </div>
                 ) : (
@@ -157,9 +154,9 @@ export default async function ConstitutionArticlePage({ params }: Props) {
 
             {/* Case Scenarios Layout block */}
             {articleData.caseScenarios && articleData.caseScenarios.length > 0 && (
-              <div className="govuk-!-padding-4 govuk-!-margin-bottom-6" style={{ backgroundColor: "#ffffff", border: "1px solid #b1b4b6", borderTop: "4px solid #00703c" }}>
-                <h3 className="govuk-heading-s govuk-!-margin-top-0 govuk-!-margin-bottom-2" style={{ color: "#00703c", fontSize: "16px" }}>Real-life Case Scenarios</h3>
-                <div className="govuk-body-s" style={{ lineHeight: "1.5" }}>
+              <div className="govuk-!-padding-4 govuk-!-margin-bottom-6">
+                <h3 className="govuk-heading-s govuk-!-margin-top-0 govuk-!-margin-bottom-2 govuk-!-text-colour-green">Real-life Case Scenarios</h3>
+                <div className="govuk-body-s">
                   <PortableTextContent content={articleData.caseScenarios} />
                 </div>
               </div>
@@ -167,8 +164,8 @@ export default async function ConstitutionArticlePage({ params }: Props) {
 
             {/* Relative info meta blocks list */}
             {(articleData.userIntents?.length > 0 || articleData.relatedActs?.length > 0) && (
-              <div className="govuk-!-margin-top-6 govuk-!-padding-top-4" style={{ borderTop: "1px solid #b1b4b6" }}>
-                <h3 className="govuk-heading-s govuk-!-margin-bottom-2" style={{ fontSize: "16px" }}>Related Information</h3>
+              <div className="govuk-!-margin-top-6 govuk-!-padding-top-4 govuk-!-border-top-1">
+                <h3 className="govuk-heading-s govuk-!-margin-bottom-2">Related Information</h3>
                 <ul className="govuk-list govuk-list--spaced govuk-!-margin-bottom-0">
                   {articleData.userIntents && articleData.userIntents.length > 0 && (
                     <li className="govuk-body-s"><strong>Relevant to:</strong> {articleData.userIntents.join(", ")}</li>
@@ -191,12 +188,12 @@ export default async function ConstitutionArticlePage({ params }: Props) {
             )}
 
             {/* Bottom Linear Step Navigation block */}
-            <div className="govuk-button-group govuk-!-margin-top-8" style={{ display: "flex", justifyContent: "space-between", gap: "10px" }}>
+            <div className="govuk-button-group govuk-!-margin-top-8 govuk-!-display-flex govuk-!-justify-content-space-between">
               {prevArticle ? (
                 <Link 
                   href={`/constitution/${chapter}/${prevArticle.articleNumber}`} 
                   className="govuk-button govuk-button--secondary govuk-!-margin-bottom-0" 
-                  style={{ textDecoration: "none", margin: 0 }}
+                  style={{ margin: 0 }}
                 >
                   ← Article {prevArticle.articleNumber}
                 </Link>
@@ -208,7 +205,7 @@ export default async function ConstitutionArticlePage({ params }: Props) {
                 <Link 
                   href={`/constitution/${chapter}/${nextArticle.articleNumber}`} 
                   className="govuk-button govuk-button--secondary govuk-!-margin-bottom-0" 
-                  style={{ textDecoration: "none", margin: 0 }}
+                  style={{ margin: 0 }}
                 >
                   Article {nextArticle.articleNumber} →
                 </Link>

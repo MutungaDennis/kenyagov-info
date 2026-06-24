@@ -24,12 +24,12 @@ export default function SessionalPaper2012Page() {
       <main className="govuk-main-wrapper govuk-!-padding-top-2" id="main-content" role="main">
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-full">
-            <span className="govuk-caption-l govuk-!-font-weight-bold" style={{ textTransform: 'uppercase', color: '#505a5f' }}>
-              Statutory Educational Policy Register
+            <span className="govuk-caption-l govuk-!-font-weight-bold govuk-!-text-colour-secondary">
+              Statutory Educational Policy
             </span>
             <h1 className="govuk-heading-l govuk-!-margin-bottom-2">Sessional Paper No. 1 of 2012</h1>
             <p className="govuk-body-l govuk-!-margin-bottom-6">
-              Policy Framework for Education, Training and Research &mdash; The legislative blueprint aligning Kenyan education with the 2010 Constitution.
+              Framework for education and training. It aligns the system with the 2010 Constitution.
             </p>
           </div>
         </div>

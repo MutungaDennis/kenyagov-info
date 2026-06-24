@@ -87,7 +87,8 @@ export default function TermsPage() {
               We may update these terms following amendments to national digital compliance frameworks. Continued interaction with the registry tools after changes are published constitutes active acceptance of the revised conditions.
             </p>
 
-            <p className="govuk-body govuk-!-margin-top-6" style={{ borderTop: '1px solid #bfc1c3', paddingTop: '15px' }}>
+            <hr className="govuk-section-break govuk-section-break--visible govuk-!-margin-top-6" />
+            <p className="govuk-body">
               If you have queries regarding this legal usage agreement, contact our administrative support desk directly via the <Link href="/contact" className="govuk-link">Contact page</Link>.
             </p>
 

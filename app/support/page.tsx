@@ -35,10 +35,10 @@ export default function SupportPage() {
         <div className="govuk-grid-column-two-thirds">
           
           {submissionState?.error && (
-            <div className="govuk-error-summary" role="alert" style={{ border: "4px solid #d4351c" }}>
+            <div className="govuk-error-summary" role="alert">
               <h2 className="govuk-error-summary__title">There is a problem</h2>
               <div className="govuk-error-summary__body">
-                <p className="govuk-body" style={{ color: "#d4351c" }}>{submissionState.error}</p>
+                <p className="govuk-body govuk-!-text-colour-red">{submissionState.error}</p>
               </div>
             </div>
           )}
@@ -50,7 +50,7 @@ export default function SupportPage() {
           </p>
 
           {/* GOV.UK Technical & Legal Disclosure Box */}
-          <div className="govuk-inset-text" style={{ borderLeftColor: "#f47738", background: "#faf9f8", padding: "15px" }}>
+          <div className="govuk-inset-text">
             <h3 className="govuk-heading-s govuk-!-margin-top-0">Important legal information</h3>
             <p className="govuk-body-s govuk-!-margin-bottom-1">
               CitizenGuide.KE is an independent platform managed by a private entity. 
@@ -151,12 +151,12 @@ export default function SupportPage() {
 
             {/* Custom Amount Form Field Conditional Drawer */}
             {selectedTier === "custom" && (
-              <div className="govuk-form-group govuk-!-margin-left-4" style={{ paddingLeft: "15px", borderLeft: "4px solid #b1b4b6" }}>
+              <div className="govuk-form-group govuk-!-margin-left-4 govuk-!-padding-left-3 govuk-inset-text">
                 <label className="govuk-label govuk-!-font-weight-bold" htmlFor="custom_amount">
                   Amount ({currency})
                 </label>
-                <div style={{ display: "flex", alignItems: "center" }}>
-                  <span className="govuk-body govuk-!-margin-right-2" style={{ fontVariantNumeric: "tabular-nums" }}>
+                <div className="govuk-!-display-flex govuk-!-align-items-center">
+                  <span className="govuk-body govuk-!-margin-right-2 govuk-!-font-variant-numeric-tabular">
                     {currency === "KES" ? "KES" : "$"}
                   </span>
                   <input
@@ -264,7 +264,7 @@ export default function SupportPage() {
 
           </form>
 
-          <p className="govuk-body govuk-!-margin-top-9" style={{ color: "#505a5f" }}>
+          <p className="govuk-body govuk-!-margin-top-9 govuk-!-text-colour-secondary">
             Thank you for considering supporting the ongoing maintenance of CitizenGuide.KE. 
             Your support helps maintain open access to public regulatory frameworks for all Kenyans.
           </p>

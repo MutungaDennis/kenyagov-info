@@ -25,7 +25,7 @@ export default function SitemapPage() {
 
             {/* Category 1: Services Directory */}
             <h2 className="govuk-heading-m govuk-!-margin-top-6 govuk-!-margin-bottom-3">Public Services Indices</h2>
-            <ul className="govuk-list govuk-list--spaced" style={{ paddingLeft: '15px', borderLeft: '4px solid #1d70b8' }}>
+            <ul className="govuk-list govuk-list--spaced" >
               <li>
                 <Link href="/services" className="govuk-link govuk-!-font-weight-bold govuk-!-font-size-19">All Services</Link>
                 <p className="govuk-body-s govuk-!-margin-top-1 govuk-text-secondary">Central hub for civil registration pathways and common informational guides.</p>
@@ -39,7 +39,7 @@ export default function SitemapPage() {
 
             {/* Category 2: Government Organs & The Executive */}
             <h2 className="govuk-heading-m govuk-!-margin-top-6 govuk-!-margin-bottom-3">Government Leadership &amp; Organs</h2>
-            <ul className="govuk-list govuk-list--spaced" style={{ paddingLeft: '15px', borderLeft: '4px solid #1d70b8' }}>
+            <ul className="govuk-list govuk-list--spaced" >
               <li>
                 <Link href="/executive" className="govuk-link govuk-!-font-weight-bold govuk-!-font-size-19">The Executive Hub</Link>
                 <p className="govuk-body-s govuk-!-margin-top-1 govuk-text-secondary">Overview of the national cabinet, state dockets, and ministries.</p>
@@ -64,7 +64,7 @@ export default function SitemapPage() {
 
             {/* Category 3: Local & Devolved Units */}
             <h2 className="govuk-heading-m govuk-!-margin-top-6 govuk-!-margin-bottom-3">Counties &amp; Devolved Units</h2>
-            <ul className="govuk-list govuk-list--spaced" style={{ paddingLeft: '15px', borderLeft: '4px solid #1d70b8' }}>
+            <ul className="govuk-list govuk-list--spaced" >
               <li>
                 <Link href="/counties" className="govuk-link govuk-!-font-weight-bold govuk-!-font-size-19">Devolved Counties Hub</Link>
                 <p className="govuk-body-s govuk-!-margin-top-1 govuk-text-secondary">Explore economic blocs, devolution guides, and county performance metrics.</p>
@@ -78,7 +78,7 @@ export default function SitemapPage() {
 
             {/* Category 4: Platform Integrity & Legal Utilities */}
             <h2 className="govuk-heading-m govuk-!-margin-top-6 govuk-!-margin-bottom-3">Platform Framework &amp; Legal Notices</h2>
-            <ul className="govuk-list govuk-list--spaced" style={{ paddingLeft: '15px', borderLeft: '4px solid #1d70b8' }}>
+            <ul className="govuk-list govuk-list--spaced" >
               <li><Link href="/about" className="govuk-link">About CitizenGuide.KE</Link></li>
               <li><Link href="/help" className="govuk-link">Help and Support Center</Link></li>
               <li><Link href="/accessibility" className="govuk-link">Accessibility Statement</Link></li>

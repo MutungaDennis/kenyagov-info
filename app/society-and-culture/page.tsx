@@ -4,13 +4,14 @@ import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import LastUpdated from "@/components/govuk/LastUpdated";
 
+
 export default function SocietyAndCulturePage() {
   // Logical thematic grouping of all 23 parameters to fit the official GOV.UK browse grid pattern
   const categories = [
     {
       id: "identity-and-heritage",
       name: "National Identity and Heritage",
-      description: "Official symbols, national celebrations, and constitutional records.",
+      description: "Symbols, holidays, events and the constitution.",
       items: [
         { title: "National Symbols", href: "/society-and-culture/national-symbols" },
         { title: "Public Holidays", href: "/society-and-culture/holidays" },
@@ -23,7 +24,7 @@ export default function SocietyAndCulturePage() {
     {
       id: "people-and-communities",
       name: "People and Communities",
-      description: "Demographics, spoken regional dialects, and faith groups.",
+      description: "Communities, languages and faith.",
       items: [
         { title: "Communities", href: "/society-and-culture/communities" },
         { title: "Languages", href: "/society-and-culture/languages" },
@@ -35,7 +36,7 @@ export default function SocietyAndCulturePage() {
     {
       id: "lifestyle-and-creative",
       name: "Lifestyle, Creative Arts and Sports",
-      description: "Kenyan literature, music, cuisine, garments, and athletics history.",
+      description: "Arts, food, fashion, sport and tourism.",
       items: [
         { title: "Arts and Entertainment", href: "/society-and-culture/arts-and-entertainment" },
         { title: "Food and Cuisine", href: "/society-and-culture/food-and-cuisine" },
@@ -48,7 +49,7 @@ export default function SocietyAndCulturePage() {
     {
       id: "civic-and-social-life",
       name: "Civic Life and Social Systems",
-      description: "Social systems, educational networks, etiquette, and values.",
+      description: "Values, education, family and traditions.",
       items: [
         { title: "Civic Values", href: "/society-and-culture/civic-values" },
         { title: "Education and Youth", href: "/society-and-culture/education-and-youth" },
@@ -87,7 +88,7 @@ export default function SocietyAndCulturePage() {
 
           {/* Clean sidebar pattern replacing the invalid inset box */}
           <aside className="govuk-grid-column-one-third" role="complementary">
-            <div style={{ borderTop: "2px solid #1d70b8", paddingTop: "15px" }}>
+            <div className="govuk-!-border-top-2 govuk-!-padding-top-3">
               <h2 className="govuk-heading-s govuk-!-margin-bottom-2">Top Tasks</h2>
               <ul className="govuk-list govuk-body-s">
                 <li className="govuk-!-margin-bottom-2">

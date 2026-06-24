@@ -33,19 +33,18 @@ export default function AboutPage() {
             {/* Section 1: Institutional Context */}
             <h2 className="govuk-heading-m govuk-!-margin-bottom-3">Why this platform exists</h2>
             <p className="govuk-body">
-              The national executive architecture of Kenya spans hundreds of state ministries, distinct departments, semi-autonomous government agencies (SAGAs), independent regulatory boards, commissions, and public funds. Each entity administers separate digital portals, historical records, and policy frameworks.
+              Kenya's government includes many ministries, agencies, commissions and public bodies. Each runs its own websites and records.
             </p>
             <p className="govuk-body">
-              For public verification, tracking this administrative framework often introduces navigation challenges across decentralized dockets, commonly referenced by their institutional acronyms:
+              Citizens often struggle to find accurate information because:
             </p>
-            
-            {/* High-contrast factual list format block */}
-            <div className="govuk-inset-text govuk-!-margin-bottom-4" style={{ letterSpacing: '0.5px', fontStyle: 'normal' }}>
-              <strong>KRA, NTSA, KEBS, NEMA, NSSF, SHA, EPRA, RBA, CA, WASREB, PPB, OAG, OCOB...</strong>
-            </div>
-
+            <ul className="govuk-list govuk-list--bullet">
+              <li>information is spread across separate sites</li>
+              <li>names and acronyms are confusing (KRA, NTSA, IEBC...)</li>
+              <li>leaders and structures change</li>
+            </ul>
             <p className="govuk-body">
-              CitizenGuide.KE consolidates these scattered registries into a centralized index. This helps citizens quickly determine institutional mandates, identify appointed leaders, trace executive orders, and access official publication links.
+              CitizenGuide.KE brings key facts into one place so you can find institutions, leaders, laws and services quickly.
             </p>
 
             {/* Section 2: Core Structural Challenges Addressed */}
@@ -89,8 +88,8 @@ export default function AboutPage() {
 
             {/* Section 5: Statutory Mandatory Disclaimer */}
             <h2 className="govuk-heading-m govuk-!-margin-top-6 govuk-!-margin-bottom-3">Statutory Disclaimer</h2>
-            <div className="govuk-inset-text govuk-!-margin-bottom-6" style={{ borderLeftColor: '#d4351c' }}>
-              CitizenGuide.KE is a completely <strong>independent</strong> informational platform. It is not affiliated with, endorsed by, or funded by the Government of Kenya or any state corporation. To process official transactions, applications, or statutory service claims, you must utilize the authorized state portal directly via the <a href="https://www.ecitizen.go.ke" target="_blank" rel="noreferrer" className="govuk-link">eCitizen Portal</a> or respective ministry websites.
+            <div className="govuk-inset-text govuk-!-margin-bottom-6">
+              CitizenGuide.KE is a completely <strong>independent</strong> informational platform. It is not affiliated with, endorsed by, or funded by the Government of Kenya or any state corporation. To process official transactions, applications, or statutory service claims, you must use the authorized state portal directly via the <a href="https://www.ecitizen.go.ke" target="_blank" rel="noreferrer" className="govuk-link">eCitizen Portal</a> or respective ministry websites.
             </div>
 
             <p className="govuk-body govuk-!-margin-top-4">

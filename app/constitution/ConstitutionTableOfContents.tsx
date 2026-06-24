@@ -107,7 +107,7 @@ export default function ConstitutionTableOfContents({
           <h1 className="govuk-heading-l govuk-!-margin-bottom-2">
             The Constitution of Kenya 2010
           </h1>
-          <p className="govuk-body" style={{ fontSize: "19px", marginBottom: 0 }}>
+          <p className="govuk-body">
             The supreme law of the Republic of Kenya. Searchable, readable, and explained in plain language.
           </p>
         </div>
@@ -134,13 +134,10 @@ export default function ConstitutionTableOfContents({
         <hr className="govuk-section-break govuk-section-break--visible govuk-section-break--s" />
 
         {/* Compact Legislation Index Bar */}
-        <div 
-          className="govuk-!-margin-top-3 govuk-!-margin-bottom-3" 
-          style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}
-        >
+        <div className="govuk-!-margin-top-3 govuk-!-margin-bottom-3">
           <div>
-            <h2 className="govuk-heading-m govuk-!-margin-bottom-1" style={{ fontSize: "20px" }}>
-              Arrangement of Articles
+            <h2 className="govuk-heading-m govuk-!-margin-bottom-1">
+              Arrangement of articles
             </h2>
             <p className="govuk-body-s govuk-!-text-colour-dark-grey govuk-!-margin-bottom-0">
               Official structure of the Constitution of Kenya 2010
@@ -150,18 +147,10 @@ export default function ConstitutionTableOfContents({
           {filteredData.chapters.length > 0 && (
             <button
               onClick={handleToggleAll}
-              className="govuk-body-s govuk-!-margin-bottom-1"
-              style={{
-                background: "none",
-                border: "none",
-                color: "#1d70b8",
-                cursor: "pointer",
-                textDecoration: "underline",
-                padding: 0,
-                fontWeight: "bold"
-              }}
+              className="govuk-link govuk-!-margin-bottom-1"
+              style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}
             >
-              {isAllOpen ? "Collapse all -" : "Expand all +"}
+              {isAllOpen ? "Collapse all" : "Expand all"}
             </button>
           )}
         </div>
@@ -170,13 +159,10 @@ export default function ConstitutionTableOfContents({
           <div className="govuk-grid-column-two-thirds-from-desktop govuk-grid-column-full">
             
             {(!searchQuery || "preamble".includes(searchQuery.toLowerCase())) && (
-              <div 
-                className="govuk-!-padding-top-2 govuk-!-padding-bottom-2" 
-                style={{ borderBottom: "1px solid #b1b4b6", paddingLeft: "24px" }}
-              >
+              <div className="govuk-!-padding-top-2 govuk-!-padding-bottom-2" style={{ borderBottom: "1px solid #b1b4b6" }}>
                 <h3 className="govuk-heading-s govuk-!-margin-0">
-                  <Link href="/constitution/0" className="govuk-link govuk-link--no-underline">
-                    PREAMBLE
+                  <Link href="/constitution/0" className="govuk-link">
+                    Preamble
                   </Link>
                 </h3>
               </div>
@@ -190,11 +176,7 @@ export default function ConstitutionTableOfContents({
                     key={chapter.chapter} 
                     open={isOpen}
                     className="govuk-details govuk-!-margin-bottom-0"
-                    style={{ 
-                      borderBottom: "1px solid #b1b4b6", 
-                      paddingTop: "4px", 
-                      paddingBottom: "4px" 
-                    }}
+                    style={{ borderBottom: "1px solid #b1b4b6" }}
                   >
                     <summary 
                       className="govuk-details__summary govuk-!-margin-bottom-0" 
@@ -202,30 +184,18 @@ export default function ConstitutionTableOfContents({
                         e.preventDefault();
                         handleToggleChapter(chapter.chapter, isOpen);
                       }}
-                      style={{ 
-                        cursor: "pointer", 
-                        padding: "6px 0 6px 24px", 
-                        position: "relative",
-                        listStyle: "none"
-                      }}
                     >
-                      <span style={{ position: "absolute", left: "2px", top: "8px", fontSize: "11px", color: "#1d70b8", userSelect: "none" }}>
-                        {isOpen ? "▼" : "▶"}
-                      </span>
-                      <span className="govuk-details__summary-text govuk-heading-s govuk-!-margin-0" style={{ fontSize: "16px", color: "#1d70b8" }}>
-                        CHAPTER {chapter.chapter} — {chapter.chapterTitle?.toUpperCase()}
+                      <span className="govuk-details__summary-text">
+                        Chapter {chapter.chapter} — {chapter.chapterTitle}
                       </span>
                     </summary>
                     
-                    <div className="govuk-details__text" style={{ borderLeft: "none", paddingLeft: "24px", paddingTop: "2px", paddingBottom: "6px" }}>
+                    <div className="govuk-details__text">
                       <ul className="govuk-list govuk-!-margin-bottom-0">
                         {articlesByChapter[chapter.chapter]?.map((article) => (
-                          <li key={article._id} className="govuk-!-margin-bottom-1" style={{ display: "flex", alignItems: "baseline", marginTop: "1px" }}>
-                            <span className="govuk-body-s govuk-!-font-weight-bold" style={{ minWidth: "35px", display: "inline-block", flexShrink: 0, margin: 0, color: "#505a5f" }}>
-                              {article.articleNumber}.
-                            </span>
-                            <Link href={`/constitution/${chapter.chapter}/${article.articleNumber}`} className="govuk-link govuk-link--no-underline govuk-!-font-size-16">
-                              {article.articleTitle}
+                          <li key={article._id} className="govuk-!-margin-bottom-1">
+                            <Link href={`/constitution/${chapter.chapter}/${article.articleNumber}`} className="govuk-link">
+                              {article.articleNumber}. {article.articleTitle}
                             </Link>
                           </li>
                         )) || (

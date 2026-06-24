@@ -71,20 +71,20 @@ export default function ExecutivePage() {
           <div className="govuk-grid-column-full">
             
             {/* Mobile Safe Horizontal Scroll Layer Wrapper to ensure full responsiveness */}
-            <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', marginBottom: '25px' }}>
-              <table className="govuk-table" style={{ minWidth: '750px' }}>
+            <div className="govuk-!-overflow-x-auto govuk-!-margin-bottom-5">
+              <table className="govuk-table">
                 <caption className="govuk-table__caption govuk-visually-hidden">List of national ministries and appointed Cabinet Secretaries.</caption>
                 <thead className="govuk-table__head">
                   <tr className="govuk-table__row">
-                    <th scope="col" className="govuk-table__header govuk-body-s" style={{ fontWeight: 'bold', width: '60px' }}>No.</th>
-                    <th scope="col" className="govuk-table__header govuk-body-s" style={{ fontWeight: 'bold' }}>Ministry / Docket</th>
-                    <th scope="col" className="govuk-table__header govuk-body-s" style={{ fontWeight: 'bold', width: '280px' }}>Cabinet Secretary</th>
+                    <th scope="col" className="govuk-table__header govuk-body-s govuk-!-font-weight-bold" style={{ width: '60px' }}>No.</th>
+                    <th scope="col" className="govuk-table__header govuk-body-s govuk-!-font-weight-bold">Ministry / Docket</th>
+                    <th scope="col" className="govuk-table__header govuk-body-s govuk-!-font-weight-bold" style={{ width: '280px' }}>Cabinet Secretary</th>
                   </tr>
                 </thead>
                 <tbody className="govuk-table__body">
                   <tr className="govuk-table__row">
                     <td className="govuk-table__cell govuk-body-s">1</td>
-                    <th scope="row" className="govuk-table__header govuk-body-s" style={{ fontWeight: 'normal' }}>
+                    <th scope="row" className="govuk-table__header govuk-body-s" >
                       <Link href="/executive/ministries/foreign-affairs" className="govuk-link govuk-!-font-weight-bold">Prime Cabinet Secretary & Foreign Affairs</Link>
                     </th>
                     <td className="govuk-table__cell govuk-body-s">
@@ -93,7 +93,7 @@ export default function ExecutivePage() {
                   </tr>
                   <tr className="govuk-table__row">
                     <td className="govuk-table__cell govuk-body-s">2</td>
-                    <th scope="row" className="govuk-table__header govuk-body-s" style={{ fontWeight: 'normal' }}>
+                    <th scope="row" className="govuk-table__header govuk-body-s" >
                       <Link href="/executive/ministries/interior" className="govuk-link govuk-!-font-weight-bold">Interior & National Administration</Link>
                     </th>
                     <td className="govuk-table__cell govuk-body-s">
@@ -102,7 +102,7 @@ export default function ExecutivePage() {
                   </tr>
                   <tr className="govuk-table__row">
                     <td className="govuk-table__cell govuk-body-s">3</td>
-                    <th scope="row" className="govuk-table__header govuk-body-s" style={{ fontWeight: 'normal' }}>
+                    <th scope="row" className="govuk-table__header govuk-body-s" >
                       <Link href="/executive/ministries/treasury" className="govuk-link govuk-!-font-weight-bold">National Treasury & Economic Planning</Link>
                     </th>
                     <td className="govuk-table__cell govuk-body-s">
@@ -111,7 +111,7 @@ export default function ExecutivePage() {
                   </tr>
                   <tr className="govuk-table__row">
                     <td className="govuk-table__cell govuk-body-s">4</td>
-                    <th scope="row" className="govuk-table__header govuk-body-s" style={{ fontWeight: 'normal' }}>
+                    <th scope="row" className="govuk-table__header govuk-body-s" >
                       <Link href="/executive/ministries/education" className="govuk-link govuk-!-font-weight-bold">Education</Link>
                     </th>
                     <td className="govuk-table__cell govuk-body-s">
@@ -120,7 +120,7 @@ export default function ExecutivePage() {
                   </tr>
                   <tr className="govuk-table__row">
                     <td className="govuk-table__cell govuk-body-s">5</td>
-                    <th scope="row" className="govuk-table__header govuk-body-s" style={{ fontWeight: 'normal' }}>
+                    <th scope="row" className="govuk-table__header govuk-body-s" >
                       <Link href="/executive/ministries/defence" className="govuk-link govuk-!-font-weight-bold">Defence</Link>
                     </th>
                     <td className="govuk-table__cell govuk-body-s">
@@ -129,7 +129,7 @@ export default function ExecutivePage() {
                   </tr>
                   <tr className="govuk-table__row">
                     <td className="govuk-table__cell govuk-body-s">6</td>
-                    <th scope="row" className="govuk-table__header govuk-body-s" style={{ fontWeight: 'normal' }}>
+                    <th scope="row" className="govuk-table__header govuk-body-s" >
                       <Link href="/executive/ministries/health" className="govuk-link govuk-!-font-weight-bold">Health</Link>
                     </th>
                     <td className="govuk-table__cell govuk-body-s">
@@ -138,7 +138,7 @@ export default function ExecutivePage() {
                   </tr>
                   <tr className="govuk-table__row">
                     <td className="govuk-table__cell govuk-body-s">7</td>
-                    <th scope="row" className="govuk-table__header govuk-body-s" style={{ fontWeight: 'normal' }}>
+                    <th scope="row" className="govuk-table__header govuk-body-s" >
                       <Link href="/executive/ministries/agriculture" className="govuk-link govuk-!-font-weight-bold">Agriculture & Livestock Development</Link>
                     </th>
                     <td className="govuk-table__cell govuk-body-s">
@@ -147,7 +147,7 @@ export default function ExecutivePage() {
                   </tr>
                   <tr className="govuk-table__row">
                     <td className="govuk-table__cell govuk-body-s">8</td>
-                    <th scope="row" className="govuk-table__header govuk-body-s" style={{ fontWeight: 'normal' }}>
+                    <th scope="row" className="govuk-table__header govuk-body-s" >
                       <Link href="/executive/ministries/transport" className="govuk-link govuk-!-font-weight-bold">Transport & Infrastructure</Link>
                     </th>
                     <td className="govuk-table__cell govuk-body-s">
@@ -156,7 +156,7 @@ export default function ExecutivePage() {
                   </tr>
                   <tr className="govuk-table__row">
                     <td className="govuk-table__cell govuk-body-s">9</td>
-                    <th scope="row" className="govuk-table__header govuk-body-s" style={{ fontWeight: 'normal' }}>
+                    <th scope="row" className="govuk-table__header govuk-body-s" >
                       <Link href="/executive/ministries/energy" className="govuk-link govuk-!-font-weight-bold">Energy & Petroleum</Link>
                     </th>
                     <td className="govuk-table__cell govuk-body-s">
@@ -165,7 +165,7 @@ export default function ExecutivePage() {
                   </tr>
                   <tr className="govuk-table__row">
                     <td className="govuk-table__cell govuk-body-s">10</td>
-                    <th scope="row" className="govuk-table__header govuk-body-s" style={{ fontWeight: 'normal' }}>
+                    <th scope="row" className="govuk-table__header govuk-body-s" >
                       <Link href="/executive/ministries/water" className="govuk-link govuk-!-font-weight-bold">Water, Sanitation & Irrigation</Link>
                     </th>
                     <td className="govuk-table__cell govuk-body-s">
@@ -174,7 +174,7 @@ export default function ExecutivePage() {
                   </tr>
                   <tr className="govuk-table__row">
                     <td className="govuk-table__cell govuk-body-s">11</td>
-                    <th scope="row" className="govuk-table__header govuk-body-s" style={{ fontWeight: 'normal' }}>
+                    <th scope="row" className="govuk-table__header govuk-body-s" >
                       <Link href="/executive/ministries/trade" className="govuk-link govuk-!-font-weight-bold">Trade, Investment & Industry</Link>
                     </th>
                     <td className="govuk-table__cell govuk-body-s">
@@ -183,7 +183,7 @@ export default function ExecutivePage() {
                   </tr>
                   <tr className="govuk-table__row">
                     <td className="govuk-table__cell govuk-body-s">12</td>
-                    <th scope="row" className="govuk-table__header govuk-body-s" style={{ fontWeight: 'normal' }}>
+                    <th scope="row" className="govuk-table__header govuk-body-s" >
                       <Link href="/executive/ministries/youth" className="govuk-link govuk-!-font-weight-bold">Youth Affairs, Sports & Arts</Link>
                     </th>
                     <td className="govuk-table__cell govuk-body-s">
@@ -192,7 +192,7 @@ export default function ExecutivePage() {
                   </tr>
                   <tr className="govuk-table__row">
                     <td className="govuk-table__cell govuk-body-s">13</td>
-                    <th scope="row" className="govuk-table__header govuk-body-s" style={{ fontWeight: 'normal' }}>
+                    <th scope="row" className="govuk-table__header govuk-body-s" >
                       <Link href="/executive/ministries/labour" className="govuk-link govuk-!-font-weight-bold">Labour & Social Protection</Link>
                     </th>
                     <td className="govuk-table__cell govuk-body-s">
@@ -201,7 +201,7 @@ export default function ExecutivePage() {
                   </tr>
                   <tr className="govuk-table__row">
                     <td className="govuk-table__cell govuk-body-s">14</td>
-                    <th scope="row" className="govuk-table__header govuk-body-s" style={{ fontWeight: 'normal' }}>
+                    <th scope="row" className="govuk-table__header govuk-body-s" >
                       <Link href="/executive/ministries/environment" className="govuk-link govuk-!-font-weight-bold">Environment, Climate Change & Forestry</Link>
                     </th>
                     <td className="govuk-table__cell govuk-body-s">
@@ -210,7 +210,7 @@ export default function ExecutivePage() {
                   </tr>
                   <tr className="govuk-table__row">
                     <td className="govuk-table__cell govuk-body-s">15</td>
-                    <th scope="row" className="govuk-table__header govuk-body-s" style={{ fontWeight: 'normal' }}>
+                    <th scope="row" className="govuk-table__header govuk-body-s" >
                       <Link href="/executive/ministries/tourism" className="govuk-link govuk-!-font-weight-bold">Tourism & Wildlife</Link>
                     </th>
                     <td className="govuk-table__cell govuk-body-s">
@@ -219,7 +219,7 @@ export default function ExecutivePage() {
                   </tr>
                   <tr className="govuk-table__row">
                     <td className="govuk-table__cell govuk-body-s">16</td>
-                    <th scope="row" className="govuk-table__header govuk-body-s" style={{ fontWeight: 'normal' }}>
+                    <th scope="row" className="govuk-table__header govuk-body-s" >
                       <Link href="/executive/ministries/ict" className="govuk-link govuk-!-font-weight-bold">Information, Communications & Digital Economy</Link>
                     </th>
                     <td className="govuk-table__cell govuk-body-s">
@@ -228,7 +228,7 @@ export default function ExecutivePage() {
                   </tr>
                   <tr className="govuk-table__row">
                     <td className="govuk-table__cell govuk-body-s">17</td>
-                    <th scope="row" className="govuk-table__header govuk-body-s" style={{ fontWeight: 'normal' }}>
+                    <th scope="row" className="govuk-table__header govuk-body-s" >
                       <Link href="/executive/ministries/lands" className="govuk-link govuk-!-font-weight-bold">Lands, Public Works, Housing & Urban Development</Link>
                     </th>
                     <td className="govuk-table__cell govuk-body-s">
@@ -237,7 +237,7 @@ export default function ExecutivePage() {
                   </tr>
                   <tr className="govuk-table__row">
                     <td className="govuk-table__cell govuk-body-s">18</td>
-                    <th scope="row" className="govuk-table__header govuk-body-s" style={{ fontWeight: 'normal' }}>
+                    <th scope="row" className="govuk-table__header govuk-body-s" >
                       <Link href="/executive/ministries/cooperatives" className="govuk-link govuk-!-font-weight-bold">Cooperatives & MSMEs</Link>
                     </th>
                     <td className="govuk-table__cell govuk-body-s">
@@ -246,7 +246,7 @@ export default function ExecutivePage() {
                   </tr>
                   <tr className="govuk-table__row">
                     <td className="govuk-table__cell govuk-body-s">19</td>
-                    <th scope="row" className="govuk-table__header govuk-body-s" style={{ fontWeight: 'normal' }}>
+                    <th scope="row" className="govuk-table__header govuk-body-s" >
                       <Link href="/executive/ministries/gender" className="govuk-link govuk-!-font-weight-bold">Gender, Culture & Equality</Link>
                     </th>
                     <td className="govuk-table__cell govuk-body-s">
@@ -255,7 +255,7 @@ export default function ExecutivePage() {
                   </tr>
                   <tr className="govuk-table__row">
                     <td className="govuk-table__cell govuk-body-s">20</td>
-                    <th scope="row" className="govuk-table__header govuk-body-s" style={{ fontWeight: 'normal' }}>
+                    <th scope="row" className="govuk-table__header govuk-body-s" >
                       <Link href="/executive/ministries/eac" className="govuk-link govuk-!-font-weight-bold">East African Community & Regional Development</Link>
                     </th>
                     <td className="govuk-table__cell govuk-body-s">

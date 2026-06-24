@@ -43,8 +43,8 @@ const ALL_CATEGORIES_QUERY = `*[_type == "governmentCategory" && !defined(parent
 }`;
 
 export const metadata = {
-  title: "Services and guidance - CitizenGuide.co.ke",
-  description: "Search, filter and find every government service available on the CitizenGuide documentation platform.",
+  title: "Services and guidance - CitizenGuide.KE",
+  description: "Find government services. Search or filter by topic.",
 };
 
 export default async function ServicesHubPage() {
@@ -54,15 +54,15 @@ export default async function ServicesHubPage() {
   ]);
 
   return (
-    <div className="govuk-width-container mx-auto px-4 py-6 max-w-5xl bg-white antialiased">
-      {/* 
-        FIXED: Wrapped in a strict Suspense Boundary with a clean GOV.UK 
-        styled loading state to resolve the CSR Prerender Bailout.
-      */}
+    <div className="govuk-width-container">
       <Suspense 
         fallback={
-          <div className="py-12 text-center text-base font-bold text-[#505a5f] font-sans">
-            Loading service directory...
+          <div className="govuk-main-wrapper">
+            <div className="govuk-grid-row">
+              <div className="govuk-grid-column-two-thirds">
+                <p className="govuk-body">Loading service directory...</p>
+              </div>
+            </div>
           </div>
         }
       >

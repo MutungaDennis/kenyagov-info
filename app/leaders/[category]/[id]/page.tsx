@@ -1,6 +1,20 @@
 import { notFound } from "next/navigation";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import { createClient } from "@/lib/supabase/server";
+import type { Metadata } from 'next';
+
+export async function generateMetadata({ params }: ProfileProps): Promise<Metadata> {
+  const { id } = await params;
+  const supabase = await createClient();
+  const { data: leader } = await supabase.from('leaders').select('name, title').eq('id', id).single();
+  if (leader) {
+    return {
+      title: `${leader.name} - ${leader.title}`,
+      description: `Profile and details for ${leader.name}, ${leader.title}.`,
+    };
+  }
+  return { title: 'Leader Profile' };
+}
 
 interface ProfileProps {
   params: Promise<{ category: string; id: string }>;

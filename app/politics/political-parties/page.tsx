@@ -114,7 +114,7 @@ export default async function PoliticalPartiesPage({
 
           <div className="govuk-grid-column-one-third">
             <p className="govuk-body-s">Filter by letter:</p>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+            <div className="govuk-!-display-flex govuk-!-flex-wrap-wrap govuk-!-gap-2">
               {alphabet.map((l) => (
                 <Link key={l} href={`/political-parties?letter=${l}`} className="govuk-link">
                   {l}
@@ -133,7 +133,7 @@ export default async function PoliticalPartiesPage({
             <div className="govuk-grid-row">
               {items.map((party: any) => (
                 <div key={party.id} className="govuk-grid-column-one-third govuk-!-margin-bottom-6">
-                  <div className="govuk-panel" style={{ padding: "16px 20px", background: "#f8f8f8" }}>
+                  <div className="govuk-panel govuk-!-padding-3 govuk-!-background-grey">
                     <h3 className="govuk-heading-s govuk-!-margin-bottom-1">
                       <Link href={`/political-parties/${party.slug}`} className="govuk-link">
                         {party.name}

@@ -11,25 +11,30 @@
   --font-sans: var(--font-public-sans), sans-serif;
 }
 
-/* Force Public Sans everywhere, eliminating GDS Transport completely [1] */
+/* 
+  Font adaptation for non-UK site:
+  We cannot use the official GDS Transport font (license + branding restrictions).
+  Public Sans is used as the closest accessible sans-serif alternative.
+  
+  We scope the override to the template root and body rather than * to avoid fighting
+  GOV.UK component-specific font rules and to let the Design System's typography scale
+  (govuk-heading-*, govuk-body-*, etc.) work as intended.
+*/
 html,
 html.govuk-template,
 .govuk-template,
 body,
-.govuk-template__body,
-* {
-  font-family: var(--font-public-sans), sans-serif !important;
+.govuk-template__body {
+  font-family: var(--font-public-sans), sans-serif;
 }
 
-*:before,
-*:after,
-*::placeholder,
-a:link,
-a:visited,
-a:hover,
-a:active,
-a:focus {
-  font-family: var(--font-public-sans), sans-serif !important;
+/* Ensure form elements and links also use our font */
+input,
+button,
+textarea,
+select,
+a {
+  font-family: inherit;
 }
 
 body {
@@ -37,6 +42,176 @@ body {
   color: var(--foreground);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  margin: 0;
+  padding: 0;
+}
+
+/* GOV.UK-compliant flex utilities to avoid inline styles */
+.govuk-!-flex-wrap-wrap { flex-wrap: wrap; }
+.govuk-!-gap-2 { gap: 8px; } /* approx for small gaps */
+.govuk-!-gap-3 { gap: 12px; }
+.govuk-!-border-bottom-1 { border-bottom: 1px solid #b1b4b6; }
+.truncate-2-lines { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.govuk-!-background-grey { background: #f3f2f1; }
+.govuk-!-color-grey { color: #505a5f; }
+.society-top-border { border-top: 2px solid #1d70b8; padding-top: 15px; }
+.accordion-button-full {
+  display: block;
+  width: 100%;
+}
+.accordion-title-bar {
+  background-color: #FFEB3B;
+  padding: 10px 14px;
+  border-radius: 6px 6px 0 0;
+}
+.cookie-banner-style {
+  background: #f3f2f1;
+  padding: 20px 0;
+  border-bottom: 3px solid #1d70b8;
+}
+.cookie-accept-btn {
+  background: #00703c;
+  color: #fff;
+  padding: 10px 20px;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+}
+.cookie-reject-btn {
+  background: #00703c;
+  color: #fff;
+  padding: 10px 20px;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+}
+.report-problem-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.report-problem-form {
+  background: #f3f2f1;
+  padding: 20px;
+  border-radius: 4px;
+}
+.govuk-!-background-white {
+  background: #ffffff;
+}
+.govuk-!-line-height-1-2 { line-height: 1.2; }
+.epra-tax-sim { border-color: #ffbf47; }
+.govuk-!-opacity-65 { opacity: 0.65; }
+.epra-sim-box { border-left: 5px solid #00703c; }
+.epra-flex-item { flex: 1; min-width: 160px; }
+.govuk-!-border-bottom-2 { border-bottom: 2px double #0b0c0c; }
+.epra-offence-card { border-left: 10px solid #d4351c; background: #f8f8f8; }
+.epra-section-row { background: #f8f8f8; }
+.epra-subtotal-row { font-weight: 500; }
+.epra-taxes-row { background: #f8f8f8; }
+.epra-total-row { background: #f3f2f1; font-weight: bold; font-size: 19px; }
+.epra-landed { border-left: 4px solid #005ea5; }
+.filter-tag {
+  background: #fff;
+  border: 1px solid #1d70b8;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-size: 14px;
+  text-decoration: none;
+  color: #1d70b8;
+  display: inline-flex;
+  align-items: center;
+}
+.sort-header {
+  background: none;
+  border: none;
+  padding: 0;
+  text-align: left;
+  font-weight: bold;
+  font-size: 18px;
+  color: #1d70b8;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.close-x { margin-left: 8px; }
+.current-nav-item {
+  padding-left: 12px;
+  border-left: 4px solid #1d70b8;
+  font-weight: bold;
+  color: #1d70b8;
+}
+.autocomplete-wrapper {
+  position: relative;
+}
+.autocomplete-form {
+  display: flex;
+}
+.autocomplete-input {
+  flex: 1;
+  border-right: none;
+  border-radius: 0;
+}
+.autocomplete-button {
+  margin: 0;
+  border-radius: 0;
+  background: #00703c;
+}
+.autocomplete-suggestions {
+  position: absolute;
+  z-index: 9999;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background-color: #ffffff;
+  border: 1px solid #b1b4b6;
+  width: 100%;
+  max-width: 100%;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow: hidden;
+}
+.autocomplete-suggestions li:hover,
+.autocomplete-suggestions li:focus {
+  background-color: #f3f2f1 !important;
+}
+.autocomplete-input-compact {
+  height: 32px;
+  font-size: 13px;
+}
+.autocomplete-button-compact {
+  height: 32px;
+  width: 36px;
+  font-size: 12px;
+}
+.print-button {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-size: 1rem;
+}
+.dropdown-relative {
+  position: relative;
+  display: inline-block;
+}
+.dropdown-button {
+  padding: 6px 12px;
+  font-size: 0.9rem;
+}
+.dropdown-content {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: white;
+  border: 1px solid #b1b4b6;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  z-index: 100;
+  min-width: 180px;
+  margin-top: 4px;
 }
 
 @media (prefers-color-scheme: dark) {

@@ -110,51 +110,33 @@ export default function GeneralFeedbackPage() {
           <div 
             ref={successPanelRef}
             tabIndex={-1}
-            className="govuk-panel govuk-panel--confirmation" 
-            style={{ 
-              backgroundColor: "#00703c", 
-              color: "#ffffff", 
-              padding: "35px", 
-              textAlign: "center", 
-              marginBottom: "30px",
-              outline: "none"
-            }}
+            className="govuk-panel govuk-panel--confirmation"
           >
-            <h1 className="govuk-panel__title" style={{ fontSize: "48px", fontWeight: "bold", margin: "0 0 15px 0", fontFamily: "sans-serif" }}>
+            <h1 className="govuk-panel__title">
               Feedback submitted
             </h1>
-            <div className="govuk-panel__body" style={{ fontSize: "24px", fontFamily: "sans-serif" }}>
+            <div className="govuk-panel__body">
               Your reference number<br />
-              <strong style={{ display: "block", fontSize: "36px", marginTop: "10px" }}>{referenceNumber}</strong>
+              <strong className="govuk-!-font-size-36 govuk-!-margin-top-2 govuk-!-display-block">{referenceNumber}</strong>
             </div>
           </div>
 
-          <h2 className="govuk-heading-m" style={{ fontSize: "24px", fontWeight: "bold", marginBottom: "15px" }}>
+          <h2 className="govuk-heading-m">
             What happens next
           </h2>
           
-          <p className="govuk-body" style={{ fontSize: "19px", lineHeight: "1.5", marginBottom: "15px" }}>
+          <p className="govuk-body">
             We review every suggestion sent to us to make our service better for all Kenyans. Thank you for helping us improve CitizenGuide.KE.
           </p>
 
-          <p className="govuk-body" style={{ fontSize: "19px", lineHeight: "1.5", marginBottom: "30px" }}>
+          <p className="govuk-body govuk-!-font-size-19">
             If you provided an email address, our technical support team might contact you if they need to ask follow-up questions or clarify your suggestion.
           </p>
 
-          <div className="govuk-button-group" style={{ display: "flex", alignItems: "center", gap: "15px" }}>
+          <div className="govuk-button-group govuk-!-display-flex govuk-!-align-items-center govuk-!-gap-3">
             <Link 
               href="/" 
-              className="govuk-button"
-              style={{
-                backgroundColor: "#00703c",
-                color: "#ffffff",
-                padding: "10px 20px",
-                textDecoration: "none",
-                fontWeight: "bold",
-                borderRadius: "0",
-                display: "inline-block",
-                boxShadow: "0 2px 0 #002d18"
-              }}
+              className="govuk-button govuk-button--start"
             >
               Return to homepage
             </Link>
@@ -181,24 +163,18 @@ export default function GeneralFeedbackPage() {
             <div 
               ref={errorSummaryRef}
               tabIndex={-1}
-              className="govuk-error-summary" 
+              className="govuk-error-summary govuk-!-margin-bottom-6" 
               role="alert" 
-              style={{ 
-                border: "4px solid #d4351c", 
-                padding: "15px", 
-                marginBottom: "30px",
-                outline: "none"
-              }}
             >
-              <h2 className="govuk-error-summary__title" style={{ color: "#d4351c", margin: "0 0 10px 0" }}>There is a problem</h2>
+              <h2 className="govuk-error-summary__title">There is a problem</h2>
               <div className="govuk-error-summary__body">
-                <p className="govuk-body" style={{ color: "#d4351c", fontWeight: "bold" }}>{submissionState.error}</p>
+                <p className="govuk-body govuk-!-text-colour-red govuk-!-font-weight-bold">{submissionState.error}</p>
               </div>
             </div>
           )}
 
           <h1 className="govuk-heading-xl">Give feedback about CitizenGuide.KE</h1>
-          <p className="govuk-body-m text-secondary" style={{ marginBottom: "25px" }}>
+          <p className="govuk-body-m govuk-!-margin-bottom-5">
             Use this form to tell us about your experience using the platform or suggest overall improvements to the system.
           </p>
           
@@ -214,7 +190,7 @@ export default function GeneralFeedbackPage() {
               </div>
 
               {isTextareaInvalid && submissionState?.errorType === "validation" && (
-                <p id="feedback-error" className="govuk-error-message" style={{ color: "#d4351c", fontWeight: "bold", margin: "0 0 5px 0" }}>
+                <p id="feedback-error" className="govuk-error-message govuk-!-text-colour-red govuk-!-font-weight-bold">
                   <span className="govuk-visually-hidden">Error:</span> {submissionState.error}
                 </p>
               )}

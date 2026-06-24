@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import { createClient } from "@/lib/supabase/server";
+import type { Metadata } from 'next';
 
 type GenericLeader = {
   id: string;
@@ -22,6 +23,15 @@ interface PageProps {
     role?: string;
     party?: string;
   }>;
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { category } = await params;
+  const title = category.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  return {
+    title: `${title} Leaders | Kenya`,
+    description: `Current ${title.toLowerCase()} leaders, office holders and representatives in Kenya.`,
+  };
 }
 
 export default async function LeadersByCategory({ params, searchParams }: PageProps) {

@@ -50,7 +50,7 @@ export default function GovUKReportProblem() {
   if (submissionState?.success) {
     return (
       <div className="govuk-width-container govuk-!-margin-top-4" role="status" aria-live="polite">
-        <div className="govuk-inset-text" style={{ borderColor: "#1d70b8", margin: 0 }}>
+        <div className="govuk-inset-text govuk-!-border-color-blue govuk-!-margin-0">
           <p className="govuk-body govuk-!-font-weight-bold">Thank you for your feedback.</p>
         </div>
       </div>
@@ -65,9 +65,9 @@ export default function GovUKReportProblem() {
         <div className="govuk-grid-column-two-thirds">
           
           {submissionState?.error && (
-            <div className="govuk-error-summary govuk-!-margin-bottom-4" role="alert" style={{ border: "4px solid #d4351c" }}>
+            <div className="govuk-error-summary govuk-!-margin-bottom-4 govuk-error-summary--error" role="alert">
               <div className="govuk-error-summary__body">
-                <p className="govuk-body govuk-!-font-weight-bold" style={{ color: "#d4351c", margin: 0 }}>
+                <p className="govuk-body govuk-!-font-weight-bold govuk-!-text-colour-red govuk-!-margin-0">
                   {submissionState.error}
                 </p>
               </div>
@@ -78,18 +78,17 @@ export default function GovUKReportProblem() {
             <p className="govuk-body-s">
               <button 
                 type="button" 
-                className="govuk-link" 
-                style={{ background: "none", border: "none", padding: 0, font: "inherit", cursor: "pointer", textDecoration: "underline" }}
+                className="govuk-link report-problem-link" 
                 onClick={() => setIsOpen(true)}
               >
                 Report a problem with this page
               </button>
             </p>
           ) : (
-            <form onSubmit={handleSubmit} style={{ background: "#f3f2f1", padding: "20px", borderRadius: "4px" }}>
+            <form onSubmit={handleSubmit} className="report-problem-form">
               <h2 className="govuk-heading-m">Help us improve CitizenGuide.KE</h2>
               
-              <div className="govuk-inset-text" style={{ background: "#ffffff" }}>
+              <div className="govuk-inset-text govuk-!-background-white">
                 Do not include personal information (such as your National ID number or phone number).
               </div>
 

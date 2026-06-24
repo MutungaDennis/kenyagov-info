@@ -132,7 +132,7 @@ export default async function WardsPage({
         <main className="govuk-main-wrapper govuk-!-padding-top-2" id="main-content" role="main">
           <h1 className="govuk-heading-l">System Error</h1>
           <p className="govuk-body">Unable to process your request. Please check your data filters and try again.</p>
-          <pre style={{ background: '#f8f8f8', padding: '10px', border: '1px solid #bfc1c3' }}>{error.message}</pre>
+          <pre className="govuk-!-background-grey govuk-!-padding-2 govuk-!-border-1">{error.message}</pre>
         </main>
       </div>
     );
@@ -198,21 +198,21 @@ export default async function WardsPage({
 
             {/* GOV.UK Compliant Filter Removal Tags Display Panel */}
             {hasActiveFilters && (
-              <div className="govuk-!-margin-bottom-4" style={{ background: '#f8f8f8', padding: '12px', border: '1px solid #bfc1c3' }}>
+              <div className="govuk-!-margin-bottom-4 govuk-!-background-grey govuk-!-padding-2 govuk-!-border-1">
                 <p className="govuk-body-s govuk-!-font-weight-bold govuk-!-margin-bottom-2">Active filters:</p>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
+                <div className="govuk-!-display-flex govuk-!-flex-wrap-wrap govuk-!-gap-2 govuk-!-align-items-center">
                   {county && (
-                    <Link href={getFilterClearUrl("county")} style={{ background: '#fff', border: '1px solid #1d70b8', padding: '4px 8px', cursor: 'pointer', fontSize: '14px', textDecoration: 'none', color: '#1d70b8', display: 'inline-flex', alignItems: 'center', borderStyle: 'solid' }}>
+                    <Link href={getFilterClearUrl("county")} className="govuk-link govuk-!-font-size-14" style={{ background: '#fff', border: '1px solid #1d70b8', padding: '4px 8px', cursor: 'pointer', textDecoration: 'none', color: '#1d70b8', display: 'inline-flex', alignItems: 'center', borderStyle: 'solid' }}>
                       County: {county} <span style={{ marginLeft: '8px', color: '#d4351c', fontWeight: 'bold' }}>&times;</span>
                     </Link>
                   )}
                   {constituency && (
-                    <Link href={getFilterClearUrl("constituency")} style={{ background: '#fff', border: '1px solid #1d70b8', padding: '4px 8px', cursor: 'pointer', fontSize: '14px', textDecoration: 'none', color: '#1d70b8', display: 'inline-flex', alignItems: 'center', borderStyle: 'solid' }}>
+                    <Link href={getFilterClearUrl("constituency")} className="govuk-link govuk-!-font-size-14" style={{ background: '#fff', border: '1px solid #1d70b8', padding: '4px 8px', cursor: 'pointer', textDecoration: 'none', color: '#1d70b8', display: 'inline-flex', alignItems: 'center', borderStyle: 'solid' }}>
                       Constituency: {constituency} <span style={{ marginLeft: '8px', color: '#d4351c', fontWeight: 'bold' }}>&times;</span>
                     </Link>
                   )}
                   {q && (
-                    <Link href={getFilterClearUrl("q")} style={{ background: '#fff', border: '1px solid #1d70b8', padding: '4px 8px', cursor: 'pointer', fontSize: '14px', textDecoration: 'none', color: '#1d70b8', display: 'inline-flex', alignItems: 'center', borderStyle: 'solid' }}>
+                    <Link href={getFilterClearUrl("q")} className="govuk-link govuk-!-font-size-14" style={{ background: '#fff', border: '1px solid #1d70b8', padding: '4px 8px', cursor: 'pointer', textDecoration: 'none', color: '#1d70b8', display: 'inline-flex', alignItems: 'center', borderStyle: 'solid' }}>
                       Search: &ldquo;{q}&rdquo; <span style={{ marginLeft: '8px', color: '#d4351c', fontWeight: 'bold' }}>&times;</span>
                     </Link>
                   )}

@@ -19,6 +19,7 @@ interface Props {
   placeholder?: string;
   className?: string;
   compact?: boolean; // for header use - smaller size
+  autoFocus?: boolean;
 }
 
 export default function SearchAutocomplete({
@@ -27,6 +28,7 @@ export default function SearchAutocomplete({
   placeholder = 'Search government...',
   className,
   compact = false,
+  autoFocus = false,
 }: Props) {
   const [query, setQuery] = useState(initialQuery);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
@@ -160,48 +162,64 @@ export default function SearchAutocomplete({
   };
 
   return (
-    <div className={className} style={{ position: 'relative' }}>
-      <form onSubmit={handleSubmit} role="search" style={{ display: 'flex' }}>
+    <div className={`${className} autocomplete-wrapper`}>
+      <form onSubmit={handleSubmit} role="search" className="autocomplete-form">
         <input
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => suggestions.length && setShowSuggestions(true)}
           placeholder={placeholder}
-          className="govuk-input"
+          className={`govuk-input autocomplete-input ${compact ? 'autocomplete-input-compact' : ''}`}
+          aria-label="Search"
+          autoFocus={autoFocus}
           style={{ 
             flex: 1, 
             borderRight: 'none', 
             borderRadius: 0,
             height: compact ? '32px' : '40px',
-            fontSize: compact ? '13px' : '14px'
+            fontSize: compact ? '13px' : '14px',
+            background: '#fff',
+            color: '#0b0c0c',
+            border: '2px solid #0b0c0c'
           }}
-          aria-label="Search"
         />
         <button
           type="submit"
-          className="govuk-button"
+          className={`govuk-button autocomplete-button ${compact ? 'autocomplete-button-compact' : ''}`}
+          aria-label="Search"
           style={{ 
             margin: 0, 
             height: compact ? '32px' : '40px', 
             width: compact ? '36px' : '44px', 
             borderRadius: 0, 
             background: '#00703c',
-            fontSize: compact ? '12px' : '14px'
+            color: '#fff',
+            fontSize: compact ? '12px' : '14px',
+            border: 'none',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
           }}
-          aria-label="Search"
         >
-          🔍
+          <svg width={compact ? 15 : 18} height={compact ? 15 : 18} viewBox="0 0 27 27" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+            <circle cx="12" cy="12" r="8.5" stroke="currentColor" strokeWidth="3" />
+            <line x1="18" y1="18" x2="24.5" y2="24.5" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+          </svg>
         </button>
       </form>
 
       {showSuggestions && suggestions.length > 0 && (
         <ul
           role="listbox"
-          style={{
+          className="autocomplete-suggestions"
+          style={{ 
             position: 'absolute',
-            zIndex: 50,
-            background: '#fff',
+            zIndex: 9999,
+            top: '100%',
+            left: 0,
+            right: 0,
+            backgroundColor: '#ffffff',
             border: '1px solid #b1b4b6',
             width: '100%',
             maxWidth: '100%',
@@ -209,6 +227,7 @@ export default function SearchAutocomplete({
             margin: 0,
             padding: 0,
             listStyle: 'none',
+            overflow: 'hidden'
           }}
         >
           {suggestions.map((s, i) => (
@@ -223,6 +242,7 @@ export default function SearchAutocomplete({
                 borderBottom: '1px solid #f3f2f1',
                 cursor: 'pointer',
                 fontSize: 14,
+                backgroundColor: '#ffffff'
               }}
               className="govuk-link"
             >
@@ -230,7 +250,7 @@ export default function SearchAutocomplete({
               <span style={{ color: '#505a5f', marginLeft: 8, fontSize: 12 }}>{s.entity_type}</span>
             </li>
           ))}
-          {loading && <li style={{ padding: 8, fontSize: 12, color: '#505a5f' }}>Searching…</li>}
+          {loading && <li style={{ padding: 8, fontSize: 12, color: '#505a5f', backgroundColor: '#ffffff' }}>Searching…</li>}
         </ul>
       )}
     </div>

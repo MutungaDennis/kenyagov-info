@@ -26,7 +26,7 @@ export function ClientLayoutWrapper({
   }, []);
 
   return (
-    <body className="govuk-template__body" suppressHydrationWarning={true} style={{ margin: 0, padding: 0 }}>
+    <body className="govuk-template__body" suppressHydrationWarning={true}>
       {/* Force an immediate top spacing reset to pull the header flush to the glass edge */}
       <style dangerouslySetInnerHTML={{__html: `
         html, body, html.govuk-template, body.govuk-template__body {

@@ -105,7 +105,8 @@ export default function CookiesPage() {
               To inspect detailed privacy explanations, learn about data protection standards under the GDPR, or read steps on removing tracking records across multiple web browsers, access the independent educational clearinghouse at <a href="https://www.allaboutcookies.org" className="govuk-link" target="_blank" rel="noreferrer">All About Cookies</a>.
             </p>
 
-            <p className="govuk-body govuk-!-margin-top-6" style={{ borderTop: '1px solid #bfc1c3', paddingTop: '15px' }}>
+            <hr className="govuk-section-break govuk-section-break--visible govuk-!-margin-top-6" />
+            <p className="govuk-body">
               If you have queries regarding our local data minimization methods, file a verification request via our <Link href="/contact" className="govuk-link">Contact desk</Link>.
             </p>
 
