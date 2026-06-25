@@ -86,6 +86,15 @@ export default function AdminNav({}: AdminNavProps) {
       >
         Polling Upload
       </Link>
+
+      {/* NEW: Hansard Management */}
+      <Link
+        href="/admin/hansard"
+        style={isActive('/admin/hansard') ? activeStyle : navLinkStyle}
+      >
+        Hansard
+      </Link>
+
       <Link
         href="/admin/analytics"
         style={isActive('/admin/analytics') ? activeStyle : navLinkStyle}
