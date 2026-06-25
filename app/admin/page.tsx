@@ -7,16 +7,17 @@ export default function AdminDashboard() {
     <div>
       <h1 className="govuk-heading-xl">Admin Dashboard</h1>
       <p className="govuk-body-l">
-        Manage data stored in Supabase. Changes appear live on the public site.
+        Manage data stored in Supabase and Sanity CMS. Changes appear live on the public site.
       </p>
 
       <div className="govuk-inset-text">
-        All management actions require admin authentication via Supabase.
+        All management actions require admin authentication.
       </div>
 
       <h2 className="govuk-heading-l">Data Management</h2>
 
       <div className="govuk-grid-row">
+        {/* Government Institutions */}
         <div className="govuk-grid-column-one-half govuk-!-margin-bottom-6">
           <div className="govuk-card govuk-card--clickable" style={{ border: "1px solid #b1b4b6", padding: "16px" }}>
             <h3 className="govuk-heading-m">
@@ -26,6 +27,7 @@ export default function AdminDashboard() {
           </div>
         </div>
 
+        {/* Government Officials */}
         <div className="govuk-grid-column-one-half govuk-!-margin-bottom-6">
           <div className="govuk-card govuk-card--clickable" style={{ border: "1px solid #b1b4b6", padding: "16px" }}>
             <h3 className="govuk-heading-m">
@@ -35,6 +37,7 @@ export default function AdminDashboard() {
           </div>
         </div>
 
+        {/* General Feedback */}
         <div className="govuk-grid-column-one-half govuk-!-margin-bottom-6">
           <div className="govuk-card govuk-card--clickable" style={{ border: "1px solid #b1b4b6", padding: "16px" }}>
             <h3 className="govuk-heading-m">
@@ -44,6 +47,7 @@ export default function AdminDashboard() {
           </div>
         </div>
 
+        {/* Bug Reports */}
         <div className="govuk-grid-column-one-half govuk-!-margin-bottom-6">
           <div className="govuk-card govuk-card--clickable" style={{ border: "1px solid #b1b4b6", padding: "16px" }}>
             <h3 className="govuk-heading-m">
@@ -53,6 +57,7 @@ export default function AdminDashboard() {
           </div>
         </div>
 
+        {/* Polling Stations Upload */}
         <div className="govuk-grid-column-one-half govuk-!-margin-bottom-6">
           <div className="govuk-card govuk-card--clickable" style={{ border: "1px solid #b1b4b6", padding: "16px" }}>
             <h3 className="govuk-heading-m">
@@ -61,10 +66,30 @@ export default function AdminDashboard() {
             <p className="govuk-body-s">Upload and process IEBC polling station PDF data into Supabase.</p>
           </div>
         </div>
+
+        {/* NEW: Hansard Management - Highlighted */}
+        <div className="govuk-grid-column-one-half govuk-!-margin-bottom-6">
+          <div 
+            className="govuk-card govuk-card--clickable" 
+            style={{ 
+              border: "1px solid #b1b4b6", 
+              padding: "16px",
+              borderLeft: "4px solid #1d70b8" 
+            }}
+          >
+            <h3 className="govuk-heading-m">
+              <Link href="/admin/hansard" className="govuk-link">Hansard Management</Link>
+            </h3>
+            <p className="govuk-body-s">
+              Upload Parliamentary Hansard PDFs, process with AI (Grok + LlamaParse), preview contributions, 
+              and publish structured sittings to Sanity.
+            </p>
+          </div>
+        </div>
       </div>
 
       <div className="govuk-inset-text govuk-!-margin-top-6">
-        <strong>Note:</strong> Additional management sections (leaders, services, counties, etc.) can be added as needed from Supabase data. Current focus is on core institutional and user-submitted data.
+        <strong>Note:</strong> Hansard data is stored in Sanity CMS. Other data (institutions, feedback, polling stations, etc.) uses Supabase.
       </div>
     </div>
   );
