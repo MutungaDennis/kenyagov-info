@@ -54,12 +54,14 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Health check
+// Health check - Updated for OpenRouter migration
 export async function GET() {
   return NextResponse.json({
     status: 'ok',
-    hasXaiKey: !!process.env.XAI_API_KEY,
+    provider: 'openrouter',                    // ← Changed from xAI
+    hasOpenRouterKey: !!process.env.OPENROUTER_API_KEY,
     hasLlamaKey: !!process.env.LLAMA_CLOUD_API_KEY,
     hasSanityToken: !!process.env.SANITY_API_TOKEN,
+    model: process.env.HANSARD_LLM_MODEL || 'google/gemini-2.5-flash (default)',
   });
 }

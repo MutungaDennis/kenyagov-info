@@ -1,9 +1,9 @@
-import { createXai } from '@ai-sdk/xai';
+import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import { generateObject } from 'ai';
 import { z } from 'zod';
 
 // ============================================
-// TYPES & SCHEMAS
+// TYPES & SCHEMAS (unchanged)
 // ============================================
 
 export const ContributionSchema = z.object({
@@ -27,7 +27,7 @@ export type Contribution = z.infer<typeof ContributionSchema>;
 export type HansardStructured = z.infer<typeof HansardStructuredSchema>;
 
 // ============================================
-// LLAMA PARSE (High-quality layout-aware extraction)
+// LLAMA PARSE (unchanged)
 // ============================================
 
 interface LlamaParseResult {
@@ -47,11 +47,9 @@ export async function parsePdfWithLlamaParse(
 
   const baseUrl = 'https://api.cloud.llamaindex.ai/api/parsing';
 
-  // ✅ FIXED: Proper way to convert Node Buffer to Blob (TypeScript safe)
   const uint8Array = new Uint8Array(pdfBuffer);
   const fileBlob = new Blob([uint8Array], { type: 'application/pdf' });
 
-  // Step 1: Upload PDF
   const formData = new FormData();
   formData.append('file', fileBlob, fileName);
   formData.append('result_type', 'markdown');
@@ -62,9 +60,7 @@ export async function parsePdfWithLlamaParse(
 
   const uploadResponse = await fetch(`${baseUrl}/upload`, {
     method: 'POST',
-    headers: {
-      Authorization: `Bearer ${LLAMA_API_KEY}`,
-    },
+    headers: { Authorization: `Bearer ${LLAMA_API_KEY}` },
     body: formData,
   });
 
@@ -76,22 +72,17 @@ export async function parsePdfWithLlamaParse(
   const uploadData = await uploadResponse.json();
   const jobId = uploadData.id || uploadData.job_id;
 
-  if (!jobId) {
-    throw new Error('Failed to get job ID from LlamaParse');
-  }
+  if (!jobId) throw new Error('Failed to get job ID from LlamaParse');
 
-  // Step 2: Poll until ready
   let attempts = 0;
   const maxAttempts = 40;
   let status = 'PENDING';
 
   while (attempts < maxAttempts) {
     await new Promise((resolve) => setTimeout(resolve, 3000));
-
     const statusRes = await fetch(`${baseUrl}/job/${jobId}`, {
       headers: { Authorization: `Bearer ${LLAMA_API_KEY}` },
     });
-
     if (!statusRes.ok) throw new Error('Failed to check LlamaParse job status');
 
     const statusData = await statusRes.json();
@@ -101,7 +92,6 @@ export async function parsePdfWithLlamaParse(
     if (status === 'ERROR' || status === 'FAILED') {
       throw new Error(`LlamaParse failed: ${statusData.error || 'Unknown error'}`);
     }
-
     attempts++;
   }
 
@@ -109,7 +99,6 @@ export async function parsePdfWithLlamaParse(
     throw new Error(`LlamaParse timed out after ${maxAttempts * 3} seconds`);
   }
 
-  // Step 3: Get markdown result
   const resultRes = await fetch(`${baseUrl}/job/${jobId}/result/markdown`, {
     headers: { Authorization: `Bearer ${LLAMA_API_KEY}` },
   });
@@ -127,11 +116,11 @@ export async function parsePdfWithLlamaParse(
 }
 
 // ============================================
-// GROK (xAI) - Intelligent Hansard Structuring
+// OPENROUTER + GEMINI 2.5 FLASH (REPLACED GROK)
 // ============================================
 
-const xai = createXai({
-  apiKey: process.env.XAI_API_KEY!,
+const openrouter = createOpenRouter({
+  apiKey: process.env.OPENROUTER_API_KEY!,
 });
 
 const SYSTEM_PROMPT = `You are an expert Kenyan Parliamentary Hansard analyst.
@@ -148,22 +137,19 @@ CRITICAL RULES:
 3. Capture the FULL spoken text. Preserve paragraphs. Include procedural notes like (Laughter), (Applause), or interjections in [square brackets].
 4. If the same person speaks multiple times, create separate entries in chronological order.
 5. Number contributions sequentially starting from 1.
-6. Extract as much metadata as possible:
-   - speakerName (clean name only)
-   - speakerTitle (Hon., Dr., Prof., Rt. Hon., etc.)
-   - constituency
-   - party
-   - role (Speaker, Deputy Speaker, Chair of Committee, etc.)
+6. Extract as much metadata as possible: speakerName, speakerTitle, constituency, party, role.
 
 Return ONLY valid JSON matching the schema. Be extremely precise with Kenyan MP names and constituencies.`;
 
-export async function structureHansardWithGrok(
+export async function structureHansardWithAI(
   markdownText: string,
   houseType: string = 'national-assembly'
 ): Promise<HansardStructured> {
-  if (!process.env.XAI_API_KEY) {
-    throw new Error('XAI_API_KEY is not configured');
+  if (!process.env.OPENROUTER_API_KEY) {
+    throw new Error('OPENROUTER_API_KEY is not configured');
   }
+
+  const modelName = process.env.HANSARD_LLM_MODEL || 'google/gemini-2.5-flash';
 
   const maxChars = 180000;
   const textToProcess =
@@ -172,19 +158,19 @@ export async function structureHansardWithGrok(
       : markdownText;
 
   const { object } = await generateObject({
-    model: xai('grok-3-latest'), // Change to 'grok-4' if you have access
+    model: openrouter(modelName),
     schema: HansardStructuredSchema,
     system: SYSTEM_PROMPT,
     prompt: `House: ${houseType}\n\nHansard content:\n\n${textToProcess}`,
     temperature: 0.1,
-    maxOutputTokens: 16000, // ✅ FIXED: was maxTokens in older versions
+    maxOutputTokens: 16000,
   });
 
   return object;
 }
 
 // ============================================
-// MAIN ORCHESTRATOR
+// MAIN ORCHESTRATOR (updated function name)
 // ============================================
 
 export interface ProcessHansardResult {
@@ -213,11 +199,11 @@ export async function processHansardPdf(
     throw new Error(`PDF parsing failed: ${error.message}`);
   }
 
-  // 2. Structure with Grok
+  // 2. Structure with AI (now via OpenRouter)
   let structured: HansardStructured;
   try {
-    structured = await structureHansardWithGrok(markdown, houseType);
-    console.log(`[Hansard] Grok extracted ${structured.contributions?.length || 0} contributions`);
+    structured = await structureHansardWithAI(markdown, houseType);
+    console.log(`[Hansard] AI extracted ${structured.contributions?.length || 0} contributions`);
   } catch (error: any) {
     throw new Error(`AI structuring failed: ${error.message}`);
   }
@@ -232,7 +218,7 @@ export async function processHansardPdf(
 }
 
 // ============================================
-// HELPER: Convert speech text → Sanity Portable Text
+// HELPER: Text to Portable Text (unchanged)
 // ============================================
 
 export function textToPortableText(text: string) {
