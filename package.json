@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@ai-sdk/xai": "^3.0.97",
     "@portabletext/react": "^6.2.0",
     "@sanity/client": "^7.22.0",
     "@sanity/image-url": "^2.1.1",
@@ -16,8 +17,10 @@
     "@supabase/ssr": "^0.10.2",
     "@supabase/supabase-js": "^2.105.3",
     "@tailwindcss/postcss": "^4.2.4",
+    "ai": "^6.0.209",
     "date-fns": "^4.2.1",
     "govuk-frontend": "^6.1.0",
+    "lucide-react": "^1.21.0",
     "next": "16.2.4",
     "next-auth": "^4.24.14",
     "next-sanity": "^12.4.5",
@@ -29,7 +32,8 @@
     "sass": "^1.80.0",
     "styled-components": "^6.4.1",
     "tailwindcss": "^4.2.4",
-    "use-debounce": "^10.1.1"
+    "use-debounce": "^10.1.1",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
