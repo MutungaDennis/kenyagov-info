@@ -62,7 +62,7 @@ export default function GovUKHeader() {
           <div className="header-logo-container">
             <Link href="/" className="header-logo-link">
               <Image 
-                src="/logo.jpeg" 
+                src="/logo.jpg" 
                 alt="CitizenGuide.KE" 
                 width={30} 
                 height={30} 
