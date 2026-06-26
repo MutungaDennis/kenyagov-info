@@ -7,12 +7,18 @@ import "@/app/globals.css";
 
 import { ClientLayoutWrapper } from "./ClientLayoutWrapper";
 
+// Configure Public Sans Font with CSS Variable binding
 const publicSans = Public_Sans({
   subsets: ['latin'],
   display: 'swap',
   variable: '--font-public-sans',
 });
 
+// =============================================================
+// GLOBAL METADATA CORE CONFIGURATION
+// Static references to images like '/og-image.png' are removed 
+// to allow Next.js file-based dynamic OG engines to take over.
+// =============================================================
 export const metadata: Metadata = {
   title: {
     default: 'Citizen Guide Kenya - Informational Guide for Kenyans',
@@ -30,20 +36,13 @@ export const metadata: Metadata = {
     siteName: 'Citizen Guide Kenya',
     locale: 'en_KE',
     type: 'website',
-    images: [
-      {
-        url: '/og-image.png', 
-        width: 1200,
-        height: 630,
-        alt: 'Citizen Guide Kenya Preview Image',
-      },
-    ],
+    // Next.js automatically maps your app/opengraph-image.tsx file here
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Citizen Guide Kenya',
     description: 'Your ultimate informational dashboard for Kenyan governance and public services.',
-    images: ['/og-image.png'],
+    // Next.js automatically injects your modern dynamic card engines here
   },
 };
 
