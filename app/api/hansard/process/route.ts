@@ -58,10 +58,12 @@ export async function POST(request: NextRequest) {
 export async function GET() {
   return NextResponse.json({
     status: 'ok',
-    provider: 'openrouter',                    // ← Changed from xAI
+    primaryProvider: 'xai',
+    fallbackProvider: 'openrouter',
+    hasXaiKey: !!process.env.XAI_API_KEY,
     hasOpenRouterKey: !!process.env.OPENROUTER_API_KEY,
     hasLlamaKey: !!process.env.LLAMA_CLOUD_API_KEY,
-    hasSanityToken: !!process.env.SANITY_API_TOKEN,
-    model: process.env.HANSARD_LLM_MODEL || 'google/gemini-2.5-flash (default)',
+    xaiModel: process.env.HANSARD_XAI_MODEL || 'grok-3-latest',
+    openRouterModel: process.env.HANSARD_OPENROUTER_MODEL || 'google/gemini-2.5-flash',
   });
 }

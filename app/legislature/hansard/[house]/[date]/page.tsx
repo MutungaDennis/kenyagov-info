@@ -1,35 +1,42 @@
-import Link from "next/link";
-import { notFound } from "next/navigation";
-import { createClient } from "next-sanity";
-import { PortableText } from "@portabletext/react";
-import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-import GovUKFeedback from "@/components/govuk/Feedback";
+'use client';
+
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
+import { createClient } from 'next-sanity';
+import { PortableText } from '@portabletext/react';
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
+import GovUKBreadcrumbs from '@/components/govuk/Breadcrumbs';
+import GovUKFeedback from '@/components/govuk/Feedback';
 
 // ============================================
 // SANITY CLIENT
 // ============================================
 const sanityClient = createClient({
-  projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || "",
-  dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || "production",
-  apiVersion: "2024-01-01",
+  projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || '',
+  dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || 'production',
+  apiVersion: '2024-01-01',
   useCdn: true,
 });
-
-export const revalidate = 3600; // ISR
 
 // ============================================
 // TYPES
 // ============================================
-interface Speech {
-  _id: string;
-  speakerLabel: string;
+interface Contribution {
+  _key: string;
+  order: number;
   supabaseLeaderId?: string;
-  party?: string;
-  speechContent: any[];
-  videoTimestamp?: number;
-  topics?: string[];
-  sectionHeader: string;
-  isKeyContribution?: boolean;
+  startTime?: string;
+  sectionHeader?: string;
+  speech: any[];
+}
+
+interface EnrichedContribution extends Contribution {
+  enrichedSpeaker?: {
+    full_name: string;
+    title?: string;
+    current_constituency?: string;
+    current_party?: string;
+  };
 }
 
 interface Sitting {
@@ -38,115 +45,97 @@ interface Sitting {
   houseType: string;
   countyName?: string;
   sittingDate: string;
-  sittingPeriod: string;
-  parliamentaryTerm: string;
+  sittingPeriod?: string;
+  parliamentaryTerm?: string;
   youtubeUrl?: string;
   editorialSummary?: any[];
   keyEvents?: string[];
   topics?: string[];
-  speeches: Speech[];
+  contributions: Contribution[];
+}
+
+interface PageProps {
+  params: Promise<{ house: string; date: string }>;
 }
 
 // ============================================
 // PAGE COMPONENT
 // ============================================
-interface PageProps {
-  params: Promise<{ house: string; date: string }>;
-}
-
 export default async function DailySittingPage({ params }: PageProps) {
   const { house, date } = await params;
 
-  // Validate house type
-  const validHouses = ["national-assembly", "senate", "county-assembly"];
+  const validHouses = ['national-assembly', 'senate', 'county-assembly'];
   if (!validHouses.includes(house)) {
     notFound();
   }
 
-  let sitting: Sitting | null = null;
-
-  try {
-    sitting = await sanityClient.fetch(
-      `
-      *[_type == "hansardSitting" 
-        && houseType == $house 
-        && sittingDate == $date][0] {
-        _id,
-        title,
-        houseType,
-        countyName,
-        sittingDate,
-        sittingPeriod,
-        parliamentaryTerm,
-        youtubeUrl,
-        editorialSummary,
-        keyEvents,
-        topics,
-        "speeches": *[_type == "hansardSpeech" && sitting._ref == ^._id] 
-          | order(sectionHeader asc, _createdAt asc) {
-            _id,
-            speakerLabel,
-            supabaseLeaderId,
-            party,
-            speechContent,
-            videoTimestamp,
-            topics,
-            sectionHeader,
-            isKeyContribution
-          }
+  // Fetch sitting from Sanity
+  const sitting: Sitting | null = await sanityClient.fetch(
+    `
+    *[_type == "hansardSitting" 
+      && houseType == $house 
+      && sittingDate == $date][0] {
+      _id,
+      title,
+      houseType,
+      countyName,
+      sittingDate,
+      sittingPeriod,
+      parliamentaryTerm,
+      youtubeUrl,
+      editorialSummary,
+      keyEvents,
+      topics,
+      contributions[] {
+        _key,
+        order,
+        supabaseLeaderId,
+        startTime,
+        sectionHeader,
+        speech
       }
-      `,
-      { house, date }
-    );
-  } catch (error) {
-    console.error("Error fetching sitting:", error);
-  }
+    }
+    `,
+    { house, date }
+  );
 
-  // Graceful handling if no data
   if (!sitting) {
     return (
       <div className="govuk-width-container">
         <GovUKBreadcrumbs
           items={[
-            { text: "Home", href: "/" },
-            { text: "Legislature", href: "/legislature" },
-            { text: "Hansard", href: "/legislature/hansard" },
-            { text: house.replace("-", " "), href: `/legislature/hansard/${house}` },
-            { text: date, href: "" },
+            { text: 'Home', href: '/' },
+            { text: 'Legislature', href: '/legislature' },
+            { text: 'Hansard', href: '/legislature/hansard' },
+            { text: house.replace('-', ' '), href: `/legislature/hansard/${house}` },
+            { text: date, href: '' },
           ]}
         />
         <main className="govuk-main-wrapper">
           <h1 className="govuk-heading-xl">Sitting Not Found</h1>
           <p className="govuk-body">
-            No Hansard record was found for <strong>{house}</strong> on <strong>{date}</strong>.
+            No Hansard record was found for <strong>{house.replace('-', ' ')}</strong> on <strong>{date}</strong>.
           </p>
           <Link href={`/legislature/hansard/${house}`} className="govuk-link">
-            ← Back to {house.replace("-", " ")} archive
+            ← Back to {house.replace('-', ' ')} archive
           </Link>
         </main>
       </div>
     );
   }
 
-  // Group speeches by section
-  const groupedSpeeches = sitting.speeches.reduce((acc: Record<string, Speech[]>, speech) => {
-    const section = speech.sectionHeader || "General Debate";
-    if (!acc[section]) acc[section] = [];
-    acc[section].push(speech);
-    return acc;
-  }, {});
-
-  const sectionNames = Object.keys(groupedSpeeches);
+  // Enrich contributions with Supabase data
+  const enrichedContributions = await enrichContributions(sitting.contributions || []);
 
   return (
     <div className="govuk-width-container">
       <GovUKBreadcrumbs
         items={[
-          { text: "Home", href: "/" },
-          { text: "Legislature", href: "/legislature" },
-          { text: "Hansard", href: "/legislature/hansard" },
-          { text: sitting.houseType.replace("-", " "), href: `/legislature/hansard/${sitting.houseType}` },
-          { text: new Date(sitting.sittingDate).toLocaleDateString("en-KE"), href: "" },
+          { text: 'Home', href: '/' },
+          { text: 'Legislature', href: '/legislature' },
+          { text: 'Hansard', href: '/legislature/hansard' },
+          { text: sitting.houseType.replace('-', ' '), href: `/legislature/hansard/${sitting.houseType}` },
+          { text: new Date(sitting.sittingDate).toLocaleDateString('en-KE'), href: '' },
         ]}
       />
 
@@ -156,16 +145,16 @@ export default async function DailySittingPage({ params }: PageProps) {
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-two-thirds">
             <span className="govuk-caption-l">
-              {sitting.houseType.replace("-", " ").toUpperCase()} • {sitting.parliamentaryTerm}
+              {sitting.houseType.replace('-', ' ').toUpperCase()} • {sitting.parliamentaryTerm}
             </span>
             <h1 className="govuk-heading-xl">{sitting.title}</h1>
             <p className="govuk-body-l govuk-!-margin-bottom-1">
-              {new Date(sitting.sittingDate).toLocaleDateString("en-KE", {
-                weekday: "long",
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}{" "}
+              {new Date(sitting.sittingDate).toLocaleDateString('en-KE', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              })}{' '}
               — {sitting.sittingPeriod}
             </p>
             {sitting.countyName && (
@@ -234,89 +223,96 @@ export default async function DailySittingPage({ params }: PageProps) {
           </div>
         )}
 
-        {/* Debate Sections */}
+        {/* Debate Contributions */}
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-full">
-            <h2 className="govuk-heading-m">Debate Sections</h2>
+            <h2 className="govuk-heading-m">Debate Contributions</h2>
 
-            {sectionNames.length > 0 ? (
-              sectionNames.map((sectionName, index) => (
-                <div key={index} className="govuk-!-margin-bottom-8">
-                  <h3 className="govuk-heading-s govuk-!-margin-bottom-3 border-b pb-2">
-                    {sectionName}
-                  </h3>
+            {enrichedContributions.length === 0 ? (
+              <div className="govuk-inset-text">
+                <p className="govuk-body">No speeches have been added for this sitting yet.</p>
+              </div>
+            ) : (
+              <div className="space-y-6 govuk-!-margin-top-4">
+                {enrichedContributions
+                  .sort((a, b) => a.order - b.order)
+                  .map((contrib) => {
+                    const speaker = contrib.enrichedSpeaker;
+                    const party = speaker?.current_party?.toUpperCase() || '';
 
-                  <div className="space-y-6">
-                    {groupedSpeeches[sectionName].map((speech) => (
-                      <div 
-                        key={speech._id} 
-                        className="govuk-summary-card govuk-!-margin-bottom-4"
-                      >
+                    const partyColor = 
+                      party.includes('UDA') ? '#1d70b8' :
+                      party.includes('ODM') ? '#f47738' :
+                      party.includes('JUBILEE') ? '#28a197' : '#505a5f';
+
+                    return (
+                      <div key={contrib._key} className="govuk-summary-card">
                         <div className="govuk-summary-card__title-wrapper">
-                          <h4 className="govuk-summary-card__title">
-                            {speech.supabaseLeaderId ? (
-                              <Link 
-                                href={`/leaders/${speech.supabaseLeaderId}`} 
-                                className="govuk-link"
-                              >
-                                {speech.speakerLabel}
-                              </Link>
+                          <h3 className="govuk-summary-card__title">
+                            <span style={{ 
+                              backgroundColor: '#1d70b8', 
+                              color: 'white', 
+                              padding: '2px 10px', 
+                              borderRadius: '3px', 
+                              fontSize: '14px',
+                              fontWeight: 600,
+                              marginRight: '10px'
+                            }}>
+                              {contrib.order}
+                            </span>
+
+                            {speaker ? (
+                              <>
+                                {speaker.title ? `${speaker.title} ` : ''}
+                                <strong>{speaker.full_name}</strong>
+                                {speaker.current_party && (
+                                  <span 
+                                    className="govuk-body-s govuk-!-margin-left-2"
+                                    style={{ 
+                                      backgroundColor: partyColor, 
+                                      color: 'white', 
+                                      padding: '2px 8px', 
+                                      borderRadius: '12px',
+                                      fontSize: '13px'
+                                    }}
+                                  >
+                                    {speaker.current_party}
+                                  </span>
+                                )}
+                                {speaker.current_constituency && (
+                                  <span className="govuk-body-s govuk-!-margin-left-2" style={{ color: '#505a5f' }}>
+                                    {speaker.current_constituency}
+                                  </span>
+                                )}
+                              </>
                             ) : (
-                              speech.speakerLabel
+                              // Fallback for old/unlinked contributions
+                              <span style={{ color: '#505a5f' }}>Speaker details not linked</span>
                             )}
-                            {speech.party && (
-                              <span className="govuk-body-s govuk-!-margin-left-2 text-gray-600">
-                                ({speech.party})
-                              </span>
-                            )}
-                          </h4>
+                          </h3>
                         </div>
 
                         <div className="govuk-summary-card__content">
-                          {/* Speech Content */}
-                          <div className="prose prose-sm max-w-none govuk-body">
-                            <PortableText value={speech.speechContent} />
+                          {/* Meta */}
+                          <div className="govuk-!-margin-bottom-3" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                            {contrib.sectionHeader && (
+                              <span className="govuk-tag govuk-tag--grey">{contrib.sectionHeader}</span>
+                            )}
+                            {contrib.startTime && (
+                              <span className="govuk-body-s" style={{ color: '#505a5f' }}>
+                                ⏱ {contrib.startTime}
+                              </span>
+                            )}
                           </div>
 
-                          {/* Topics for this speech */}
-                          {speech.topics && speech.topics.length > 0 && (
-                            <div className="govuk-!-margin-top-3">
-                              {speech.topics.map((t, i) => (
-                                <span key={i} className="govuk-tag govuk-tag--grey govuk-!-margin-right-1 govuk-!-font-size-14">
-                                  {t}
-                                </span>
-                              ))}
-                            </div>
-                          )}
-
-                          {/* Watch Timestamp Link */}
-                          {speech.videoTimestamp && sitting.youtubeUrl && (
-                            <div className="govuk-!-margin-top-3">
-                              <a
-                                href={`${sitting.youtubeUrl}&t=${speech.videoTimestamp}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="govuk-link govuk-!-font-weight-bold"
-                              >
-                                ▶ Watch this moment ({Math.floor(speech.videoTimestamp / 60)}m {speech.videoTimestamp % 60}s)
-                              </a>
-                            </div>
-                          )}
-
-                          {speech.isKeyContribution && (
-                            <div className="govuk-!-margin-top-2">
-                              <span className="govuk-tag govuk-tag--green">Key Contribution</span>
-                            </div>
-                          )}
+                          {/* Speech */}
+                          <div className="prose prose-sm max-w-none govuk-body">
+                            <PortableText value={contrib.speech} />
+                          </div>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="govuk-inset-text">
-                <p className="govuk-body">No speeches have been added for this sitting yet.</p>
+                    );
+                  })}
               </div>
             )}
           </div>
@@ -328,4 +324,51 @@ export default async function DailySittingPage({ params }: PageProps) {
       </main>
     </div>
   );
+}
+
+// ============================================
+// SUPABASE ENRICHMENT FUNCTION
+// ============================================
+async function enrichContributions(contributions: Contribution[]): Promise<EnrichedContribution[]> {
+  const supabase = createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY! // or use anon key if RLS allows
+  );
+
+  const leaderIds = Array.from(
+    new Set(contributions.map(c => c.supabaseLeaderId).filter(Boolean) as string[])
+  );
+
+  if (leaderIds.length === 0) {
+    return contributions.map(c => ({ ...c }));
+  }
+
+  const { data: leaders } = await supabase
+    .from('leaders')
+    .select(`
+      id,
+      full_name,
+      title,
+      current_constituency,
+      current_party
+    `)
+    .in('id', leaderIds);
+
+  const leaderMap = new Map((leaders || []).map(l => [l.id, l]));
+
+  return contributions.map(contrib => {
+    const leader = contrib.supabaseLeaderId ? leaderMap.get(contrib.supabaseLeaderId) : null;
+
+    return {
+      ...contrib,
+      enrichedSpeaker: leader
+        ? {
+            full_name: leader.full_name,
+            title: leader.title,
+            current_constituency: leader.current_constituency,
+            current_party: leader.current_party,
+          }
+        : undefined,
+    };
+  });
 }

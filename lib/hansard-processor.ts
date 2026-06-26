@@ -1,9 +1,10 @@
+import { createXai } from '@ai-sdk/xai';
 import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import { generateObject } from 'ai';
 import { z } from 'zod';
 
 // ============================================
-// TYPES & SCHEMAS (unchanged)
+// TYPES & SCHEMAS
 // ============================================
 
 export const ContributionSchema = z.object({
@@ -27,7 +28,7 @@ export type Contribution = z.infer<typeof ContributionSchema>;
 export type HansardStructured = z.infer<typeof HansardStructuredSchema>;
 
 // ============================================
-// LLAMA PARSE (unchanged)
+// LLAMA PARSE (unchanged - high quality)
 // ============================================
 
 interface LlamaParseResult {
@@ -116,8 +117,12 @@ export async function parsePdfWithLlamaParse(
 }
 
 // ============================================
-// OPENROUTER + GEMINI 2.5 FLASH (REPLACED GROK)
+// PROVIDERS
 // ============================================
+
+const xai = createXai({
+  apiKey: process.env.XAI_API_KEY!,
+});
 
 const openrouter = createOpenRouter({
   apiKey: process.env.OPENROUTER_API_KEY!,
@@ -141,36 +146,93 @@ CRITICAL RULES:
 
 Return ONLY valid JSON matching the schema. Be extremely precise with Kenyan MP names and constituencies.`;
 
-export async function structureHansardWithAI(
-  markdownText: string,
-  houseType: string = 'national-assembly'
-): Promise<HansardStructured> {
-  if (!process.env.OPENROUTER_API_KEY) {
-    throw new Error('OPENROUTER_API_KEY is not configured');
+// ============================================
+// XAI (Primary)
+// ============================================
+
+async function structureWithXAI(markdownText: string, houseType: string): Promise<HansardStructured> {
+  if (!process.env.XAI_API_KEY) {
+    throw new Error('XAI_API_KEY is not configured');
   }
 
-  const modelName = process.env.HANSARD_LLM_MODEL || 'google/gemini-2.5-flash';
-
+  const model = process.env.HANSARD_XAI_MODEL || 'grok-3-latest';
   const maxChars = 180000;
-  const textToProcess =
-    markdownText.length > maxChars
-      ? markdownText.substring(0, maxChars) + '\n\n[CONTENT TRUNCATED]'
-      : markdownText;
+  const textToProcess = markdownText.length > maxChars 
+    ? markdownText.substring(0, maxChars) + '\n\n[CONTENT TRUNCATED]' 
+    : markdownText;
 
   const { object } = await generateObject({
-    model: openrouter(modelName),
+    model: xai(model),
     schema: HansardStructuredSchema,
     system: SYSTEM_PROMPT,
     prompt: `House: ${houseType}\n\nHansard content:\n\n${textToProcess}`,
     temperature: 0.1,
-    maxOutputTokens: 16000,
+    maxOutputTokens: 8000,
   });
 
   return object;
 }
 
 // ============================================
-// MAIN ORCHESTRATOR (updated function name)
+// OPENROUTER (Fallback)
+// ============================================
+
+async function structureWithOpenRouter(markdownText: string, houseType: string): Promise<HansardStructured> {
+  if (!process.env.OPENROUTER_API_KEY) {
+    throw new Error('OPENROUTER_API_KEY is not configured');
+  }
+
+  const model = process.env.HANSARD_OPENROUTER_MODEL || 'google/gemini-2.5-flash';
+  const maxChars = 180000;
+  const textToProcess = markdownText.length > maxChars 
+    ? markdownText.substring(0, maxChars) + '\n\n[CONTENT TRUNCATED]' 
+    : markdownText;
+
+  const { object } = await generateObject({
+    model: openrouter(model),
+    schema: HansardStructuredSchema,
+    system: SYSTEM_PROMPT,
+    prompt: `House: ${houseType}\n\nHansard content:\n\n${textToProcess}`,
+    temperature: 0.1,
+    maxOutputTokens: 8000,
+  });
+
+  return object;
+}
+
+// ============================================
+// MAIN AI STRUCTURING (with automatic fallback)
+// ============================================
+
+export async function structureHansardWithAI(
+  markdownText: string,
+  houseType: string = 'national-assembly'
+): Promise<HansardStructured> {
+  // Try XAI first
+  try {
+    console.log('[Hansard] Trying primary provider: xAI (Grok)');
+    const result = await structureWithXAI(markdownText, houseType);
+    console.log('[Hansard] ✅ Success with xAI');
+    return result;
+  } catch (xaiError: any) {
+    console.warn(`[Hansard] xAI failed: ${xaiError.message}. Falling back to OpenRouter...`);
+
+    // Fallback to OpenRouter
+    try {
+      const result = await structureWithOpenRouter(markdownText, houseType);
+      console.log('[Hansard] ✅ Success with OpenRouter fallback');
+      return result;
+    } catch (openRouterError: any) {
+      console.error('[Hansard] Both providers failed');
+      throw new Error(
+        `AI structuring failed. xAI: ${xaiError.message} | OpenRouter: ${openRouterError.message}`
+      );
+    }
+  }
+}
+
+// ============================================
+// MAIN ORCHESTRATOR
 // ============================================
 
 export interface ProcessHansardResult {
@@ -187,9 +249,8 @@ export async function processHansardPdf(
   houseType: 'national-assembly' | 'senate' | 'county-assembly' = 'national-assembly'
 ): Promise<ProcessHansardResult> {
   const startTime = Date.now();
-  const warnings: string[] = [];
 
-  // 1. Extract with LlamaParse
+  // 1. LlamaParse
   let markdown: string;
   try {
     const llamaResult = await parsePdfWithLlamaParse(pdfBuffer, fileName);
@@ -199,7 +260,7 @@ export async function processHansardPdf(
     throw new Error(`PDF parsing failed: ${error.message}`);
   }
 
-  // 2. Structure with AI (now via OpenRouter)
+  // 2. AI Structuring (XAI → OpenRouter fallback)
   let structured: HansardStructured;
   try {
     structured = await structureHansardWithAI(markdown, houseType);
@@ -213,12 +274,11 @@ export async function processHansardPdf(
     structured,
     rawMarkdownLength: markdown.length,
     processingTimeMs: Date.now() - startTime,
-    warnings: warnings.length > 0 ? warnings : undefined,
   };
 }
 
 // ============================================
-// HELPER: Text to Portable Text (unchanged)
+// HELPER: Text → Portable Text
 // ============================================
 
 export function textToPortableText(text: string) {

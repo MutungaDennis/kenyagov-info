@@ -15,8 +15,12 @@ interface SaveHansardRequest {
   sittingDate: string; // YYYY-MM-DD
   title: string;
   slug?: string;
+  sittingPeriod?: string;
+  parliamentaryTerm?: string;
+  youtubeUrl?: string;
   contributions: Array<{
     order: number;
+    supabaseLeaderId?: string;           // ← ADDED
     speakerName: string;
     speakerTitle?: string;
     constituency?: string;
@@ -44,10 +48,11 @@ export async function POST(request: NextRequest) {
     const slugBase = body.slug || `${body.houseType}-${body.sittingDate}`;
     const slug = slugBase.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 
-    // Convert speech text → Portable Text blocks
+    // Convert speech text → Portable Text blocks + include supabaseLeaderId
     const processedContributions = body.contributions.map((contrib, index) => ({
       _key: `contrib-${index}`,
       order: contrib.order,
+      supabaseLeaderId: contrib.supabaseLeaderId || undefined,   // ← ADDED
       speakerName: contrib.speakerName.trim(),
       speakerTitle: contrib.speakerTitle?.trim() || '',
       constituency: contrib.constituency?.trim() || '',
@@ -57,15 +62,19 @@ export async function POST(request: NextRequest) {
       speech: textToPortableText(contrib.speech),
     }));
 
-    const document = {
+    const document: any = {
       _type: 'hansardSitting',
       title: body.title.trim(),
       slug: { _type: 'slug', current: slug },
-      house: body.houseType,
+      houseType: body.houseType,
       sittingDate: body.sittingDate,
+      sittingPeriod: body.sittingPeriod || 'Morning Sitting',
+      parliamentaryTerm: body.parliamentaryTerm || '13th Parliament (2022–2027)',
+      youtubeUrl: body.youtubeUrl || undefined,
       contributions: processedContributions,
       editorialSummary: body.editorialSummary || '',
       suggestedTopics: body.suggestedTopics || [],
+      isActive: true,
       _createdAt: new Date().toISOString(),
     };
 
