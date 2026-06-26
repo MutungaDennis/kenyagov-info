@@ -7,8 +7,6 @@ export default defineType({
   icon: () => '🗣️',
 
   fields: [
-    // ... existing fields (title, slug, houseType, county, sittingDate, etc.) remain the same ...
-
     defineField({
       name: 'title',
       title: 'Sitting Title',
@@ -96,87 +94,75 @@ export default defineType({
       description: 'Short 2–4 paragraph citizen-friendly summary',
     }),
 
+    // ============================================
+    // CLEANED CONTRIBUTIONS ARRAY
+    // ============================================
     defineField({
-  name: 'contributions',
-  title: 'Contributions / Speeches',
-  type: 'array',
-  of: [
-    {
-      type: 'object',
-      fields: [
-        defineField({
-          name: 'order',
-          title: 'Order',
-          type: 'number',
-          description: 'Sequential order of the contribution in the sitting',
-          validation: (Rule) => Rule.required().min(1),
-        }),
-        defineField({
-          name: 'speakerName',
-          title: 'Speaker Full Name',
-          type: 'string',
-          description: 'e.g. "John Kiarie" or "Moses Wetang\'ula"',
-          validation: (Rule) => Rule.required(),
-        }),
-        defineField({
-          name: 'speakerTitle',
-          title: 'Honorific / Title',
-          type: 'string',
-          description: 'e.g. "Hon.", "Dr.", "Prof.", "The Hon. (Dr.)", "Rt. Hon."',
-        }),
-        defineField({
-          name: 'constituency',
-          title: 'Constituency / County',
-          type: 'string',
-          description: 'e.g. "Kibra Constituency" or "Nairobi County" for Senators',
-        }),
-        defineField({
-          name: 'party',
-          title: 'Political Party',
-          type: 'string',
-          description: 'e.g. "ODM", "UDA", "Jubilee Party", "Independent"',
-        }),
-        defineField({
-          name: 'role',
-          title: 'Official Role / Position',
-          type: 'string',
-          description: 'e.g. "Speaker", "Deputy Speaker", "Leader of the Majority Party", "Chair, Budget Committee"',
-        }),
-        defineField({
-          name: 'speech',
-          title: 'Full Speech / Contribution',
-          type: 'array',
-          of: [{ type: 'block' }],
-          description: 'The complete spoken words. Preserve original paragraphs. Include procedural notes like (Laughter), (Applause), or interjections in [square brackets] if present in original.',
-        }),
-        defineField({
-          name: 'startTime',
-          title: 'Start Time (optional)',
-          type: 'string',
-          description: 'e.g. "10:23" or "2:15 PM" if timestamped from video or Hansard',
-        }),
-      ],
-      preview: {
-        select: {
-          order: 'order',
-          speakerName: 'speakerName',
-          speakerTitle: 'speakerTitle',
-          constituency: 'constituency',
-          party: 'party',
-        },
-        prepare({ order, speakerName, speakerTitle, constituency, party }) {
-          return {
-            title: `${order}. ${speakerTitle || ''} ${speakerName || 'Unknown Speaker'}`.trim(),
-            subtitle: [constituency, party].filter(Boolean).join(' • '),
-          }
-        },
-      },
-    },
-  ],
-  description: 'All individual speeches and contributions from this sitting, extracted and structured from the Hansard PDF.',
-}),
+      name: 'contributions',
+      title: 'Contributions / Speeches',
+      type: 'array',
+      of: [
+        {
+          type: 'object',
+          fields: [
+            defineField({
+              name: 'order',
+              title: 'Order',
+              type: 'number',
+              description: 'Sequential order of the contribution in the sitting',
+              validation: (Rule) => Rule.required().min(1),
+            }),
 
-    // NEW: Key Events / Highlights
+            // === ONLY LINK TO SUPABASE ===
+            defineField({
+              name: 'supabaseLeaderId',
+              title: 'Supabase Leader ID',
+              type: 'string',
+              description: 'UUID from the leaders table in Supabase. This is the single source of truth for speaker name, title, constituency, party, and role.',
+            }),
+
+            defineField({
+              name: 'startTime',
+              title: 'Start Time (optional)',
+              type: 'string',
+              description: 'e.g. "10:23" or "2:15 PM" if timestamped from video or Hansard',
+            }),
+
+            defineField({
+              name: 'sectionHeader',
+              title: 'Section / Order of Business',
+              type: 'string',
+              description: 'e.g. "THE FINANCE BILL, 2026 – SECOND READING"',
+            }),
+
+            defineField({
+              name: 'speech',
+              title: 'Full Speech / Contribution',
+              type: 'array',
+              of: [{ type: 'block' }],
+              description: 'The complete spoken words. Preserve original paragraphs. Include procedural notes like (Laughter), (Applause), or interjections in [square brackets].',
+              validation: (Rule) => Rule.required(),
+            }),
+          ],
+          preview: {
+            select: {
+              order: 'order',
+              supabaseLeaderId: 'supabaseLeaderId',
+              section: 'sectionHeader',
+            },
+            prepare({ order, supabaseLeaderId, section }) {
+              return {
+                title: `${order}. ${supabaseLeaderId ? 'Linked Speaker' : 'Unlinked Speaker'}`,
+                subtitle: section || '',
+              }
+            },
+          },
+        },
+      ],
+      description: 'All individual speeches and contributions from this sitting. Speaker details are resolved from Supabase using supabaseLeaderId.',
+    }),
+
+    // Key Events / Highlights
     defineField({
       name: 'keyEvents',
       title: 'Key Events / Highlights',
@@ -188,7 +174,7 @@ export default defineType({
       description: 'Short scannable highlights (e.g. "Sugar importation statement requested", "Equalisation Fund debate dominates sitting"). Max 8–10 items.',
     }),
 
-    // NEW: Debate Sections (for navigation + accordions)
+    // Debate Sections (for navigation + accordions)
     defineField({
       name: 'debateSections',
       title: 'Debate Sections',
