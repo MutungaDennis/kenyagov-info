@@ -4,7 +4,7 @@ import { ImageResponse } from 'next/og';
 export const runtime = 'edge';
 export const alt = 'Citizen Guide Kenya - Civic Information Platform';
 export const size = { width: 1200, height: 630 };
-export const contentType = 'image/png';
+export const contentType = 'image/webp';
 
 export default async function Image() {
   // Points directly to your asset folder structure at public/image/logo.jpg
