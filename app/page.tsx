@@ -196,7 +196,7 @@ export default function Home() {
             <h2 className="govuk-heading-m">National government</h2>
             <ul className="govuk-list">
               <li>
-                <Link href="/executive" className="govuk-link govuk-!-font-weight-bold">The Executive</Link>
+                <Link href="/government/cabinet" className="govuk-link govuk-!-font-weight-bold">The Executive</Link>
                 <p className="govuk-body govuk-!-margin-top-1">Presidency, ministries, cabinet secretaries and state departments.</p>
               </li>
               <li>
