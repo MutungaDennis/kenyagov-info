@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-import GovUKFeedback from "@/components/govuk/Feedback";
 
 export default function AccessibilityPage() {
   return (
@@ -80,7 +79,6 @@ export default function AccessibilityPage() {
               The technical architecture of this site runs on a Next.js framework paired with compiled GOV.UK Frontend stylesheet modules. Layout structures are verified against standard assistive software stacks, including VoiceOver, NVDA screen readers, and HTML markup validation tools.
             </p>
 
-            <GovUKFeedback />
           </div>
         </div>
       </main>
