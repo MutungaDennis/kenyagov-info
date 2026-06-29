@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -9,45 +9,29 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ leaders: [] });
   }
 
-  // Safe client creation (prevents build-time crash)
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
+  );
 
-  if (!supabaseUrl || !supabaseAnonKey) {
-    console.error('Missing Supabase environment variables');
+  const { data, error } = await supabase
+    .from('leaders')
+    .select('id, full_name, title, current_constituency, current_party, current_organization')
+    .or(`full_name.ilike.%${q}%,current_constituency.ilike.%${q}%`)
+    .limit(15);
+
+  if (error) {
     return NextResponse.json({ leaders: [] }, { status: 500 });
   }
 
-  const supabase = createClient(supabaseUrl, supabaseAnonKey);
+  const leaders = (data || []).map((l: any) => ({
+    id: l.id,
+    full_name: l.full_name,
+    title: l.title,
+    constituency: l.current_constituency,
+    party: l.current_party,
+    role: l.current_organization,
+  }));
 
-  try {
-    const { data, error } = await supabase
-      .from('leaders')
-      .select(`
-        id,
-        slug,
-        title,
-        first_name,
-        surname,
-        full_name,
-        category,
-        level,
-        current_party,
-        current_constituency,
-        current_county
-      `)
-      .or(`full_name.ilike.%${q}%,slug.ilike.%${q}%`)
-      .order('full_name', { ascending: true })
-      .limit(15);
-
-    if (error) {
-      console.error('Leader search error:', error);
-      return NextResponse.json({ leaders: [] }, { status: 500 });
-    }
-
-    return NextResponse.json({ leaders: data || [] });
-  } catch (err) {
-    console.error('Unexpected error in leader search:', err);
-    return NextResponse.json({ leaders: [] }, { status: 500 });
-  }
+  return NextResponse.json({ leaders });
 }

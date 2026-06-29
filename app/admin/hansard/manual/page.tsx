@@ -2,18 +2,22 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Link as LinkIcon, Loader2, X } from 'lucide-react';
+import { Link as LinkIcon, Loader2 } from 'lucide-react';
+
+type ContributionType = 'spoken' | 'procedural' | 'header';
 
 interface Contribution {
   order: number;
-  supabaseLeaderId?: string;           // NEW
+  type: ContributionType;
+  supabaseLeaderId?: string;
   speakerName: string;
   speakerTitle?: string;
   constituency?: string;
   party?: string;
   role?: string;
-  speech: string;
+  speech: any; // Can be string or Portable Text array from Sanity
   startTime?: string;
+  sectionHeader?: string;
 }
 
 interface SittingForm {
@@ -51,28 +55,101 @@ export default function ManualHansardEntry() {
   const [modalOpen, setModalOpen] = useState(false);
   const [currentContribution, setCurrentContribution] = useState<Contribution>({
     order: 1,
+    type: 'spoken',
     speakerName: '',
     speech: '',
   });
 
-  // Leader search state
   const [leaderSearchResults, setLeaderSearchResults] = useState<LeaderSearchResult[]>([]);
   const [isSearchingLeaders, setIsSearchingLeaders] = useState(false);
   const [showLeaderDropdown, setShowLeaderDropdown] = useState(false);
 
   const [isSaving, setIsSaving] = useState(false);
   const [successData, setSuccessData] = useState<any>(null);
+  const [showSuccessBanner, setShowSuccessBanner] = useState(false);
+
+  // For loading existing sittings
+  const [existingDocumentId, setExistingDocumentId] = useState<string | null>(null);
+  const [isLoadingExisting, setIsLoadingExisting] = useState(false);
+  const [loadDate, setLoadDate] = useState('');
+  const [loadHouse, setLoadHouse] = useState<'national-assembly' | 'senate' | 'county-assembly'>('national-assembly');
+
+  // Helper: Convert Portable Text (from Sanity) to plain text for safe display
+  const portableTextToPlain = (blocks: any): string => {
+    if (!blocks) return '';
+    if (typeof blocks === 'string') return blocks;
+    if (!Array.isArray(blocks)) return '';
+
+    return blocks
+      .map((block: any) => {
+        if (block._type === 'block' && block.children) {
+          return block.children.map((child: any) => child.text || '').join('');
+        }
+        return '';
+      })
+      .join(' ')
+      .trim();
+  };
+
+  const getPublicUrl = () => {
+    const { houseType, sittingDate } = sitting;
+    if (!sittingDate) return '#';
+    if (houseType === 'national-assembly') return `/legislature/hansard/national-assembly/${sittingDate}`;
+    if (houseType === 'senate') return `/legislature/hansard/senate/${sittingDate}`;
+    if (houseType === 'county-assembly') return `/legislature/hansard/county-assemblies/${sittingDate}`;
+    return `/legislature/hansard/${sittingDate}`;
+  };
+
+  // ==================== LOAD EXISTING SITTING ====================
+  const loadExistingSitting = async () => {
+    if (!loadDate) {
+      alert('Please select a date');
+      return;
+    }
+
+    setIsLoadingExisting(true);
+
+    try {
+      const res = await fetch(`/api/hansard/load-existing?date=${loadDate}&houseType=${loadHouse}`);
+      const data = await res.json();
+
+      if (!data.exists) {
+        alert('No sitting found for that date and house.');
+        setIsLoadingExisting(false);
+        return;
+      }
+
+      const loaded = data.sitting;
+
+      // Auto-fill the form
+      setSitting({
+        title: loaded.title || '',
+        sittingDate: loaded.sittingDate,
+        houseType: loaded.houseType,
+        sittingPeriod: loaded.sittingPeriod || 'Morning Sitting',
+        parliamentaryTerm: loaded.parliamentaryTerm || '13th Parliament (2022–2027)',
+        youtubeUrl: loaded.youtubeUrl || '',
+        editorialSummary: loaded.editorialSummary || '',
+      });
+
+      setContributions(loaded.contributions || []);
+      setExistingDocumentId(loaded._id);
+
+      alert(`Loaded existing sitting with ${loaded.contributions?.length || 0} contributions. You can now add more.`);
+    } catch (error) {
+      console.error(error);
+      alert('Failed to load existing sitting');
+    } finally {
+      setIsLoadingExisting(false);
+    }
+  };
 
   const openAddModal = () => {
     const nextOrder = contributions.length > 0 
       ? Math.max(...contributions.map(c => c.order)) + 1 
       : 1;
 
-    setCurrentContribution({
-      order: nextOrder,
-      speakerName: '',
-      speech: '',
-    });
+    setCurrentContribution({ order: nextOrder, type: 'spoken', speakerName: '', speech: '' });
     setEditingIndex(null);
     setLeaderSearchResults([]);
     setShowLeaderDropdown(false);
@@ -88,9 +165,23 @@ export default function ManualHansardEntry() {
   };
 
   const saveContribution = () => {
-    if (!currentContribution.speakerName.trim() || !currentContribution.speech.trim()) {
-      alert('Speaker Name and Speech are required.');
-      return;
+    const type = currentContribution.type;
+
+    if (type === 'header') {
+      if (!currentContribution.sectionHeader?.trim()) {
+        alert('Section / Order of Business is required for Section Headers.');
+        return;
+      }
+    } else if (type === 'procedural') {
+      if (!currentContribution.speech.trim()) {
+        alert('Content is required for Procedural Notes.');
+        return;
+      }
+    } else if (type === 'spoken') {
+      if (!currentContribution.speakerName.trim() || !currentContribution.speech.trim()) {
+        alert('Speaker Name and Content are required for Spoken contributions.');
+        return;
+      }
     }
 
     if (editingIndex !== null) {
@@ -102,7 +193,7 @@ export default function ManualHansardEntry() {
     }
 
     setModalOpen(false);
-    setCurrentContribution({ order: 1, speakerName: '', speech: '' });
+    setCurrentContribution({ order: 1, type: 'spoken', speakerName: '', speech: '' });
     setEditingIndex(null);
     setLeaderSearchResults([]);
     setShowLeaderDropdown(false);
@@ -110,8 +201,7 @@ export default function ManualHansardEntry() {
 
   const deleteContribution = (index: number) => {
     if (!confirm('Delete this contribution?')) return;
-    const updated = contributions.filter((_, i) => i !== index);
-    setContributions(updated);
+    setContributions(contributions.filter((_, i) => i !== index));
   };
 
   const moveContribution = (index: number, direction: 'up' | 'down') => {
@@ -120,9 +210,7 @@ export default function ManualHansardEntry() {
 
     const updated = [...contributions];
     [updated[index], updated[newIndex]] = [updated[newIndex], updated[index]];
-
-    const renumbered = updated.map((c, i) => ({ ...c, order: i + 1 }));
-    setContributions(renumbered);
+    setContributions(updated.map((c, i) => ({ ...c, order: i + 1 })));
   };
 
   const handleSaveToSanity = async () => {
@@ -148,15 +236,18 @@ export default function ManualHansardEntry() {
         editorialSummary: sitting.editorialSummary || undefined,
         contributions: contributions.map(c => ({
           order: c.order,
-          supabaseLeaderId: c.supabaseLeaderId || undefined,   // NEW
+          type: c.type,
+          supabaseLeaderId: c.supabaseLeaderId || undefined,
           speakerName: c.speakerName.trim(),
           speakerTitle: c.speakerTitle?.trim() || '',
           constituency: c.constituency?.trim() || '',
           party: c.party?.trim() || '',
           role: c.role?.trim() || '',
-          speech: c.speech.trim(),
+          speech: c.speech,
           startTime: c.startTime?.trim() || '',
+          sectionHeader: c.sectionHeader?.trim() || '',
         })),
+        existingDocumentId: existingDocumentId || undefined,
       };
 
       const res = await fetch('/api/hansard/save', {
@@ -169,6 +260,8 @@ export default function ManualHansardEntry() {
       if (!res.ok) throw new Error(data.error || 'Failed to save');
 
       setSuccessData(data);
+      setShowSuccessBanner(true);
+      setContributions([]);
     } catch (error: any) {
       alert('Error saving: ' + error.message);
     } finally {
@@ -176,14 +269,21 @@ export default function ManualHansardEntry() {
     }
   };
 
-  // Search leaders from Supabase
+  const continueWithSameSitting = () => {
+    setShowSuccessBanner(false);
+    setSuccessData(null);
+  };
+
+  const startNewSitting = () => {
+    window.location.reload();
+  };
+
   const searchLeaders = async (query: string) => {
     if (query.length < 2) {
       setLeaderSearchResults([]);
       setShowLeaderDropdown(false);
       return;
     }
-
     setIsSearchingLeaders(true);
     try {
       const res = await fetch(`/api/leaders/search?q=${encodeURIComponent(query)}`);
@@ -204,62 +304,83 @@ export default function ManualHansardEntry() {
       ...currentContribution,
       supabaseLeaderId: leader.id,
       speakerName: leader.full_name || '',
-      speakerTitle: leader.title || currentContribution.speakerTitle || '',
-      constituency: leader.constituency || currentContribution.constituency || '',
-      party: leader.party || currentContribution.party || '',
-      role: leader.role || currentContribution.role || '',
+      speakerTitle: leader.title || '',
+      constituency: leader.constituency || '',
+      party: leader.party || '',
+      role: leader.role || '',
     });
     setShowLeaderDropdown(false);
     setLeaderSearchResults([]);
   };
 
   const unlinkLeader = () => {
-    setCurrentContribution({
-      ...currentContribution,
-      supabaseLeaderId: undefined,
-    });
+    setCurrentContribution({ ...currentContribution, supabaseLeaderId: undefined });
   };
-
-  if (successData) {
-    return (
-      <div className="govuk-width-container">
-        <main className="govuk-main-wrapper">
-          <div style={{ maxWidth: '700px', margin: '0 auto', textAlign: 'center' }}>
-            <h1 className="govuk-heading-xl">✅ Hansard Sitting Published</h1>
-            <p className="govuk-body-l">{successData.title}</p>
-            
-            <div className="govuk-inset-text">
-              {successData.contributionsCount} contributions saved successfully.
-            </div>
-
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
-              <Link href={`/legislature/hansard/${successData.slug}`} target="_blank" className="govuk-button">
-                View on Public Site
-              </Link>
-              <a href={`https://your-sanity-studio-url.sanity.studio/desk/hansardSitting;${successData.documentId}`} target="_blank" className="govuk-button govuk-button--secondary">
-                Edit in Sanity Studio
-              </a>
-              <button onClick={() => window.location.reload()} className="govuk-button govuk-button--secondary">
-                Create Another Sitting
-              </button>
-            </div>
-          </div>
-        </main>
-      </div>
-    );
-  }
 
   return (
     <div className="govuk-width-container">
       <main className="govuk-main-wrapper">
         <h1 className="govuk-heading-xl">Manual Hansard Entry</h1>
-        <p className="govuk-body-l">Add or create Hansard sittings and contributions manually. Use the leader search to link speakers to the official records.</p>
+        <p className="govuk-body-l">
+          Upload real Hansard sittings. Use <strong>Section Header</strong> and <strong>Procedural Note</strong> for non-spoken content.
+        </p>
 
-        {/* Sitting Metadata */}
+        {/* Load Existing Sitting Section */}
+        <div className="govuk-inset-text govuk-!-margin-bottom-6" style={{ backgroundColor: '#f3f8f4', borderLeft: '5px solid #1d70b8' }}>
+          <h3 className="govuk-heading-s govuk-!-margin-bottom-2">Continue Working on an Existing Sitting</h3>
+          <div className="govuk-grid-row">
+            <div className="govuk-grid-column-one-half">
+              <div className="govuk-form-group">
+                <label className="govuk-label">Sitting Date</label>
+                <input type="date" className="govuk-input" value={loadDate} onChange={(e) => setLoadDate(e.target.value)} />
+              </div>
+            </div>
+            <div className="govuk-grid-column-one-half">
+              <div className="govuk-form-group">
+                <label className="govuk-label">House</label>
+                <select className="govuk-select" value={loadHouse} onChange={(e) => setLoadHouse(e.target.value as any)}>
+                  <option value="national-assembly">National Assembly</option>
+                  <option value="senate">Senate</option>
+                  <option value="county-assembly">County Assembly</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <button onClick={loadExistingSitting} disabled={isLoadingExisting || !loadDate} className="govuk-button">
+            {isLoadingExisting ? 'Loading...' : 'Load Existing Sitting & Continue'}
+          </button>
+          {existingDocumentId && (
+            <p className="govuk-body-s govuk-!-margin-top-2" style={{ color: '#137a3a' }}>
+              ✓ Currently editing existing sitting
+            </p>
+          )}
+        </div>
+
+        {/* Success Banner */}
+        {showSuccessBanner && successData && (
+          <div className="govuk-inset-text" style={{ backgroundColor: '#e6f4ea', borderLeft: '6px solid #137a3a', padding: '20px 24px', marginBottom: '32px' }}>
+            <h2 className="govuk-heading-m" style={{ color: '#137a3a', marginBottom: '8px' }}>
+              ✅ Sitting {successData.action === 'updated' ? 'Updated' : 'Published'} Successfully
+            </h2>
+            <p className="govuk-body" style={{ marginBottom: '4px' }}><strong>{successData.title}</strong></p>
+            <p className="govuk-body-s" style={{ color: '#505a5f', marginBottom: '16px' }}>
+              {sitting.houseType.replace('-', ' ')} • {sitting.sittingDate} • {successData.contributionsCount} contributions
+            </p>
+
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+              <button onClick={continueWithSameSitting} className="govuk-button">Continue adding more</button>
+              <Link href={getPublicUrl()} target="_blank" className="govuk-button govuk-button--secondary">View on Public Site →</Link>
+              <a href={`https://www.sanity.io/@oPARwvA07/studio/yomntryu9cc5zo2e7odm374w/default/hansardSitting;${successData.documentId}`} target="_blank" className="govuk-button govuk-button--secondary">Edit in Sanity Studio</a>
+              <button onClick={startNewSitting} className="govuk-button govuk-button--secondary">Start a new sitting</button>
+            </div>
+          </div>
+        )}
+
+        {/* Sitting Details */}
         <div className="govuk-grid-row govuk-!-margin-bottom-8">
           <div className="govuk-grid-column-two-thirds">
             <h2 className="govuk-heading-m">Sitting Details</h2>
-            
+
             <div className="govuk-form-group">
               <label className="govuk-label">Sitting Title *</label>
               <input type="text" className="govuk-input" value={sitting.title} onChange={(e) => setSitting({ ...sitting, title: e.target.value })} placeholder="e.g. Thursday, 18 June 2026 – Morning Sitting" />
@@ -308,42 +429,51 @@ export default function ManualHansardEntry() {
           </div>
         </div>
 
-        {/* Contributions Section */}
+        {/* Contributions Table */}
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-full">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h2 className="govuk-heading-m" style={{ marginBottom: 0 }}>Contributions ({contributions.length})</h2>
+              <h2 className="govuk-heading-m" style={{ marginBottom: 0 }}>
+                Contributions ({contributions.length})
+              </h2>
               <button onClick={openAddModal} className="govuk-button">+ Add Contribution</button>
             </div>
 
             {contributions.length === 0 ? (
-              <div className="govuk-inset-text">No contributions added yet. Click "Add Contribution" to start.</div>
+              <div className="govuk-inset-text">No contributions added yet. Click "+ Add Contribution" to start.</div>
             ) : (
               <table className="govuk-table">
                 <thead>
                   <tr>
-                    <th style={{ width: '60px' }}>Order</th>
-                    <th>Speaker</th>
-                    <th>Party / Role</th>
-                    <th style={{ width: '120px' }}>Actions</th>
+                    <th style={{ width: '50px' }}>Order</th>
+                    <th style={{ width: '110px' }}>Type</th>
+                    <th>Speaker / Section</th>
+                    <th>Content</th>
+                    <th style={{ width: '140px' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {contributions.sort((a, b) => a.order - b.order).map((contrib, index) => (
+                  {contributions.sort((a,b) => a.order - b.order).map((contrib, index) => (
                     <tr key={index}>
                       <td><strong>{contrib.order}</strong></td>
                       <td>
+                        {contrib.type === 'spoken' && <span className="govuk-tag govuk-tag--blue">Spoken</span>}
+                        {contrib.type === 'procedural' && <span className="govuk-tag govuk-tag--yellow">Procedural</span>}
+                        {contrib.type === 'header' && <span className="govuk-tag govuk-tag--grey">Header</span>}
+                      </td>
+                      <td>
+                        {contrib.sectionHeader && <div style={{ fontWeight: 600, color: '#1d70b8' }}>{contrib.sectionHeader}</div>}
                         {contrib.speakerTitle && <span style={{ color: '#505a5f' }}>{contrib.speakerTitle} </span>}
-                        <strong>{contrib.speakerName}</strong>
-                        {contrib.supabaseLeaderId && <span style={{ marginLeft: '8px', fontSize: '11px', background: '#e6f4ea', color: '#137a3a', padding: '1px 6px', borderRadius: '3px' }}>LINKED</span>}
-                        {contrib.constituency && <div className="govuk-body-s">{contrib.constituency}</div>}
+                        <strong>{contrib.speakerName || '—'}</strong>
+                        {contrib.supabaseLeaderId && <span style={{ marginLeft: '6px', fontSize: '11px', background: '#e6f4ea', color: '#137a3a', padding: '1px 5px', borderRadius: '3px' }}>LINKED</span>}
+                      </td>
+                      <td style={{ maxWidth: '380px' }}>
+                        {portableTextToPlain(contrib.speech).length > 100 
+                          ? portableTextToPlain(contrib.speech).substring(0, 100) + '...' 
+                          : portableTextToPlain(contrib.speech)}
                       </td>
                       <td>
-                        {contrib.party && <span className="govuk-tag govuk-tag--blue">{contrib.party}</span>}
-                        {contrib.role && <div className="govuk-body-s">{contrib.role}</div>}
-                      </td>
-                      <td>
-                        <button onClick={() => openEditModal(index)} className="govuk-button govuk-button--secondary govuk-!-margin-right-1" style={{ padding: '4px 12px', fontSize: '13px' }}>Edit</button>
+                        <button onClick={() => openEditModal(index)} className="govuk-button govuk-button--secondary govuk-!-margin-right-1" style={{ padding: '4px 10px', fontSize: '13px' }}>Edit</button>
                         <button onClick={() => moveContribution(index, 'up')} className="govuk-button govuk-button--secondary" style={{ padding: '4px 8px', fontSize: '13px' }}>↑</button>
                         <button onClick={() => moveContribution(index, 'down')} className="govuk-button govuk-button--secondary" style={{ padding: '4px 8px', fontSize: '13px' }}>↓</button>
                         <button onClick={() => deleteContribution(index)} className="govuk-button govuk-button--warning" style={{ padding: '4px 8px', fontSize: '13px', marginLeft: '4px' }}>Delete</button>
@@ -357,124 +487,153 @@ export default function ManualHansardEntry() {
         </div>
 
         <div className="govuk-!-margin-top-8">
-          <button onClick={handleSaveToSanity} disabled={isSaving || contributions.length === 0} className="govuk-button govuk-button--start" style={{ fontSize: '18px', padding: '14px 32px' }}>
-            {isSaving ? 'Publishing...' : 'Publish to Sanity'}
+          <button 
+            onClick={handleSaveToSanity} 
+            disabled={isSaving || contributions.length === 0} 
+            className="govuk-button govuk-button--start" 
+            style={{ fontSize: '18px', padding: '14px 32px' }}
+          >
+            {isSaving ? 'Publishing...' : (existingDocumentId ? 'Update Sitting' : 'Publish to Sanity')}
           </button>
+          <p className="govuk-hint govuk-!-margin-top-2">
+            {existingDocumentId 
+              ? 'This will update the existing sitting with new contributions.' 
+              : 'This will create a new sitting.'}
+          </p>
         </div>
 
         {/* Modal */}
         {modalOpen && (
           <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-            <div style={{ background: 'white', padding: '32px', borderRadius: '4px', width: '90%', maxWidth: '820px', maxHeight: '92vh', overflowY: 'auto' }}>
+            <div style={{ background: 'white', padding: '32px', borderRadius: '4px', width: '90%', maxWidth: '860px', maxHeight: '92vh', overflowY: 'auto' }}>
               <h2 className="govuk-heading-m">{editingIndex !== null ? 'Edit Contribution' : 'Add New Contribution'}</h2>
 
-              {/* === SEARCHABLE LEADER DROPDOWN === */}
-              <div style={{ background: '#f3f8f4', border: '1px solid #cce3d4', padding: '16px', borderRadius: '4px', marginBottom: '24px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                  <label className="govuk-label" style={{ marginBottom: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <LinkIcon size={16} /> Link to Official Leader Record (from Supabase)
-                  </label>
-                  {currentContribution.supabaseLeaderId && (
-                    <button type="button" onClick={unlinkLeader} style={{ fontSize: '12px', color: '#c62828' }}>Unlink</button>
-                  )}
-                </div>
-
-                {currentContribution.supabaseLeaderId ? (
-                  <div style={{ color: '#137a3a', fontWeight: 500, fontSize: '14px' }}>
-                    ✓ Linked to official leader record
-                  </div>
-                ) : (
-                  <>
-                    <input
-                      type="text"
-                      className="govuk-input"
-                      placeholder="Search leader name (e.g. Moses Wetang'ula, John Kiarie...)"
-                      onChange={(e) => searchLeaders(e.target.value)}
-                      onFocus={() => leaderSearchResults.length > 0 && setShowLeaderDropdown(true)}
-                    />
-
-                    {isSearchingLeaders && (
-                      <div style={{ fontSize: '13px', color: '#137a3a', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <Loader2 size={14} className="animate-spin" /> Searching leaders...
-                      </div>
-                    )}
-
-                    {showLeaderDropdown && leaderSearchResults.length > 0 && (
-                      <div style={{ marginTop: '6px', border: '1px solid #ccc', borderRadius: '4px', maxHeight: '220px', overflowY: 'auto', background: 'white', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
-                        {leaderSearchResults.map((leader) => (
-                          <button
-                            key={leader.id}
-                            type="button"
-                            onClick={() => selectLeader(leader)}
-                            style={{ width: '100%', textAlign: 'left', padding: '10px 14px', border: 'none', background: 'white', cursor: 'pointer', borderBottom: '1px solid #eee' }}
-                          >
-                            <div style={{ fontWeight: 600 }}>{leader.full_name}</div>
-                            <div style={{ fontSize: '12px', color: '#505a5f' }}>
-                              {[leader.constituency, leader.party, leader.role].filter(Boolean).join(' • ')}
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </>
-                )}
+              {/* Entry Type */}
+              <div className="govuk-form-group">
+                <label className="govuk-label">Entry Type</label>
+                <select className="govuk-select" value={currentContribution.type} onChange={(e) => setCurrentContribution({ ...currentContribution, type: e.target.value as ContributionType })}>
+                  <option value="spoken">Spoken Contribution (MP speech)</option>
+                  <option value="procedural">Procedural Note (Laughter, consultations, Chair changes, etc.)</option>
+                  <option value="header">Section Header (Papers, Bill, Motion, Adjournment, etc.)</option>
+                </select>
               </div>
 
-              {/* Rest of the form fields */}
+              {/* Section Header */}
+              <div className="govuk-form-group">
+                <label className="govuk-label">Section / Order of Business</label>
+                <input type="text" className="govuk-input" placeholder="e.g. PAPERS LAID or THE SUPPLEMENTARY APPROPRIATION BILL – Second Reading" value={currentContribution.sectionHeader || ''} onChange={(e) => setCurrentContribution({ ...currentContribution, sectionHeader: e.target.value })} />
+              </div>
+
+              {/* Leader Search - Only for Spoken */}
+              {currentContribution.type === 'spoken' && (
+                <div style={{ background: '#f3f8f4', border: '1px solid #cce3d4', padding: '16px', borderRadius: '4px', marginBottom: '24px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <label className="govuk-label" style={{ marginBottom: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <LinkIcon size={16} /> Link to Official Leader Record
+                    </label>
+                    {currentContribution.supabaseLeaderId && <button type="button" onClick={unlinkLeader} style={{ fontSize: '12px', color: '#c62828' }}>Unlink</button>}
+                  </div>
+
+                  {currentContribution.supabaseLeaderId ? (
+                    <div style={{ color: '#137a3a', fontWeight: 500, fontSize: '14px' }}>✓ Linked to official record. Fields marked * are locked.</div>
+                  ) : (
+                    <>
+                      <input type="text" className="govuk-input" placeholder="Search leader name..." onChange={(e) => searchLeaders(e.target.value)} onFocus={() => leaderSearchResults.length > 0 && setShowLeaderDropdown(true)} />
+                      {isSearchingLeaders && <div style={{ fontSize: '13px', color: '#137a3a', marginTop: '6px' }}><Loader2 size={14} className="animate-spin" /> Searching...</div>}
+                      {showLeaderDropdown && leaderSearchResults.length > 0 && (
+                        <div style={{ marginTop: '6px', border: '1px solid #ccc', borderRadius: '4px', maxHeight: '220px', overflowY: 'auto', background: 'white', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+                          {leaderSearchResults.map((leader) => (
+                            <button key={leader.id} type="button" onClick={() => selectLeader(leader)} style={{ width: '100%', textAlign: 'left', padding: '10px 14px', border: 'none', background: 'white', cursor: 'pointer', borderBottom: '1px solid #eee' }}>
+                              <div style={{ fontWeight: 600 }}>{leader.full_name}</div>
+                              <div style={{ fontSize: '12px', color: '#505a5f' }}>{[leader.constituency, leader.party, leader.role].filter(Boolean).join(' • ')}</div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
+
+              {/* Speaker Name - Only for Spoken */}
+              {currentContribution.type === 'spoken' && (
+                <div className="govuk-form-group">
+                  <label className="govuk-label">Speaker Full Name *</label>
+                  <input type="text" className="govuk-input" value={currentContribution.speakerName} onChange={(e) => setCurrentContribution({ ...currentContribution, speakerName: e.target.value })} />
+                </div>
+              )}
+
+              {/* Locked fields for Spoken */}
+              {currentContribution.type === 'spoken' && (
+                <>
+                  <div className="govuk-grid-row">
+                    <div className="govuk-grid-column-one-half">
+                      <div className="govuk-form-group">
+                        <label className="govuk-label">Title / Honorific *</label>
+                        <input type="text" className="govuk-input" value={currentContribution.speakerTitle || ''} onChange={(e) => setCurrentContribution({ ...currentContribution, speakerTitle: e.target.value })} disabled={!!currentContribution.supabaseLeaderId} />
+                      </div>
+                    </div>
+                    <div className="govuk-grid-column-one-half">
+                      <div className="govuk-form-group">
+                        <label className="govuk-label">Constituency / County *</label>
+                        <input type="text" className="govuk-input" value={currentContribution.constituency || ''} onChange={(e) => setCurrentContribution({ ...currentContribution, constituency: e.target.value })} disabled={!!currentContribution.supabaseLeaderId} />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="govuk-grid-row">
+                    <div className="govuk-grid-column-one-half">
+                      <div className="govuk-form-group">
+                        <label className="govuk-label">Political Party *</label>
+                        <input type="text" className="govuk-input" value={currentContribution.party || ''} onChange={(e) => setCurrentContribution({ ...currentContribution, party: e.target.value })} disabled={!!currentContribution.supabaseLeaderId} />
+                      </div>
+                    </div>
+                    <div className="govuk-grid-column-one-half">
+                      <div className="govuk-form-group">
+                        <label className="govuk-label">Role / Position *</label>
+                        <input type="text" className="govuk-input" value={currentContribution.role || ''} onChange={(e) => setCurrentContribution({ ...currentContribution, role: e.target.value })} disabled={!!currentContribution.supabaseLeaderId} />
+                      </div>
+                    </div>
+                  </div>
+
+                  {currentContribution.supabaseLeaderId && <p className="govuk-hint" style={{ fontSize: '13px', marginTop: '-8px', marginBottom: '16px' }}>Fields marked * are locked to the official database record.</p>}
+                </>
+              )}
+
+              {/* Order + Start Time */}
               <div className="govuk-grid-row">
                 <div className="govuk-grid-column-one-half">
                   <div className="govuk-form-group">
                     <label className="govuk-label">Order</label>
-                    <input type="number" className="govuk-input" value={currentContribution.order} onChange={(e) => setCurrentContribution({...currentContribution, order: parseInt(e.target.value)})} />
+                    <input type="number" className="govuk-input" value={currentContribution.order} onChange={(e) => setCurrentContribution({ ...currentContribution, order: parseInt(e.target.value) })} />
                   </div>
                 </div>
                 <div className="govuk-grid-column-one-half">
                   <div className="govuk-form-group">
                     <label className="govuk-label">Start Time (optional)</label>
-                    <input type="text" className="govuk-input" placeholder="10:23" value={currentContribution.startTime || ''} onChange={(e) => setCurrentContribution({...currentContribution, startTime: e.target.value})} />
+                    <input type="text" className="govuk-input" placeholder="10:23" value={currentContribution.startTime || ''} onChange={(e) => setCurrentContribution({ ...currentContribution, startTime: e.target.value })} />
                   </div>
                 </div>
               </div>
 
+              {/* Content */}
               <div className="govuk-form-group">
-                <label className="govuk-label">Speaker Full Name *</label>
-                <input type="text" className="govuk-input" value={currentContribution.speakerName} onChange={(e) => setCurrentContribution({...currentContribution, speakerName: e.target.value})} />
-              </div>
-
-              <div className="govuk-grid-row">
-                <div className="govuk-grid-column-one-half">
-                  <div className="govuk-form-group">
-                    <label className="govuk-label">Title / Honorific</label>
-                    <input type="text" className="govuk-input" placeholder="Hon." value={currentContribution.speakerTitle || ''} onChange={(e) => setCurrentContribution({...currentContribution, speakerTitle: e.target.value})} />
-                  </div>
-                </div>
-                <div className="govuk-grid-column-one-half">
-                  <div className="govuk-form-group">
-                    <label className="govuk-label">Constituency / County</label>
-                    <input type="text" className="govuk-input" value={currentContribution.constituency || ''} onChange={(e) => setCurrentContribution({...currentContribution, constituency: e.target.value})} />
-                  </div>
-                </div>
-              </div>
-
-              <div className="govuk-grid-row">
-                <div className="govuk-grid-column-one-half">
-                  <div className="govuk-form-group">
-                    <label className="govuk-label">Political Party</label>
-                    <input type="text" className="govuk-input" placeholder="UDA / ODM / Independent" value={currentContribution.party || ''} onChange={(e) => setCurrentContribution({...currentContribution, party: e.target.value})} />
-                  </div>
-                </div>
-                <div className="govuk-grid-column-one-half">
-                  <div className="govuk-form-group">
-                    <label className="govuk-label">Role / Position</label>
-                    <input type="text" className="govuk-input" placeholder="Speaker, Chair of Committee..." value={currentContribution.role || ''} onChange={(e) => setCurrentContribution({...currentContribution, role: e.target.value})} />
-                  </div>
-                </div>
-              </div>
-
-              <div className="govuk-form-group">
-                <label className="govuk-label">Full Speech / Contribution *</label>
-                <textarea className="govuk-textarea" rows={12} value={currentContribution.speech} onChange={(e) => setCurrentContribution({...currentContribution, speech: e.target.value})} placeholder="Paste or type the full speech here..." />
-                <div className="govuk-hint">Use normal line breaks for paragraphs. Procedural notes like (Laughter) or (Applause) are welcome.</div>
+                <label className="govuk-label">
+                  {currentContribution.type === 'header' ? 'Content (optional)' : currentContribution.type === 'procedural' ? 'Procedural Note Content *' : 'Full Speech / Contribution *'}
+                </label>
+                <textarea 
+                  className="govuk-textarea" 
+                  rows={currentContribution.type === 'header' ? 4 : 10} 
+                  value={currentContribution.speech} 
+                  onChange={(e) => setCurrentContribution({ ...currentContribution, speech: e.target.value })} 
+                  placeholder={
+                    currentContribution.type === 'header' 
+                      ? 'You can leave this empty or write a short note' 
+                      : currentContribution.type === 'procedural' 
+                      ? 'e.g. (Laughter) or (Loud consultations) or [The Temporary Speaker left the Chair]' 
+                      : 'Paste the full speech here...'
+                  } 
+                />
               </div>
 
               <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>

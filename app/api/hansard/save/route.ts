@@ -12,7 +12,7 @@ const sanity = createClient({
 
 interface SaveHansardRequest {
   houseType: 'national-assembly' | 'senate' | 'county-assembly';
-  sittingDate: string; // YYYY-MM-DD
+  sittingDate: string;
   title: string;
   slug?: string;
   sittingPeriod?: string;
@@ -20,17 +20,19 @@ interface SaveHansardRequest {
   youtubeUrl?: string;
   contributions: Array<{
     order: number;
-    supabaseLeaderId?: string;           // ← ADDED
-    speakerName: string;
+    type: 'spoken' | 'procedural' | 'header';
+    supabaseLeaderId?: string;
+    speakerName?: string;
     speakerTitle?: string;
     constituency?: string;
     party?: string;
     role?: string;
     speech: string;
     startTime?: string;
+    sectionHeader?: string;
   }>;
   editorialSummary?: string;
-  suggestedTopics?: string[];
+  existingDocumentId?: string; // NEW: for updating existing sittings
 }
 
 export async function POST(request: NextRequest) {
@@ -48,20 +50,48 @@ export async function POST(request: NextRequest) {
     const slugBase = body.slug || `${body.houseType}-${body.sittingDate}`;
     const slug = slugBase.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 
-    // Convert speech text → Portable Text blocks + include supabaseLeaderId
+    // Process contributions
     const processedContributions = body.contributions.map((contrib, index) => ({
       _key: `contrib-${index}`,
       order: contrib.order,
-      supabaseLeaderId: contrib.supabaseLeaderId || undefined,   // ← ADDED
-      speakerName: contrib.speakerName.trim(),
+      type: contrib.type || 'spoken',
+      supabaseLeaderId: contrib.supabaseLeaderId || undefined,
+      speakerName: contrib.speakerName?.trim() || '',
       speakerTitle: contrib.speakerTitle?.trim() || '',
       constituency: contrib.constituency?.trim() || '',
       party: contrib.party?.trim() || '',
       role: contrib.role?.trim() || '',
       startTime: contrib.startTime?.trim() || '',
+      sectionHeader: contrib.sectionHeader?.trim() || '',
       speech: textToPortableText(contrib.speech),
     }));
 
+    // ==================== UPDATE EXISTING SITTING ====================
+    if (body.existingDocumentId) {
+      const updated = await sanity
+        .patch(body.existingDocumentId)
+        .set({
+          title: body.title.trim(),
+          sittingPeriod: body.sittingPeriod || 'Morning Sitting',
+          parliamentaryTerm: body.parliamentaryTerm || '13th Parliament (2022–2027)',
+          youtubeUrl: body.youtubeUrl || undefined,
+          editorialSummary: body.editorialSummary || '',
+          contributions: processedContributions,
+        })
+        .commit();
+
+      return NextResponse.json({
+        success: true,
+        documentId: updated._id,
+        slug: updated.slug?.current,
+        title: updated.title,
+        contributionsCount: processedContributions.length,
+        message: 'Hansard sitting updated successfully',
+        action: 'updated',
+      });
+    }
+
+    // ==================== CREATE NEW SITTING ====================
     const document: any = {
       _type: 'hansardSitting',
       title: body.title.trim(),
@@ -73,9 +103,7 @@ export async function POST(request: NextRequest) {
       youtubeUrl: body.youtubeUrl || undefined,
       contributions: processedContributions,
       editorialSummary: body.editorialSummary || '',
-      suggestedTopics: body.suggestedTopics || [],
       isActive: true,
-      _createdAt: new Date().toISOString(),
     };
 
     const created = await sanity.create(document);
@@ -86,7 +114,8 @@ export async function POST(request: NextRequest) {
       slug: created.slug?.current,
       title: created.title,
       contributionsCount: processedContributions.length,
-      message: 'Hansard sitting published successfully',
+      message: 'Hansard sitting created successfully',
+      action: 'created',
     });
   } catch (error: any) {
     console.error('[Hansard Save Error]', error);
