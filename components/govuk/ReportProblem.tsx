@@ -32,6 +32,22 @@ export default function GovUKReportProblem() {
     }
   }, [submissionState]);
 
+  // Force Turnstile to render when the form becomes visible
+  useEffect(() => {
+    if (isOpen && (window as any).turnstile) {
+      // Small delay to ensure the DOM element exists
+      const timer = setTimeout(() => {
+        try {
+          (window as any).turnstile.render('.cf-turnstile');
+        } catch (e) {
+          // Ignore if already rendered
+        }
+      }, 150);
+
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
+
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSubmissionState(null);
@@ -43,7 +59,6 @@ export default function GovUKReportProblem() {
     const doing = formData.get("doing") as string;
     const wrong = formData.get("wrong") as string;
 
-    // Client-side validation
     if (!doing.trim()) {
       setSubmissionState({
         error: "Tell us what you were doing.",
@@ -68,7 +83,6 @@ export default function GovUKReportProblem() {
       return;
     }
 
-    // Append current page path
     formData.append("page_path", pathname);
 
     startTransition(async () => {
@@ -77,20 +91,20 @@ export default function GovUKReportProblem() {
       if (result.success) {
         setSubmissionState({ success: true });
         targetForm.reset();
-        // Auto-close after success (optional - remove if you prefer it stays open)
+
+        // Auto-close after success
         setTimeout(() => {
           setIsOpen(false);
           setSubmissionState(null);
-        }, 2500);
+        }, 2200);
       } else {
         setSubmissionState({
           error: result.error || "We could not save your report. Please try again later.",
           errorType: "server",
         });
 
-        // Reset Turnstile widget so user can try again
+        // Reset Turnstile so user can try again
         try {
-          // @ts-ignore
           if ((window as any).turnstile) {
             const widget = targetForm.querySelector(".cf-turnstile");
             if (widget) (window as any).turnstile.reset(widget);
