@@ -10,7 +10,9 @@ export const size = {
 export const contentType = "image/webp";
 
 export default function Image() {
-  const logoUrl = new URL("../public/logo.webp", import.meta.url).toString();
+  // ✅ Use absolute URL instead of new URL(..., import.meta.url)
+  // This prevents bundling the image into the Edge Function
+  const logoUrl = "https://www.citizenguide.ke/logo.webp";
 
   return new ImageResponse(
     (
