@@ -81,15 +81,15 @@ export async function handleContactMessage(formData: FormData, turnstileToken: s
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const { data, error } = await supabase
-      .from("contact_messages")           // ← Updated table name
+      .from("contact_messages")                    // ← New table name
       .insert([
         {
-          name: name || null,
-          email: email || null,
+          name: name?.trim() || null,
+          email: email?.trim() || null,
           subject: subject.trim(),
           message: message.trim(),
-          phone: null,                    // Not collected in form
-          contact_type: "general_inquiry", // Default value
+          phone: null,                             // Not collected in form
+          contact_type: "general_inquiry",         // Default value
         },
       ])
       .select("id")
