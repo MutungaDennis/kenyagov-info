@@ -4,81 +4,59 @@ import { createClient } from "@supabase/supabase-js";
 import { headers } from "next/headers";
 
 /**
- * Robust server-side verification for Cloudflare Turnstile tokens.
- * Includes remote IP for better validation and graceful handling for dev/ISP issues.
+ * Verifies Cloudflare Turnstile token.
+ * Never exposes configuration details to the user.
  */
-async function verifyTurnstileToken(token: string) {
+async function verifyTurnstileToken(token: string): Promise<boolean> {
   const secretKey = process.env.TURNSTILE_SECRET_KEY;
 
   if (!secretKey) {
-    console.error(
-      "CRITICAL CONFIGURATION ERROR: 'TURNSTILE_SECRET_KEY' is missing from your server environment variables."
-    );
+    console.error("CONFIG ERROR: TURNSTILE_SECRET_KEY is missing");
     return false;
   }
 
-  // Get client IP if available (for Cloudflare verification)
   const headersList = await headers();
   const remoteIp =
     headersList.get("cf-connecting-ip") ||
     headersList.get("x-forwarded-for")?.split(",")[0]?.trim() ||
     "";
 
-  // ============================================================
-  // DEVELOPMENT / TEST KEY BYPASS
-  // ============================================================
-  const isTestSecret = secretKey.includes("000000000000000000000000000000000000000"); // matches test secrets
+  // Development / test key bypass
   const isDev = process.env.NODE_ENV === "development";
+  const isTestKey = secretKey.includes("000000000000000000000000000000000000000");
 
-  if (isDev || isTestSecret) {
-    console.log(
-      "⚠️ [DEV BYPASS] Turnstile verification skipped — using test key or development mode. " +
-      "Only checking token presence."
-    );
-    return !!token && token.length > 10;
+  if (isDev || isTestKey) {
+    return !!token && token.length > 8;
   }
 
-  // ============================================================
-  // PRODUCTION VERIFICATION
-  // ============================================================
   try {
-    const verificationPayload = new URLSearchParams();
-    verificationPayload.append("secret", secretKey);
-    verificationPayload.append("response", token);
-    if (remoteIp) verificationPayload.append("remoteip", remoteIp);
+    const payload = new URLSearchParams();
+    payload.append("secret", secretKey);
+    payload.append("response", token);
+    if (remoteIp) payload.append("remoteip", remoteIp);
 
-    const response = await fetch(
-      "https://challenges.cloudflare.com/turnstile/v0/siteverify",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: verificationPayload.toString(),
-      }
-    );
+    const response = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: payload.toString(),
+    });
 
     const data = await response.json();
-
-    if (!data.success) {
-      console.error("Cloudflare Turnstile rejected the token. Error codes:", data["error-codes"]);
-      return false;
-    }
-
-    return true;
+    return data.success === true;
   } catch (error) {
-    console.error("Turnstile validation network error:", error);
-    // In production, fail closed for security. But log for debugging.
+    console.error("Turnstile verification error:", error);
     return false;
   }
 }
 
 /**
- * ACTION 1: Handles specific page-context bug and problem logs
+ * ACTION 1: Report a problem on a specific page
  * Used by: components/govuk/ReportProblem.tsx
  */
 export async function handleFeedbackSubmission(formData: FormData, turnstileToken: string) {
-  const isValidToken = await verifyTurnstileToken(turnstileToken);
-  if (!isValidToken) {
-    return { success: false, error: "Security check failed. Please refresh the page and try again." };
+  const isValid = await verifyTurnstileToken(turnstileToken);
+  if (!isValid) {
+    return { success: false, error: "We could not verify the security check. Please refresh the page and try again." };
   }
 
   const doing = formData.get("doing") as string;
@@ -86,22 +64,17 @@ export async function handleFeedbackSubmission(formData: FormData, turnstileToke
   const email = formData.get("email") as string;
   const pagePath = formData.get("page_path") as string;
 
-  // Smart database credential check with fallback options
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!supabaseUrl || !supabaseKey) {
-    console.error("❌ SUPABASE CONFIGURATION ERROR (Action 1):");
-    console.error("- URL Present:", !!supabaseUrl);
-    console.error("- Anon Key Present:", !!process.env.SUPABASE_ANON_KEY);
-    console.error("- Service Role Key Present:", !!process.env.SUPABASE_SERVICE_ROLE_KEY);
-    return { success: false, error: "Server configuration missing database credentials." };
+    console.error("CONFIG ERROR: Supabase credentials missing");
+    return { success: false, error: "We are currently unable to save feedback. Please try again later." };
   }
 
   try {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // FIXED: Selects the newly created record ID upon insert to return to frontend
     const { data, error } = await supabase
       .from("citizen_feedback")
       .insert([
@@ -110,58 +83,58 @@ export async function handleFeedbackSubmission(formData: FormData, turnstileToke
           what_went_wrong: wrong,
           email_address: email || null,
           page_path: pagePath || "/unknown",
-        }
+        },
       ])
       .select("id")
       .single();
 
-    if (error) return { success: false, error: `Database Error: ${error.message}` };
+    if (error) {
+      console.error("Database error (citizen_feedback):", error);
+      return { success: false, error: "We could not save your feedback right now. Please try again later." };
+    }
+
     return { success: true, recordId: data.id };
   } catch (err: any) {
-    return { success: false, error: `Server Exception: ${err.message || err}` };
+    console.error("Unexpected error in handleFeedbackSubmission:", err);
+    return { success: false, error: "Something went wrong. Please try again later." };
   }
 }
 
 /**
- * ACTION 2: Handles overall system improvements from the beta header link
+ * ACTION 2: General feedback from /feedback page
  * Used by: app/feedback/page.tsx
  */
 export async function handleGeneralFeedback(formData: FormData, turnstileToken: string) {
-  const isValidToken = await verifyTurnstileToken(turnstileToken);
-  if (!isValidToken) {
-    return { success: false, error: "Security check failed. Please refresh the page and try again." };
+  const isValid = await verifyTurnstileToken(turnstileToken);
+  if (!isValid) {
+    return { success: false, error: "We could not verify the security check. Please refresh the page and try again." };
   }
 
   const feedbackText = (formData.get("feedback_text") as string) || "";
   const fullName = formData.get("full_name") as string;
   const email = formData.get("email") as string;
 
-  // GOV.UK Strict Validation Guidelines
+  // Validation
   if (!feedbackText.trim()) {
     return { success: false, error: "Enter your feedback on how we can improve this website." };
   }
-  
+
   if (feedbackText.length > 1200) {
     const excess = feedbackText.length - 1200;
-    return { success: false, error: `Feedback must be 1,200 characters or less. Remove ${excess} characters.` };
+    return { success: false, error: `Feedback must be 1,200 characters or less. Please remove ${excess} characters.` };
   }
 
-  // Smart database credential check with fallback options
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!supabaseUrl || !supabaseKey) {
-    console.error("❌ SUPABASE CONFIGURATION ERROR (Action 2):");
-    console.error("- URL Present:", !!supabaseUrl);
-    console.error("- Anon Key Present:", !!process.env.SUPABASE_ANON_KEY);
-    console.error("- Service Role Key Present:", !!process.env.SUPABASE_SERVICE_ROLE_KEY);
-    return { success: false, error: "Server configuration missing database credentials." };
+    console.error("CONFIG ERROR: Supabase credentials missing");
+    return { success: false, error: "We are currently unable to save feedback. Please try again later." };
   }
 
   try {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // FIXED: Selects the newly created record ID upon insert to return to frontend
     const { data, error } = await supabase
       .from("general_feedback")
       .insert([
@@ -169,14 +142,19 @@ export async function handleGeneralFeedback(formData: FormData, turnstileToken: 
           feedback_text: feedbackText,
           full_name: fullName || null,
           email_address: email || null,
-        }
+        },
       ])
       .select("id")
       .single();
 
-    if (error) return { success: false, error: `Database Error: ${error.message}` };
+    if (error) {
+      console.error("Database error (general_feedback):", error);
+      return { success: false, error: "We could not save your feedback right now. Please try again later." };
+    }
+
     return { success: true, recordId: data.id };
   } catch (err: any) {
-    return { success: false, error: `Server Exception: ${err.message || err}` };
+    console.error("Unexpected error in handleGeneralFeedback:", err);
+    return { success: false, error: "Something went wrong. Please try again later." };
   }
 }
