@@ -1,57 +1,113 @@
-"use client";
+'use client';
 
 import { usePathname } from "next/navigation";
 import { useState, useRef, useEffect, useTransition } from "react";
-import Script from "next/script"; // Leverages Next.js optimized script injector
 import { handleFeedbackSubmission } from "@/app/feedback/actions";
 
 export default function GovUKReportProblem() {
   const pathname = usePathname();
   const firstInputRef = useRef<HTMLTextAreaElement>(null);
-  const [isPending, startTransition] = useTransition();
-  
-  const [isOpen, setIsOpen] = useState(false);
-  const [submissionState, setSubmissionState] = useState<{ success?: boolean; error?: string } | null>(null);
+  const errorSummaryRef = useRef<HTMLDivElement>(null);
 
-  // Auto-focus the text field when the drawer expands for touchscreen keyboard activation
+  const [isPending, startTransition] = useTransition();
+  const [isOpen, setIsOpen] = useState(false);
+
+  const [submissionState, setSubmissionState] = useState<{
+    success?: boolean;
+    error?: string;
+    errorType?: "validation" | "security" | "server";
+  } | null>(null);
+
+  // Focus first field when drawer opens
   useEffect(() => {
     if (isOpen && firstInputRef.current) {
       firstInputRef.current.focus();
     }
   }, [isOpen]);
 
+  // Focus error summary when error appears
+  useEffect(() => {
+    if (submissionState?.error && errorSummaryRef.current) {
+      errorSummaryRef.current.focus();
+    }
+  }, [submissionState]);
+
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    
+    setSubmissionState(null);
+
     const targetForm = event.currentTarget;
     const formData = new FormData(targetForm);
-    
-    // Natively extract the Turnstile token directly from the hidden form input populated by Cloudflare
     const implicitToken = formData.get("cf-turnstile-response") as string;
 
-    if (!implicitToken) {
-      setSubmissionState({ error: "Please wait for the security verification check to complete." });
+    const doing = formData.get("doing") as string;
+    const wrong = formData.get("wrong") as string;
+
+    // Client-side validation
+    if (!doing.trim()) {
+      setSubmissionState({
+        error: "Tell us what you were doing.",
+        errorType: "validation",
+      });
       return;
     }
 
-    formData.append("page_path", pathname); // Automatically bundle the active URL route location string
+    if (!wrong.trim()) {
+      setSubmissionState({
+        error: "Tell us what went wrong.",
+        errorType: "validation",
+      });
+      return;
+    }
+
+    if (!implicitToken) {
+      setSubmissionState({
+        error: "Security check is initializing. Please try again in a moment.",
+        errorType: "security",
+      });
+      return;
+    }
+
+    // Append current page path
+    formData.append("page_path", pathname);
 
     startTransition(async () => {
       const result = await handleFeedbackSubmission(formData, implicitToken);
+
       if (result.success) {
         setSubmissionState({ success: true });
         targetForm.reset();
+        // Auto-close after success (optional - remove if you prefer it stays open)
+        setTimeout(() => {
+          setIsOpen(false);
+          setSubmissionState(null);
+        }, 2500);
       } else {
-        setSubmissionState({ error: result.error || "Failed to log feedback." });
+        setSubmissionState({
+          error: result.error || "We could not save your report. Please try again later.",
+          errorType: "server",
+        });
+
+        // Reset Turnstile widget so user can try again
+        try {
+          // @ts-ignore
+          if ((window as any).turnstile) {
+            const widget = targetForm.querySelector(".cf-turnstile");
+            if (widget) (window as any).turnstile.reset(widget);
+          }
+        } catch (e) {}
       }
     });
   }
 
+  // Success State
   if (submissionState?.success) {
     return (
       <div className="govuk-width-container govuk-!-margin-top-4" role="status" aria-live="polite">
         <div className="govuk-inset-text govuk-!-border-color-blue govuk-!-margin-0">
-          <p className="govuk-body govuk-!-font-weight-bold">Thank you for your feedback.</p>
+          <p className="govuk-body govuk-!-font-weight-bold">
+            Thank you. Your report has been sent.
+          </p>
         </div>
       </div>
     );
@@ -59,15 +115,18 @@ export default function GovUKReportProblem() {
 
   return (
     <div className="govuk-width-container govuk-!-margin-top-4">
-      {/* Turnstile script loaded globally once via ClientLayoutWrapper.tsx */}
-
       <div className="govuk-grid-row">
         <div className="govuk-grid-column-two-thirds">
-          
+          {/* Error Summary */}
           {submissionState?.error && (
-            <div className="govuk-error-summary govuk-!-margin-bottom-4 govuk-error-summary--error" role="alert">
+            <div
+              ref={errorSummaryRef}
+              tabIndex={-1}
+              className="govuk-error-summary govuk-!-margin-bottom-4"
+              role="alert"
+            >
               <div className="govuk-error-summary__body">
-                <p className="govuk-body govuk-!-font-weight-bold govuk-!-text-colour-red govuk-!-margin-0">
+                <p className="govuk-body govuk-!-font-weight-bold">
                   {submissionState.error}
                 </p>
               </div>
@@ -76,9 +135,9 @@ export default function GovUKReportProblem() {
 
           {!isOpen ? (
             <p className="govuk-body-s">
-              <button 
-                type="button" 
-                className="govuk-link report-problem-link" 
+              <button
+                type="button"
+                className="govuk-link report-problem-link"
                 onClick={() => setIsOpen(true)}
               >
                 Report a problem with this page
@@ -87,67 +146,79 @@ export default function GovUKReportProblem() {
           ) : (
             <form onSubmit={handleSubmit} className="report-problem-form">
               <h2 className="govuk-heading-m">Help us improve CitizenGuide.KE</h2>
-              
+
               <div className="govuk-inset-text govuk-!-background-white">
-                Do not include personal information (such as your National ID number or phone number).
+                Do not include personal information such as your National ID number or phone number.
               </div>
 
               <div className="govuk-form-group">
                 <label className="govuk-label govuk-label--s" htmlFor="doing">
                   What were you doing?
                 </label>
-                <textarea 
-                  ref={firstInputRef} 
-                  className="govuk-textarea" 
-                  id="doing" 
-                  name="doing" 
-                  rows={3} 
-                  required 
+                <textarea
+                  ref={firstInputRef}
+                  className="govuk-textarea"
+                  id="doing"
+                  name="doing"
+                  rows={3}
+                  required
                   placeholder="e.g. Looking for information about passport applications..."
-                ></textarea>
+                />
               </div>
 
               <div className="govuk-form-group">
                 <label className="govuk-label govuk-label--s" htmlFor="wrong">
                   What went wrong?
                 </label>
-                <textarea 
-                  className="govuk-textarea" 
-                  id="wrong" 
-                  name="wrong" 
-                  rows={4} 
-                  required 
+                <textarea
+                  className="govuk-textarea"
+                  id="wrong"
+                  name="wrong"
+                  rows={4}
+                  required
                   placeholder="e.g. The eCitizen link throws a timeout error..."
-                ></textarea>
+                />
               </div>
 
               <div className="govuk-form-group">
                 <label className="govuk-label govuk-label--s" htmlFor="email">
                   Email address (optional)
                 </label>
-                <input className="govuk-input" id="email" name="email" type="email" placeholder="your@email.com" />
+                <input
+                  className="govuk-input"
+                  id="email"
+                  name="email"
+                  type="email"
+                  placeholder="your@email.com"
+                />
               </div>
 
-              {/* Fixed: Reliable implicit rendering layout block that automatically builds the token inside the form structure */}
+              {/* Cloudflare Turnstile */}
               <div className="govuk-form-group">
-                <div 
-                  className="cf-turnstile" 
+                <div
+                  className="cf-turnstile"
                   data-sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
                   data-theme="light"
-                ></div>
+                />
               </div>
 
               <div className="govuk-button-group">
                 <button type="submit" disabled={isPending} className="govuk-button">
                   {isPending ? "Sending..." : "Submit report"}
                 </button>
-                <button type="button" className="govuk-button govuk-button--secondary" onClick={() => setIsOpen(false)}>
+                <button
+                  type="button"
+                  className="govuk-button govuk-button--secondary"
+                  onClick={() => {
+                    setIsOpen(false);
+                    setSubmissionState(null);
+                  }}
+                >
                   Cancel
                 </button>
               </div>
             </form>
           )}
-
         </div>
       </div>
     </div>
