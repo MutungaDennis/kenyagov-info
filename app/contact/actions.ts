@@ -78,8 +78,8 @@ export async function handleContactMessage(formData: FormData, turnstileToken: s
   try {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // More robust insert + select
-    const { data, error } = await supabase
+    // We only INSERT — no .select() to avoid RLS SELECT permission issues
+    const { error } = await supabase
       .from("contact_messages")
       .insert([
         {
@@ -90,29 +90,15 @@ export async function handleContactMessage(formData: FormData, turnstileToken: s
           phone: null,
           contact_type: "general_inquiry",
         },
-      ])
-      .select("id")
-      .single();
+      ]);
 
     if (error) {
-      // Log the real error for debugging
-      console.error("Supabase insert/select error:", error);
-
-      // If it's a SELECT permission error but insert likely succeeded, still treat as success
-      if (error.code === "42501" || error.message?.includes("permission")) {
-        console.warn("RLS may be blocking SELECT after INSERT. Treating as success.");
-        return { success: true, recordId: "unknown" }; // fallback
-      }
-
+      console.error("Database insert error:", error);
       return { success: false, error: "We could not save your message right now. Please try again later." };
     }
 
-    if (!data || !data.id) {
-      console.error("Insert succeeded but no ID was returned (possible RLS issue)");
-      return { success: false, error: "We could not save your message right now. Please try again later." };
-    }
-
-    return { success: true, recordId: data.id };
+    // Success — we don't need the ID for the user
+    return { success: true };
   } catch (err: any) {
     console.error("Unexpected error in handleContactMessage:", err);
     return { success: false, error: "Something went wrong. Please try again later." };
