@@ -15,10 +15,19 @@ const publicSans = Public_Sans({
 });
 
 // =============================================================
-// GLOBAL METADATA CORE CONFIGURATION
-// Static references to images like '/og-image.png' are removed 
-// to allow Next.js file-based dynamic OG engines to take over.
+// OPEN GRAPH / SOCIAL IMAGE CONFIGURATION
 // =============================================================
+// CURRENT SETUP (Static images - Recommended for Vercel free/pro plan)
+// - Using static files: app/opengraph-image.webp + app/twitter-image.webp
+// - This avoids the Edge Function size limit (1 MB on Vercel)
+//
+// FUTURE REVERSION (when deploying on Cloudflare with 25 MB limit):
+// 1. Rename `app/opengraph-image2.tsx` back to `app/opengraph-image.tsx`
+// 2. Delete or rename `app/opengraph-image.webp` and `app/twitter-image.webp`
+// 3. Comment out or remove the `images` arrays below (lines with openGraph.images and twitter.images)
+// 4. The dynamic file will then automatically take over
+// =============================================================
+
 export const metadata: Metadata = {
   title: {
     default: 'Citizen Guide Kenya - Informational Guide for Kenyans',
@@ -29,6 +38,8 @@ export const metadata: Metadata = {
   alternates: {
     canonical: '/',
   },
+
+  // === OPEN GRAPH (Facebook, LinkedIn, WhatsApp, etc.) ===
   openGraph: {
     title: 'Citizen Guide Kenya - Informational Guide for Kenyans',
     description: 'Access the Kenyan Constitution, County records, Parliamentary Acts, and step-by-step public service guides seamlessly.',
@@ -36,13 +47,26 @@ export const metadata: Metadata = {
     siteName: 'Citizen Guide Kenya',
     locale: 'en_KE',
     type: 'website',
-    // Next.js automatically maps your app/opengraph-image.tsx file here
+    
+    // CURRENT: Static image (explicit for clarity)
+    images: [
+      {
+        url: '/opengraph-image.webp',
+        width: 1200,
+        height: 630,
+        alt: 'Citizen Guide Kenya - Your Guide to Kenyan Governance',
+      },
+    ],
   },
+
+  // === TWITTER / X CARD ===
   twitter: {
     card: 'summary_large_image',
     title: 'Citizen Guide Kenya',
     description: 'Your ultimate informational dashboard for Kenyan governance and public services.',
-    // Next.js automatically injects your modern dynamic card engines here
+    
+    // CURRENT: Static image
+    images: ['/twitter-image.webp'],
   },
 };
 
