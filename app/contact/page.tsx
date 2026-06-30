@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import Link from "next/link";
 import { useState, useRef, useEffect, useTransition } from "react";
@@ -16,7 +16,6 @@ export default function ContactPage() {
     success?: boolean;
     error?: string;
     errorType?: "validation" | "security" | "server";
-    recordId?: string;
   } | null>(null);
 
   const [messageValue, setMessageValue] = useState("");
@@ -78,17 +77,21 @@ export default function ContactPage() {
       const result = await handleContactMessage(formData, implicitToken);
 
       if (result.success) {
-        setSubmissionState({ success: true, recordId: result.recordId });
+        setSubmissionState({ success: true });
         setMessageValue("");
         targetForm.reset();
       } else {
-        const isValidationError = result.error?.includes("subject") || result.error?.includes("message") || result.error?.includes("characters");
+        const isValidationError =
+          result.error?.includes("subject") ||
+          result.error?.includes("message") ||
+          result.error?.includes("characters");
+
         setSubmissionState({
           error: result.error || "Could not send your message.",
           errorType: isValidationError ? "validation" : "server",
         });
 
-        // Reset Turnstile on error
+        // Reset Turnstile widget on error
         try {
           // @ts-ignore
           if ((window as any).turnstile) {
@@ -100,14 +103,16 @@ export default function ContactPage() {
     });
   }
 
-  // Success Screen
+  // ==================== SUCCESS SCREEN ====================
   if (submissionState?.success) {
-    const rawUuid = submissionState.recordId || "00000000";
-    const referenceNumber = `CG-${rawUuid.split("-")[0].toUpperCase()}`;
-
     return (
       <div className="govuk-width-container">
-        <GovUKBreadcrumbs items={[{ text: "Home", href: "/" }, { text: "Contact", href: "/contact" }]} />
+        <GovUKBreadcrumbs
+          items={[
+            { text: "Home", href: "/" },
+            { text: "Contact", href: "/contact" },
+          ]}
+        />
 
         <main className="govuk-main-wrapper govuk-!-padding-top-2" id="main-content" role="main">
           <div className="govuk-grid-row">
@@ -119,16 +124,13 @@ export default function ContactPage() {
               >
                 <h1 className="govuk-panel__title">Message sent</h1>
                 <div className="govuk-panel__body">
-                  Your reference number<br />
-                  <strong className="govuk-!-font-size-36 govuk-!-margin-top-2 govuk-!-display-block">
-                    {referenceNumber}
-                  </strong>
+                  Thank you. We have received your message.
                 </div>
               </div>
 
               <h2 className="govuk-heading-m">What happens next</h2>
               <p className="govuk-body">
-                Thank you for contacting us. We review all messages and will get back to you if we need more information.
+                We review all messages and will get back to you if we need more information.
               </p>
 
               <div className="govuk-button-group">
@@ -143,11 +145,17 @@ export default function ContactPage() {
     );
   }
 
+  // ==================== FORM ====================
   const isMessageInvalid = submissionState?.errorType === "validation" && charsRemaining < 0;
 
   return (
     <div className="govuk-width-container">
-      <GovUKBreadcrumbs items={[{ text: "Home", href: "/" }, { text: "Contact", href: "/contact" }]} />
+      <GovUKBreadcrumbs
+        items={[
+          { text: "Home", href: "/" },
+          { text: "Contact", href: "/contact" },
+        ]}
+      />
 
       <main className="govuk-main-wrapper govuk-!-padding-top-2" id="main-content" role="main">
         <div className="govuk-grid-row">
@@ -260,7 +268,11 @@ export default function ContactPage() {
 
               {/* Cloudflare Turnstile */}
               <div className="govuk-form-group">
-                <div className="cf-turnstile" data-sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY} data-theme="light"></div>
+                <div
+                  className="cf-turnstile"
+                  data-sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
+                  data-theme="light"
+                />
               </div>
 
               <div className="govuk-button-group">
