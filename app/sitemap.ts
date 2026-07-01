@@ -15,17 +15,18 @@ async function getSupabaseUrls(): Promise<SitemapEntry[]> {
   const supabase = await createClient();
   const urls: SitemapEntry[] = [];
 
-  // 1. LEADERS
+  // 1. LEADERS (Now at /government/people/[slug])
   try {
     const { data: leaders } = await supabase
       .from('leaders')
-      .select('id, category, updated_at')
+      .select('slug, updated_at')
+      .eq('is_active', true)
       .limit(1000);
     
     leaders?.forEach((leader: any) => {
-      if (leader.category && leader.id) {
+      if (leader.slug) {
         urls.push({
-          url: `${BASE_URL}/leaders/${leader.category}/${leader.id}`,
+          url: `${BASE_URL}/government/people/${leader.slug}`,
           lastModified: leader.updated_at ? new Date(leader.updated_at) : undefined,
           changeFrequency: 'monthly',
           priority: 0.7,
@@ -34,24 +35,7 @@ async function getSupabaseUrls(): Promise<SitemapEntry[]> {
     });
   } catch (e) { /* ignore */ }
 
-  // 2. OFFICIALS
-  try {
-    const { data: officials } = await supabase
-      .from('officials')
-      .select('id, updated_at')
-      .limit(1000);
-    
-    officials?.forEach((o: any) => {
-      urls.push({
-        url: `${BASE_URL}/officials/${o.id}`,
-        lastModified: o.updated_at ? new Date(o.updated_at) : undefined,
-        changeFrequency: 'monthly',
-        priority: 0.6,
-      });
-    });
-  } catch (e) { /* ignore */ }
-
-  // 3. INSTITUTIONS (Main + Subpages)
+  // 2. INSTITUTIONS (Now at /government/institutions/[slug])
   try {
     const { data: institutions } = await supabase
       .from('institutions')
@@ -62,25 +46,16 @@ async function getSupabaseUrls(): Promise<SitemapEntry[]> {
     institutions?.forEach((inst: any) => {
       if (inst.slug) {
         urls.push({
-          url: `${BASE_URL}/institutions/${inst.slug}`,
+          url: `${BASE_URL}/government/institutions/${inst.slug}`,
           lastModified: inst.updated_at ? new Date(inst.updated_at) : undefined,
           changeFrequency: 'weekly',
           priority: 0.8,
-        });
-
-        // Institution subpages
-        ['leadership', 'services', 'locations', 'publications', 'tenders', 'tools', 'data'].forEach(sub => {
-          urls.push({
-            url: `${BASE_URL}/institutions/${inst.slug}/${sub}`,
-            changeFrequency: 'monthly',
-            priority: 0.5,
-          });
         });
       }
     });
   } catch (e) { /* ignore */ }
 
-  // 4. COUNTIES
+  // 3. COUNTIES (Now at /government/counties/[slug])
   try {
     const { data: counties } = await supabase
       .from('counties')
@@ -90,7 +65,7 @@ async function getSupabaseUrls(): Promise<SitemapEntry[]> {
     counties?.forEach((c: any) => {
       if (c.slug) {
         urls.push({
-          url: `${BASE_URL}/counties/${c.slug}`,
+          url: `${BASE_URL}/government/counties/${c.slug}`,
           lastModified: c.updated_at ? new Date(c.updated_at) : undefined,
           changeFrequency: 'monthly',
           priority: 0.7,
@@ -99,7 +74,7 @@ async function getSupabaseUrls(): Promise<SitemapEntry[]> {
     });
   } catch (e) { /* ignore */ }
 
-  // 5. WARDS (All ~1,450 wards)
+  // 4. WARDS (Now at /government/counties/wards/[slug]/about)
   try {
     const { data: wards } = await supabase
       .from('wards')
@@ -109,7 +84,7 @@ async function getSupabaseUrls(): Promise<SitemapEntry[]> {
     wards?.forEach((w: any) => {
       if (w.slug) {
         urls.push({
-          url: `${BASE_URL}/counties/wards/${w.slug}`,
+          url: `${BASE_URL}/government/counties/wards/${w.slug}/about`,
           lastModified: w.updated_at ? new Date(w.updated_at) : undefined,
           changeFrequency: 'monthly',
           priority: 0.5,
@@ -118,11 +93,33 @@ async function getSupabaseUrls(): Promise<SitemapEntry[]> {
     });
   } catch (e) { /* ignore */ }
 
+  // 5. LEGISLATURE MEMBERS (National Assembly & Senate)
+  try {
+    const { data: naMembers } = await supabase
+      .from('leaders')
+      .select('slug, updated_at')
+      .eq('is_active', true)
+      .in('category', ['Member of Parliament', 'Senator'])
+      .limit(500);
+    
+    naMembers?.forEach((m: any) => {
+      if (m.slug) {
+        urls.push({
+          url: `${BASE_URL}/government/legislature/national-assembly/members/${m.slug}`,
+          lastModified: m.updated_at ? new Date(m.updated_at) : undefined,
+          changeFrequency: 'monthly',
+          priority: 0.6,
+        });
+      }
+    });
+  } catch (e) { /* ignore */ }
+
   // Root index pages
-  urls.push({ url: `${BASE_URL}/leaders`, changeFrequency: 'weekly', priority: 0.8 });
-  urls.push({ url: `${BASE_URL}/counties`, changeFrequency: 'weekly', priority: 0.8 });
-  urls.push({ url: `${BASE_URL}/institutions`, changeFrequency: 'weekly', priority: 0.8 });
-  urls.push({ url: `${BASE_URL}/officials`, changeFrequency: 'weekly', priority: 0.6 });
+  urls.push({ url: `${BASE_URL}/government`, changeFrequency: 'weekly', priority: 0.9 });
+  urls.push({ url: `${BASE_URL}/government/people`, changeFrequency: 'weekly', priority: 0.8 });
+  urls.push({ url: `${BASE_URL}/government/institutions`, changeFrequency: 'weekly', priority: 0.8 });
+  urls.push({ url: `${BASE_URL}/government/counties`, changeFrequency: 'weekly', priority: 0.8 });
+  urls.push({ url: `${BASE_URL}/government/legislature`, changeFrequency: 'weekly', priority: 0.8 });
 
   return urls;
 }
@@ -148,7 +145,7 @@ async function getSanityUrls(): Promise<SitemapEntry[]> {
   } catch (e) { /* ignore */ }
 
   // ==========================================
-  // CONSTITUTION - Chapters + Articles (NEW STRUCTURE)
+  // CONSTITUTION - Chapters + Articles
   // ==========================================
   try {
     const articles = await sanityClient.fetch(
@@ -180,7 +177,7 @@ async function getSanityUrls(): Promise<SitemapEntry[]> {
         });
       });
 
-      // 2. Add individual Article pages (NEW URL STRUCTURE)
+      // 2. Add individual Article pages
       articles.forEach((a: any) => {
         urls.push({
           url: `${BASE_URL}/constitution/chapter/${a.chapter}/article/${a.articleNumber}`,
@@ -212,7 +209,7 @@ async function getSanityUrls(): Promise<SitemapEntry[]> {
   } catch (e) { /* ignore */ }
 
   // ==========================================
-  // PRESIDENTIAL INTERNATIONAL VISITS
+  // PRESIDENTIAL INTERNATIONAL VISITS (Now at /government/presidential-visits/[slug])
   // ==========================================
   try {
     const trips = await sanityClient.fetch(
@@ -220,10 +217,27 @@ async function getSanityUrls(): Promise<SitemapEntry[]> {
     );
     trips?.forEach((t: any) => {
       urls.push({
-        url: `${BASE_URL}/executive/presidency/international-visits/${t.slug}`,
+        url: `${BASE_URL}/government/presidential-visits/${t.slug}`,
         lastModified: t._updatedAt ? new Date(t._updatedAt) : undefined,
         changeFrequency: 'monthly',
-        priority: 0.5,
+        priority: 0.6,
+      });
+    });
+  } catch (e) { /* ignore */ }
+
+  // ==========================================
+  // POLITICAL PARTIES (Now at /elections/political-parties/[slug])
+  // ==========================================
+  try {
+    const parties = await sanityClient.fetch(
+      `*[_type == "politicalParty" && defined(slug.current)]{ "slug": slug.current, _updatedAt }`
+    );
+    parties?.forEach((p: any) => {
+      urls.push({
+        url: `${BASE_URL}/elections/political-parties/${p.slug}`,
+        lastModified: p._updatedAt ? new Date(p._updatedAt) : undefined,
+        changeFrequency: 'monthly',
+        priority: 0.6,
       });
     });
   } catch (e) { /* ignore */ }
@@ -233,24 +247,69 @@ async function getSanityUrls(): Promise<SitemapEntry[]> {
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticUrls: SitemapEntry[] = [
+    // Homepage
     { url: BASE_URL, changeFrequency: 'daily', priority: 1.0 },
-    { url: `${BASE_URL}/services`, changeFrequency: 'weekly', priority: 0.9 },
-    { url: `${BASE_URL}/executive`, changeFrequency: 'weekly', priority: 0.9 },
-    { url: `${BASE_URL}/legislature`, changeFrequency: 'weekly', priority: 0.8 },
-    { url: `${BASE_URL}/judiciary`, changeFrequency: 'weekly', priority: 0.8 },
-    { url: `${BASE_URL}/counties`, changeFrequency: 'weekly', priority: 0.8 },
-    { url: `${BASE_URL}/institutions`, changeFrequency: 'weekly', priority: 0.8 },
-    { url: `${BASE_URL}/leaders`, changeFrequency: 'weekly', priority: 0.8 },
-    { url: `${BASE_URL}/politics`, changeFrequency: 'weekly', priority: 0.7 },
+    
+    // Government Hub
+    { url: `${BASE_URL}/government`, changeFrequency: 'weekly', priority: 0.9 },
+    { url: `${BASE_URL}/government/cabinet`, changeFrequency: 'weekly', priority: 0.8 },
+    { url: `${BASE_URL}/government/commissions`, changeFrequency: 'weekly', priority: 0.8 },
+    { url: `${BASE_URL}/government/presidency`, changeFrequency: 'weekly', priority: 0.8 },
+    { url: `${BASE_URL}/government/deputy-presidency`, changeFrequency: 'weekly', priority: 0.8 },
+    { url: `${BASE_URL}/government/prime-cabinet-secretary`, changeFrequency: 'weekly', priority: 0.8 },
+    { url: `${BASE_URL}/government/people`, changeFrequency: 'weekly', priority: 0.8 },
+    { url: `${BASE_URL}/government/institutions`, changeFrequency: 'weekly', priority: 0.8 },
+    { url: `${BASE_URL}/government/judiciary`, changeFrequency: 'weekly', priority: 0.8 },
+    { url: `${BASE_URL}/government/legislature`, changeFrequency: 'weekly', priority: 0.8 },
+    { url: `${BASE_URL}/government/counties`, changeFrequency: 'weekly', priority: 0.8 },
+    
+    // Transparency Registers (Redirects to Search)
+    { url: `${BASE_URL}/government/cabinet-decisions`, changeFrequency: 'daily', priority: 0.7 },
+    { url: `${BASE_URL}/government/executive-orders`, changeFrequency: 'daily', priority: 0.7 },
+    { url: `${BASE_URL}/government/presidential-visits`, changeFrequency: 'weekly', priority: 0.7 },
+    { url: `${BASE_URL}/government/publications`, changeFrequency: 'weekly', priority: 0.7 },
+    { url: `${BASE_URL}/government/speeches`, changeFrequency: 'weekly', priority: 0.7 },
+    { url: `${BASE_URL}/government/consultations`, changeFrequency: 'weekly', priority: 0.7 },
+    
+    // Elections (was /politics)
+    { url: `${BASE_URL}/elections`, changeFrequency: 'weekly', priority: 0.8 },
+    { url: `${BASE_URL}/elections/general-elections`, changeFrequency: 'yearly', priority: 0.7 },
+    { url: `${BASE_URL}/elections/by-elections`, changeFrequency: 'monthly', priority: 0.7 },
+    { url: `${BASE_URL}/elections/referendums`, changeFrequency: 'yearly', priority: 0.7 },
+    { url: `${BASE_URL}/elections/voter-registration`, changeFrequency: 'monthly', priority: 0.7 },
+    { url: `${BASE_URL}/elections/political-parties`, changeFrequency: 'monthly', priority: 0.7 },
+    { url: `${BASE_URL}/coalitions`, changeFrequency: 'monthly', priority: 0.6 },
+    
+    // Constitution & Laws
     { url: `${BASE_URL}/constitution`, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${BASE_URL}/acts/parliament`, changeFrequency: 'weekly', priority: 0.8 },
+    
+    // Documents & Resources
     { url: `${BASE_URL}/documents`, changeFrequency: 'weekly', priority: 0.7 },
+    { url: `${BASE_URL}/documents/vision-2030`, changeFrequency: 'monthly', priority: 0.7 },
+    { url: `${BASE_URL}/documents/sessional-papers/1965-no-10`, changeFrequency: 'yearly', priority: 0.5 },
+    { url: `${BASE_URL}/documents/sessional-papers/1986-no-1`, changeFrequency: 'yearly', priority: 0.5 },
+    { url: `${BASE_URL}/documents/sessional-papers/2012-no-1`, changeFrequency: 'yearly', priority: 0.5 },
+    
+    // Search & Data
+    { url: `${BASE_URL}/search/all`, changeFrequency: 'daily', priority: 0.9 },
     { url: `${BASE_URL}/open-data`, changeFrequency: 'monthly', priority: 0.8 },
+    
+    // Guides & Society
     { url: `${BASE_URL}/guides`, changeFrequency: 'weekly', priority: 0.7 },
     { url: `${BASE_URL}/society-and-culture`, changeFrequency: 'monthly', priority: 0.6 },
+    { url: `${BASE_URL}/services`, changeFrequency: 'weekly', priority: 0.8 },
+    
+    // Static Pages
     { url: `${BASE_URL}/about`, changeFrequency: 'monthly', priority: 0.5 },
     { url: `${BASE_URL}/help`, changeFrequency: 'monthly', priority: 0.5 },
     { url: `${BASE_URL}/contact`, changeFrequency: 'monthly', priority: 0.5 },
+    { url: `${BASE_URL}/accessibility`, changeFrequency: 'yearly', priority: 0.3 },
+    { url: `${BASE_URL}/cookies`, changeFrequency: 'yearly', priority: 0.3 },
+    { url: `${BASE_URL}/privacy`, changeFrequency: 'yearly', priority: 0.3 },
+    { url: `${BASE_URL}/terms`, changeFrequency: 'yearly', priority: 0.3 },
+    { url: `${BASE_URL}/feedback`, changeFrequency: 'monthly', priority: 0.4 },
+    { url: `${BASE_URL}/support`, changeFrequency: 'monthly', priority: 0.4 },
   ];
 
   const [supabaseUrls, sanityUrls] = await Promise.all([
