@@ -68,8 +68,8 @@ export default function GovUKHeader() {
                 <Image 
                   src="/logo.webp" 
                   alt="CitizenGuide.KE" 
-                  width={30} 
-                  height={30} 
+                  width={32} 
+                  height={32} 
                   priority
                   className="header-logo-image"
                 />
@@ -89,7 +89,7 @@ export default function GovUKHeader() {
                   aria-expanded={desktopSearchOpen}
                   aria-controls="desktop-header-search-panel"
                 >
-                  <svg width="18" height="18" viewBox="0 0 27 27" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+                  <svg width="20" height="20" viewBox="0 0 27 27" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
                     <circle cx="12" cy="12" r="8.5" stroke="currentColor" strokeWidth="3" />
                     <line x1="18" y1="18" x2="24.5" y2="24.5" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
                   </svg>
@@ -105,7 +105,7 @@ export default function GovUKHeader() {
                   aria-label={mobileSearchOpen ? "Close search tool" : "Open search tool"}
                   aria-expanded={mobileSearchOpen}
                 >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="11" cy="11" r="8"></circle>
                     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                   </svg>
@@ -116,20 +116,6 @@ export default function GovUKHeader() {
                 href="/support" 
                 className="govuk-button universal-header-support-btn"
                 onClick={closeMenus}
-                style={{
-                  color: '#0b0c0c',
-                  backgroundColor: '#f3f2f1',
-                  boxShadow: '0 2px 0 #0b0c0c',
-                  fontSize: '13px',
-                  fontWeight: 'bold',
-                  textDecoration: 'none',
-                  padding: '6px 12px',
-                  margin: '0',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  border: '2px solid #0b0c0c',
-                  borderRadius: '0'
-                }}
               >
                 <span>Support</span>
               </Link>
@@ -148,7 +134,7 @@ export default function GovUKHeader() {
           )}
         </div>
 
-        {/* TIER 2: Deep Kenyan Green Navigation Ribbon */}
+        {/* TIER 2: Emerald Green Navigation Ribbon */}
         <div className="header-bottom-green-tier">
           <div className="govuk-width-container header-green-inner">
             <nav aria-label="Primary Site Sections" className="header-nav">
@@ -156,25 +142,38 @@ export default function GovUKHeader() {
                 href="/services" 
                 className="ribbon-nav-link" 
                 onClick={closeMenus}
-                style={{ color: '#ffffff', fontSize: '15px', fontWeight: 'bold', textDecoration: 'none', padding: '8px 10px', display: 'inline-flex' }}
               >
                 Services
+              </Link>
+
+              <Link 
+                href="/government" 
+                className="ribbon-nav-link mobile-ribbon-extra" 
+                onClick={closeMenus}
+              >
+                Government
+              </Link>
+
+              <Link 
+                href="/elections" 
+                className="ribbon-nav-link mobile-ribbon-extra" 
+                onClick={closeMenus}
+              >
+                Elections
               </Link>
 
               <Link 
                 href="/government/cabinet" 
                 className="ribbon-nav-link desktop-ribbon-extra" 
                 onClick={closeMenus}
-                style={{ color: '#ffffff', fontSize: '15px', fontWeight: 'bold', textDecoration: 'none', padding: '8px 10px', display: 'inline-flex' }}
               >
                 Cabinet
               </Link>
 
               <Link 
-                href="/counties" 
+                href="/government/counties" 
                 className="ribbon-nav-link desktop-ribbon-extra" 
                 onClick={closeMenus}
-                style={{ color: '#ffffff', fontSize: '15px', fontWeight: 'bold', textDecoration: 'none', padding: '8px 10px', display: 'inline-flex' }}
               >
                 Counties
               </Link>
@@ -183,36 +182,24 @@ export default function GovUKHeader() {
                 href="/constitution" 
                 className="ribbon-nav-link desktop-ribbon-extra" 
                 onClick={closeMenus}
-                style={{ color: '#ffffff', fontSize: '15px', fontWeight: 'bold', textDecoration: 'none', padding: '8px 10px', display: 'inline-flex' }}
               >
                 Constitution
               </Link>
 
               <Link 
-                href="/open-data" 
+                href="/government/institutions" 
                 className="ribbon-nav-link desktop-ribbon-extra" 
                 onClick={closeMenus}
-                style={{ color: '#ffffff', fontSize: '15px', fontWeight: 'bold', textDecoration: 'none', padding: '8px 10px', display: 'inline-flex' }}
               >
-                Open data
+                Institutions
               </Link>
 
               <Link 
-                href="/politics" 
+                href="/government/people" 
                 className="ribbon-nav-link desktop-ribbon-extra" 
                 onClick={closeMenus}
-                style={{ color: '#ffffff', fontSize: '15px', fontWeight: 'bold', textDecoration: 'none', padding: '8px 10px', display: 'inline-flex' }}
               >
-                Politics
-              </Link>
-
-              <Link 
-                href="/leaders" 
-                className="ribbon-nav-link desktop-ribbon-extra" 
-                onClick={closeMenus}
-                style={{ color: '#ffffff', fontSize: '15px', fontWeight: 'bold', textDecoration: 'none', padding: '8px 10px', display: 'inline-flex' }}
-              >
-                Leaders
+                Officials
               </Link>
             </nav>
 
@@ -238,59 +225,48 @@ export default function GovUKHeader() {
             <div 
               id="expanded-more-mega-menu"
               className="more-dropdown-drawer-panel"
-              style={{ 
-                backgroundColor: '#f3f2f1', 
-                borderBottom: '4px solid #003D1F', 
-                width: '100%',
-                position: 'absolute',
-                top: '100%',
-                left: 0,
-                zIndex: 98,
-                boxShadow: '0 6px 12px rgba(0,0,0,0.15)',
-                clear: 'both'
-              }}
             >
               <div className="govuk-width-container govuk-!-padding-top-5 govuk-!-padding-bottom-5 govuk-!-padding-horizontal-3">
-                <div className="mega-menu-flex-grid" style={{ display: 'flex', flexWrap: 'wrap', gap: '28px 20px', alignItems: 'flex-start' }}>
+                <div className="mega-menu-flex-grid">
                   
                   {/* Column 1: Services */}
-                  <div className="mega-menu-column" style={{ flex: '1 1 240px', boxSizing: 'border-box' }}>
-                    <h2 className="govuk-heading-s govuk-!-margin-bottom-3" style={{ color: '#0b0c0c', borderBottom: '3px solid #003D1F', paddingBottom: '4px', margin: 0, fontSize: '16px' }}>
+                  <div className="mega-menu-column">
+                    <h2 className="govuk-heading-s govuk-!-margin-bottom-3 mega-menu-heading">
                       Services
                     </h2>
                     <ul className="govuk-list govuk-list--spaced">
                       <li className="govuk-!-margin-bottom-2">
-                        <Link href="/services" className="govuk-link sub-drawer-link govuk-!-font-weight-bold" onClick={closeMenus} style={{ fontWeight: 'bold', fontSize: '16px', textDecoration: 'none', color: '#003D1F' }}>
+                        <Link href="/services" className="govuk-link sub-drawer-link govuk-!-font-weight-bold" onClick={closeMenus}>
                           All services A–Z
                         </Link>
                       </li>
                       <li className="govuk-!-margin-bottom-2">
-                        <Link href="/services?category=business-self-employed" className="govuk-link sub-drawer-link" onClick={closeMenus} style={{ fontWeight: 'bold', fontSize: '16px', textDecoration: 'none', color: '#003D1F' }}>
+                        <Link href="/services?category=business-self-employed" className="govuk-link sub-drawer-link" onClick={closeMenus}>
                           Businesses and self-employed
                         </Link>
                       </li>
                       <li className="govuk-!-margin-bottom-2">
-                        <Link href="/services?category=civil-registration" className="govuk-link sub-drawer-link" onClick={closeMenus} style={{ fontWeight: 'bold', fontSize: '16px', textDecoration: 'none', color: '#003D1F' }}>
+                        <Link href="/services?category=civil-registration" className="govuk-link sub-drawer-link" onClick={closeMenus}>
                           Births, deaths, marriages and care
                         </Link>
                       </li>
                       <li className="govuk-!-margin-bottom-2">
-                        <Link href="/services?category=driving-transport" className="govuk-link sub-drawer-link" onClick={closeMenus} style={{ fontWeight: 'bold', fontSize: '16px', textDecoration: 'none', color: '#003D1F' }}>
+                        <Link href="/services?category=driving-transport" className="govuk-link sub-drawer-link" onClick={closeMenus}>
                           Driving and transport
                         </Link>
                       </li>
                       <li className="govuk-!-margin-bottom-2">
-                        <Link href="/services?category=passports-travel" className="govuk-link sub-drawer-link" onClick={closeMenus} style={{ fontWeight: 'bold', fontSize: '16px', textDecoration: 'none', color: '#003D1F' }}>
+                        <Link href="/services?category=passports-travel" className="govuk-link sub-drawer-link" onClick={closeMenus}>
                           Passports, travel and living abroad
                         </Link>
                       </li>
                       <li className="govuk-!-margin-bottom-2">
-                        <Link href="/services?category=money-tax" className="govuk-link sub-drawer-link" onClick={closeMenus} style={{ fontWeight: 'bold', fontSize: '16px', textDecoration: 'none', color: '#003D1F' }}>
+                        <Link href="/services?category=money-tax" className="govuk-link sub-drawer-link" onClick={closeMenus}>
                           Money and tax
                         </Link>
                       </li>
                       <li>
-                        <Link href="/services?category=land-property" className="govuk-link sub-drawer-link" onClick={closeMenus} style={{ fontWeight: 'bold', fontSize: '16px', textDecoration: 'none', color: '#003D1F' }}>
+                        <Link href="/services?category=land-property" className="govuk-link sub-drawer-link" onClick={closeMenus}>
                           Land and property
                         </Link>
                       </li>
@@ -298,96 +274,106 @@ export default function GovUKHeader() {
                   </div>
 
                   {/* Column 2: Government */}
-                  <div className="mega-menu-column" style={{ flex: '1 1 240px', boxSizing: 'border-box' }}>
-                    <h2 className="govuk-heading-s govuk-!-margin-bottom-3" style={{ color: '#0b0c0c', borderBottom: '3px solid #003D1F', paddingBottom: '4px', margin: 0, fontSize: '16px' }}>
+                  <div className="mega-menu-column">
+                    <h2 className="govuk-heading-s govuk-!-margin-bottom-3 mega-menu-heading">
                       Government
                     </h2>
                     <ul className="govuk-list govuk-list--spaced">
                       <li className="govuk-!-margin-bottom-2">
-                        <Link href="/government/cabinet" className="govuk-link sub-drawer-link" onClick={closeMenus} style={{ fontWeight: 'bold', fontSize: '16px', textDecoration: 'none', color: '#003D1F' }}>
+                        <Link href="/government/presidency" className="govuk-link sub-drawer-link" onClick={closeMenus}>
+                          The Presidency
+                        </Link>
+                      </li>
+                      <li className="govuk-!-margin-bottom-2">
+                        <Link href="/government/cabinet" className="govuk-link sub-drawer-link" onClick={closeMenus}>
                           The Cabinet
                         </Link>
                       </li>
                       <li className="govuk-!-margin-bottom-2">
-                        <Link href="/legislature" className="govuk-link sub-drawer-link" onClick={closeMenus} style={{ fontWeight: 'bold', fontSize: '16px', textDecoration: 'none', color: '#003D1F' }}>
-                          The Legislature
+                        <Link href="/government/legislature" className="govuk-link sub-drawer-link" onClick={closeMenus}>
+                          Parliament
                         </Link>
                       </li>
                       <li className="govuk-!-margin-bottom-2">
-                        <Link href="/judiciary" className="govuk-link sub-drawer-link" onClick={closeMenus} style={{ fontWeight: 'bold', fontSize: '16px', textDecoration: 'none', color: '#003D1F' }}>
+                        <Link href="/government/judiciary" className="govuk-link sub-drawer-link" onClick={closeMenus}>
                           The Judiciary
                         </Link>
                       </li>
                       <li className="govuk-!-margin-bottom-2">
-                        <Link href="/independent-bodies" className="govuk-link sub-drawer-link" onClick={closeMenus} style={{ fontWeight: 'bold', fontSize: '16px', textDecoration: 'none', color: '#003D1F' }}>
-                          Independent bodies
+                        <Link href="/government/commissions" className="govuk-link sub-drawer-link" onClick={closeMenus}>
+                          Constitutional commissions
                         </Link>
                       </li>
                       <li>
-                        <Link href="/counties" className="govuk-link sub-drawer-link" onClick={closeMenus} style={{ fontWeight: 'bold', fontSize: '16px', textDecoration: 'none', color: '#003D1F' }}>
-                          Counties &amp; devolution
+                        <Link href="/government/counties" className="govuk-link sub-drawer-link" onClick={closeMenus}>
+                          County governments
                         </Link>
                       </li>
                     </ul>
                   </div>
 
                   {/* Column 3: Laws & Records */}
-                  <div className="mega-menu-column" style={{ flex: '1 1 240px', boxSizing: 'border-box' }}>
-                    <h2 className="govuk-heading-s govuk-!-margin-bottom-3" style={{ color: '#0b0c0c', borderBottom: '3px solid #003D1F', paddingBottom: '4px', margin: 0, fontSize: '16px' }}>
+                  <div className="mega-menu-column">
+                    <h2 className="govuk-heading-s govuk-!-margin-bottom-3 mega-menu-heading">
                       Laws &amp; Records
                     </h2>
                     <ul className="govuk-list govuk-list--spaced">
                       <li className="govuk-!-margin-bottom-2">
-                        <Link href="/constitution" className="govuk-link sub-drawer-link govuk-!-font-weight-bold" onClick={closeMenus} style={{ fontWeight: 'bold', fontSize: '16px', textDecoration: 'none', color: '#003D1F' }}>
+                        <Link href="/constitution" className="govuk-link sub-drawer-link govuk-!-font-weight-bold" onClick={closeMenus}>
                           Constitution of Kenya
                         </Link>
                       </li>
                       <li className="govuk-!-margin-bottom-2">
-                        <Link href="/acts/parliament" className="govuk-link sub-drawer-link" onClick={closeMenus} style={{ fontWeight: 'bold', fontSize: '16px', textDecoration: 'none', color: '#003D1F' }}>
+                        <Link href="/acts/parliament" className="govuk-link sub-drawer-link" onClick={closeMenus}>
                           Acts of Parliament
                         </Link>
                       </li>
                       <li className="govuk-!-margin-bottom-2">
-                        <Link href="/documents" className="govuk-link sub-drawer-link" onClick={closeMenus} style={{ fontWeight: 'bold', fontSize: '16px', textDecoration: 'none', color: '#003D1F' }}>
+                        <Link href="/documents" className="govuk-link sub-drawer-link" onClick={closeMenus}>
                           Official documents
                         </Link>
                       </li>
+                      <li className="govuk-!-margin-bottom-2">
+                        <Link href="/government/people" className="govuk-link sub-drawer-link" onClick={closeMenus}>
+                          Government officials
+                        </Link>
+                      </li>
                       <li>
-                        <Link href="/leaders" className="govuk-link sub-drawer-link" onClick={closeMenus} style={{ fontWeight: 'bold', fontSize: '16px', textDecoration: 'none', color: '#003D1F' }}>
-                          Current leaders
+                        <Link href="/government/institutions" className="govuk-link sub-drawer-link" onClick={closeMenus}>
+                          Public institutions
                         </Link>
                       </li>
                     </ul>
                   </div>
 
-                  {/* Column 4: Politics, Data & Society */}
-                  <div className="mega-menu-column" style={{ flex: '1 1 240px', boxSizing: 'border-box' }}>
-                    <h2 className="govuk-heading-s govuk-!-margin-bottom-3" style={{ color: '#0b0c0c', borderBottom: '3px solid #003D1F', paddingBottom: '4px', margin: 0, fontSize: '16px' }}>
-                      Politics, Data &amp; Society
+                  {/* Column 4: Elections, Data & Society */}
+                  <div className="mega-menu-column">
+                    <h2 className="govuk-heading-s govuk-!-margin-bottom-3 mega-menu-heading">
+                      Elections, Data &amp; Society
                     </h2>
                     <ul className="govuk-list govuk-list--spaced">
                       <li className="govuk-!-margin-bottom-2">
-                        <Link href="/politics" className="govuk-link sub-drawer-link" onClick={closeMenus} style={{ fontWeight: 'bold', fontSize: '16px', textDecoration: 'none', color: '#003D1F' }}>
-                          Politics &amp; elections
+                        <Link href="/elections" className="govuk-link sub-drawer-link govuk-!-font-weight-bold" onClick={closeMenus}>
+                          Elections
                         </Link>
                       </li>
                       <li className="govuk-!-margin-bottom-2">
-                        <Link href="/institutions" className="govuk-link sub-drawer-link" onClick={closeMenus} style={{ fontWeight: 'bold', fontSize: '16px', textDecoration: 'none', color: '#003D1F' }}>
-                          Public institutions
+                        <Link href="/elections/political-parties" className="govuk-link sub-drawer-link" onClick={closeMenus}>
+                          Political parties
                         </Link>
                       </li>
                       <li className="govuk-!-margin-bottom-2">
-                        <Link href="/open-data" className="govuk-link sub-drawer-link govuk-!-font-weight-bold" onClick={closeMenus} style={{ fontWeight: 'bold', fontSize: '16px', textDecoration: 'none', color: '#003D1F' }}>
+                        <Link href="/open-data" className="govuk-link sub-drawer-link" onClick={closeMenus}>
                           Open data
                         </Link>
                       </li>
                       <li className="govuk-!-margin-bottom-2">
-                        <Link href="/society-and-culture" className="govuk-link sub-drawer-link" onClick={closeMenus} style={{ fontWeight: 'bold', fontSize: '16px', textDecoration: 'none', color: '#003D1F' }}>
+                        <Link href="/society-and-culture" className="govuk-link sub-drawer-link" onClick={closeMenus}>
                           Society &amp; culture
                         </Link>
                       </li>
                       <li>
-                        <Link href="/guides" className="govuk-link sub-drawer-link" onClick={closeMenus} style={{ fontWeight: 'bold', fontSize: '16px', textDecoration: 'none', color: '#003D1F' }}>
+                        <Link href="/guides" className="govuk-link sub-drawer-link" onClick={closeMenus}>
                           Citizen guides
                         </Link>
                       </li>
@@ -400,95 +386,9 @@ export default function GovUKHeader() {
           )}
         </div>
 
-        {/* Global CSS with updated Kenyan green theme */}
+        {/* Global CSS - Updated with emerald green theme */}
         <style dangerouslySetInnerHTML={{__html: `
-          .header-branding-title { font-size: 15px; }
-          .sub-drawer-link { color: #003D1F !important; }
-          .sub-drawer-link:hover { text-decoration: underline !important; color: #002A15 !important; }
-          .mega-menu-column h2.govuk-heading-s { color: #0b0c0c; border-bottom: 3px solid #003D1F; padding-bottom: 4px; margin: 0; font-size: 16px; }
-          .mega-menu-column p.govuk-body-s { color: #505a5f; }
-          .mega-menu-column ul.govuk-list { margin: 0; padding: 0; }
-
-          .more-active { background-color: rgba(255, 255, 255, 0.2) !important; }
-          .icon-active { background-color: rgba(0, 0, 0, 0.06) !important; border-radius: 4px; }
-          .ribbon-nav-link:hover { background-color: rgba(255, 255, 255, 0.15) !important; text-decoration: underline !important; border-radius: 4px; }
-          .ribbon-nav-link { color: #ffffff; font-size: 15px; font-weight: bold; text-decoration: none; padding: 8px 10px; display: inline-flex; }
-          .top-tier-action-group { display: flex; align-items: center; gap: 8px; }
-          .header-top-white-tier { border-bottom: 1px solid #e5e5e5; position: relative; }
-          .govuk-width-container.top { margin: 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 6px 16px; box-sizing: border-box; }
-          .header-branding-title { font-weight: 800; color: #0b0c0c; letter-spacing: -0.4px; line-height: 1; }
-          .header-logo-container { display: inline-flex; align-items: center; }
-          .header-logo-link { display: inline-flex; align-items: center; text-decoration: none; }
-          .universal-header-support-btn {
-            color: #0b0c0c;
-            background-color: #f3f2f1;
-            box-shadow: 0 2px 0 #0b0c0c;
-            font-size: 13px;
-            font-weight: bold;
-            text-decoration: none;
-            padding: 6px 12px;
-            margin: 0;
-            display: inline-flex;
-            align-items: center;
-            border: 2px solid #0b0c0c;
-            border-radius: 0;
-          }
-          .universal-header-support-btn:hover { background-color: #dbdad9 !important; }
-
-          .more-dropdown-drawer-panel { position: absolute; top: 100%; left: 0; }
-          .mobile-only-search-pane {
-            background-color: #f3f2f1;
-            border-bottom: 4px solid #003D1F;
-            width: 100%;
-            position: absolute;
-            top: 100%;
-            left: 0;
-            z-index: 99;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-          }
-
-          @media (max-width: 40.05rem) {
-            .desktop-search-inline-container { display: none !important; }
-            .desktop-search-icon-btn { display: none !important; }
-            .desktop-ribbon-extra { display: none !important; }
-            .mobile-search-toggle-btn { display: inline-flex !important; }
-            .header-branding-title { font-size: 15px; }
-            .universal-header-support-btn {
-              padding: 7px 11px !important;
-              font-size: 13px !important;
-            }
-            .govuk-width-container.top {
-              padding: 8px 12px !important;
-            }
-          }
-
-          @media (max-width: 23rem) {
-            .header-branding-title { font-size: 14px; }
-          }
-
-          @media (min-width: 40.0625rem) {
-            .header-branding-title { font-size: 24px; }
-            .mobile-only-menu-column { display: none !important; }
-            .mobile-only-search-pane { display: none !important; }
-            .mobile-search-toggle-btn { display: none !important; }
-            .universal-header-support-btn {
-              padding: 8px 14px !important;
-              font-size: 14px !important;
-            }
-            .header-bottom-green-tier .govuk-width-container { flex-direction: row !important; align-items: center; justify-content: space-between; }
-          }
-
-          @media (max-width: 48.0625rem) {
-            .more-dropdown-drawer-panel { position: relative !important; top: 0 !important; }
-          }
-
-          .header-logo-image {
-            margin-right: 8px;
-            display: inline-block;
-            vertical-align: middle;
-            border-radius: 4px;
-            border: 1px solid #bfc1c3;
-          }
+          /* Base styles */
           .site-two-tone-header {
             background-color: #ffffff;
             border-bottom: 6px solid #CE1126;
@@ -497,17 +397,114 @@ export default function GovUKHeader() {
             position: relative;
             z-index: 100;
           }
-          .mega-menu-flex-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 28px 20px;
-          }
-          .header-bottom-green-tier {
-            background-color: #003D1F;
-            padding-top: 6px;
-            padding-bottom: 6px;
+
+          .header-top-white-tier {
+            border-bottom: 1px solid #e5e5e5;
             position: relative;
           }
+
+          .govuk-width-container.top {
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 16px;
+            box-sizing: border-box;
+          }
+
+          .header-logo-container {
+            display: inline-flex;
+            align-items: center;
+          }
+
+          .header-logo-link {
+            display: inline-flex;
+            align-items: center;
+            text-decoration: none;
+          }
+
+          .header-logo-image {
+            margin-right: 10px;
+            display: inline-block;
+            vertical-align: middle;
+            border-radius: 4px;
+            border: 1px solid #bfc1c3;
+          }
+
+          .header-branding-title {
+            font-weight: 800;
+            color: #0b0c0c;
+            letter-spacing: -0.4px;
+            line-height: 1;
+            font-size: 18px;
+          }
+
+          .top-tier-action-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+          }
+
+          /* Support Button - Now uses green with white text for better visibility */
+          .universal-header-support-btn {
+            color: #ffffff !important;
+            background-color: #047857 !important;
+            box-shadow: 0 2px 0 #065f46 !important;
+            font-size: 14px;
+            font-weight: bold;
+            text-decoration: none;
+            padding: 8px 16px;
+            margin: 0;
+            display: inline-flex;
+            align-items: center;
+            border: none;
+            border-radius: 4px;
+          }
+
+          .universal-header-support-btn:hover {
+            background-color: #065f46 !important;
+          }
+
+          .desktop-search-icon-btn {
+            background: none;
+            border: none;
+            color: #0b0c0c;
+            cursor: pointer;
+            padding: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+          }
+
+          .desktop-search-icon-btn:hover {
+            background-color: rgba(0, 0, 0, 0.06);
+          }
+
+          .mobile-search-toggle-btn-base {
+            background: none;
+            border: none;
+            color: #0b0c0c;
+            cursor: pointer;
+            padding: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+          }
+
+          .icon-active {
+            background-color: rgba(0, 0, 0, 0.06) !important;
+            border-radius: 4px;
+          }
+
+          /* Emerald Green navigation tier - matches search bar color */
+          .header-bottom-green-tier {
+            background-color: #047857;
+            padding-top: 8px;
+            padding-bottom: 8px;
+            position: relative;
+          }
+
           .header-green-inner {
             margin: 0 auto;
             display: flex;
@@ -518,15 +515,28 @@ export default function GovUKHeader() {
             box-sizing: border-box;
             position: relative;
           }
-          .govuk-!-padding-horizontal-3 {
-            padding-left: 16px !important;
-            padding-right: 16px !important;
-          }
+
           .header-nav {
             display: flex;
             align-items: center;
             gap: 2px;
           }
+
+          .ribbon-nav-link {
+            color: #ffffff;
+            font-size: 15px;
+            font-weight: bold;
+            text-decoration: none;
+            padding: 10px 12px;
+            display: inline-flex;
+            border-radius: 4px;
+          }
+
+          .ribbon-nav-link:hover {
+            background-color: rgba(255, 255, 255, 0.2) !important;
+            text-decoration: underline !important;
+          }
+
           .ribbon-more-toggle-btn {
             background-color: transparent;
             border: none;
@@ -534,56 +544,101 @@ export default function GovUKHeader() {
             font-size: 15px;
             font-weight: bold;
             cursor: pointer;
-            padding: 8px 12px;
+            padding: 10px 14px;
             display: inline-flex;
             align-items: center;
-            gap: 4px;
+            gap: 6px;
             border-radius: 4px;
           }
+
           .ribbon-more-toggle-btn svg {
             transition: transform 0.2s ease;
           }
+
           .ribbon-more-toggle-btn svg.rotated {
             transform: rotate(180deg);
           }
-          .mobile-search-toggle-btn-base {
-            background: none;
-            border: none;
+
+          .more-active {
+            background-color: rgba(255, 255, 255, 0.25) !important;
+          }
+
+          /* Mobile search pane */
+          .mobile-only-search-pane {
+            background-color: #f3f2f1;
+            border-bottom: 4px solid #047857;
+            width: 100%;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            z-index: 99;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+          }
+
+          /* Mega menu */
+          .more-dropdown-drawer-panel {
+            background-color: #f3f2f1;
+            border-bottom: 4px solid #047857;
+            width: 100%;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            z-index: 98;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+            clear: both;
+          }
+
+          .mega-menu-flex-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 28px 20px;
+            align-items: flex-start;
+          }
+
+          .mega-menu-column {
+            flex: 1 1 240px;
+            box-sizing: border-box;
+          }
+
+          .mega-menu-heading {
             color: #0b0c0c;
-            cursor: pointer;
-            padding: 8px;
-            align-items: center;
-            justify-content: center;
+            border-bottom: 3px solid #047857;
+            padding-bottom: 4px;
+            margin: 0;
+            font-size: 16px;
           }
-          .desktop-search-icon-btn {
-            background: none;
-            border: none;
-            color: #0b0c0c;
-            cursor: pointer;
-            padding: 8px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 4px;
+
+          .sub-drawer-link {
+            color: #047857 !important;
+            font-weight: bold;
+            font-size: 16px;
+            text-decoration: none;
           }
-          .desktop-search-icon-btn:hover {
-            background-color: rgba(0, 0, 0, 0.06);
+
+          .sub-drawer-link:hover {
+            text-decoration: underline !important;
+            color: #065f46 !important;
           }
+
+          /* Desktop search panel */
           .header-search-expanded {
             background-color: #f3f2f1;
-            border-bottom: 4px solid #003D1F;
+            border-bottom: 4px solid #047857;
             padding: 12px 0;
             position: relative;
             z-index: 95;
           }
+
           .search-expanded-content {
             display: flex;
             align-items: center;
             gap: 8px;
           }
+
           .search-expanded-content .autocomplete-wrapper {
             flex: 1;
           }
+
           .search-expanded-close {
             background: none;
             border: 2px solid #0b0c0c;
@@ -599,11 +654,90 @@ export default function GovUKHeader() {
             justify-content: center;
             margin-left: 4px;
           }
+
           .search-expanded-close:hover {
             background-color: #e5e5e5;
           }
+
+          /* Mobile styles */
+          @media (max-width: 40.05rem) {
+            .header-branding-title {
+              font-size: 19px;
+            }
+
+            .govuk-width-container.top {
+              padding: 10px 14px !important;
+            }
+
+            .universal-header-support-btn {
+              padding: 9px 14px !important;
+              font-size: 14px !important;
+            }
+
+            .desktop-search-icon-btn {
+              display: none !important;
+            }
+
+            .desktop-ribbon-extra {
+              display: none !important;
+            }
+
+            .mobile-search-toggle-btn {
+              display: inline-flex !important;
+            }
+
+            .header-logo-image {
+              width: 34px;
+              height: 34px;
+            }
+          }
+
+          @media (max-width: 23rem) {
+            .header-branding-title {
+              font-size: 17px;
+            }
+          }
+
+          /* Tablet and desktop styles */
           @media (min-width: 40.0625rem) {
-            .desktop-search-inline-container { display: none !important; }
+            .header-branding-title {
+              font-size: 24px;
+            }
+
+            .mobile-only-search-pane {
+              display: none !important;
+            }
+
+            .mobile-search-toggle-btn {
+              display: none !important;
+            }
+
+            .mobile-ribbon-extra {
+              display: none !important;
+            }
+
+            .universal-header-support-btn {
+              padding: 10px 18px !important;
+              font-size: 15px !important;
+            }
+
+            .header-bottom-green-tier .govuk-width-container {
+              flex-direction: row !important;
+              align-items: center;
+              justify-content: space-between;
+            }
+          }
+
+          @media (max-width: 48.0625rem) {
+            .more-dropdown-drawer-panel {
+              position: relative !important;
+              top: 0 !important;
+            }
+          }
+
+          .govuk-!-padding-horizontal-3 {
+            padding-left: 16px !important;
+            padding-right: 16px !important;
           }
         `}} />
       </header>
