@@ -21,7 +21,11 @@ export default defineType({
       title: 'Slug',
       type: 'slug',
       options: { source: 'title', maxLength: 96 },
-      validation: (Rule: any) => Rule.required(),
+      validation: (Rule: any) => Rule.required().custom((slug: any) => {
+        if (!slug?.current) return 'Slug is required';
+        return true;
+      }),
+      description: 'URL-friendly identifier. Must be unique.',
     }),
     defineField({
       name: 'destinationCountry',
@@ -70,7 +74,7 @@ export default defineType({
       }),
     }),
 
-    // === NEW: Speeches Delivered During the Trip ===
+    // === Speeches Delivered During the Trip ===
     defineField({
       name: 'speeches',
       title: 'Speeches Delivered During the Trip',
