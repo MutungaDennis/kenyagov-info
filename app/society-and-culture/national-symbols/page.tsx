@@ -1,5 +1,4 @@
-'use client';
-
+// app/society-and-culture/national-symbols/page.tsx
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import LastUpdated from "@/components/govuk/LastUpdated";
@@ -7,100 +6,111 @@ import LastUpdated from "@/components/govuk/LastUpdated";
 export default function NationalSymbolsPage() {
   return (
     <div className="govuk-width-container">
-      {/* GOV.UK Navigation Breadcrumbs */}
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
-          { text: "Society and Culture", href: "/society-and-culture" },
-          { text: "National Symbols", href: "/society-and-culture/national-symbols" },
+          { text: "Society and culture", href: "/society-and-culture" },
+          { text: "National symbols", href: "/society-and-culture/national-symbols" },
         ]}
       />
 
       <main className="govuk-main-wrapper" id="main-content" role="main">
         
-        {/* HEADER SECTION */}
-        <div className="govuk-grid-row govuk-!-margin-bottom-7">
+        {/* Header */}
+        <div className="govuk-grid-row">
           <div className="govuk-grid-column-two-thirds">
-            <span className="govuk-caption-xl">National Identity and Heritage</span>
-            <h1 className="govuk-heading-xl govuk-!-margin-bottom-4">
-              National Symbols of Kenya
-            </h1>
+            <span className="govuk-caption-xl">National identity and heritage</span>
+            <h1 className="govuk-heading-xl">National symbols of Kenya</h1>
             <p className="govuk-body-l">
-              Article 9(1) of the Constitution of Kenya establishes the official state symbols that represent the sovereignty, unity, and shared cultural values of the Republic.
+              <Link href="/constitution/chapter/2/article/9" className="govuk-link">
+                Article 9(1) of the Constitution of Kenya
+              </Link>
+              {' '}establishes the official national symbols. These represent the sovereignty, unity and shared values of the Republic.
             </p>
           </div>
         </div>
 
-        {/* LEGAL COMPLIANCE WARNING BANNER */}
-        <div className="govuk-grid-row govuk-!-margin-bottom-7">
-          <div className="govuk-grid-column-full">
-            <div className="govuk-notification-banner" role="region" aria-labelledby="govuk-notification-banner-title" data-module="govuk-notification-banner" style={{ borderLeftColor: "#d4351c" }}>
-              <div className="govuk-notification-banner__header" style={{ backgroundColor: "#d4351c" }}>
-                <h2 className="govuk-notification-banner__title" id="govuk-notification-banner-title">
-                  Legal Notice: Protected Emblems
-                </h2>
-              </div>
-              <div className="govuk-notification-banner__content">
-                <h3 className="govuk-notification-banner__heading">
-                  National Flag, Emblems and Names Act (Cap. 99)
-                </h3>
-                <p className="govuk-body">
-                  Under Section 3 of <strong>Cap. 99 of the Laws of Kenya</strong>, it is a criminal offence to display, reproduce, or use any specified national emblem (such as the Coat of Arms or Public Seal) or their colourable imitations for trade, business, or unauthorized public profiles without written permission from the Cabinet Secretary. 
-                </p>
-                <p className="govuk-body">
-                  To ensure full legal compliance, this educational service provides precise <strong>textual and constitutional descriptions</strong> of these protected symbols in lieu of downloadable graphic imitations.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* CONTENT AND SIDEBAR MATRIX */}
-        <div className="govuk-grid-row">
+        <div className="govuk-grid-row govuk-!-margin-top-6">
+          
+          {/* Main content */}
           <div className="govuk-grid-column-two-thirds">
+
+            {/* Legal notice */}
+            <div className="govuk-inset-text govuk-!-margin-bottom-8">
+              <p className="govuk-body">
+                The National Flag, Emblems and Names Act (Cap. 99) protects Kenya's national symbols. It is an offence to use the Coat of Arms, Public Seal or other protected emblems for commercial purposes without written permission from the Cabinet Secretary.
+              </p>
+              <p className="govuk-body govuk-!-margin-bottom-0">
+                For this reason, this page provides textual descriptions of the symbols rather than graphic reproductions.
+              </p>
+            </div>
+
+            {/* Table of contents */}
+            <nav className="govuk-!-margin-bottom-8" aria-label="Page contents">
+              <h2 className="govuk-heading-s">Contents</h2>
+              <ol className="govuk-list govuk-list--spaced">
+                <li><a className="govuk-link" href="#national-flag">The national flag</a></li>
+                <li><a className="govuk-link" href="#coat-of-arms">The Coat of Arms</a></li>
+                <li><a className="govuk-link" href="#national-anthem">The national anthem</a></li>
+                <li><a className="govuk-link" href="#national-motto">The national motto</a></li>
+                <li><a className="govuk-link" href="#national-pledge">The national pledge</a></li>
+                <li><a className="govuk-link" href="#public-seal">The Public Seal</a></li>
+              </ol>
+            </nav>
+
+            <hr className="govuk-section-break govuk-section-break--l govuk-section-break--visible" />
 
             {/* 1. THE NATIONAL FLAG */}
             <section id="national-flag" className="govuk-!-margin-bottom-8">
-              <h2 className="govuk-heading-l">1. The National Flag</h2>
+              <h2 className="govuk-heading-l">The national flag</h2>
               <p className="govuk-body">
-                The national flag is a powerful emblem of independence and pride. It is based on the Kenya African National Union (KANU) independence flag and consists of four colors with a traditional Maasai shield and two crossed spears in the center.
+                The national flag is the most recognised symbol of Kenya. It is based on the flag of the Kenya African National Union (KANU), which led the country to independence in 1963.
               </p>
-              
-              {/* Accessible Data Table for Color Symbolism */}
-              <table className="govuk-table govuk-!-margin-bottom-4">
-                <caption className="govuk-table__caption govuk-table__caption--s">Official Meaning of National Flag Elements</caption>
+              <p className="govuk-body">
+                The flag has a ratio of 2:3 (height to width). From top to bottom, it consists of equal horizontal bands of black, white, red, white and green, with a traditional Maasai shield and two crossed spears in the centre.
+              </p>
+
+              <h3 className="govuk-heading-s">Meaning of the flag elements</h3>
+              <table className="govuk-table">
+                <caption className="govuk-table__caption govuk-visually-hidden">
+                  The meaning of each element on the national flag
+                </caption>
                 <thead className="govuk-table__head">
                   <tr className="govuk-table__row">
-                    <th scope="col" className="govuk-table__header" style={{ width: "30%" }}>Element / Color</th>
-                    <th scope="col" className="govuk-table__header">Constitutional Meaning and Significance</th>
+                    <th scope="col" className="govuk-table__header">Element</th>
+                    <th scope="col" className="govuk-table__header">Meaning</th>
                   </tr>
                 </thead>
                 <tbody className="govuk-table__body">
                   <tr className="govuk-table__row">
-                    <th scope="row" className="govuk-table__header" style={{ fontWeight: "600" }}>Black</th>
-                    <td className="govuk-table__cell">Represents the indigenous people of the Republic of Kenya.</td>
+                    <th scope="row" className="govuk-table__header">Black</th>
+                    <td className="govuk-table__cell">The people of Kenya</td>
                   </tr>
                   <tr className="govuk-table__row">
-                    <th scope="row" className="govuk-table__header" style={{ fontWeight: "600" }}>Red</th>
-                    <td className="govuk-table__cell">Symbolizes the blood shed during the arduous struggle for freedom and independence.</td>
+                    <th scope="row" className="govuk-table__header">Red</th>
+                    <td className="govuk-table__cell">The blood shed during the struggle for independence</td>
                   </tr>
                   <tr className="govuk-table__row">
-                    <th scope="row" className="govuk-table__header" style={{ fontWeight: "600" }}>Green</th>
-                    <td className="govuk-table__cell">Represents the country&apos;s rich agricultural abundance and natural resources.</td>
+                    <th scope="row" className="govuk-table__header">Green</th>
+                    <td className="govuk-table__cell">The country's natural wealth and agricultural resources</td>
                   </tr>
                   <tr className="govuk-table__row">
-                    <th scope="row" className="govuk-table__header" style={{ fontWeight: "600" }}>White Lines</th>
-                    <td className="govuk-table__cell">Signifies peace, honesty, and national unity across all diverse communities.</td>
+                    <th scope="row" className="govuk-table__header">White fimbriation</th>
+                    <td className="govuk-table__cell">Peace, honesty and unity</td>
                   </tr>
                   <tr className="govuk-table__row">
-                    <th scope="row" className="govuk-table__header" style={{ fontWeight: "600" }}>Shield &amp; Spears</th>
-                    <td className="govuk-table__cell">Symbolizes the defense of freedom and the readiness to safeguard national sovereignty.</td>
+                    <th scope="row" className="govuk-table__header">Shield and spears</th>
+                    <td className="govuk-table__cell">The defence of freedom and national sovereignty</td>
                   </tr>
                 </tbody>
               </table>
 
-              <div className="govuk-inset-text">
-                <strong>Restriction:</strong> Flying the national flag on private motor vehicles is explicitly restricted by law to the President, Deputy President, Chief Justice, Speakers of Parliament, Cabinet Secretaries, and foreign diplomats. Violations attract strict legal fines or prosecution.
+              <div className="govuk-warning-text">
+                <span className="govuk-warning-text__icon" aria-hidden="true">!</span>
+                <strong className="govuk-warning-text__text">
+                  <span className="govuk-visually-hidden">Warning</span>
+                  Flying the national flag on private vehicles is restricted by law to the President, Deputy President, Chief Justice, Speakers of Parliament, Cabinet Secretaries and accredited foreign diplomats.
+                </strong>
               </div>
             </section>
 
@@ -108,58 +118,116 @@ export default function NationalSymbolsPage() {
 
             {/* 2. THE COAT OF ARMS */}
             <section id="coat-of-arms" className="govuk-!-margin-bottom-8">
-              <h2 className="govuk-heading-l">2. The Coat of Arms</h2>
+              <h2 className="govuk-heading-l">The Coat of Arms</h2>
               <p className="govuk-body">
-                The Coat of Arms of Kenya is the state graphic seal of authority. Pursuant to statutory guidelines, we describe its exact heraldic compositions as defined in the Second Schedule of the Constitution:
+                The Coat of Arms is the official state emblem of Kenya. It is used on government documents, official correspondence and state buildings. The design is described in the Second Schedule of the Constitution.
               </p>
+              <p className="govuk-body">The Coat of Arms contains the following elements:</p>
               <ul className="govuk-list govuk-list--bullet">
                 <li>
-                  <strong>The Supporters:</strong> Two golden African lions, symbolizing wildlife heritage and fierce collective courage, stand as guardians on either side holding traditional East African spears.
+                  <strong>Two lions</strong> — two golden African lions standing on either side, holding traditional spears. They symbolise wildlife heritage and national courage.
                 </li>
                 <li>
-                  <strong>The Central Shield:</strong> Features the national colors (Black, Red, Green, White) with a central rooster holding an axe while moving forward, signifying the break of a new dawn, success, and the continuous will to work.
+                  <strong>The central shield</strong> — features the national colours (black, red, green and white) with a rooster holding an axe. The rooster represents the new dawn and the spirit of hard work.
                 </li>
                 <li>
-                  <strong>The Base Silhouette:</strong> The entire composition rests firmly on a silhouette model representing Mount Kenya.
+                  <strong>Mount Kenya</strong> — the entire composition rests on a silhouette of Mount Kenya, the country's highest mountain.
                 </li>
                 <li>
-                  <strong>Agricultural Abundance:</strong> The foreground features meticulous depictions of Kenya&apos;s primary agricultural cash crops—specifically coffee, pyrethrum, sisal, tea, maize, and pineapples.
+                  <strong>Agricultural produce</strong> — the foreground shows Kenya's main crops: coffee, pyrethrum, sisal, tea, maize and pineapples.
                 </li>
                 <li>
-                  <strong>The State Motto Scroll:</strong> At the lowest base, a scroll bears the official national motto: <em>&quot;Harambee&quot;</em> (Kiswahili for &quot;Pulling together in corporate unity&quot;).
+                  <strong>The motto scroll</strong> — at the base, a scroll bears the national motto "Harambee".
                 </li>
               </ul>
             </section>
 
             <hr className="govuk-section-break govuk-section-break--l govuk-section-break--visible" />
+
             {/* 3. THE NATIONAL ANTHEM */}
             <section id="national-anthem" className="govuk-!-margin-bottom-8">
-              <h2 className="govuk-heading-l">3. The National Anthem</h2>
+              <h2 className="govuk-heading-l">The national anthem</h2>
               <p className="govuk-body">
-                Kenya’s national anthem is a corporate prayer composed by local elders prior to independence in 1963. It was designed to promote patriotism and national cohesion. It is written in both Kiswahili and English:
+                Kenya's national anthem was composed in 1963 by a committee led by Graham Hyslop, G.W. Senoga Zake, Peter Kibukosya and Washington Omondi. It was first performed at the independence ceremony on 12 December 1963.
               </p>
-              
+              <p className="govuk-body">
+                The anthem has three stanzas, written in both Kiswahili and English.
+              </p>
+
+              <h3 className="govuk-heading-s">Stanza 1</h3>
               <div className="govuk-grid-row">
                 <div className="govuk-grid-column-one-half">
-                  <h3 className="govuk-heading-s">Stanza 1 (Kiswahili)</h3>
-                  <p className="govuk-body" style={{ fontStyle: "italic", lineHeight: "1.6" }}>
+                  <p className="govuk-body">
+                    <strong>Kiswahili</strong><br />
                     Ee Mungu nguvu yetu<br />
                     Ilete baraka kwetu<br />
                     Haki iwe ngao na mlinzi<br />
                     Natukae na undugu<br />
                     Amani na uhuru<br />
-                    Raha tupate na ustawi.
+                    Raha tupate na ustawi
                   </p>
                 </div>
                 <div className="govuk-grid-column-one-half">
-                  <h3 className="govuk-heading-s">Stanza 1 (English)</h3>
-                  <p className="govuk-body" style={{ fontStyle: "italic", lineHeight: "1.6" }}>
+                  <p className="govuk-body">
+                    <strong>English</strong><br />
                     O God of all creation<br />
                     Bless this our land and nation<br />
                     Justice be our shield and defender<br />
                     May we dwell in unity<br />
                     Peace and liberty<br />
-                    Plenty be found within our borders.
+                    Plenty be found within our borders
+                  </p>
+                </div>
+              </div>
+
+              <h3 className="govuk-heading-s">Stanza 2</h3>
+              <div className="govuk-grid-row">
+                <div className="govuk-grid-column-one-half">
+                  <p className="govuk-body">
+                    <strong>Kiswahili</strong><br />
+                    Amkeni ndugu zetu<br />
+                    Tufanye sote bidii<br />
+                    Nasi tujitoe kwa nguvu<br />
+                    Nchi yetu ya Kenya<br />
+                    Tunayoipenda<br />
+                    Tuwe tayari kuilinda
+                  </p>
+                </div>
+                <div className="govuk-grid-column-one-half">
+                  <p className="govuk-body">
+                    <strong>English</strong><br />
+                    Let one and all arise<br />
+                    With hearts both strong and true<br />
+                    Service be our earnest endeavour<br />
+                    And our homeland of Kenya<br />
+                    Heritage of splendour<br />
+                    Firm may we stand to defend
+                  </p>
+                </div>
+              </div>
+
+              <h3 className="govuk-heading-s">Stanza 3</h3>
+              <div className="govuk-grid-row">
+                <div className="govuk-grid-column-one-half">
+                  <p className="govuk-body">
+                    <strong>Kiswahili</strong><br />
+                    Natujenge taifa letu<br />
+                    Ee, ndio wajibu wetu<br />
+                    Kenya istahili heshima<br />
+                    Tuungane mikono<br />
+                    Pamoja kazini<br />
+                    Kila siku tuwe na shukrani
+                  </p>
+                </div>
+                <div className="govuk-grid-column-one-half">
+                  <p className="govuk-body">
+                    <strong>English</strong><br />
+                    Let all with one accord<br />
+                    In common bond united<br />
+                    Build this our nation together<br />
+                    And the glory of Kenya<br />
+                    The fruit of our labour<br />
+                    Fill every heart with thanksgiving
                   </p>
                 </div>
               </div>
@@ -169,12 +237,15 @@ export default function NationalSymbolsPage() {
 
             {/* 4. THE NATIONAL MOTTO */}
             <section id="national-motto" className="govuk-!-margin-bottom-8">
-              <h2 className="govuk-heading-l">4. The National Motto</h2>
+              <h2 className="govuk-heading-l">The national motto</h2>
               <p className="govuk-body">
-                The official national motto of Kenya is <strong>&quot;Harambee&quot;</strong>, which is Kiswahili for &quot;Let us pull together&quot;. 
+                Kenya's national motto is <strong>"Harambee"</strong>, a Kiswahili word meaning "Let us all pull together".
               </p>
               <p className="govuk-body">
-                Enshrined at the base scroll of the Coat of Arms, it represents Kenya’s foundational tradition of community-based mutual assistance, collective responsibility, and joint resource mobilization to achieve national development priorities.
+                The motto appears on the scroll at the base of the Coat of Arms. It represents the Kenyan tradition of community-based mutual assistance, where people come together to contribute resources and labour for the common good.
+              </p>
+              <p className="govuk-body">
+                The Harambee spirit was central to Kenya's early development, with communities raising funds to build schools, hospitals and other social facilities.
               </p>
             </section>
 
@@ -182,61 +253,80 @@ export default function NationalSymbolsPage() {
 
             {/* 5. THE NATIONAL PLEDGE */}
             <section id="national-pledge" className="govuk-!-margin-bottom-8">
-              <h2 className="govuk-heading-l">5. The National Pledge</h2>
+              <h2 className="govuk-heading-l">The national pledge</h2>
               <p className="govuk-body">
-                The National Pledge of Loyalty is a solemn civic declaration recited during public assemblies, civil ceremonies, and educational forums to affirm personal allegiance to the sovereign state:
+                The National Pledge of Loyalty is a civic declaration recited at public assemblies, schools and official ceremonies. It affirms a citizen's commitment to the Republic of Kenya.
               </p>
-              <div style={{ backgroundColor: "#f3f2f1", padding: "20px", borderLeft: "5px solid #1d70b8", marginBottom: "20px" }}>
-                <p className="govuk-body" style={{ fontStyle: "italic", fontSize: "19px", lineHeight: "1.5" }}>
-                  &quot;I pledge my loyalty to the Republic of Kenya, and to the National Flag; that I will diligently serve my country with all my heart, mind and strength; and that I will maintain and defend the integrity of Kenya, against all enemies, both internal and external, so help me God.&quot;
+              <div className="govuk-inset-text">
+                <p className="govuk-body govuk-!-margin-bottom-0">
+                  "I pledge my loyalty to the Republic of Kenya and to the National Flag; that I will diligently serve my country with all my heart, mind and strength; and that I will maintain and defend the integrity of Kenya, against all enemies, both internal and external, so help me God."
                 </p>
               </div>
             </section>
 
             <hr className="govuk-section-break govuk-section-break--l govuk-section-break--visible" />
 
-            {/* PUBLIC SEAL EXTRA REVENUE MATRIX */}
+            {/* 6. THE PUBLIC SEAL */}
             <section id="public-seal" className="govuk-!-margin-bottom-8">
               <h2 className="govuk-heading-l">The Public Seal</h2>
               <p className="govuk-body">
-                The Public Seal of Kenya is the official state stamp used by the Executive branch to validate high-level legislative actions, treatial protocols, and presidential proclamations. It features a circular compression enclosing the graphic components of the National Coat of Arms, maintaining sovereign authority under the safe custody of the Head of State.
+                The Public Seal is the official stamp used by the Executive to validate important state documents, including treaties, presidential proclamations and high-level legal instruments.
+              </p>
+              <p className="govuk-body">
+                The seal is circular and features the graphic elements of the national Coat of Arms. It is kept in the custody of the President.
               </p>
             </section>
+
+            <hr className="govuk-section-break govuk-section-break--l govuk-section-break--visible" />
+
+            <LastUpdated
+              published="2026-05-22"
+              lastUpdated="2026-07-02"
+            />
+
           </div>
 
-          {/* SIDEBAR NAVIGATION COLUMN */}
-          <aside className="govuk-grid-column-one-third" role="complementary">
-            <div className="society-top-border">
-              <h2 className="govuk-heading-m govuk-!-margin-bottom-3">Related Guidance</h2>
-              <ul className="govuk-list govuk-body-s">
-                <li className="govuk-!-margin-bottom-3">
-                  <Link href="/society-and-culture/holidays" className="govuk-link">
-                    <strong>National Days and Public Holidays</strong>
-                  </Link>
-                </li>
-                <li className="govuk-!-margin-bottom-3">
-                  <Link href="/society-and-culture/constitution-and-national-values" className="govuk-link">
-                    <strong>Constitutional Rights and Values</strong>
-                  </Link>
-                </li>
-                <li className="govuk-!-margin-bottom-3">
-                  <Link href="/society-and-culture/civic-values" className="govuk-link">
-                    <strong>Public Participation Frameworks</strong>
-                  </Link>
-                </li>
-              </ul>
-            </div>
-          </aside>
-        </div>
-
-        {/* FEEDBACK & FOOTER METADATA */}
-        <div className="govuk-grid-row govuk-!-margin-top-6">
-          <div className="govuk-grid-column-full">
-            <LastUpdated published="2026-05-22" lastUpdated="2026-05-22" />
-            
+          {/* Sidebar */}
+          <div className="govuk-grid-column-one-third">
+            <aside className="govuk-!-display-none-print" role="complementary">
+              <h2 className="govuk-heading-m">Related pages</h2>
+              <nav role="navigation">
+                <ul className="govuk-list govuk-list--spaced">
+                  <li>
+                    <Link href="/society-and-culture/holidays" className="govuk-link">
+                      Public holidays
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/society-and-culture/constitution-and-national-values" className="govuk-link">
+                      Constitution and national values
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/society-and-culture/national-events" className="govuk-link">
+                      National events
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/society-and-culture/heritage-sites" className="govuk-link">
+                      Heritage sites
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/society-and-culture/cultural-calendar" className="govuk-link">
+                      Cultural calendar
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/society-and-culture" className="govuk-link">
+                      All society and culture
+                    </Link>
+                  </li>
+                </ul>
+              </nav>
+            </aside>
           </div>
         </div>
-
       </main>
     </div>
   );

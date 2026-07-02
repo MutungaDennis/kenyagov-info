@@ -29,7 +29,6 @@ export default function CommunitiesPage() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Phase 1: Query Available Timeline Directories
   useEffect(() => {
     async function fetchTimelineYears() {
       try {
@@ -45,13 +44,12 @@ export default function CommunitiesPage() {
         const activeYear = data?.find(y => y.is_active) || data?.[0];
         if (activeYear) setSelectedYearId(activeYear.id);
       } catch (err: any) {
-        setError(err.message || "Failed to load census years registry.");
+        setError(err.message || "Failed to load census years.");
       }
     }
     fetchTimelineYears();
   }, []);
 
-  // Phase 2: Live Fetch Census Entries on Year ID Switch State
   useEffect(() => {
     if (selectedYearId === null) return;
     
@@ -67,7 +65,7 @@ export default function CommunitiesPage() {
         if (recError) throw recError;
         setRecords(data || []);
       } catch (err: any) {
-        setError(err.message || "Failed to query live demographic datasets.");
+        setError(err.message || "Failed to load census data.");
       } finally {
         setIsLoading(false);
       }
@@ -75,7 +73,6 @@ export default function CommunitiesPage() {
     fetchCensusMetrics();
   }, [selectedYearId]);
 
-  // Data filtering logic based on category codes provided
   const macroRecords = records.filter(r => r.classification_type === 'MACRO');
   
   const citizenRecords = records.filter(r => 
@@ -90,21 +87,22 @@ export default function CommunitiesPage() {
     r.category_code === 'TOTAL_NON_KENYANS'
   );
 
-  // Sorting helper logic to bubble up primary groups cleanly
-  const sortedCitizenRecords = [...citizenRecords].sort((a, b) => {
-    const isAMain = a.classification_type === 'CITIZEN_MAIN';
-    const isBMain = b.classification_type === 'CITIZEN_MAIN';
-    if (isAMain && !isBMain) return -1;
-    if (!isAMain && isBMain) return 1;
-    return b.population_count - a.population_count;
-  });
+  // Get ALL main tribes (CITIZEN_MAIN classification)
+  const allMainTribes = citizenRecords
+    .filter(r => r.classification_type === 'CITIZEN_MAIN')
+    .sort((a, b) => b.population_count - a.population_count);
 
   const selectedYearLabel = years.find(y => y.id === selectedYearId)?.census_year || 2019;
+
+  const handleTabClick = (e: React.MouseEvent<HTMLAnchorElement>, tab: 'totals' | 'tribes' | 'foreign') => {
+    e.preventDefault();
+    setActiveTab(tab);
+  };
 
   if (isLoading && years.length === 0) {
     return (
       <div className="govuk-width-container govuk-!-padding-top-9">
-        <p className="govuk-body-l">Establishing remote connection to public KNBS census database tables...</p>
+        <p className="govuk-body-l">Loading census data...</p>
       </div>
     );
   }
@@ -114,282 +112,349 @@ export default function CommunitiesPage() {
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
-          { text: "Society and Culture", href: "/society-and-culture" },
+          { text: "Society and culture", href: "/society-and-culture" },
           { text: "Communities", href: "/society-and-culture/communities" },
         ]}
       />
 
       <main className="govuk-main-wrapper" id="main-content" role="main">
         
-        {/* HEADER SECTION */}
-        <div className="govuk-grid-row govuk-!-margin-bottom-6">
+        {/* Header */}
+        <div className="govuk-grid-row">
           <div className="govuk-grid-column-two-thirds">
-            <span className="govuk-caption-xl">National Identity and Heritage</span>
-            <h1 className="govuk-heading-xl govuk-!-margin-bottom-4">Demographics &amp; Ethnic Communities</h1>
+            <span className="govuk-caption-xl">People and communities</span>
+            <h1 className="govuk-heading-xl">Communities in Kenya</h1>
             <p className="govuk-body-l">
-              Official data tracking metrics managed natively within your database architecture to document demographic changes over successive census cycles.
+              Population data from the Kenya National Bureau of Statistics (KNBS) census, showing the size and composition of Kenya's communities.
             </p>
           </div>
         </div>
 
-        {/* TIMELINE CONTROL FILTERBAR */}
-        <div style={{ backgroundColor: "#f3f2f1", padding: "15px", marginBottom: "30px", borderLeft: "5px solid #1d70b8" }}>
-          <div className="govuk-form-group" style={{ marginBottom: 0 }}>
-            <label className="govuk-label" htmlFor="census-year-select">
-              <strong>Select Active Statistics Census Year</strong>
-            </label>
-            <select 
-              className="govuk-select" 
-              id="census-year-select" 
-              value={selectedYearId || ""} 
-              onChange={(e) => setSelectedYearId(Number(e.target.value))}
-              style={{ minWidth: "240px" }}
+        {/* Data source attribution */}
+        <div className="govuk-inset-text govuk-!-margin-bottom-6">
+          <p className="govuk-body govuk-!-margin-bottom-2">
+            <strong>Data source:</strong> Kenya National Bureau of Statistics (KNBS), 2019 Kenya Population and Housing Census.
+          </p>
+          <p className="govuk-body govuk-!-margin-bottom-0">
+            <a 
+              href="https://www.knbs.or.ke/wp-content/uploads/2023/09/2019-Kenya-population-and-Housing-Census-Volume-4-Distribution-of-Population-by-Socio-Economic-Characteristics.pdf" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="govuk-link"
             >
-              {years.map(y => (
-                <option key={y.id} value={y.id}>KNBS Census Record: {y.census_year}</option>
-              ))}
-            </select>
-          </div>
+              View the full KNBS census report (PDF)
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                width="14" 
+                height="14" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="2" 
+                strokeLinecap="round" 
+                strokeLinejoin="round"
+                aria-hidden="true"
+                focusable="false"
+                style={{ marginLeft: '4px', verticalAlign: 'middle', display: 'inline-block' }}
+              >
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                <polyline points="15 3 21 3 21 9" />
+                <line x1="10" y1="14" x2="21" y2="3" />
+              </svg>
+              <span className="govuk-visually-hidden"> (opens in a new tab)</span>
+            </a>
+          </p>
+        </div>
+
+        {/* Filters */}
+        <div className="govuk-!-margin-bottom-6">
+          <label className="govuk-label govuk-label--s" htmlFor="census-year-select">
+            Census year
+          </label>
+          <select 
+            className="govuk-select" 
+            id="census-year-select" 
+            value={selectedYearId || ""} 
+            onChange={(e) => setSelectedYearId(Number(e.target.value))}
+          >
+            {years.map(y => (
+              <option key={y.id} value={y.id}>{y.census_year}</option>
+            ))}
+          </select>
         </div>
 
         {error && (
           <div className="govuk-error-summary" role="alert" aria-labelledby="error-heading">
-            <h2 className="govuk-error-summary__title" id="error-heading">Database Sync Error</h2>
-            <div className="govuk-error-summary__body"><p className="govuk-body">{error}</p></div>
+            <h2 className="govuk-error-summary__title" id="error-heading">There is a problem</h2>
+            <div className="govuk-error-summary__body">
+              <p className="govuk-body">{error}</p>
+            </div>
           </div>
         )}
 
-        {/* DUAL WORKSPACE LAYOUT MATRIX */}
-        <div className="govuk-grid-row">
-          <div className="govuk-grid-column-two-thirds">
+        {isLoading ? (
+          <p className="govuk-body">Loading data...</p>
+        ) : (
+          <div className="govuk-tabs">
+            <h2 className="govuk-tabs__title">Contents</h2>
             
-            {/* GOV.UK TAB SYSTEM COMPONENT NAVIGATION LINK BUTTONS */}
-            <div style={{ borderBottom: "2px solid #b1b4b6", marginBottom: "25px", display: "flex", gap: "5px" }}>
-              <button 
-                onClick={() => setActiveTab('totals')}
-                style={{
-                  padding: "10px 15px", fontWeight: "bold", border: "1px solid transparent", cursor: "pointer", fontSize: "16px",
-                  backgroundColor: activeTab === 'totals' ? "#ffffff" : "transparent",
-                  borderBottom: activeTab === 'totals' ? "4px solid #1d70b8" : "none",
-                  borderTop: activeTab === 'totals' ? "1px solid #b1b4b6" : "none",
-                  borderLeft: activeTab === 'totals' ? "1px solid #b1b4b6" : "none",
-                  borderRight: activeTab === 'totals' ? "1px solid #b1b4b6" : "none"
-                }}
-              >
-                1. Macro Totals
-              </button>
-              <button 
-                onClick={() => setActiveTab('tribes')}
-                style={{
-                  padding: "10px 15px", fontWeight: "bold", border: "1px solid transparent", cursor: "pointer", fontSize: "16px",
-                  backgroundColor: activeTab === 'tribes' ? "#ffffff" : "transparent",
-                  borderBottom: activeTab === 'tribes' ? "4px solid #1d70b8" : "none",
-                  borderTop: activeTab === 'tribes' ? "1px solid #b1b4b6" : "none",
-                  borderLeft: activeTab === 'tribes' ? "1px solid #b1b4b6" : "none",
-                  borderRight: activeTab === 'tribes' ? "1px solid #b1b4b6" : "none"
-                }}
-              >
-                2. Kenyan Communities
-              </button>
-              <button 
-                onClick={() => setActiveTab('foreign')}
-                style={{
-                  padding: "10px 15px", fontWeight: "bold", border: "1px solid transparent", cursor: "pointer", fontSize: "16px",
-                  backgroundColor: activeTab === 'foreign' ? "#ffffff" : "transparent",
-                  borderBottom: activeTab === 'foreign' ? "4px solid #1d70b8" : "none",
-                  borderTop: activeTab === 'foreign' ? "1px solid #b1b4b6" : "none",
-                  borderLeft: activeTab === 'foreign' ? "1px solid #b1b4b6" : "none",
-                  borderRight: activeTab === 'foreign' ? "1px solid #b1b4b6" : "none"
-                }}
-              >
-                3. Foreign Nationalities
-              </button>
+            <ul className="govuk-tabs__list" role="tablist">
+              <li className={`govuk-tabs__list-item ${activeTab === 'totals' ? 'govuk-tabs__list-item--selected' : ''}`} role="presentation">
+                <a 
+                  className="govuk-tabs__tab"
+                  href="#tab-totals"
+                  onClick={(e) => handleTabClick(e, 'totals')}
+                  role="tab"
+                  aria-selected={activeTab === 'totals'}
+                  aria-controls="tab-totals"
+                  id="tab-label-totals"
+                >
+                  Population totals
+                </a>
+              </li>
+              <li className={`govuk-tabs__list-item ${activeTab === 'tribes' ? 'govuk-tabs__list-item--selected' : ''}`} role="presentation">
+                <a 
+                  className="govuk-tabs__tab"
+                  href="#tab-tribes"
+                  onClick={(e) => handleTabClick(e, 'tribes')}
+                  role="tab"
+                  aria-selected={activeTab === 'tribes'}
+                  aria-controls="tab-tribes"
+                  id="tab-label-tribes"
+                >
+                  Kenyan communities
+                </a>
+              </li>
+              <li className={`govuk-tabs__list-item ${activeTab === 'foreign' ? 'govuk-tabs__list-item--selected' : ''}`} role="presentation">
+                <a 
+                  className="govuk-tabs__tab"
+                  href="#tab-foreign"
+                  onClick={(e) => handleTabClick(e, 'foreign')}
+                  role="tab"
+                  aria-selected={activeTab === 'foreign'}
+                  aria-controls="tab-foreign"
+                  id="tab-label-foreign"
+                >
+                  Foreign nationalities
+                </a>
+              </li>
+            </ul>
+
+            {/* Tab 1: Population Totals */}
+            <div 
+              className={`govuk-tabs__panel ${activeTab !== 'totals' ? 'govuk-tabs__panel--hidden' : ''}`}
+              id="tab-totals"
+              role="tabpanel"
+              aria-labelledby="tab-label-totals"
+            >
+              <h2 className="govuk-heading-l">Population totals ({selectedYearLabel})</h2>
+              <p className="govuk-body">
+                Overall population breakdown by category.
+              </p>
+              <table className="govuk-table">
+                <caption className="govuk-table__caption govuk-visually-hidden">
+                  Population totals for {selectedYearLabel}
+                </caption>
+                <thead className="govuk-table__head">
+                  <tr className="govuk-table__row">
+                    <th scope="col" className="govuk-table__header">Population group</th>
+                    <th scope="col" className="govuk-table__header govuk-table__header--numeric">Population</th>
+                  </tr>
+                </thead>
+                <tbody className="govuk-table__body">
+                  {macroRecords.map((rec) => {
+                    const isTotalRow = rec.category_code === 'TOTAL_POPULATION';
+                    return (
+                      <tr key={rec.id} className="govuk-table__row">
+                        <th scope="row" className="govuk-table__header" style={{ fontWeight: isTotalRow ? "bold" : "normal" }}>
+                          {rec.name}
+                        </th>
+                        <td className="govuk-table__cell govuk-table__cell--numeric" style={{ fontWeight: isTotalRow ? "bold" : "normal" }}>
+                          {rec.population_count.toLocaleString()}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
 
-            {isLoading ? (
-              <p className="govuk-body">Loading selected database rows...</p>
-            ) : (
-              <>
-                {/* TAB 1 CONTENT BLOCK: NATIONAL TOTALS */}
-                {activeTab === 'totals' && (
-                  <section id="tab-totals" style={{ overflowX: "auto" }}>
-                    <h2 className="govuk-heading-m">Macro Distribution Summary ({selectedYearLabel})</h2>
-                    <table className="govuk-table">
-                      <thead className="govuk-table__head">
+            {/* Tab 2: Kenyan Communities - NOW SHOWS ALL TRIBES */}
+            <div 
+              className={`govuk-tabs__panel ${activeTab !== 'tribes' ? 'govuk-tabs__panel--hidden' : ''}`}
+              id="tab-tribes"
+              role="tabpanel"
+              aria-labelledby="tab-label-tribes"
+            >
+              <h2 className="govuk-heading-l">Kenyan communities ({selectedYearLabel})</h2>
+              <p className="govuk-body">
+                All ethnic communities in Kenya. For communities with sub-groups, click to expand and see the breakdown.
+              </p>
+
+              <table className="govuk-table">
+                <caption className="govuk-table__caption govuk-visually-hidden">
+                  All Kenyan communities for {selectedYearLabel}
+                </caption>
+                <thead className="govuk-table__head">
+                  <tr className="govuk-table__row">
+                    <th scope="col" className="govuk-table__header" style={{ width: "10%" }}>#</th>
+                    <th scope="col" className="govuk-table__header" style={{ width: "55%" }}>Community</th>
+                    <th scope="col" className="govuk-table__header govuk-table__header--numeric" style={{ width: "35%" }}>Population</th>
+                  </tr>
+                </thead>
+                <tbody className="govuk-table__body">
+                  {allMainTribes.map((mainRec, index) => {
+                    // Find all sub-tribes for this main tribe
+                    const subTribes = citizenRecords
+                      .filter(child => child.parent_id === mainRec.id && child.classification_type === 'CITIZEN_SUB')
+                      .sort((a, b) => b.population_count - a.population_count);
+                    
+                    const hasSubTribes = subTribes.length > 0;
+
+                    return (
+                      <React.Fragment key={mainRec.id}>
                         <tr className="govuk-table__row">
-                          <th scope="col" className="govuk-table__header">Registry Population Segment</th>
-                          <th scope="col" className="govuk-table__header govuk-table__header--numeric">Enumerated Size</th>
+                          <td className="govuk-table__cell">
+                            <strong>{index + 1}</strong>
+                          </td>
+                          <td className="govuk-table__cell">
+                            {hasSubTribes ? (
+                              <strong>{mainRec.name} <span className="govuk-body-s govuk-!-margin-left-1">({subTribes.length} sub-groups)</span></strong>
+                            ) : (
+                              <strong>{mainRec.name}</strong>
+                            )}
+                          </td>
+                          <td className="govuk-table__cell govuk-table__cell--numeric" style={{ fontWeight: "bold" }}>
+                            {mainRec.population_count.toLocaleString()}
+                          </td>
                         </tr>
-                      </thead>
-                      <tbody className="govuk-table__body">
-                        {macroRecords.map((rec) => {
-                          const isBoldRow = rec.category_code === 'TOTAL_POPULATION';
-                          return (
-                            <tr key={rec.id} className="govuk-table__row">
-                            <th scope="row" className="govuk-table__header" style={{ fontWeight: isBoldRow ? "bold" : "normal" }}>{rec.name}</th>
-                            <td className="govuk-table__cell govuk-table__cell--numeric" style={{ fontWeight: isBoldRow ? "bold" : "normal" }}>
-                              {rec.population_count.toLocaleString()}
+
+                        {/* Show sub-tribes if they exist */}
+                        {hasSubTribes && (
+                          <tr className="govuk-table__row">
+                            <td colSpan={3} className="govuk-!-padding-0">
+                              <details className="govuk-details govuk-!-margin-bottom-0">
+                                <summary className="govuk-details__summary">
+                                  <span className="govuk-details__summary-text">
+                                    View sub-groups for {mainRec.name}
+                                  </span>
+                                </summary>
+                                <div className="govuk-details__text">
+                                  <table className="govuk-table govuk-!-margin-bottom-0">
+                                    <tbody className="govuk-table__body">
+                                      {subTribes.map((subRec) => (
+                                        <tr key={subRec.id} className="govuk-table__row">
+                                          <td className="govuk-table__cell">
+                                            {subRec.name}
+                                          </td>
+                                          <td className="govuk-table__cell govuk-table__cell--numeric">
+                                            {subRec.population_count.toLocaleString()}
+                                          </td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              </details>
                             </td>
                           </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </section>
-              )}
-
-                            {/* TAB 2 CONTENT BLOCK: DETAILED COMMUNITIES WITH INTERACTIVE SUB-CATEGORIES */}
-              {activeTab === 'tribes' && (
-                <section id="tab-tribes" style={{ overflowX: "auto" }}>
-                  <h2 className="govuk-heading-m">Kenyan Communities &amp; Sub-tribes ({selectedYearLabel})</h2>
-                  <p className="govuk-body-s" style={{ color: "#505a5f" }}>
-                    Major groups with sub-clans are displayed below. Select any row to expand and inspect detailed sub-category census records.
-                  </p>
-
-                  <table className="govuk-table">
-                    <thead className="govuk-table__head">
-                      <tr className="govuk-table__row">
-                        <th scope="col" className="govuk-table__header" style={{ width: "10%" }}>Index</th>
-                        <th scope="col" className="govuk-table__header" style={{ width: "55%" }}>Tribe / Ethnic Community Classification</th>
-                        <th scope="col" className="govuk-table__header govuk-table__header--numeric" style={{ width: "35%" }}>Population Count</th>
-                      </tr>
-                    </thead>
-                    <tbody className="govuk-table__body">
-                      {(() => {
-                        // 1. Separate top-level parent rows from sub-items for precise structural rendering
-                        const mainGroups = citizenRecords.filter(r => r.parent_id === null || r.category_code.endsWith('_TOTAL'));
-                        
-                        // Sort top-level groups by total size
-                        const sortedMainGroups = [...mainGroups].sort((a, b) => b.population_count - a.population_count);
-                        
-                        return sortedMainGroups.map((mainRec, index) => {
-                          // 2. Fetch any nested children belonging to this specific parent node
-                          const subCategories = citizenRecords.filter(child => child.parent_id === mainRec.id);
-                          const hasSubCategories = subCategories.length > 0;
-
-                          // Sort subcategories by size as well
-                          const sortedSubCategories = [...subCategories].sort((a, b) => b.population_count - a.population_count);
-
-                          return (
-                            <React.Fragment key={mainRec.id}>
-                              {/* Primary Parent Row Entry */}
-                              <tr className="govuk-table__row" style={{ backgroundColor: hasSubCategories ? "#f3f2f1" : "transparent" }}>
-                                <td className="govuk-table__cell">
-                                  <strong>{index + 1}</strong>
-                                </td>
-                                <td className="govuk-table__cell">
-                                  {hasSubCategories ? (
-                                    <strong>{mainRec.name} <span style={{ fontWeight: "normal", fontSize: "14px", color: "#505a5f" }}>(Includes {subCategories.length} Sub-categories)</span></strong>
-                                  ) : (
-                                    <strong>{mainRec.name}</strong>
-                                  )}
-                                </td>
-                                <td className="govuk-table__cell govuk-table__cell--numeric" style={{ fontWeight: "bold" }}>
-                                  {mainRec.population_count.toLocaleString()}
-                                </td>
-                              </tr>
-
-                              {/* Interactive Nested Sub-Category Area Panel (Rendered only if sub-clans exist) */}
-                              {hasSubCategories && (
-                                <tr className="govuk-table__row">
-                                  <td colSpan={3} style={{ padding: "0px" }}>
-                                    <details className="govuk-details" style={{ margin: "0px", padding: "12px 20px", borderLeft: "4px solid #1d70b8", backgroundColor: "#ffffff" }}>
-                                      <summary className="govuk-details__summary" style={{ marginBottom: "5px" }}>
-                                        <span className="govuk-details__summary-text" style={{ fontSize: "16px" }}>
-                                          View sub-categories breakdown for {mainRec.name}
-                                        </span>
-                                      </summary>
-                                      <div className="govuk-details__text" style={{ padding: "0px", borderLeft: "none" }}>
-                                        <table className="govuk-table" style={{ margin: "5px 0 0 0", width: "100%" }}>
-                                          <tbody className="govuk-table__body">
-                                            {sortedSubCategories.map((subRec) => (
-                                              <tr key={subRec.id} className="govuk-table__row" style={{ borderBottom: "1px dashed #b1b4b6" }}>
-                                                <td className="govuk-table__cell" style={{ color: "#0b0c0c", fontSize: "16px" }}>
-                                                  {subRec.name}
-                                                </td>
-                                                <td className="govuk-table__cell govuk-table__cell--numeric" style={{ color: "#0b0c0c", fontSize: "16px" }}>
-                                                  {subRec.population_count.toLocaleString()}
-                                                </td>
-                                              </tr>
-                                            ))}
-                                          </tbody>
-                                        </table>
-                                      </div>
-                                    </details>
-                                  </td>
-                                </tr>
-                              )}
-                            </React.Fragment>
-                          );
-                        });
-                      })()}
-                    </tbody>
-                  </table>
-                </section>
-              )}
-
-
-              {/* TAB 3 CONTENT BLOCK: FOREIGN INDIVIDUAL NATIONALITIES */}
-              {activeTab === 'foreign' && (
-                <section id="tab-foreign" style={{ overflowX: "auto" }}>
-                  <h2 className="govuk-heading-m">Foreign Nationalities &amp; Stateless Tracking ({selectedYearLabel})</h2>
-                  <table className="govuk-table">
-                    <thead className="govuk-table__head">
-                      <tr className="govuk-table__row">
-                        <th scope="col" className="govuk-table__header">Origin Classification Area</th>
-                        <th scope="col" className="govuk-table__header govuk-table__header--numeric">Enumerated Size</th>
-                      </tr>
-                    </thead>
-                    <tbody className="govuk-table__body">
-                      {foreignRecords.map((rec) => {
-                        const isSubItem = rec.category_code.startsWith('EA_');
-                        const isTotalRow = rec.category_code === 'TOTAL_NON_KENYANS' || rec.category_code === 'FOREIGN_EA_COMBINED';
-
-                        return (
-                          <tr key={rec.id} className="govuk-table__row">
-                            <td className="govuk-table__cell" style={{ paddingLeft: isSubItem ? "20px" : "0px" }}>
-                              {isTotalRow ? <strong>{rec.name}</strong> : rec.name}
-                            </td>
-                            <td className="govuk-table__cell govuk-table__cell--numeric" style={{ fontWeight: isTotalRow ? "bold" : "normal" }}>
-                              {rec.population_count.toLocaleString()}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </section>
-              )}
-            </>
-          )}
-          </div>
-
-          {/* SIDEBAR NAVIGATION COLUMN */}
-          <aside className="govuk-grid-column-one-third" role="complementary">
-            <div className="society-top-border">
-              <h2 className="govuk-heading-m govuk-!-margin-bottom-3">Related Guidance</h2>
-              <ul className="govuk-list govuk-body-s">
-                <li className="govuk-!-margin-bottom-3">
-                  <Link href="/society-and-culture/languages" className="govuk-link">
-                    <strong>Languages and Linguistic Families</strong>
-                  </Link>
-                </li>
-                <li className="govuk-!-margin-bottom-3">
-                  <Link href="/society-and-culture/constitution-and-national-values" className="govuk-link">
-                    <strong>Constitution and Governance Principles</strong>
-                  </Link>
-                </li>
-              </ul>
+                        )}
+                      </React.Fragment>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
-          </aside>
-        </div>
 
-        {/* FEEDBACK & FOOTER METADATA */}
+            {/* Tab 3: Foreign Nationalities */}
+            <div 
+              className={`govuk-tabs__panel ${activeTab !== 'foreign' ? 'govuk-tabs__panel--hidden' : ''}`}
+              id="tab-foreign"
+              role="tabpanel"
+              aria-labelledby="tab-label-foreign"
+            >
+              <h2 className="govuk-heading-l">Foreign nationalities ({selectedYearLabel})</h2>
+              <p className="govuk-body">
+                Population of foreign nationals and stateless persons residing in Kenya.
+              </p>
+              <table className="govuk-table">
+                <caption className="govuk-table__caption govuk-visually-hidden">
+                  Foreign nationalities for {selectedYearLabel}
+                </caption>
+                <thead className="govuk-table__head">
+                  <tr className="govuk-table__row">
+                    <th scope="col" className="govuk-table__header">Origin</th>
+                    <th scope="col" className="govuk-table__header govuk-table__header--numeric">Population</th>
+                  </tr>
+                </thead>
+                <tbody className="govuk-table__body">
+                  {foreignRecords.map((rec) => {
+                    const isSubItem = rec.category_code.startsWith('EA_');
+                    const isTotalRow = rec.category_code === 'TOTAL_NON_KENYANS' || rec.category_code === 'FOREIGN_EA_COMBINED';
+
+                    return (
+                      <tr key={rec.id} className="govuk-table__row">
+                        <td className="govuk-table__cell" style={{ paddingLeft: isSubItem ? "20px" : "0px" }}>
+                          {isTotalRow ? <strong>{rec.name}</strong> : rec.name}
+                        </td>
+                        <td className="govuk-table__cell govuk-table__cell--numeric" style={{ fontWeight: isTotalRow ? "bold" : "normal" }}>
+                          {rec.population_count.toLocaleString()}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
         <div className="govuk-grid-row govuk-!-margin-top-6">
-          <div className="govuk-grid-column-full">
-            <LastUpdated published="2026-05-22" lastUpdated="2026-05-22" />
+          {/* Sidebar */}
+          <div className="govuk-grid-column-one-third">
+            <aside className="govuk-!-display-none-print" role="complementary">
+              <h2 className="govuk-heading-m">Related pages</h2>
+              <nav role="navigation">
+                <ul className="govuk-list govuk-list--spaced">
+                  <li>
+                    <Link href="/society-and-culture/languages" className="govuk-link">
+                      Languages
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/society-and-culture/religion-and-faith" className="govuk-link">
+                      Religion and faith
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/society-and-culture/national-symbols" className="govuk-link">
+                      National symbols
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/society-and-culture/heritage-sites" className="govuk-link">
+                      Heritage sites
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/society-and-culture/cultural-calendar" className="govuk-link">
+                      Cultural calendar
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/society-and-culture" className="govuk-link">
+                      All society and culture
+                    </Link>
+                  </li>
+                </ul>
+              </nav>
+            </aside>
           </div>
         </div>
+
+        <hr className="govuk-section-break govuk-section-break--l govuk-section-break--visible" />
+
+        <LastUpdated published="2026-05-22" lastUpdated="2026-07-02" />
 
       </main>
     </div>
