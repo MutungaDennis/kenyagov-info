@@ -1,237 +1,324 @@
-// lib/data/culturalEvents.utils.ts
+// app/society-and-culture/cultural-calendar/[slug]/page.tsx
+import { Metadata } from 'next'
+import { notFound } from 'next/navigation'
+import Image from 'next/image'
+import Link from 'next/link'
+import { sanityClient } from '@/lib/sanity/client'
+import { 
+  CULTURAL_EVENT_BY_SLUG_QUERY, 
+  CULTURAL_EVENT_SLUGS_QUERY 
+} from '@/lib/sanity/queries'
+import GovUKBreadcrumbs from '@/components/govuk/Breadcrumbs'
+import { PortableText } from '@portabletext/react'
+import {
+  CulturalEvent,
+  formatEventTiming,
+  formatEventLocation,
+  getCategoryLabel,
+} from '@/lib/data/culturalEvents.utils'
 
-export interface CulturalEvent {
-  _id: string
-  name: string
-  slug: string
-  shortDescription: string
-  description?: any
-  significance?: string
-  timingType: 'fixed-date' | 'seasonal' | 'approximate' | 'periodic' | 'variable'
-  specificDate?: string
-  startMonth?: string
-  endMonth?: string
-  approximatePeriod?: string
-  frequency: string
-  nextExpectedYear?: number
-  venue: string
-  county: string
-  isRotating?: boolean
-  quarter: 'Q1' | 'Q2' | 'Q3' | 'Q4'
-  eventCategory: string
-  culturalGroups?: string[]
-  organiser?: string
-  mainImage?: any
-  gallery?: any[]  // <-- ADDED
-  officialWebsite?: string
-  externalLinks?: Array<{  // <-- ADDED
-    title: string
-    url: string
-  }>
-  status: string
+export const revalidate = 3600
+
+// Generate static params for all event slugs
+export async function generateStaticParams() {
+  const slugs = await sanityClient.fetch(CULTURAL_EVENT_SLUGS_QUERY)
+  return slugs.map((s: { slug: string }) => ({ slug: s.slug }))
 }
 
-const MONTHS = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December'
-]
-
-const QUARTER_INFO = {
-  Q1: { label: 'First quarter', months: 'January – March', range: [0, 2] },
-  Q2: { label: 'Second quarter', months: 'April – June', range: [3, 5] },
-  Q3: { label: 'Third quarter', months: 'July – September', range: [6, 8] },
-  Q4: { label: 'Fourth quarter', months: 'October – December', range: [9, 11] },
-}
-
-/**
- * Get the current month index (0-11).
- */
-export function getCurrentMonthIndex(): number {
-  return new Date().getMonth()
-}
-
-/**
- * Get the current quarter (Q1, Q2, Q3, Q4).
- */
-export function getCurrentQuarter(): 'Q1' | 'Q2' | 'Q3' | 'Q4' {
-  const month = getCurrentMonthIndex()
-  if (month <= 2) return 'Q1'
-  if (month <= 5) return 'Q2'
-  if (month <= 8) return 'Q3'
-  return 'Q4'
-}
-
-/**
- * Get the month index from a month name.
- */
-export function getMonthIndex(monthName: string): number {
-  return MONTHS.indexOf(monthName)
-}
-
-/**
- * Format a timing display for an event.
- */
-export function formatEventTiming(event: CulturalEvent): string {
-  switch (event.timingType) {
-    case 'fixed-date':
-      if (event.specificDate) {
-        const date = new Date(event.specificDate)
-        return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long' })
-      }
-      return 'Fixed date'
-    
-    case 'seasonal':
-      if (event.startMonth && event.endMonth) {
-        return `${event.startMonth} – ${event.endMonth}`
-      }
-      if (event.startMonth) {
-        return event.startMonth
-      }
-      return 'Seasonal'
-    
-    case 'approximate':
-      return event.approximatePeriod || 'Approximate period'
-    
-    case 'periodic':
-      if (event.nextExpectedYear) {
-        return `Next expected: ${event.nextExpectedYear} (${event.frequency})`
-      }
-      return event.frequency
-    
-    case 'variable':
-      return 'Dates vary each year'
-    
-    default:
-      return 'Timing varies'
-  }
-}
-
-/**
- * Format a location display for an event.
- */
-export function formatEventLocation(event: CulturalEvent): string {
-  if (event.isRotating) {
-    return `${event.venue} (rotating host county)`
-  }
-  return `${event.venue}, ${event.county}`
-}
-
-/**
- * Get a human-readable category label.
- */
-export function getCategoryLabel(category: string): string {
-  const labels: Record<string, string> = {
-    'cultural-festival': 'Cultural festival',
-    'traditional-ceremony': 'Traditional ceremony',
-    'national-celebration': 'National celebration',
-    'sports': 'Sports and recreation',
-    'natural-phenomenon': 'Natural phenomenon',
-    'arts-music': 'Arts and music',
-    'historical': 'Historical commemoration',
-    'religious': 'Religious or spiritual',
-  }
-  return labels[category] || 'Cultural event'
-}
-
-/**
- * Get quarter information.
- */
-export function getQuarterInfo(quarter: 'Q1' | 'Q2' | 'Q3' | 'Q4') {
-  return QUARTER_INFO[quarter]
-}
-
-/**
- * Group events by quarter.
- */
-export function groupEventsByQuarter(events: CulturalEvent[]): Record<string, CulturalEvent[]> {
-  const grouped: Record<string, CulturalEvent[]> = {
-    Q1: [],
-    Q2: [],
-    Q3: [],
-    Q4: [],
-  }
+// SEO metadata
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params
+  const event: CulturalEvent | null = await sanityClient.fetch(CULTURAL_EVENT_BY_SLUG_QUERY, { slug })
   
-  events.forEach(event => {
-    if (grouped[event.quarter]) {
-      grouped[event.quarter].push(event)
-    }
-  })
-  
-  return grouped
-}
-
-/**
- * Determine if an event is "upcoming" based on current date.
- * Returns a sort priority (lower = sooner). Returns null if not upcoming.
- */
-export function getUpcomingPriority(event: CulturalEvent): number | null {
-  const currentMonth = getCurrentMonthIndex()
-  const quarterInfo = QUARTER_INFO[event.quarter]
-  const [quarterStart, quarterEnd] = quarterInfo.range
-  
-  // If event is in a future quarter this year
-  if (quarterStart > currentMonth) {
-    return quarterStart - currentMonth
-  }
-  
-  // If event is in the current quarter, check more specific timing
-  if (quarterStart <= currentMonth && currentMonth <= quarterEnd) {
-    if (event.timingType === 'fixed-date' && event.specificDate) {
-      const eventDate = new Date(event.specificDate)
-      const today = new Date()
-      today.setHours(0, 0, 0, 0)
-      eventDate.setHours(0, 0, 0, 0)
-      
-      if (eventDate >= today) {
-        return (eventDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
-      }
-    }
-    
-    if (event.timingType === 'seasonal' && event.startMonth) {
-      const startIdx = getMonthIndex(event.startMonth)
-      if (startIdx >= currentMonth) {
-        return startIdx - currentMonth
-      }
-    }
-    
-    // Event is in current quarter but timing has passed or is ongoing
-    return 0.5 // Show as "happening now"
-  }
-  
-  // For periodic events with a known next year
-  if (event.timingType === 'periodic' && event.nextExpectedYear) {
-    const currentYear = new Date().getFullYear()
-    if (event.nextExpectedYear > currentYear) {
-      return 1000 + (event.nextExpectedYear - currentYear) * 12
+  if (!event) {
+    return {
+      title: 'Event not found | Cultural Calendar | CitizenGuide.KE',
     }
   }
-  
-  return null // Not upcoming
+
+  return {
+    title: `${event.name} | Cultural Calendar | CitizenGuide.KE`,
+    description: event.shortDescription,
+    openGraph: {
+      title: event.name,
+      description: event.shortDescription,
+      type: 'article',
+    },
+  }
 }
 
-/**
- * Get upcoming events, sorted by soonest first.
- */
-export function getUpcomingEvents(events: CulturalEvent[], limit: number = 3): CulturalEvent[] {
-  return events
-    .map(event => ({ event, priority: getUpcomingPriority(event) }))
-    .filter(item => item.priority !== null)
-    .sort((a, b) => (a.priority || 0) - (b.priority || 0))
-    .slice(0, limit)
-    .map(item => item.event)
-}
+export default async function CulturalEventPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
+  const event: CulturalEvent | null = await sanityClient.fetch(CULTURAL_EVENT_BY_SLUG_QUERY, { slug })
 
-/**
- * Get events happening in the current quarter.
- */
-export function getCurrentQuarterEvents(events: CulturalEvent[]): CulturalEvent[] {
-  const currentQuarter = getCurrentQuarter()
-  return events.filter(event => event.quarter === currentQuarter)
-}
+  if (!event) {
+    notFound()
+  }
 
-/**
- * Get events for a specific quarter.
- */
-export function getEventsForQuarter(events: CulturalEvent[], quarter: 'Q1' | 'Q2' | 'Q3' | 'Q4'): CulturalEvent[] {
-  return events.filter(event => event.quarter === quarter)
+  return (
+    <div className="govuk-width-container">
+      <GovUKBreadcrumbs
+        items={[
+          { text: "Home", href: "/" },
+          { text: "Society and culture", href: "/society-and-culture" },
+          { text: "Cultural calendar", href: "/society-and-culture/cultural-calendar" },
+          { text: event.name, href: `/society-and-culture/cultural-calendar/${event.slug}` },
+        ]}
+      />
+
+      <main className="govuk-main-wrapper" id="main-content" role="main">
+        <div className="govuk-grid-row">
+          <div className="govuk-grid-column-two-thirds">
+            
+            <span className="govuk-caption-xl">{getCategoryLabel(event.eventCategory)}</span>
+            <h1 className="govuk-heading-xl">{event.name}</h1>
+
+            {/* Key Information Panel */}
+            <div className="govuk-inset-text govuk-!-margin-bottom-6">
+              <dl className="app-event-details">
+                <div>
+                  <dt className="govuk-body-s"><strong>When</strong></dt>
+                  <dd className="govuk-body govuk-!-margin-bottom-2">{formatEventTiming(event)}</dd>
+                </div>
+                <div>
+                  <dt className="govuk-body-s"><strong>Where</strong></dt>
+                  <dd className="govuk-body govuk-!-margin-bottom-2">{formatEventLocation(event)}</dd>
+                </div>
+                <div>
+                  <dt className="govuk-body-s"><strong>Frequency</strong></dt>
+                  <dd className="govuk-body govuk-!-margin-bottom-2">{event.frequency}</dd>
+                </div>
+                {event.organiser && (
+                  <div>
+                    <dt className="govuk-body-s"><strong>Organised by</strong></dt>
+                    <dd className="govuk-body govuk-!-margin-bottom-2">{event.organiser}</dd>
+                  </div>
+                )}
+              </dl>
+            </div>
+
+            {/* Main Image */}
+            {event.mainImage && (
+              <figure className="govuk-!-margin-bottom-6">
+                <Image
+                  src={event.mainImage.asset.url}
+                  alt={event.mainImage.alt || event.name}
+                  width={800}
+                  height={450}
+                  style={{ width: '100%', height: 'auto' }}
+                />
+                {event.mainImage.alt && (
+                  <figcaption className="govuk-body-s govuk-!-margin-top-1">
+                    {event.mainImage.alt}
+                  </figcaption>
+                )}
+              </figure>
+            )}
+
+            {/* Description */}
+            <section className="govuk-!-margin-bottom-6">
+              <h2 className="govuk-heading-l">About this event</h2>
+              <div className="govuk-body">
+                <PortableText value={event.description} />
+              </div>
+            </section>
+
+            {/* Significance */}
+            {event.significance && (
+              <section className="govuk-!-margin-bottom-6">
+                <h2 className="govuk-heading-l">Cultural significance</h2>
+                <p className="govuk-body">{event.significance}</p>
+              </section>
+            )}
+
+            {/* Cultural Groups */}
+            {event.culturalGroups && event.culturalGroups.length > 0 && (
+              <section className="govuk-!-margin-bottom-6">
+                <h2 className="govuk-heading-l">Associated communities</h2>
+                <ul className="govuk-list govuk-list--bullet">
+                  {event.culturalGroups.map(group => (
+                    <li key={group}>{group}</li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
+            {/* Gallery */}
+            {event.gallery && event.gallery.length > 0 && (
+              <section className="govuk-!-margin-bottom-6">
+                <h2 className="govuk-heading-l">Gallery</h2>
+                <div className="app-gallery-grid">
+                  {event.gallery.map((img: any, index: number) => (
+                    <figure key={index} className="app-gallery-item">
+                      <Image
+                        src={img.asset.url}
+                        alt={img.alt || `${event.name} - image ${index + 1}`}
+                        width={400}
+                        height={300}
+                        style={{ width: '100%', height: 'auto' }}
+                      />
+                      {img.caption && (
+                        <figcaption className="govuk-body-s govuk-!-margin-top-1">
+                          {img.caption}
+                        </figcaption>
+                      )}
+                    </figure>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* External Links */}
+            {(event.officialWebsite || (event.externalLinks && event.externalLinks.length > 0)) && (
+              <section className="govuk-!-margin-bottom-6">
+                <h2 className="govuk-heading-l">More information</h2>
+                <ul className="govuk-list govuk-list--spaced">
+                  {event.officialWebsite && (
+                    <li>
+                      <a 
+                        href={event.officialWebsite}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="govuk-link"
+                      >
+                        Official website
+                        <svg 
+                          xmlns="http://www.w3.org/2000/svg" 
+                          width="14" 
+                          height="14" 
+                          viewBox="0 0 24 24" 
+                          fill="none" 
+                          stroke="currentColor" 
+                          strokeWidth="2" 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round"
+                          aria-hidden="true"
+                          focusable="false"
+                          style={{ marginLeft: '4px', verticalAlign: 'middle', display: 'inline-block' }}
+                        >
+                          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                          <polyline points="15 3 21 3 21 9" />
+                          <line x1="10" y1="14" x2="21" y2="3" />
+                        </svg>
+                        <span className="govuk-visually-hidden"> (opens in a new tab)</span>
+                      </a>
+                    </li>
+                  )}
+                  {event.externalLinks?.map((link: any, index: number) => (
+                    <li key={index}>
+                      <a 
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="govuk-link"
+                      >
+                        {link.title}
+                        <svg 
+                          xmlns="http://www.w3.org/2000/svg" 
+                          width="14" 
+                          height="14" 
+                          viewBox="0 0 24 24" 
+                          fill="none" 
+                          stroke="currentColor" 
+                          strokeWidth="2" 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round"
+                          aria-hidden="true"
+                          focusable="false"
+                          style={{ marginLeft: '4px', verticalAlign: 'middle', display: 'inline-block' }}
+                        >
+                          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                          <polyline points="15 3 21 3 21 9" />
+                          <line x1="10" y1="14" x2="21" y2="3" />
+                        </svg>
+                        <span className="govuk-visually-hidden"> (opens in a new tab)</span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
+            <hr className="govuk-section-break govuk-section-break--l govuk-section-break--visible" />
+
+            <p className="govuk-body">
+              <Link href="/society-and-culture/cultural-calendar" className="govuk-link">
+                ← Back to cultural calendar
+              </Link>
+            </p>
+          </div>
+
+          {/* Sidebar */}
+          <div className="govuk-grid-column-one-third">
+            <aside className="govuk-!-display-none-print" role="complementary">
+              <h2 className="govuk-heading-m">Related pages</h2>
+              <nav role="navigation">
+                <ul className="govuk-list govuk-list--spaced">
+                  <li>
+                    <Link href="/society-and-culture/cultural-calendar" className="govuk-link">
+                      Cultural calendar
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/society-and-culture/holidays" className="govuk-link">
+                      Public holidays
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/society-and-culture/heritage-sites" className="govuk-link">
+                      Heritage sites
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/society-and-culture/communities" className="govuk-link">
+                      Communities
+                    </Link>
+                  </li>
+                </ul>
+              </nav>
+            </aside>
+          </div>
+        </div>
+      </main>
+
+      <style>{`
+        .app-event-details {
+          margin: 0;
+        }
+
+        .app-event-details div {
+          margin-bottom: 10px;
+        }
+
+        .app-event-details dt {
+          margin-bottom: 2px;
+          color: #505a5f;
+        }
+
+        .app-event-details dd {
+          margin: 0;
+        }
+
+        .app-gallery-grid {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 15px;
+        }
+
+        .app-gallery-item {
+          margin: 0;
+        }
+
+        .app-gallery-item img {
+          border: 1px solid #b1b4b6;
+        }
+
+        @media (max-width: 40.0625rem) {
+          .app-gallery-grid {
+            grid-template-columns: 1fr;
+          }
+        }
+      `}</style>
+    </div>
+  )
 }

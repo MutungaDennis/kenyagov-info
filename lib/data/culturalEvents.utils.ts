@@ -22,7 +22,12 @@ export interface CulturalEvent {
   culturalGroups?: string[]
   organiser?: string
   mainImage?: any
+  gallery?: any[]
   officialWebsite?: string
+  externalLinks?: Array<{
+    title: string
+    url: string
+  }>
   status: string
 }
 
@@ -38,16 +43,10 @@ const QUARTER_INFO = {
   Q4: { label: 'Fourth quarter', months: 'October – December', range: [9, 11] },
 }
 
-/**
- * Get the current month index (0-11).
- */
 export function getCurrentMonthIndex(): number {
   return new Date().getMonth()
 }
 
-/**
- * Get the current quarter (Q1, Q2, Q3, Q4).
- */
 export function getCurrentQuarter(): 'Q1' | 'Q2' | 'Q3' | 'Q4' {
   const month = getCurrentMonthIndex()
   if (month <= 2) return 'Q1'
@@ -56,16 +55,10 @@ export function getCurrentQuarter(): 'Q1' | 'Q2' | 'Q3' | 'Q4' {
   return 'Q4'
 }
 
-/**
- * Get the month index from a month name.
- */
 export function getMonthIndex(monthName: string): number {
   return MONTHS.indexOf(monthName)
 }
 
-/**
- * Format a timing display for an event.
- */
 export function formatEventTiming(event: CulturalEvent): string {
   switch (event.timingType) {
     case 'fixed-date':
@@ -101,9 +94,6 @@ export function formatEventTiming(event: CulturalEvent): string {
   }
 }
 
-/**
- * Format a location display for an event.
- */
 export function formatEventLocation(event: CulturalEvent): string {
   if (event.isRotating) {
     return `${event.venue} (rotating host county)`
@@ -111,9 +101,6 @@ export function formatEventLocation(event: CulturalEvent): string {
   return `${event.venue}, ${event.county}`
 }
 
-/**
- * Get a human-readable category label.
- */
 export function getCategoryLabel(category: string): string {
   const labels: Record<string, string> = {
     'cultural-festival': 'Cultural festival',
@@ -128,16 +115,10 @@ export function getCategoryLabel(category: string): string {
   return labels[category] || 'Cultural event'
 }
 
-/**
- * Get quarter information.
- */
 export function getQuarterInfo(quarter: 'Q1' | 'Q2' | 'Q3' | 'Q4') {
   return QUARTER_INFO[quarter]
 }
 
-/**
- * Group events by quarter.
- */
 export function groupEventsByQuarter(events: CulturalEvent[]): Record<string, CulturalEvent[]> {
   const grouped: Record<string, CulturalEvent[]> = {
     Q1: [],
@@ -155,21 +136,15 @@ export function groupEventsByQuarter(events: CulturalEvent[]): Record<string, Cu
   return grouped
 }
 
-/**
- * Determine if an event is "upcoming" based on current date.
- * Returns a sort priority (lower = sooner). Returns null if not upcoming.
- */
 export function getUpcomingPriority(event: CulturalEvent): number | null {
   const currentMonth = getCurrentMonthIndex()
   const quarterInfo = QUARTER_INFO[event.quarter]
   const [quarterStart, quarterEnd] = quarterInfo.range
   
-  // If event is in a future quarter this year
   if (quarterStart > currentMonth) {
     return quarterStart - currentMonth
   }
   
-  // If event is in the current quarter, check more specific timing
   if (quarterStart <= currentMonth && currentMonth <= quarterEnd) {
     if (event.timingType === 'fixed-date' && event.specificDate) {
       const eventDate = new Date(event.specificDate)
@@ -189,11 +164,9 @@ export function getUpcomingPriority(event: CulturalEvent): number | null {
       }
     }
     
-    // Event is in current quarter but timing has passed or is ongoing
-    return 0.5 // Show as "happening now"
+    return 0.5
   }
   
-  // For periodic events with a known next year
   if (event.timingType === 'periodic' && event.nextExpectedYear) {
     const currentYear = new Date().getFullYear()
     if (event.nextExpectedYear > currentYear) {
@@ -201,12 +174,9 @@ export function getUpcomingPriority(event: CulturalEvent): number | null {
     }
   }
   
-  return null // Not upcoming
+  return null
 }
 
-/**
- * Get upcoming events, sorted by soonest first.
- */
 export function getUpcomingEvents(events: CulturalEvent[], limit: number = 3): CulturalEvent[] {
   return events
     .map(event => ({ event, priority: getUpcomingPriority(event) }))
@@ -216,17 +186,11 @@ export function getUpcomingEvents(events: CulturalEvent[], limit: number = 3): C
     .map(item => item.event)
 }
 
-/**
- * Get events happening in the current quarter.
- */
 export function getCurrentQuarterEvents(events: CulturalEvent[]): CulturalEvent[] {
   const currentQuarter = getCurrentQuarter()
   return events.filter(event => event.quarter === currentQuarter)
 }
 
-/**
- * Get events for a specific quarter.
- */
 export function getEventsForQuarter(events: CulturalEvent[], quarter: 'Q1' | 'Q2' | 'Q3' | 'Q4'): CulturalEvent[] {
   return events.filter(event => event.quarter === quarter)
 }
