@@ -1,176 +1,255 @@
-'use client';
+// app/society-and-culture/cultural-calendar/page.tsx
+import { Metadata } from 'next'
+import Link from 'next/link'
+import { sanityClient } from '@/lib/sanity/client'
+import { CULTURAL_EVENTS_QUERY } from '@/lib/sanity/queries'
+import GovUKBreadcrumbs from '@/components/govuk/Breadcrumbs'
+import LastUpdated from '@/components/govuk/LastUpdated'
+import {
+  CulturalEvent,
+  formatEventTiming,
+  formatEventLocation,
+  getQuarterInfo,
+  getUpcomingEvents,
+  getCurrentQuarter,
+} from '@/lib/data/culturalEvents.utils'
 
-import Link from "next/link";
-import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-import LastUpdated from "@/components/govuk/LastUpdated";
+export const metadata: Metadata = {
+  title: 'Cultural Calendar | Society and Culture | CitizenGuide.KE',
+  description: 'A chronological guide to Kenya\'s cultural festivals, traditional ceremonies, natural phenomena, and community celebrations throughout the year.',
+}
 
-export default function CulturalCalendarPage() {
+export const revalidate = 3600 // Revalidate every hour
+
+export default async function CulturalCalendarPage() {
+  const events: CulturalEvent[] = await sanityClient.fetch(CULTURAL_EVENTS_QUERY)
+  
+  const upcomingEvents = getUpcomingEvents(events, 3)
+  const currentQuarter = getCurrentQuarter()
+  
+  const quarters: Array<'Q1' | 'Q2' | 'Q3' | 'Q4'> = ['Q1', 'Q2', 'Q3', 'Q4']
+
   return (
     <div className="govuk-width-container">
-      {/* GOV.UK Navigation Breadcrumbs */}
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
-          { text: "Society and Culture", href: "/society-and-culture" },
-          { text: "Cultural Calendar", href: "/society-and-culture/cultural-calendar" },
+          { text: "Society and culture", href: "/society-and-culture" },
+          { text: "Cultural calendar", href: "/society-and-culture/cultural-calendar" },
         ]}
       />
 
       <main className="govuk-main-wrapper" id="main-content" role="main">
-        
-        {/* HEADER SECTION */}
-        <div className="govuk-grid-row govuk-!-margin-bottom-7">
-          <div className="govuk-grid-column-two-thirds">
-            <span className="govuk-caption-xl">National Identity and Heritage</span>
-            <h1 className="govuk-heading-xl govuk-!-margin-bottom-4">
-              The Kenyan Cultural Calendar
-            </h1>
-            <p className="govuk-body-l">
-              A chronological guide to seasonal natural phenomena, ethnic heritage assemblies, historical festivals, and community celebrations observed throughout the year across Kenya.
-            </p>
-          </div>
-        </div>
-
-        {/* CONTENT AND SIDEBAR MATRIX */}
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-two-thirds">
-
-            {/* FIRST QUARTER */}
-            <section id="first-quarter" className="govuk-!-margin-bottom-8">
-              <h2 className="govuk-heading-l" style={{ borderBottom: "3px solid #1d70b8", paddingBottom: "5px" }}>
-                First Quarter (January – March)
-              </h2>
-              
-              <div className="govuk-!-margin-bottom-4">
-                <h3 className="govuk-heading-m govuk-!-margin-bottom-1">East African Arts Festival</h3>
-                <span className="govuk-body-s" style={{ fontWeight: "bold", color: "#505a5f", display: "block", marginBottom: "10px" }}>Occurs: March | Location: Nairobi</span>
-                <p className="govuk-body">
-                  Hosted by the National Museums of Kenya, this three-day global exhibition highlights painting, sculpture, fashion design, literature, and indigenous music talent from across the region.
-                </p>
-              </div>
-            </section>
-
-            {/* SECOND QUARTER */}
-            <section id="second-quarter" className="govuk-!-margin-bottom-8">
-              <h2 className="govuk-heading-l" style={{ borderBottom: "3px solid #1d70b8", paddingBottom: "5px" }}>
-                Second Quarter (April – June)
-              </h2>
-
-              <div className="govuk-!-margin-bottom-4">
-                <h3 className="govuk-heading-m govuk-!-margin-bottom-1">The Safari Rally Kenya</h3>
-                <span className="govuk-body-s" style={{ fontWeight: "bold", color: "#505a5f", display: "block", marginBottom: "10px" }}>Occurs: Easter Weekend / Mid-Year | Location: Naivasha, Nakuru County</span>
-                <p className="govuk-body">
-                  A legendary motorsport competition, currently part of the World Rally Championship (WRC) calendar. It attracts millions of citizens and international spectators to the floor of the Great Rift Valley.
-                </p>
-              </div>
-
-              <div className="govuk-!-margin-bottom-4">
-                <h3 className="govuk-heading-m govuk-!-margin-bottom-1">Madaraka Day Festivities</h3>
-                <span className="govuk-body-s" style={{ fontWeight: "bold", color: "#505a5f", display: "block", marginBottom: "10px" }}>Occurs: 1 June | Location: Rotating County Host</span>
-                <p className="govuk-body">
-                  The first official national day of the year, bringing together regional ethnic dancing troupes, choral unions, and military displays to celebrate self-governance.
-                </p>
-              </div>
-            </section>
-                        {/* THIRD QUARTER - THE PEAK SEASON */}
-            <section id="third-quarter" className="govuk-!-margin-bottom-8">
-              <h2 className="govuk-heading-l" style={{ borderBottom: "3px solid #1d70b8", paddingBottom: "5px" }}>
-                Third Quarter (July – September)
-              </h2>
-
-              <div className="govuk-!-margin-bottom-4">
-                <h3 className="govuk-heading-m govuk-!-margin-bottom-1">The Great Wildebeest Migration</h3>
-                <span className="govuk-body-s" style={{ fontWeight: "bold", color: "#505a5f", display: "block", marginBottom: "10px" }}>Occurs: July – August | Location: Maasai Mara National Reserve</span>
-                <p className="govuk-body">
-                  Recognized as one of the Seven Natural Wonders of Africa. Over two million wildebeests, zebras, and antelopes cross the Mara River from the Serengeti into Kenya, a seasonal shift that underpins local wildlife heritage celebrations.
-                </p>
-              </div>
-
-              <div className="govuk-!-margin-bottom-4">
-                <h3 className="govuk-heading-m govuk-!-margin-bottom-1">Maralal Camel Derby</h3>
-                <span className="govuk-body-s" style={{ fontWeight: "bold", color: "#505a5f", display: "block", marginBottom: "10px" }}>Occurs: August | Location: Maralal Town, Samburu County</span>
-                <p className="govuk-body">
-                  An intense annual camel race event that serves as a vehicle for peace and cohesion among northern nomadic communities, featuring rich cultural attire displays by the Samburu, Turkana, and Pokot peoples.
-                </p>
-              </div>
-
-              <div className="govuk-!-margin-bottom-4">
-                <h3 className="govuk-heading-m govuk-!-margin-bottom-1">The Kenya Music Festival National Finals</h3>
-                <span className="govuk-body-s" style={{ fontWeight: "bold", color: "#505a5f", display: "block", marginBottom: "10px" }}>Occurs: August | Location: Designated Regional University Campus</span>
-                <p className="govuk-body">
-                  The culmination of the largest school-based cultural event on the continent, bringing together thousands of learners to showcase traditional folk songs, instrumental ensembles, and cultural dances.
-                </p>
-              </div>
-            </section>
-
-            {/* FOURTH QUARTER */}
-            <section id="fourth-quarter" className="govuk-!-margin-bottom-8">
-              <h2 className="govuk-heading-l" style={{ borderBottom: "3px solid #1d70b8", paddingBottom: "5px" }}>
-                Fourth Quarter (October – December)
-              </h2>
-
-              <div className="govuk-!-margin-bottom-4">
-                <h3 className="govuk-heading-m govuk-!-margin-bottom-1">Mashujaa Cultural Assemblies</h3>
-                <span className="govuk-body-s" style={{ fontWeight: "bold", color: "#505a5f", display: "block", marginBottom: "10px" }}>Occurs: 20 October | Location: National</span>
-                <p className="govuk-body">
-                  A period dedicated to honouring cultural icons, historical freedom fighters, and community elders who protect the intangible cultural heritage of Kenya&apos;s 40+ unique communities.
-                </p>
-              </div>
-
-              <div className="govuk-!-margin-bottom-4">
-                <h3 className="govuk-heading-m govuk-!-margin-bottom-1">Lamu Cultural Festival</h3>
-                <span className="govuk-body-s" style={{ fontWeight: "bold", color: "#505a5f", display: "block", marginBottom: "10px" }}>Occurs: November | Location: Lamu Old Town (UNESCO Site)</span>
-                <p className="govuk-body">
-                  An immersive event designed to promote Swahili culture and traditions. The schedule features traditional dhow racing, donkey races, Swahili poetry recitations, and local musical showcases.
-                </p>
-              </div>
-
-              <div className="govuk-!-margin-bottom-4">
-                <h3 className="govuk-heading-m govuk-!-margin-bottom-1">Jamhuri Day Celebrations</h3>
-                <span className="govuk-body-s" style={{ fontWeight: "bold", color: "#505a5f", display: "block", marginBottom: "10px" }}>Occurs: 12 December | Location: Nairobi (Nyayo/Kasarani Stadium)</span>
-                <p className="govuk-body">
-                  Kenya&apos;s ultimate Republic holiday, closing out the state events loop with extensive cross-cultural multi-ethnic music performances, creative theatrical displays, and historical fly-pasts.
-                </p>
-              </div>
-            </section>
-
-          </div>
-
-          {/* SIDEBAR NAVIGATION COLUMN */}
-          <aside className="govuk-grid-column-one-third" role="complementary">
-            <div className="society-top-border">
-              <h2 className="govuk-heading-m govuk-!-margin-bottom-3">Related Guidance</h2>
-              <ul className="govuk-list govuk-body-s">
-                <li className="govuk-!-margin-bottom-3">
-                  <Link href="/society-and-culture/national-events" className="govuk-link">
-                    <strong>National State Events</strong>
-                  </Link>
-                </li>
-                <li className="govuk-!-margin-bottom-3">
-                  <Link href="/society-and-culture/heritage-sites" className="govuk-link">
-                    <strong>Historical Heritage Sites</strong>
-                  </Link>
-                </li>
-                <li className="govuk-!-margin-bottom-3">
-                  <Link href="/society-and-culture/traditional-culture" className="govuk-link">
-                    <strong>Traditional Practices &amp; Ceremonies</strong>
-                  </Link>
-                </li>
-              </ul>
-            </div>
-          </aside>
-        </div>
-
-        {/* FEEDBACK & FOOTER METADATA */}
-        <div className="govuk-grid-row govuk-!-margin-top-6">
-          <div className="govuk-grid-column-full">
-            <LastUpdated published="2026-05-22" lastUpdated="2026-05-22" />
             
+            <h1 className="govuk-heading-xl">Cultural calendar</h1>
+            
+            <p className="govuk-body-l">
+              A guide to Kenya's cultural festivals, traditional ceremonies, natural phenomena and community celebrations throughout the year.
+            </p>
+
+            {events.length === 0 ? (
+              <div className="govuk-inset-text">
+                <p className="govuk-body">
+                  No cultural events are currently listed. Check back soon for updates.
+                </p>
+              </div>
+            ) : (
+              <>
+                {/* UPCOMING EVENTS */}
+                {upcomingEvents.length > 0 && (
+                  <section className="govuk-!-margin-bottom-8">
+                    <h2 className="govuk-heading-l">Coming up</h2>
+                    <p className="govuk-body">
+                      Cultural events happening soon in Kenya.
+                    </p>
+                    <ul className="govuk-list govuk-list--spaced">
+                      {upcomingEvents.map(event => (
+                        <li key={event._id} className="app-cultural-event-upcoming">
+                          <Link 
+                            href={`/society-and-culture/cultural-calendar/${event.slug}`}
+                            className="govuk-link govuk-link--no-visited-state"
+                          >
+                            <strong className="govuk-!-font-size-19">{event.name}</strong>
+                          </Link>
+                          <p className="govuk-body-s govuk-!-margin-top-1 govuk-!-margin-bottom-1">
+                            <strong>{formatEventTiming(event)}</strong>
+                          </p>
+                          <p className="govuk-body-s govuk-!-margin-bottom-0">
+                            {formatEventLocation(event)}
+                          </p>
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                )}
+
+                <hr className="govuk-section-break govuk-section-break--l govuk-section-break--visible" />
+
+                {/* EVENTS BY QUARTER */}
+                {quarters.map(quarter => {
+                  const quarterEvents = events.filter(e => e.quarter === quarter)
+                  if (quarterEvents.length === 0) return null
+                  
+                  const quarterInfo = getQuarterInfo(quarter)
+                  const isCurrentQuarter = quarter === currentQuarter
+
+                  return (
+                    <section 
+                      key={quarter} 
+                      id={quarter.toLowerCase()}
+                      className={`govuk-!-margin-bottom-8 ${isCurrentQuarter ? 'app-current-quarter' : ''}`}
+                    >
+                      <h2 className="govuk-heading-l">
+                        {quarterInfo.label}
+                        <span className="govuk-caption-m govuk-!-margin-top-1">
+                          {quarterInfo.months}
+                        </span>
+                      </h2>
+
+                      {isCurrentQuarter && (
+                        <p className="govuk-body-s app-current-quarter-label">
+                          <strong>Current quarter</strong>
+                        </p>
+                      )}
+
+                      <ul className="govuk-list govuk-list--spaced">
+                        {quarterEvents.map(event => (
+                          <li key={event._id} className="app-cultural-event-item">
+                            <Link 
+                              href={`/society-and-culture/cultural-calendar/${event.slug}`}
+                              className="govuk-link govuk-link--no-visited-state"
+                            >
+                              <h3 className="govuk-heading-s govuk-!-margin-bottom-1">
+                                {event.name}
+                              </h3>
+                            </Link>
+                            <p className="govuk-body-s govuk-!-margin-bottom-1">
+                              <strong>{formatEventTiming(event)}</strong>
+                              {' • '}
+                              {formatEventLocation(event)}
+                            </p>
+                            <p className="govuk-body-s govuk-!-margin-bottom-0">
+                              {event.shortDescription}
+                            </p>
+                            {event.culturalGroups && event.culturalGroups.length > 0 && (
+                              <p className="govuk-body-s govuk-!-margin-top-1 govuk-!-margin-bottom-0">
+                                <span className="govuk-visually-hidden">Associated communities: </span>
+                                {event.culturalGroups.join(', ')}
+                              </p>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    </section>
+                  )
+                })}
+
+                <hr className="govuk-section-break govuk-section-break--l govuk-section-break--visible" />
+
+                {/* LEGAL / GENERAL NOTICE */}
+                <div className="govuk-inset-text">
+                  <p className="govuk-body govuk-!-margin-bottom-0">
+                    Dates for seasonal, approximate and periodic events may vary each year. 
+                    Check with the organising body or county government for confirmed dates before travelling.
+                  </p>
+                </div>
+
+                <LastUpdated published="2026-05-22" lastUpdated="2026-07-02" />
+              </>
+            )}
+          </div>
+
+          {/* Sidebar */}
+          <div className="govuk-grid-column-one-third">
+            <aside className="govuk-!-display-none-print" role="complementary">
+              <h2 className="govuk-heading-m">Related pages</h2>
+              <nav role="navigation">
+                <ul className="govuk-list govuk-list--spaced">
+                  <li>
+                    <Link href="/society-and-culture/holidays" className="govuk-link">
+                      Public holidays
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/society-and-culture/national-events" className="govuk-link">
+                      National events
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/society-and-culture/heritage-sites" className="govuk-link">
+                      Heritage sites
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/society-and-culture/communities" className="govuk-link">
+                      Communities
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/society-and-culture/national-symbols" className="govuk-link">
+                      National symbols
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/society-and-culture" className="govuk-link">
+                      All society and culture
+                    </Link>
+                  </li>
+                </ul>
+              </nav>
+
+              <hr className="govuk-section-break govuk-section-break--l govuk-section-break--visible" />
+
+              <div className="govuk-inset-text">
+                <p className="govuk-body govuk-!-margin-bottom-0">
+                  The Ministry of Sports, Culture and Heritage coordinates national cultural events and festivals.
+                </p>
+              </div>
+            </aside>
           </div>
         </div>
-
       </main>
-    </div>
-  );
-}
 
+      <style>{`
+        .app-cultural-event-upcoming {
+          padding: 15px;
+          border-left: 4px solid #1d70b8;
+          background-color: #f3f2f1;
+          margin-bottom: 15px;
+        }
+
+        .app-cultural-event-item {
+          padding: 15px 0;
+          border-bottom: 1px solid #b1b4b6;
+        }
+
+        .app-cultural-event-item:last-child {
+          border-bottom: none;
+        }
+
+        .app-current-quarter {
+          padding: 20px;
+          background-color: #f3f2f1;
+          border-left: 5px solid #00703c;
+        }
+
+        .app-current-quarter-label {
+          color: #00703c;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          font-size: 14px;
+        }
+
+        .app-cultural-event-item h3 {
+          color: #1d70b8;
+        }
+
+        .app-cultural-event-item h3:hover {
+          text-decoration-thickness: 3px;
+        }
+      `}</style>
+    </div>
+  )
+}

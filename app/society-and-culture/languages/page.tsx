@@ -1,6 +1,4 @@
-'use client';
-
-import React from "react";
+// app/society-and-culture/languages/page.tsx
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import LastUpdated from "@/components/govuk/LastUpdated";
@@ -8,151 +6,305 @@ import LastUpdated from "@/components/govuk/LastUpdated";
 export default function LanguagesPage() {
   return (
     <div className="govuk-width-container">
-      {/* GOV.UK Navigation Breadcrumbs */}
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
-          { text: "Society and Culture", href: "/society-and-culture" },
+          { text: "Society and culture", href: "/society-and-culture" },
           { text: "Languages", href: "/society-and-culture/languages" },
         ]}
       />
 
       <main className="govuk-main-wrapper" id="main-content" role="main">
-        
-        {/* HEADER SECTION */}
-        <div className="govuk-grid-row govuk-!-margin-bottom-7">
+        <div className="govuk-grid-row">
           <div className="govuk-grid-column-two-thirds">
-            <span className="govuk-caption-xl">National Identity and Heritage</span>
-            <h1 className="govuk-heading-xl govuk-!-margin-bottom-4">
-              Languages Spoken in Kenya
-            </h1>
+            
+            <span className="govuk-caption-xl">People and communities</span>
+            <h1 className="govuk-heading-xl">Languages of Kenya</h1>
+            
             <p className="govuk-body-l">
-              An educational guide to Article 7 of the Constitution of Kenya, outlining the official, national, and indigenous languages that shape communication and social integration.
+              Kenya is a multilingual country with over 68 languages spoken across its communities. This page explains the constitutional status of languages, the major language families, and efforts to preserve linguistic diversity.
             </p>
           </div>
         </div>
 
-        {/* CONTENT AND SIDEBAR MATRIX */}
-        <div className="govuk-grid-row">
+        <div className="govuk-grid-row govuk-!-margin-top-6">
+          
+          {/* Main content */}
           <div className="govuk-grid-column-two-thirds">
 
-            {/* 1. CONSTITUTIONAL STATUS OF LANGUAGES */}
+            {/* Table of contents */}
+            <nav className="govuk-!-margin-bottom-8" aria-label="Page contents">
+              <h2 className="govuk-heading-s">Contents</h2>
+              <ol className="govuk-list govuk-list--spaced">
+                <li><a className="govuk-link" href="#constitutional-status">Constitutional status of languages</a></li>
+                <li><a className="govuk-link" href="#linguistic-families">Indigenous language families</a></li>
+                <li><a className="govuk-link" href="#sign-language">Kenyan Sign Language and Braille</a></li>
+                <li><a className="govuk-link" href="#urban-trends">Urban language evolution (Sheng)</a></li>
+                <li><a className="govuk-link" href="#endangered-languages">Endangered languages</a></li>
+                <li><a className="govuk-link" href="#preservation">Language preservation efforts</a></li>
+              </ol>
+            </nav>
+
+            <hr className="govuk-section-break govuk-section-break--l govuk-section-break--visible" />
+
+            {/* Constitutional Status */}
             <section id="constitutional-status" className="govuk-!-margin-bottom-8">
-              <h2 className="govuk-heading-l">1. Constitutional Status</h2>
+              <h2 className="govuk-heading-l">Constitutional status of languages</h2>
               <p className="govuk-body">
-                Article 7 of the Constitution of Kenya clearly divides the linguistic structure of the public sector into two distinct categories to foster administrative efficiency while preserving national identity:
+                <Link href="/constitution/chapter/1/article/7" className="govuk-link">
+                  Article 7
+                </Link>
+                {' '}of the Constitution recognises two categories of languages for official use:
               </p>
 
-              {/* Accessible Data Table for Language Classifications */}
-              <table className="govuk-table govuk-!-margin-bottom-4">
-                <caption className="govuk-table__caption govuk-table__caption--s">Constitutional Language Status (Article 7)</caption>
+              <table className="govuk-table">
+                <caption className="govuk-table__caption govuk-visually-hidden">
+                  Constitutional classification of languages in Kenya
+                </caption>
                 <thead className="govuk-table__head">
                   <tr className="govuk-table__row">
-                    <th scope="col" className="govuk-table__header" style={{ width: "30%" }}>Classification</th>
-                    <th scope="col" className="govuk-table__header" style={{ width: "25%" }}>Language</th>
-                    <th scope="col" className="govuk-table__header">Statutory Application and Role</th>
+                    <th scope="col" className="govuk-table__header">Classification</th>
+                    <th scope="col" className="govuk-table__header">Language</th>
+                    <th scope="col" className="govuk-table__header">Role</th>
                   </tr>
                 </thead>
                 <tbody className="govuk-table__body">
                   <tr className="govuk-table__row">
-                    <th scope="row" className="govuk-table__header" style={{ fontWeight: "600" }}>National Language</th>
+                    <th scope="row" className="govuk-table__header">National language</th>
                     <td className="govuk-table__cell">Kiswahili</td>
-                    <td className="govuk-table__cell">Article 7(1). Serves as the primary medium for cultural expression, national identity, and inter-ethnic cohesion.</td>
+                    <td className="govuk-table__cell">The language of national identity and cultural expression. Used to promote unity across ethnic groups.</td>
                   </tr>
                   <tr className="govuk-table__row">
-                    <th scope="row" className="govuk-table__header" style={{ fontWeight: "600" }}>Official Languages</th>
+                    <th scope="row" className="govuk-table__header">Official languages</th>
                     <td className="govuk-table__cell">Kiswahili and English</td>
-                    <td className="govuk-table__cell">Article 7(2). Both languages are legally authorized for public administration, legislative records, judicial proceedings, and official government publications.</td>
+                    <td className="govuk-table__cell">Used for government business, legislation, court proceedings, and official records.</td>
                   </tr>
                 </tbody>
               </table>
 
               <p className="govuk-body">
-                Furthermore, Article 7(3) places a mandatory requirement on the State to promote and protect the diversity of language among all Kenyan communities, alongside developing and facilitating the use of Kenyan Sign Language (KSL) and Braille.
+                The Constitution also requires the State to promote and protect the diversity of languages among Kenyan communities, and to develop and promote the use of Kenyan Sign Language and Braille.
               </p>
             </section>
 
             <hr className="govuk-section-break govuk-section-break--l govuk-section-break--visible" />
 
-            {/* 2. THE THREE MAJOR LINGUISTIC FAMILIES */}
+            {/* Linguistic Families */}
             <section id="linguistic-families" className="govuk-!-margin-bottom-8">
-              <h2 className="govuk-heading-l">2. Indigenous Language Families</h2>
+              <h2 className="govuk-heading-l">Indigenous language families</h2>
               <p className="govuk-body">
-                Beyond the administrative usage of English and Kiswahili, Kenya is home to over 40 distinct indigenous languages. These belong structurally to three primary African linguistic families:
+                Beyond English and Kiswahili, Kenya is home to over 40 indigenous languages. These belong to three major African language families:
               </p>
 
+              <h3 className="govuk-heading-s">Bantu languages</h3>
+              <p className="govuk-body">
+                The largest language group in Kenya, spoken mainly in the Western, Nyanza, Central and Coastal regions. Major Bantu languages include:
+              </p>
+              <ul className="govuk-list govuk-list--bullet">
+                <li>Kikuyu (Gĩkũyũ)</li>
+                <li>Luhya (Luyia)</li>
+                <li>Kamba (Kĩkamba)</li>
+                <li>Kisii (Ekegusii)</li>
+                <li>Meru (Kĩmĩrũ)</li>
+                <li>Mijikenda (nine dialects including Giriama, Digo, and Duruma)</li>
+                <li>Taita (Kidawida)</li>
+              </ul>
+
+              <h3 className="govuk-heading-s">Nilotic languages</h3>
+              <p className="govuk-body">
+                Spoken by communities around Lake Victoria and the Rift Valley. Nilotic languages are divided into three groups:
+              </p>
               <ul className="govuk-list govuk-list--bullet">
                 <li>
-                  <strong>Bantu Languages:</strong> The largest linguistic category in Kenya, spoken primarily across the Western, Nyanza, Central, and Coastal regions. Examples include Kikuyu, Luhya, Kamba, Kisii, Meru, and Mijikenda dialects.
+                  <strong>River-Lake Nilotic (Luo)</strong> — spoken by the Luo community around Lake Victoria
                 </li>
                 <li>
-                  <strong>Nilotic Languages:</strong> Spoken by communities concentrated along Lake Victoria and the Great Rift Valley system. This family is traditionally sub-categorized into River-Lake Nilotic (Luo), Highlands Nilotic (Kalenjin dialects), and Plains Nilotic (Maasai, Samburu, and Turkana).
+                  <strong>Highlands Nilotic (Kalenjin)</strong> — includes Kipsigis, Nandi, Tugen, Pokot, Marakwet, Keiyo, Sabaot and Terik
                 </li>
                 <li>
-                  <strong>Cushitic Languages:</strong> Spoken predominantly by pastoralist communities inhabiting the expansive northern and north-eastern arid zones, including Somali, Oromo, Rendille, and Borana languages.
+                  <strong>Plains Nilotic</strong> — includes Maasai (Maa), Samburu, and Turkana
                 </li>
               </ul>
+
+              <h3 className="govuk-heading-s">Cushitic languages</h3>
+              <p className="govuk-body">
+                Spoken mainly by pastoralist communities in the northern and north-eastern arid regions:
+              </p>
+              <ul className="govuk-list govuk-list--bullet">
+                <li>Somali (Af-Soomaali)</li>
+                <li>Oromo (Afaan Oromoo)</li>
+                <li>Rendille</li>
+                <li>Borana (Afaan Borana)</li>
+                <li>Gabbra</li>
+                <li>Orma</li>
+              </ul>
+
+              <p className="govuk-body">
+                Kenya also has a small number of languages from other families, including Arabic (spoken along the coast) and Hindi (spoken by the Asian community).
+              </p>
             </section>
 
             <hr className="govuk-section-break govuk-section-break--l govuk-section-break--visible" />
-            {/* 3. KENYAN SIGN LANGUAGE & ACCESSIBILITY */}
+
+            {/* Sign Language */}
             <section id="sign-language" className="govuk-!-margin-bottom-8">
-              <h2 className="govuk-heading-l">3. Kenyan Sign Language (KSL) and Braille</h2>
+              <h2 className="govuk-heading-l">Kenyan Sign Language and Braille</h2>
               <p className="govuk-body">
-                The State has a constitutional obligation under Article 7(3)(b) to promote the development and use of indigenous modes of communication for persons with disabilities. 
+                The Constitution requires the State to promote the use of communication methods for people with disabilities.
               </p>
               <p className="govuk-body">
-                Kenyan Sign Language (KSL) is the primary visual language used by the deaf community in Kenya. It features unique grammatical structures distinct from spoken or written languages. KSL interpreters are legally integrated into national broadcasting services, public courts, and major legislative assemblies to ensure equitable access to government data.
+                <strong>Kenyan Sign Language (KSL)</strong> is the primary visual language used by the deaf community in Kenya. It has its own grammar and structure, distinct from spoken or written languages. KSL interpreters are used in:
+              </p>
+              <ul className="govuk-list govuk-list--bullet">
+                <li>national broadcasting services</li>
+                <li>public courts and tribunals</li>
+                <li>Parliament and county assemblies</li>
+                <li>schools for the deaf</li>
+              </ul>
+              <p className="govuk-body">
+                <strong>Braille</strong> is the tactile writing system used by blind and visually impaired Kenyans. The Kenya Institute for the Blind produces educational materials and official documents in Braille.
               </p>
             </section>
 
             <hr className="govuk-section-break govuk-section-break--l govuk-section-break--visible" />
 
-            {/* 4. URBAN LANGUAGE TRENDS */}
+            {/* Urban Trends */}
             <section id="urban-trends" className="govuk-!-margin-bottom-8">
-              <h2 className="govuk-heading-l">4. Urban Language Evolution (Sheng)</h2>
+              <h2 className="govuk-heading-l">Urban language evolution (Sheng)</h2>
               <p className="govuk-body">
-                In multi-ethnic urban centers such as Nairobi, Mombasa, and Kisumu, language practices have evolved dynamically. This shift has given rise to <strong>Sheng</strong>—a vibrant, rapid-changing language hybrid.
+                In multi-ethnic urban centres like Nairobi, Mombasa and Kisumu, a dynamic language hybrid called <strong>Sheng</strong> has emerged.
               </p>
               <p className="govuk-body">
-                Sheng blends standard Kiswahili grammar structure with a mixed vocabulary drawn from English, indigenous languages, and localized slang expressions. While it originated primarily among urban youth, it has grown into a mainstream medium utilized across commercial advertising, youth development programs, public health campaigns, and popular musical media to bridge ethnic gaps.
+                Sheng blends Kiswahili grammar with vocabulary drawn from English, indigenous languages, and local slang. While it began as youth slang, it is now widely used in:
+              </p>
+              <ul className="govuk-list govuk-list--bullet">
+                <li>commercial advertising</li>
+                <li>popular music and entertainment</li>
+                <li>public health campaigns</li>
+                <li>social media and digital communication</li>
+              </ul>
+              <p className="govuk-body">
+                Sheng serves as a bridge across ethnic and class divides in urban Kenya, though it is not recognised as an official language.
               </p>
             </section>
-          </div>
 
-          {/* SIDEBAR NAVIGATION COLUMN */}
-          <aside className="govuk-grid-column-one-third" role="complementary">
-            <div className="society-top-border">
-              <h2 className="govuk-heading-m govuk-!-margin-bottom-3">Related Guidance</h2>
-              <ul className="govuk-list govuk-body-s">
-                <li className="govuk-!-margin-bottom-3">
-                  <Link href="/society-and-culture/communities" className="govuk-link">
-                    <strong>Communities and Cultural Groups</strong>
-                  </Link>
+            <hr className="govuk-section-break govuk-section-break--l govuk-section-break--visible" />
+
+            {/* Endangered Languages */}
+            <section id="endangered-languages" className="govuk-!-margin-bottom-8">
+              <h2 className="govuk-heading-l">Endangered languages</h2>
+              <p className="govuk-body">
+                Several indigenous languages in Kenya are at risk of disappearing. A language is considered endangered when the younger generation no longer learns or speaks it as their first language.
+              </p>
+              <p className="govuk-body">
+                Languages at risk include:
+              </p>
+              <ul className="govuk-list govuk-list--bullet">
+                <li>
+                  <strong>El Molo</strong> — spoken by fewer than 10 people around Lake Turkana. Considered critically endangered.
                 </li>
-                <li className="govuk-!-margin-bottom-3">
-                  <Link href="/society-and-culture/national-symbols" className="govuk-link">
-                    <strong>Official National Symbols Registry</strong>
-                  </Link>
+                <li>
+                  <strong>Omotik</strong> — a Southern Nilotic language with very few remaining speakers.
                 </li>
-                <li className="govuk-!-margin-bottom-3">
-                  <Link href="/society-and-culture/traditional-culture" className="govuk-link">
-                    <strong>Traditional Practices &amp; Ceremonies</strong>
-                  </Link>
+                <li>
+                  <strong>Yaaku (Mogogodo)</strong> — formerly spoken by the Mukogodo community in Laikipia County. Most speakers have shifted to Maasai.
+                </li>
+                <li>
+                  <strong>Suba</strong> — spoken around Lake Victoria, with speakers increasingly shifting to Luo.
+                </li>
+                <li>
+                  <strong>Assan</strong> — a Cushitic language that is nearly extinct.
                 </li>
               </ul>
-            </div>
-          </aside>
-        </div>
+              <p className="govuk-body">
+                Language loss often occurs when communities shift to more widely spoken languages for economic or social reasons. When a language disappears, so does the unique cultural knowledge, oral traditions, and worldview it carries.
+              </p>
+            </section>
 
-        {/* FEEDBACK & FOOTER METADATA */}
-        <div className="govuk-grid-row govuk-!-margin-top-6">
-          <div className="govuk-grid-column-full">
-            <LastUpdated published="2026-05-22" lastUpdated="2026-05-22" />
-            
+            <hr className="govuk-section-break govuk-section-break--l govuk-section-break--visible" />
+
+            {/* Preservation Efforts */}
+            <section id="preservation" className="govuk-!-margin-bottom-8">
+              <h2 className="govuk-heading-l">Language preservation efforts</h2>
+              <p className="govuk-body">
+                Several institutions and initiatives work to preserve Kenya's linguistic heritage:
+              </p>
+              <ul className="govuk-list govuk-list--spaced">
+                <li>
+                  <strong>Kenya Institute of Curriculum Development (KICD)</strong> — develops mother-tongue education materials for early primary schools. Children are taught in their local language for the first three years of primary school.
+                </li>
+                <li>
+                  <strong>National Museums of Kenya</strong> — documents and archives indigenous languages, including recording oral histories and traditional knowledge.
+                </li>
+                <li>
+                  <strong>Universities</strong> — institutions like the University of Nairobi, Kenyatta University, and Maseno University offer degree programmes in linguistics and African languages.
+                </li>
+                <li>
+                  <strong>Community language boards</strong> — some communities have established boards to standardise orthography (writing systems) and produce dictionaries.
+                </li>
+                <li>
+                  <strong>Digital archives</strong> — projects like the Endangered Languages Project and local digital initiatives are creating online resources for minority languages.
+                </li>
+              </ul>
+              <p className="govuk-body">
+                The{' '}
+                <Link href="/government/institutions/kiswahili-institute" className="govuk-link">
+                  Kiswahili Institute (Chama cha Kiswahili Tanzania)
+                </Link>
+                {' '}works regionally to promote Kiswahili across East Africa, including standardisation and development of new terminology.
+              </p>
+            </section>
+
+            <hr className="govuk-section-break govuk-section-break--l govuk-section-break--visible" />
+
+            <LastUpdated published="2026-05-22" lastUpdated="2026-07-02" />
+
+          </div>
+
+          {/* Sidebar */}
+          <div className="govuk-grid-column-one-third">
+            <aside className="govuk-!-display-none-print" role="complementary">
+              <h2 className="govuk-heading-m">Related pages</h2>
+              <nav role="navigation">
+                <ul className="govuk-list govuk-list--spaced">
+                  <li>
+                    <Link href="/society-and-culture/communities" className="govuk-link">
+                      Communities
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/society-and-culture/national-symbols" className="govuk-link">
+                      National symbols
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/society-and-culture/constitution-and-national-values" className="govuk-link">
+                      Constitution and national values
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/society-and-culture/heritage-sites" className="govuk-link">
+                      Heritage sites
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/society-and-culture" className="govuk-link">
+                      All society and culture
+                    </Link>
+                  </li>
+                </ul>
+              </nav>
+
+              <hr className="govuk-section-break govuk-section-break--l govuk-section-break--visible" />
+
+              <div className="govuk-inset-text">
+                <p className="govuk-body govuk-!-margin-bottom-0">
+                  The Ministry of Education, Science and Technology oversees language policy and mother-tongue education in Kenya.
+                </p>
+              </div>
+            </aside>
           </div>
         </div>
-
       </main>
     </div>
   );
