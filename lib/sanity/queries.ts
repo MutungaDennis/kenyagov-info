@@ -134,6 +134,7 @@ export const SINGLE_NEWS_QUERY = `
   }
 `;
 
+
 export const HERO_CONTENT_QUERY = `
   *[_type == "pageContent" && page == "home"][0] {
     _id,
@@ -144,5 +145,130 @@ export const HERO_CONTENT_QUERY = `
     callToAction,
     ctaUrl,
     sections[]
+  }
+`;
+
+// ==========================================
+// CULTURAL EVENTS
+// ==========================================
+
+export const CULTURAL_EVENTS_QUERY = `
+  *[_type == "culturalEvent" && status == "active"] | order(quarter asc, name asc) {
+    _id,
+    name,
+    "slug": slug.current,
+    shortDescription,
+    description,
+    significance,
+    timingType,
+    specificDate,
+    startMonth,
+    endMonth,
+    approximatePeriod,
+    frequency,
+    nextExpectedYear,
+    venue,
+    county,
+    isRotating,
+    quarter,
+    eventCategory,
+    culturalGroups,
+    organiser,
+    mainImage,
+    officialWebsite,
+    status
+  }
+`;
+
+export const CULTURAL_EVENT_BY_SLUG_QUERY = `
+  *[_type == "culturalEvent" && slug.current == $slug][0] {
+    _id,
+    name,
+    "slug": slug.current,
+    shortDescription,
+    description,
+    significance,
+    timingType,
+    specificDate,
+    startMonth,
+    endMonth,
+    approximatePeriod,
+    frequency,
+    nextExpectedYear,
+    venue,
+    county,
+    isRotating,
+    quarter,
+    eventCategory,
+    culturalGroups,
+    organiser,
+    mainImage,
+    gallery,
+    externalLinks,
+    officialWebsite,
+    status
+  }
+`;
+
+export const CULTURAL_EVENT_SLUGS_QUERY = `
+  *[_type == "culturalEvent" && defined(slug.current)] {
+    "slug": slug.current
+  }
+`;
+
+
+export const HERITAGE_SITES_QUERY = `
+  *[_type == "heritageSite" && status == "active"] | order(category asc, name asc) {
+    _id,
+    name,
+    "slug": slug.current,
+    shortDescription,
+    fullDescription,
+    category,
+    region,
+    county,
+    designationYear,
+    designatingBody,
+    historicalPeriod,
+    historicalSignificance,
+    associatedCommunities,
+    specificLocation,
+    mainImage,
+    officialWebsite,
+    status
+  }
+`;
+
+export const HERITAGE_SITE_BY_SLUG_QUERY = `
+  *[_type == "heritageSite" && slug.current == $slug][0] {
+    _id,
+    name,
+    "slug": slug.current,
+    shortDescription,
+    fullDescription,
+    category,
+    region,
+    county,
+    designationYear,
+    designatingBody,
+    unescoInscriptionNumber,
+    historicalPeriod,
+    historicalSignificance,
+    associatedCommunities,
+    specificLocation,
+    coordinates,
+    visitorInfo,
+    mainImage,
+    gallery,
+    officialWebsite,
+    unescoLink,
+    externalLinks,
+    status
+  }
+`;
+
+export const HERITAGE_SITE_SLUGS_QUERY = `
+  *[_type == "heritageSite" && defined(slug.current)] {
+    "slug": slug.current
   }
 `;

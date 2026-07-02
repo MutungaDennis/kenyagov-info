@@ -1,3 +1,4 @@
+// sanity/schemaTypes/index.ts
 import { type SchemaTypeDefinition } from 'sanity';
 
 import { page } from './page';
@@ -18,6 +19,12 @@ import hansardSpeech from './hansardSpeech';
 import legislativeItem from './legislativeItem';
 import hansardDivision from './hansardDivision';
 
+// CULTURAL EVENTS
+import culturalEvent from './culturalEvent';
+
+// HERITAGE SITES
+import heritageSite from './heritageSite';
+
 export const schema: { types: SchemaTypeDefinition[] } = {
   types: [
     page,
@@ -36,5 +43,11 @@ export const schema: { types: SchemaTypeDefinition[] } = {
     hansardSpeech,
     legislativeItem,
     hansardDivision,
+
+    // Cultural Events
+    culturalEvent,
+
+    // Heritage Sites
+    heritageSite,
   ],
 };
