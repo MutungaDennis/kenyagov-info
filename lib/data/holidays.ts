@@ -17,10 +17,12 @@ export interface Holiday {
  * - designated: Holidays designated for members of a particular faith community (**)
  * - substitute: Substitute holiday when a public holiday falls on a Sunday
  * - special: Ad-hoc or special national holiday declared through Gazette Notice (†)
+ *   Includes public mourning days declared for former Heads of State and Government.
  */
 export const holidays: Record<number, Holiday[]> = {
   2020: [
     { date: "2020-01-01", name: "New Year's Day", type: "national" },
+    { date: "2020-02-11", name: "Public Mourning — Death of former President Daniel arap Moi", type: "special" },
     { date: "2020-03-20", name: "Eid al-Fitr", type: "religious" },
     { date: "2020-04-10", name: "Good Friday", type: "national" },
     { date: "2020-04-13", name: "Easter Monday", type: "national" },
@@ -57,11 +59,11 @@ export const holidays: Record<number, Holiday[]> = {
     { date: "2022-03-03", name: "Eid al-Fitr", type: "religious" },
     { date: "2022-04-15", name: "Good Friday", type: "national" },
     { date: "2022-04-18", name: "Easter Monday", type: "national" },
+    { date: "2022-04-29", name: "Public Mourning — State Funeral of former President Mwai Kibaki", type: "special" },
     { date: "2022-05-01", name: "Labour Day", type: "national" },
     { date: "2022-05-02", name: "Labour Day Substitute Holiday", type: "substitute" },
     { date: "2022-06-01", name: "Madaraka Day", type: "national" },
     { date: "2022-07-10", name: "Eid al-Adha", type: "religious" },
-    { date: "2022-09-19", name: "State Funeral of Queen Elizabeth II", type: "special" },
     { date: "2022-10-10", name: "Mazingira Day", type: "national" },
     { date: "2022-10-20", name: "Mashujaa Day", type: "national" },
     { date: "2022-10-26", name: "Diwali", type: "designated" },
@@ -77,7 +79,6 @@ export const holidays: Record<number, Holiday[]> = {
     { date: "2023-04-07", name: "Good Friday", type: "national" },
     { date: "2023-04-10", name: "Easter Monday", type: "national" },
     { date: "2023-05-01", name: "Labour Day", type: "national" },
-    { date: "2023-05-02", name: "Coronation of King Charles III", type: "special" },
     { date: "2023-06-01", name: "Madaraka Day", type: "national" },
     { date: "2023-06-29", name: "Eid al-Adha", type: "religious" },
     { date: "2023-10-10", name: "Mazingira Day", type: "national" },
@@ -114,6 +115,7 @@ export const holidays: Record<number, Holiday[]> = {
     { date: "2025-06-02", name: "Madaraka Day Substitute Holiday", type: "substitute" },
     { date: "2025-06-06", name: "Eid al-Adha", type: "religious" },
     { date: "2025-10-10", name: "Mazingira Day", type: "national" },
+    { date: "2025-10-17", name: "Public Mourning — State Funeral of former Prime Minister Raila Odinga", type: "special" },
     { date: "2025-10-20", name: "Mashujaa Day", type: "national" },
     { date: "2025-10-20", name: "Diwali", type: "designated" },
     { date: "2025-12-12", name: "Jamhuri Day", type: "national" },
