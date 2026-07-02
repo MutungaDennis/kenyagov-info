@@ -1,201 +1,181 @@
+// app/government/judiciary/page.tsx
 import Link from "next/link";
-//import GovUKBackLink from "@/components/govuk/BackLink";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-
 
 export default function JudiciaryPage() {
   return (
     <div className="govuk-width-container">
-      {/* <GovUKBackLink href="/legislature" /> */}
-
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
-          { text: "The Legislature", href: "/legislature" },
-          { text: "Judiciary", href: "/judiciary" },
+          { text: "Government", href: "/government" },
+          { text: "Judiciary", href: "/government/judiciary" },
         ]}
       />
 
-      <main className="govuk-main-wrapper">
+      <main className="govuk-main-wrapper" id="main-content" role="main">
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-two-thirds">
-            <h1 className="govuk-heading-xl">The Judiciary of Kenya</h1>
+            
+            <h1 className="govuk-heading-xl">The Judiciary</h1>
+            
             <p className="govuk-body-l">
-              The Judiciary is one of the three independent arms of government under Chapter 10 of the Constitution of Kenya 2010. 
-              It interprets the law, protects the Constitution, and delivers justice to all Kenyans.
+              The Judiciary interprets the law, protects the Constitution, and delivers justice to all Kenyans. It is independent of the Executive and the Legislature.
             </p>
 
-            <div className="govuk-inset-text">
-              Justice Be Our Shield and Defender
-            </div>
-
-            {/* Quick Overview */}
-            <div className="govuk-grid-row govuk-!-margin-top-9 govuk-!-margin-bottom-9">
-              <div className="govuk-grid-column-one-third">
-                <strong>Superior Courts</strong><br />5 courts
-              </div>
-              <div className="govuk-grid-column-one-third">
-                <strong>Subordinate Courts</strong><br />Magistrates, Kadhis &amp; Tribunals
-              </div>
-              <div className="govuk-grid-column-one-third">
-                <strong>Leadership</strong><br />Chief Justice
-              </div>
-            </div>
-
-            {/* Superior Courts */}
-            <h2 className="govuk-heading-l">Superior Courts</h2>
-
-            <details className="govuk-details" data-module="govuk-details">
-              <summary className="govuk-details__summary">
-                <span className="govuk-details__summary-text">Supreme Court</span>
-              </summary>
-              <div className="govuk-details__text">
-                Highest court in Kenya. Final interpreter of the Constitution. Handles presidential election disputes and matters of general public importance.
-              </div>
-            </details>
-
-            <details className="govuk-details" data-module="govuk-details">
-              <summary className="govuk-details__summary">
-                <span className="govuk-details__summary-text">Court of Appeal</span>
-              </summary>
-              <div className="govuk-details__text">
-                Hears appeals from the High Court and other superior courts.
-              </div>
-            </details>
-
-            <details className="govuk-details" data-module="govuk-details">
-              <summary className="govuk-details__summary">
-                <span className="govuk-details__summary-text">High Court</span>
-              </summary>
-              <div className="govuk-details__text">
-                Unlimited original jurisdiction in civil and criminal matters. Supervisory role over subordinate courts.
-              </div>
-            </details>
-
-            <details className="govuk-details" data-module="govuk-details">
-              <summary className="govuk-details__summary">
-                <span className="govuk-details__summary-text">Employment &amp; Labour Relations Court (ELRC)</span>
-              </summary>
-              <div className="govuk-details__text">
-                Specialised court handling all employment and labour disputes.
-              </div>
-            </details>
-
-            <details className="govuk-details" data-module="govuk-details">
-              <summary className="govuk-details__summary">
-                <span className="govuk-details__summary-text">Environment &amp; Land Court (ELC)</span>
-              </summary>
-              <div className="govuk-details__text">
-                Specialised court for land, environment, and natural resources matters.
-              </div>
-            </details>
-
-            {/* Subordinate Courts */}
-            <h2 className="govuk-heading-l govuk-!-margin-top-9">Subordinate Courts</h2>
-
-            <details className="govuk-details" data-module="govuk-details">
-              <summary className="govuk-details__summary">
-                <span className="govuk-details__summary-text">Magistrates’ Courts</span>
-              </summary>
-              <div className="govuk-details__text">
-                Handle the majority of criminal and civil cases across Kenya.
-              </div>
-            </details>
-
-            <details className="govuk-details" data-module="govuk-details">
-              <summary className="govuk-details__summary">
-                <span className="govuk-details__summary-text">Kadhis’ Courts</span>
-              </summary>
-              <div className="govuk-details__text">
-                Deal with Muslim personal law (marriage, divorce, inheritance).
-              </div>
-            </details>
-
-            <details className="govuk-details" data-module="govuk-details">
-              <summary className="govuk-details__summary">
-                <span className="govuk-details__summary-text">Small Claims Court &amp; Tribunals</span>
-              </summary>
-              <div className="govuk-details__text">
-                Fast-track resolution for minor disputes and specialised matters.
-              </div>
-            </details>
-
-            {/* New Enhanced Administrative Section */}
-            <h2 className="govuk-heading-l govuk-!-margin-top-9">Administration &amp; Leadership</h2>
-
-            <details className="govuk-details" data-module="govuk-details" open>
-              <summary className="govuk-details__summary">
-                <span className="govuk-details__summary-text">Key Administrative Offices</span>
-              </summary>
-              <div className="govuk-details__text">
-                <ul className="govuk-list govuk-list--bullet">
-                  <li><strong>Office of the Chief Justice</strong></li>
-                  <li><strong>Office of the Deputy Chief Justice</strong></li>
-                  <li><strong>Office of the Chief Registrar of Judiciary</strong></li>
-                  <li><strong>Office of the President of the Court of Appeal</strong></li>
-                  <li><strong>Office of the Principal Judge of the High Court</strong></li>
-                  <li><strong>Office of the Principal Judge, ELRC</strong></li>
-                  <li><strong>Office of the Presiding Judge, ELC</strong></li>
-                  <li><strong>Chief of Staff, Office of the Chief Justice</strong></li>
-                  <li><strong>Office of the Judiciary Ombudsman</strong></li>
-                </ul>
-              </div>
-            </details>
-
-            <details className="govuk-details" data-module="govuk-details">
-              <summary className="govuk-details__summary">
-                <span className="govuk-details__summary-text">Office of Registrars</span>
-              </summary>
-              <div className="govuk-details__text">
-                <ul className="govuk-list govuk-list--bullet">
-                  <li>Registrar, Supreme Court</li>
-                  <li>Registrar, Court of Appeal</li>
-                  <li>Registrar, High Court</li>
-                  <li>Registrar, Employment &amp; Labour Relations Court</li>
-                  <li>Registrar, Environment &amp; Land Court</li>
-                  <li>Registrar, Magistrates’ Courts</li>
-                  <li>Registrar, Small Claims Court</li>
-                  <li>Registrar, Tribunals</li>
-                  <li>Registrar, Court Annexed Mediation</li>
-                  <li>Registrar, Kenya Judiciary Academy</li>
-                </ul>
-              </div>
-            </details>
-
-            <details className="govuk-details" data-module="govuk-details">
-              <summary className="govuk-details__summary">
-                <span className="govuk-details__summary-text">Directorates &amp; Support Units</span>
-              </summary>
-              <div className="govuk-details__text">
-                <ul className="govuk-list govuk-list--bullet">
-                  <li>Directorate of Human Resource Management &amp; Development</li>
-                  <li>Directorate of Planning &amp; Organisational Performance</li>
-                  <li>Directorate of ICT</li>
-                  <li>Directorate of Finance &amp; Accounts</li>
-                  <li>Directorate of Supply Chain Management</li>
-                  <li>Directorate of Public Affairs &amp; Communication</li>
-                  <li>Directorate of Administration &amp; Security Services</li>
-                  <li>Department of Construction &amp; Maintenance Works</li>
-                  <li>Information &amp; Record Management Unit</li>
-                </ul>
-              </div>
-            </details>
-
-            <p className="govuk-body govuk-!-margin-top-6">
-              <Link href="/judiciary/administration" className="govuk-link">
-                View detailed administration and leadership structure →
-              </Link>
+            <p className="govuk-body">
+              The court system is divided into Superior Courts and Subordinate Courts.
             </p>
 
-            <p className="govuk-body govuk-!-margin-top-9">
-              <Link href="/judiciary/appeals-process" className="govuk-link">
-                Understand the appeals process from Magistrates’ Court to Supreme Court →
-              </Link>
+            <hr className="govuk-section-break govuk-section-break--l govuk-section-break--visible" />
+
+            {/* ========================================== */}
+            {/* SUPERIOR COURTS                            */}
+            {/* ========================================== */}
+            <h2 className="govuk-heading-m">Superior Courts</h2>
+            <p className="govuk-body">
+              These courts have unlimited jurisdiction over criminal and civil matters, or specific appellate jurisdiction.
             </p>
+            <ul className="govuk-list govuk-list--spaced">
+              <li>
+                <Link href="/government/judiciary/supreme-court" className="govuk-link govuk-!-font-weight-bold">
+                  Supreme Court
+                </Link>
+                <p className="govuk-body-s govuk-!-margin-top-1">
+                  The highest court in Kenya. It handles presidential election petitions and appeals from the Court of Appeal.
+                </p>
+              </li>
+              <li>
+                <h3 className="govuk-heading-s govuk-!-margin-bottom-1">Court of Appeal</h3>
+                <p className="govuk-body-s govuk-!-margin-bottom-0">
+                  Hears appeals from the High Court and other courts or tribunals.
+                </p>
+              </li>
+              <li>
+                <h3 className="govuk-heading-s govuk-!-margin-bottom-1">High Court</h3>
+                <p className="govuk-body-s govuk-!-margin-bottom-0">
+                  Unlimited original jurisdiction in criminal and civil matters. It also supervises subordinate courts.
+                </p>
+              </li>
+              <li>
+                <h3 className="govuk-heading-s govuk-!-margin-bottom-1">Employment and Labour Relations Court (ELRC)</h3>
+                <p className="govuk-body-s govuk-!-margin-bottom-0">
+                  A specialised court that handles disputes relating to employment and labour relations.
+                </p>
+              </li>
+              <li>
+                <h3 className="govuk-heading-s govuk-!-margin-bottom-1">Environment and Land Court (ELC)</h3>
+                <p className="govuk-body-s govuk-!-margin-bottom-0">
+                  A specialised court that handles disputes relating to land, environment, and natural resources.
+                </p>
+              </li>
+            </ul>
+
+            <hr className="govuk-section-break govuk-section-break--l govuk-section-break--visible" />
+
+            {/* ========================================== */}
+            {/* SUBORDINATE COURTS                         */}
+            {/* ========================================== */}
+            <h2 className="govuk-heading-m">Subordinate Courts</h2>
+            <p className="govuk-body">
+              These courts handle the majority of cases across Kenya.
+            </p>
+            <ul className="govuk-list govuk-list--spaced">
+              <li>
+                <h3 className="govuk-heading-s govuk-!-margin-bottom-1">Magistrates' Courts</h3>
+                <p className="govuk-body-s govuk-!-margin-bottom-0">
+                  The primary courts for civil and criminal cases. They are ranked by the authority of the magistrate (Chief Magistrate, Senior Principal Magistrate, etc.).
+                </p>
+              </li>
+              <li>
+                <h3 className="govuk-heading-s govuk-!-margin-bottom-1">Kadhis' Courts</h3>
+                <p className="govuk-body-s govuk-!-margin-bottom-0">
+                  Determine questions of Muslim law relating to personal status, marriage, divorce, or inheritance, where all parties are Muslim.
+                </p>
+              </li>
+              <li>
+                <h3 className="govuk-heading-s govuk-!-margin-bottom-1">Small Claims Court</h3>
+                <p className="govuk-body-s govuk-!-margin-bottom-0">
+                  Provides a faster, cheaper way to resolve civil disputes involving small amounts of money.
+                </p>
+              </li>
+              <li>
+                <h3 className="govuk-heading-s govuk-!-margin-bottom-1">Tribunals</h3>
+                <p className="govuk-body-s govuk-!-margin-bottom-0">
+                  Specialised bodies that handle specific disputes, such as the Business Premises Rent Tribunal or the Industrial Court.
+                </p>
+              </li>
+            </ul>
+
+            <hr className="govuk-section-break govuk-section-break--l govuk-section-break--visible" />
+
+            {/* ========================================== */}
+            {/* LEADERSHIP AND ADMINISTRATION              */}
+            {/* ========================================== */}
+            <h2 className="govuk-heading-m">Leadership and administration</h2>
+            <p className="govuk-body">
+              The Judiciary is headed by the Chief Justice, who is also the President of the Supreme Court. The day-to-day administration is managed by the Chief Registrar.
+            </p>
+            <ul className="govuk-list govuk-list--spaced">
+              <li>
+                <Link href="/government/judiciary/administration" className="govuk-link">
+                  View the full leadership structure and directorates
+                </Link>
+              </li>
+            </ul>
+
+            <hr className="govuk-section-break govuk-section-break--l govuk-section-break--visible" />
+
+            {/* ========================================== */}
+            {/* JUDICIAL SERVICE COMMISSION                */}
+            {/* ========================================== */}
+            <h2 className="govuk-heading-m">Judicial Service Commission (JSC)</h2>
+            <p className="govuk-body">
+              The JSC is an independent commission responsible for promoting and facilitating the independence and accountability of the judiciary. It recommends the appointment of judges and handles the discipline of judicial officers.
+            </p>
+            <ul className="govuk-list govuk-list--spaced">
+              <li>
+                <Link href="/government/commissions" className="govuk-link">
+                  View the Judicial Service Commission profile
+                </Link>
+              </li>
+            </ul>
+
+          </div>
+
+          {/* ========================================== */}
+          {/* SIDEBAR: RELATED CONTENT                   */}
+          {/* ========================================== */}
+          <div className="govuk-grid-column-one-third">
+            <aside className="govuk-!-display-none-print" role="complementary">
+              <h2 className="govuk-heading-m">Related content</h2>
+              <nav role="navigation">
+                <ul className="govuk-list govuk-list--spaced">
+                  <li>
+                    <Link href="/constitution" className="govuk-link">
+                      The Constitution of Kenya
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/government/legislature" className="govuk-link">
+                      Parliament and laws
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/government/commissions" className="govuk-link">
+                      Constitutional commissions
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/government/people" className="govuk-link">
+                      Government officials
+                    </Link>
+                  </li>
+                </ul>
+              </nav>
+            </aside>
           </div>
         </div>
-
-        
       </main>
     </div>
   );

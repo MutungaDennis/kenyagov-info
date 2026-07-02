@@ -22,12 +22,10 @@ export default function ContactPage() {
   const MAX_CHARS = 2000;
   const charsRemaining = MAX_CHARS - messageValue.length;
 
-  // Focus first field on load
   useEffect(() => {
     if (firstInputRef.current) firstInputRef.current.focus();
   }, []);
 
-  // Focus error or success panel
   useEffect(() => {
     if (submissionState?.error && errorSummaryRef.current) {
       errorSummaryRef.current.focus();
@@ -91,7 +89,6 @@ export default function ContactPage() {
           errorType: isValidationError ? "validation" : "server",
         });
 
-        // Reset Turnstile widget on error
         try {
           // @ts-ignore
           if ((window as any).turnstile) {
@@ -114,7 +111,7 @@ export default function ContactPage() {
           ]}
         />
 
-        <main className="govuk-main-wrapper govuk-!-padding-top-2" id="main-content" role="main">
+        <main className="govuk-main-wrapper" id="main-content" role="main">
           <div className="govuk-grid-row">
             <div className="govuk-grid-column-two-thirds">
               <div
@@ -157,7 +154,7 @@ export default function ContactPage() {
         ]}
       />
 
-      <main className="govuk-main-wrapper govuk-!-padding-top-2" id="main-content" role="main">
+      <main className="govuk-main-wrapper" id="main-content" role="main">
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-two-thirds">
             {/* Error Summary */}
@@ -175,20 +172,23 @@ export default function ContactPage() {
               </div>
             )}
 
-            <h1 className="govuk-heading-l govuk-!-margin-bottom-2">Contact Us</h1>
-            <p className="govuk-body govuk-!-margin-bottom-4">
-              Submit feedback, report directory errors, or suggest improvements for CitizenGuide.KE.
+            <h1 className="govuk-heading-xl">Contact CitizenGuide.KE</h1>
+            
+            <p className="govuk-body-l">
+              Use this form to send us feedback, report an error, or suggest an improvement.
             </p>
 
-            <div className="govuk-inset-text govuk-!-margin-bottom-6">
-              CitizenGuide.KE is an independent citizen-facing informational platform. It is <strong>not</strong> an official outlet of the Government of Kenya.
+            <div className="govuk-inset-text">
+              <p className="govuk-body">
+                This is an independent website. We do not provide official government services.
+              </p>
             </div>
 
-            <h2 className="govuk-heading-m govuk-!-margin-bottom-4">Send us a message</h2>
+            <h2 className="govuk-heading-l">Send us a message</h2>
 
             <form onSubmit={handleSubmit} noValidate>
               <div className="govuk-form-group">
-                <label className="govuk-label govuk-!-font-weight-bold" htmlFor="contact-name">
+                <label className="govuk-label govuk-label--s" htmlFor="contact-name">
                   Full name (optional)
                 </label>
                 <input
@@ -202,7 +202,7 @@ export default function ContactPage() {
               </div>
 
               <div className="govuk-form-group">
-                <label className="govuk-label govuk-!-font-weight-bold" htmlFor="contact-email">
+                <label className="govuk-label govuk-label--s" htmlFor="contact-email">
                   Email address (optional)
                 </label>
                 <div className="govuk-hint" id="email-hint">
@@ -219,7 +219,7 @@ export default function ContactPage() {
               </div>
 
               <div className="govuk-form-group">
-                <label className="govuk-label govuk-!-font-weight-bold" htmlFor="contact-subject">
+                <label className="govuk-label govuk-label--s" htmlFor="contact-subject">
                   Subject
                 </label>
                 <input
@@ -232,33 +232,33 @@ export default function ContactPage() {
               </div>
 
               <div className={`govuk-form-group ${isMessageInvalid ? "govuk-form-group--error" : ""}`}>
-                <label className="govuk-label govuk-!-font-weight-bold" htmlFor="contact-message">
+                <label className="govuk-label govuk-label--s" htmlFor="contact-message">
                   Message
                 </label>
                 <div className="govuk-hint" id="message-hint">
-                  Please include specific details (e.g. table names, links, or page URLs).
+                  Include specific details, such as page names, links, or what you were looking for.
                 </div>
 
                 {isMessageInvalid && (
-                  <p className="govuk-error-message">
+                  <p id="message-error" className="govuk-error-message">
                     <span className="govuk-visually-hidden">Error:</span> {submissionState?.error}
                   </p>
                 )}
 
                 <textarea
-                  className="govuk-textarea"
+                  className={`govuk-textarea ${isMessageInvalid ? "govuk-textarea--error" : ""}`}
                   id="contact-message"
                   name="message"
                   rows={8}
                   value={messageValue}
                   onChange={(e) => setMessageValue(e.target.value)}
                   aria-describedby={`message-hint ${isMessageInvalid ? "message-error" : ""}`}
-                  style={isMessageInvalid ? { border: "4px solid #d4351c" } : {}}
                 />
 
                 <div
+                  id="message-count"
                   className={`govuk-hint govuk-character-count__message ${charsRemaining < 0 ? "govuk-error-message" : ""}`}
-                  style={charsRemaining < 0 ? { color: "#d4351c", fontWeight: "bold" } : {}}
+                  aria-live="polite"
                 >
                   {charsRemaining >= 0
                     ? `You have ${charsRemaining} characters remaining`
@@ -277,7 +277,7 @@ export default function ContactPage() {
 
               <div className="govuk-button-group">
                 <button type="submit" disabled={isPending} className="govuk-button">
-                  {isPending ? "Sending..." : "Submit message"}
+                  {isPending ? "Sending..." : "Send message"}
                 </button>
                 <Link href="/" className="govuk-button govuk-button--secondary">
                   Cancel
@@ -285,25 +285,16 @@ export default function ContactPage() {
               </div>
             </form>
 
-            <h2 className="govuk-heading-m govuk-!-margin-top-8">Other ways to reach us</h2>
-            <ul className="govuk-list govuk-list--spaced">
-              <li>
-                <strong>Email:</strong>{" "}
-                <a href="mailto:hello@citizenguide.ke" className="govuk-link">
-                  hello@citizenguide.ke
-                </a>
-              </li>
-            </ul>
+            <hr className="govuk-section-break govuk-section-break--l govuk-section-break--visible" />
 
-            <hr className="govuk-section-break govuk-section-break--visible govuk-!-margin-top-6" />
-
-            <p className="govuk-body govuk-!-margin-top-4">
-              <strong>Note:</strong> We cannot process official government applications or payments. Please use the official{" "}
-              <a href="https://www.ecitizen.go.ke" target="_blank" rel="noreferrer" className="govuk-link">
-                eCitizen portal
-              </a>{" "}
-              for government services.
+            <h2 className="govuk-heading-l">Other ways to contact us</h2>
+            <p className="govuk-body">
+              You can also email us at{' '}
+              <a href="mailto:info@citizenguide.ke" className="govuk-link">
+                info@citizenguide.ke
+              </a>
             </p>
+
           </div>
         </div>
       </main>

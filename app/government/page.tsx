@@ -178,7 +178,7 @@ export default function GovernmentHomePage() {
               <nav role="navigation" aria-labelledby="related-content">
                 <ul className="govuk-list govuk-list--spaced">
                   <li>
-                    <Link href="/parliament" className="govuk-link">
+                    <Link href="/government/legislature" className="govuk-link">
                       Parliament
                     </Link>
                     <p className="govuk-body-s govuk-!-margin-top-1 govuk-!-margin-bottom-0">
@@ -186,7 +186,7 @@ export default function GovernmentHomePage() {
                     </p>
                   </li>
                   <li>
-                    <Link href="/judiciary" className="govuk-link">
+                    <Link href="/government/judiciary" className="govuk-link">
                       The Judiciary
                     </Link>
                     <p className="govuk-body-s govuk-!-margin-top-1 govuk-!-margin-bottom-0">
@@ -194,7 +194,7 @@ export default function GovernmentHomePage() {
                     </p>
                   </li>
                   <li>
-                    <Link href="/commissions" className="govuk-link">
+                    <Link href="/government/commissions" className="govuk-link">
                       Independent Commissions
                     </Link>
                     <p className="govuk-body-s govuk-!-margin-top-1 govuk-!-margin-bottom-0">
@@ -202,7 +202,7 @@ export default function GovernmentHomePage() {
                     </p>
                   </li>
                   <li>
-                    <Link href="/counties" className="govuk-link">
+                    <Link href="/government/counties" className="govuk-link">
                       County Governments
                     </Link>
                     <p className="govuk-body-s govuk-!-margin-top-1 govuk-!-margin-bottom-0">
@@ -229,7 +229,7 @@ export default function GovernmentHomePage() {
                   </Link>
                 </li>
                 <li>
-                  <Link href="/acts" className="govuk-link">
+                  <Link href="/acts/parliament" className="govuk-link">
                     Acts of Parliament
                   </Link>
                 </li>
