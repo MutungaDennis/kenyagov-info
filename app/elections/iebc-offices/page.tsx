@@ -13,6 +13,12 @@ interface PageProps {
 
 const ITEMS_PER_PAGE = 50;
 
+// Helper function to safely convert any value to lowercase string
+const safeString = (value: any): string => {
+  if (value === null || value === undefined) return "";
+  return String(value).toLowerCase();
+};
+
 export default async function IebcOfficesPage({
   searchParams,
 }: PageProps) {
@@ -38,11 +44,13 @@ export default async function IebcOfficesPage({
 
   const safeData = data ?? [];
 
+  // Filter with safe string conversion
   const filtered = query
     ? safeData.filter((c) =>
-        (c.name ?? "").toLowerCase().includes(query) ||
-        (c.county_code ?? "").toLowerCase().includes(query) ||
-        (c.office_location ?? "").toLowerCase().includes(query)
+        safeString(c.name).includes(query) ||
+        safeString(c.county_code).includes(query) ||
+        safeString(c.office_location).includes(query) ||
+        safeString(c.most_conspicuous_landmark).includes(query)
       )
     : safeData;
 
@@ -70,7 +78,7 @@ export default async function IebcOfficesPage({
         
         <h1 className="govuk-heading-xl">IEBC constituency offices</h1>
         
-        <p className="govuk-body-l">
+        <p className="govuk-body">
           Find Independent Electoral and Boundaries Commission (IEBC) constituency offices across Kenya, including office locations and landmarks.
         </p>
 
@@ -110,14 +118,6 @@ export default async function IebcOfficesPage({
           </p>
         </div>
 
-        <div className="govuk-inset-text govuk-!-margin-bottom-6">
-          <p className="govuk-body govuk-!-margin-bottom-0">
-            <strong>{filtered.length}</strong> {filtered.length === 1 ? "constituency office" : "constituency offices"} found
-            {query && ` matching "${query}"`}
-            {totalPages > 1 && ` (showing ${startIndex + 1}–${Math.min(endIndex, filtered.length)} of ${filtered.length})`}
-          </p>
-        </div>
-
         {/* Search */}
         <div className="app-iebc-search govuk-!-margin-bottom-6">
           <form method="GET" action="/elections/iebc-offices" className="app-iebc-search-form">
@@ -148,6 +148,15 @@ export default async function IebcOfficesPage({
               )}
             </div>
           </form>
+        </div>
+
+        {/* Results count - now below search */}
+        <div className="govuk-inset-text govuk-!-margin-bottom-6">
+          <p className="govuk-body govuk-!-margin-bottom-0">
+            <strong>{filtered.length}</strong> {filtered.length === 1 ? "constituency office" : "constituency offices"} found
+            {query && ` matching "${query}"`}
+            {totalPages > 1 && ` (showing ${startIndex + 1}–${Math.min(endIndex, filtered.length)} of ${filtered.length})`}
+          </p>
         </div>
 
         {/* Table */}
