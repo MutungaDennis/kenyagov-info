@@ -53,28 +53,12 @@ export function ClientLayoutWrapper({
     }
   }, [pathname, isAdminRoute]);
 
-  // ==========================================
-  // GLOBAL SCHEMA.ORG - WebSite + Organization
-  // This applies to the entire site
-  // ==========================================
-  const globalSchema = {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    "name": "CitizenGuide.KE",
-    "url": "https://www.citizenguide.ke",
-    "description": "An independent civic technology platform providing structured information on Kenya's Constitution, government institutions, counties, and public services.",
-    "publisher": {
-      "@type": "Organization",
-      "name": "CitizenGuide.KE",
-      "url": "https://www.citizenguide.ke"
-    }
-  };
-
   return (
     <body className="govuk-template__body" suppressHydrationWarning={true}>
       {/*
         GOV.UK page template: mark JS support immediately so enhanced
         components can initialise correctly after initAll().
+        Sitewide WebSite/Organization JSON-LD is server-rendered in app/layout.tsx.
       */}
       <script
         dangerouslySetInnerHTML={{
@@ -110,12 +94,6 @@ export function ClientLayoutWrapper({
           gtag('config', 'G-GG9GWN5J48');
         `}
       </Script>
-
-      {/* Global Schema.org - placed early in body */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(globalSchema) }}
-      />
 
       <style dangerouslySetInnerHTML={{__html: `
         html, body, html.govuk-template, body.govuk-template__body {

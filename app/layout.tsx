@@ -1,72 +1,117 @@
 // app/layout.tsx
-import { Metadata } from 'next';
+import { Metadata, Viewport } from 'next';
 import { Public_Sans } from 'next/font/google';
 
-import "govuk-frontend/govuk-frontend.min.css"; 
-import "@/app/globals.css"; 
+import "govuk-frontend/govuk-frontend.min.css";
+import "@/app/globals.css";
 
 import { ClientLayoutWrapper } from "./ClientLayoutWrapper";
 
-// Configure Public Sans Font with CSS Variable binding
 const publicSans = Public_Sans({
   subsets: ['latin'],
   display: 'swap',
   variable: '--font-public-sans',
 });
 
-// =============================================================
-// OPEN GRAPH / SOCIAL IMAGE CONFIGURATION
-// =============================================================
-// CURRENT SETUP (Static images - Recommended for Vercel free/pro plan)
-// - Using static files: app/opengraph-image.webp + app/twitter-image.webp
-// - This avoids the Edge Function size limit (1 MB on Vercel)
-//
-// FUTURE REVERSION (when deploying on Cloudflare with 25 MB limit):
-// 1. Rename `app/opengraph-image2.tsx` back to `app/opengraph-image.tsx`
-// 2. Delete or rename `app/opengraph-image.webp` and `app/twitter-image.webp`
-// 3. Comment out or remove the `images` arrays below (lines with openGraph.images and twitter.images)
-// 4. The dynamic file will then automatically take over
-// =============================================================
+const SITE_URL = 'https://www.citizenguide.ke';
+const SITE_NAME = 'CitizenGuide.KE';
+const DEFAULT_TITLE = 'CitizenGuide.KE — Informational guide to Kenyan governance';
+const DEFAULT_DESCRIPTION =
+  'Find clear, factual information about the Government of Kenya — institutions, leaders, counties, public services, elections, and the Constitution of Kenya 2010.';
+
+/**
+ * Default social share image: branded card with site logo.
+ * Absolute URL (via metadataBase) so WhatsApp, Facebook, LinkedIn, X can fetch it.
+ * File is ~13KB — well under Vercel limits (previous assets exceeded 1MB).
+ */
+const OG_IMAGE = {
+  url: '/og-image.webp',
+  width: 1200,
+  height: 630,
+  alt: 'CitizenGuide.KE — Your guide to Kenyan governance',
+  type: 'image/webp' as const,
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  themeColor: '#047857',
+};
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
+
   title: {
-    default: 'Citizen Guide Kenya - Informational Guide for Kenyans',
-    template: '%s | Citizen Guide Kenya',
+    default: DEFAULT_TITLE,
+    template: `%s | ${SITE_NAME}`,
   },
-  description: 'Your comprehensive, easy-to-use informational guide to Kenyan governance, institutions, constitution, counties, and public services.',
-  metadataBase: new URL('https://www.citizenguide.ke'),
+  description: DEFAULT_DESCRIPTION,
+  applicationName: SITE_NAME,
+  authors: [{ name: SITE_NAME, url: SITE_URL }],
+  creator: SITE_NAME,
+  publisher: SITE_NAME,
+  category: 'government',
+  keywords: [
+    'Kenya government',
+    'Constitution of Kenya',
+    'counties',
+    'public services',
+    'elections',
+    'IEBC',
+    'Parliament of Kenya',
+    'cabinet',
+    'CitizenGuide',
+    'civic information',
+  ],
+
   alternates: {
     canonical: '/',
+    // AI / LLM discovery file (also at /llms.txt)
+    types: {
+      'text/plain': [{ url: '/llms.txt', title: 'llms.txt' }],
+    },
   },
 
-  // === OPEN GRAPH (Facebook, LinkedIn, WhatsApp, etc.) ===
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+      'max-video-preview': -1,
+    },
+  },
+
+  // Open Graph — GOV.UK-style centralized template defaults
   openGraph: {
-    title: 'Citizen Guide Kenya - Informational Guide for Kenyans',
-    description: 'Access the Kenyan Constitution, County records, Parliamentary Acts, and step-by-step public service guides seamlessly.',
-    url: 'https://www.citizenguide.ke',
-    siteName: 'Citizen Guide Kenya',
-    locale: 'en_KE',
     type: 'website',
-    
-    // CURRENT: Static image (explicit for clarity)
-    images: [
-      {
-        url: '/opengraph-image.webp',
-        width: 1200,
-        height: 630,
-        alt: 'Citizen Guide Kenya - Your Guide to Kenyan Governance',
-      },
-    ],
+    locale: 'en_KE',
+    url: SITE_URL,
+    siteName: SITE_NAME,
+    title: DEFAULT_TITLE,
+    description: DEFAULT_DESCRIPTION,
+    images: [OG_IMAGE],
   },
 
-  // === TWITTER / X CARD ===
+  // X / Twitter
   twitter: {
     card: 'summary_large_image',
-    title: 'Citizen Guide Kenya',
-    description: 'Your ultimate informational dashboard for Kenyan governance and public services.',
-    
-    // CURRENT: Static image
-    images: ['/twitter-image.webp'],
+    title: SITE_NAME,
+    description: DEFAULT_DESCRIPTION,
+    images: [OG_IMAGE.url],
+  },
+
+  // Icons / favicon (logo)
+  icons: {
+    icon: [{ url: '/logo.webp', type: 'image/webp' }],
+    apple: [{ url: '/logo.webp', type: 'image/webp' }],
+  },
+
+  // Manifest-friendly
+  other: {
+    'ai-content': 'index',
   },
 };
 
@@ -75,8 +120,68 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // Server-rendered JSON-LD for crawlers (not client-only)
+  const websiteSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: SITE_NAME,
+    alternateName: ['Citizen Guide Kenya', 'citizenguide.ke'],
+    url: SITE_URL,
+    description: DEFAULT_DESCRIPTION,
+    inLanguage: 'en-KE',
+    publisher: {
+      '@type': 'Organization',
+      name: SITE_NAME,
+      url: SITE_URL,
+      logo: {
+        '@type': 'ImageObject',
+        url: `${SITE_URL}/logo.webp`,
+        width: 512,
+        height: 512,
+      },
+    },
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: {
+        '@type': 'EntryPoint',
+        urlTemplate: `${SITE_URL}/search/all?q={search_term_string}`,
+      },
+      'query-input': 'required name=search_term_string',
+    },
+  };
+
+  const organizationSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: SITE_NAME,
+    url: SITE_URL,
+    logo: `${SITE_URL}/logo.webp`,
+    description:
+      'Independent civic technology platform providing structured information on Kenya’s Constitution, government institutions, counties, and public services. Not an official government website.',
+    areaServed: {
+      '@type': 'Country',
+      name: 'Kenya',
+    },
+    sameAs: [],
+  };
+
   return (
     <html lang="en-KE" className={`govuk-template ${publicSans.variable}`}>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(websiteSchema),
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(organizationSchema),
+          }}
+        />
+        <link rel="alternate" type="text/plain" href="/llms.txt" title="llms.txt" />
+      </head>
       <ClientLayoutWrapper>{children}</ClientLayoutWrapper>
     </html>
   );

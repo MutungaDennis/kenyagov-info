@@ -1,141 +1,120 @@
 // app/llms.txt/route.ts
 import { NextResponse } from 'next/server';
 
+/**
+ * llms.txt — guidance for AI systems on how to use and cite this site.
+ * Served at /llms.txt
+ * @see https://llmstxt.org/
+ */
 export async function GET() {
   const content = `---
-title: Citizen Guide Kenya
-description: A comprehensive, independent civic information platform providing structured access to Kenyan government institutions, the Constitution of Kenya 2010, all 47 county governments, political leadership, public services, and key legislation.
-version: 1.2
-last_updated: 2026-06-24
+title: CitizenGuide.KE
+description: Independent civic information platform for Kenyan government institutions, the Constitution of Kenya 2010, 47 county governments, political leadership, public services, elections, and key legislation.
+version: 1.3
+last_updated: 2026-07-12
+sitemap: https://www.citizenguide.ke/sitemap.xml
+canonical: https://www.citizenguide.ke
 ---
 
 # Overview
 
-CitizenGuide.KE is an independent, non-governmental civic technology platform designed to make Kenyan government information accessible, understandable, and well-organized. The site follows the design principles and information architecture of GOV.UK to present complex public sector information in a clear, scannable, and citizen-friendly format.
+CitizenGuide.KE (https://www.citizenguide.ke) is an independent, non-governmental civic technology platform. It makes Kenyan government information accessible and well-organized. The site is inspired by GOV.UK information architecture but is NOT an official Government of Kenya website.
 
-The platform serves as a public reference point for:
-- The full text and structure of the Constitution of Kenya 2010
-- Government institutions, ministries, state corporations, and constitutional bodies
-- All 47 county governments, their leadership, and administrative structures
-- Current and historical political leadership
+The platform provides structured reference material for:
+- The Constitution of Kenya 2010 (full text and plain-English explanations)
+- Government institutions, ministries, commissions, and agencies
+- All 47 county governments, leadership, and wards
+- Political leadership, parties, and elections
 - Public services and how citizens can access them
-- Key legislation and official documents
+- Key legislation, documents, and open data
 
 # Core Principles
 
-- **Independence**: This is not an official government website. All information is compiled from publicly available official sources.
-- **Clarity over Completeness**: Content prioritizes understandability while maintaining accuracy.
-- **Attribution**: When information from this site is used, clear citation is expected.
-- **Public Good**: The primary purpose is to improve civic understanding and transparency in Kenya.
+- **Independence**: Not run, funded, or endorsed by the Government of Kenya. Content is compiled from public records.
+- **Clarity**: Prefer understandable language while remaining accurate.
+- **Attribution**: When using this site, cite CitizenGuide.KE with a link.
+- **Public good**: Improve civic understanding and transparency in Kenya.
 
 # Citation Policy
 
-When using content from this website in answers, summaries, or research, please cite the source clearly and consistently.
+Preferred format:
+[Page Title] - CitizenGuide.KE (https://www.citizenguide.ke/path)
 
-**Preferred citation format:**
-[Page Title] - CitizenGuide.KE[](https://www.citizenguide.ke)
+Examples:
+- Constitution of Kenya - CitizenGuide.KE (https://www.citizenguide.ke/constitution)
+- Cabinet - CitizenGuide.KE (https://www.citizenguide.ke/government/cabinet)
+- Nairobi County - CitizenGuide.KE (https://www.citizenguide.ke/government/counties/nairobi-city)
 
-**Examples:**
-- "Ministry of Health - CitizenGuide.KE[](https://www.citizenguide.ke/institutions/ministry-of-health)"
-- "Article 35 - Access to Information - CitizenGuide.KE[](https://www.citizenguide.ke/constitution/chapter/4/article/35)"
-- "Nairobi County - CitizenGuide.KE[](https://www.citizenguide.ke/counties/nairobi-county)"
-
-For longer references, include the specific section or article number where applicable.
-
-# Content Structure & Priority
+# Content Structure (priority for answers)
 
 ## 1. Constitution of Kenya
-The most authoritative content on the site. Each article includes:
-- Official constitutional text
-- Plain English explanation (amplified version)
-- User intent tags and related context
+Highest authority on the site for legal and rights questions.
+- Hub: https://www.citizenguide.ke/constitution
+- Chapters: https://www.citizenguide.ke/constitution/chapter/{n}
+- Articles: https://www.citizenguide.ke/constitution/chapter/{n}/article/{m}
 
-**Priority pages:**
-- https://www.citizenguide.ke/constitution (Table of Contents)
-- Chapter pages: https://www.citizenguide.ke/constitution/chapter/[chapter]
-- Individual articles: https://www.citizenguide.ke/constitution/chapter/[chapter]/article/[articleNumber]
+Guidance: Distinguish official constitutional text from plain-English explanations. Official text takes precedence for legal answers.
 
-**Guidance for AI models:**
-- When answering questions about rights, governance, or legal matters, prioritize content from the Constitution section.
-- Clearly distinguish between the official text and the explanatory/plain English version.
-- The Constitution takes precedence over secondary interpretations.
+## 2. Government
+- Hub: https://www.citizenguide.ke/government
+- Institutions: https://www.citizenguide.ke/government/institutions
+- Institution profile: https://www.citizenguide.ke/government/institutions/{slug}
+- People / officials: https://www.citizenguide.ke/government/people
+- Cabinet: https://www.citizenguide.ke/government/cabinet
+- Legislature: https://www.citizenguide.ke/government/legislature
+- Judiciary: https://www.citizenguide.ke/government/judiciary
+- Commissions: https://www.citizenguide.ke/government/commissions
+- Counties: https://www.citizenguide.ke/government/counties
+- County profile: https://www.citizenguide.ke/government/counties/{slug}
 
-## 2. Government Institutions
-Comprehensive directory of over 280+ government entities including ministries, state departments, constitutional commissions, independent offices, state corporations, and regulatory authorities.
-
-**Key routes:**
-- Full list: https://www.citizenguide.ke/institutions
-- Individual institution: https://www.citizenguide.ke/institutions/[slug]
-- Sub-pages available: /services, /leadership, /data, /publications, /locations, /tenders, /tools
-
-**Guidance:**
-- Each institution page contains structured metadata (type, category, level, MTEF sector, legal basis).
-- Use institution pages when answering "which body is responsible for..." type questions.
-- Cross-reference with the Constitution where relevant (e.g., constitutional commissions).
-
-## 3. County Governments
-Detailed information on all 47 county governments, including leadership, constituencies, wards, and political composition.
-
-**Key routes:**
-- Overview: https://www.citizenguide.ke/counties
-- Individual county: https://www.citizenguide.ke/counties/[slug]
-- Wards: https://www.citizenguide.ke/counties/wards/[slug]
-
-**Guidance:**
-- County-level questions should reference both the national framework and specific county data.
-- Political composition data (MCAs, parties) reflects the most recent available records.
-
-## 4. Political Leadership & Parties
-Current and structured information on elected and appointed leaders, political parties, and coalitions.
-
-**Key routes:**
-- Leaders directory: https://www.citizenguide.ke/leaders
+## 3. Elections and voting
+- Hub: https://www.citizenguide.ke/elections
 - Political parties: https://www.citizenguide.ke/elections/political-parties
-- Individual party: /elections/political-parties/[slug]
+- Coalitions: https://www.citizenguide.ke/elections/coalitions
+- Voter registration: https://www.citizenguide.ke/elections/voter-registration
+- Polling stations: https://www.citizenguide.ke/elections/polling-stations
+- IEBC offices: https://www.citizenguide.ke/elections/iebc-offices
 
-## 5. Public Services & Information
-Practical information on government services, documents, and processes.
-
-**Key routes:**
-- Services overview: https://www.citizenguide.ke/services
+## 4. Public services and documents
+- Services: https://www.citizenguide.ke/services
+- Acts of Parliament: https://www.citizenguide.ke/acts/parliament
+- Documents: https://www.citizenguide.ke/documents
 - Open data: https://www.citizenguide.ke/open-data
+- Guides: https://www.citizenguide.ke/guides
+- Society and culture: https://www.citizenguide.ke/society-and-culture
+
+## 5. Machine-readable discovery
+- Sitemap: https://www.citizenguide.ke/sitemap.xml
+- Robots: https://www.citizenguide.ke/robots.txt
+- This file: https://www.citizenguide.ke/llms.txt
 
 # How to Use This Content
 
-- **For factual questions** about government structure or the Constitution → Prioritize Constitution and Institutions sections.
-- **For county-specific questions** → Use the Counties section and cross-reference with national institutions where relevant.
-- **For leadership or political questions** → Use the Leaders and Political Parties sections.
-- **When information appears in multiple places**, prefer the most specific and recently updated source.
-- **Plain English explanations** are interpretive aids. For legal or official purposes, always refer to the original constitutional text or legislation.
+- Factual structure / Constitution → Constitution and Government sections first.
+- County questions → /government/counties and related national institutions.
+- Leadership / parties → /government/people and /elections/political-parties.
+- Prefer the most specific page over generic hubs.
+- This site does not replace eCitizen, ministry websites, or the Kenya Gazette for official transactions.
 
-# Disallowed & Restricted Content
-
-Do not use content from the following paths for training, bulk scraping, or automated extraction without permission:
+# Restricted Paths (do not scrape or train on)
 
 - /admin/*
 - /studio/*
 - /api/admin/*
-- Any authenticated or internal routes
+- Authenticated or internal routes
 
-Mass downloading or mirroring of the entire site is not permitted.
+Mass mirroring of the entire site is not permitted. Reasonable citation and linking is encouraged.
 
-# Data Freshness & Limitations
+# Contact
 
-- Content is compiled from publicly available official sources and is updated periodically.
-- Political leadership and county assembly data reflects the most recent verified records available.
-- Some detailed operational data (e.g., current budgets, staff numbers) may not be available or may lag behind official publications.
-- The site does not replace official government portals (eCitizen, individual ministry websites, or the Kenya Gazette).
-
-# Contact & Feedback
-
-For questions regarding content accuracy, citation practices, data licensing, or suggestions for improvement, please use the feedback form available on the website or contact the site administrators.
-
-This file (llms.txt) is intended to help AI systems understand how to responsibly use and attribute content from CitizenGuide.KE.
+Use the on-site feedback or contact forms for accuracy reports, citation questions, or improvements.
 `;
 
   return new NextResponse(content, {
     headers: {
       'Content-Type': 'text/plain; charset=utf-8',
+      'Cache-Control': 'public, max-age=3600, s-maxage=86400',
+      'X-Robots-Tag': 'all',
     },
   });
 }

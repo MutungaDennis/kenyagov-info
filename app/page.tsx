@@ -1,10 +1,40 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import HomeSearch from "@/components/site/HomeSearch";
 
-export const metadata = {
-  title: "Citizen Guide Kenya - Informational Guide for Kenyans",
+const SITE_URL = "https://www.citizenguide.ke";
+
+export const metadata: Metadata = {
+  title: {
+    absolute: "CitizenGuide.KE — Informational guide to Kenyan governance",
+  },
   description:
-    "Find clear, factual information about the Government of Kenya — institutions, leaders, counties, public services and the constitution.",
+    "Find clear, factual information about the Government of Kenya — institutions, leaders, counties, public services, elections, and the Constitution of Kenya 2010.",
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    title: "CitizenGuide.KE — Informational guide to Kenyan governance",
+    description:
+      "Find clear, factual information about the Government of Kenya — institutions, leaders, counties, public services and the constitution.",
+    url: SITE_URL,
+    type: "website",
+    images: [
+      {
+        url: "/og-image.webp",
+        width: 1200,
+        height: 630,
+        alt: "CitizenGuide.KE — Your guide to Kenyan governance",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "CitizenGuide.KE",
+    description:
+      "Find clear, factual information about the Government of Kenya — institutions, leaders, counties, public services and the constitution.",
+    images: ["/og-image.webp"],
+  },
 };
 
 /**

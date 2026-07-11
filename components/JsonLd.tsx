@@ -1,8 +1,8 @@
 // components/JsonLd.tsx
-'use client';
+// Server-friendly JSON-LD injector (no 'use client' — crawlers see it in HTML).
 
 interface JsonLdProps {
-  data: Record<string, any>;
+  data: Record<string, unknown> | Record<string, unknown>[];
 }
 
 export function JsonLd({ data }: JsonLdProps) {

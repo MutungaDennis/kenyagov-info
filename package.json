@@ -6,8 +6,10 @@
     "dev": "next dev --webpack",
     "build": "next build --webpack",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "generate:og": "node scripts/generate-og-image.mjs"
   },
+
   "dependencies": {
     "@ai-sdk/xai": "^3.0.97",
     "@openrouter/ai-sdk-provider": "^2.9.1",
