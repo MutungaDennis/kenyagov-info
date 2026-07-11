@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 
 /**
  * Homepage search island — client only for form state.
- * Surrounding homepage content is server-rendered.
+ * On small screens: full-width field + icon-only submit (GOV.UK style).
+ * On larger screens: field + labelled "Search" button.
  */
 export default function HomeSearch() {
   const router = useRouter();
@@ -19,7 +20,11 @@ export default function HomeSearch() {
   };
 
   return (
-    <form onSubmit={handleSearchSubmit} className="govuk-form-group" role="search">
+    <form
+      onSubmit={handleSearchSubmit}
+      className="govuk-form-group app-home-search"
+      role="search"
+    >
       <label className="govuk-label govuk-label--m" htmlFor="main-search">
         Search government entities, services or laws
       </label>
@@ -27,12 +32,13 @@ export default function HomeSearch() {
         For example: KRA, Constitution Article 47, passport or Nairobi County
       </div>
 
-      <div className="govuk-input__wrapper">
+      <div className="app-home-search__controls">
         <input
-          className="govuk-input"
+          className="govuk-input app-home-search__input"
           id="main-search"
           name="q"
           type="search"
+          enterKeyHint="search"
           autoComplete="off"
           aria-describedby="search-hint-text"
           value={query}
@@ -40,10 +46,39 @@ export default function HomeSearch() {
         />
         <button
           type="submit"
-          className="govuk-button"
+          className="govuk-button app-home-search__button"
           data-module="govuk-button"
+          aria-label="Search"
         >
-          Search
+          {/* Visible label on tablet/desktop; icon-only on small screens */}
+          <span className="app-home-search__button-text" aria-hidden="true">
+            Search
+          </span>
+          <svg
+            className="app-home-search__button-icon"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 27 27"
+            width="27"
+            height="27"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <circle
+              cx="12.016"
+              cy="11.016"
+              r="8.516"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="3"
+            />
+            <path
+              d="m19.5 18.5 5.5 5.5"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="3"
+              strokeLinecap="round"
+            />
+          </svg>
         </button>
       </div>
     </form>
