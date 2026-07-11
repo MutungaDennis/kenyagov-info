@@ -38,7 +38,8 @@ const politicsSections = [
 
 export default function PoliticsPage() {
   return (
-    <div className="govuk-width-container">
+  <>
+    
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
@@ -46,7 +47,7 @@ export default function PoliticsPage() {
         ]}
       />
 
-      <main className="govuk-main-wrapper">
+      
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-two-thirds">
             <span className="govuk-caption-xl">Governance & Democracy</span>
@@ -122,7 +123,9 @@ export default function PoliticsPage() {
 
         <LastUpdated published="2026-05-19" lastUpdated="2026-05-19" />
 
-      </main>
-    </div>
-  );
+      
+    
+  
+  </>
+);
 }

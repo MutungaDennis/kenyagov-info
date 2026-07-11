@@ -50,7 +50,8 @@ export default async function SenateHansard() {
   }
 
   return (
-    <div className="govuk-width-container">
+  <>
+    
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
@@ -60,7 +61,7 @@ export default async function SenateHansard() {
         ]}
       />
 
-      <main className="govuk-main-wrapper" id="main-content" role="main">
+      
         {/* Header */}
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-two-thirds">
@@ -160,7 +161,9 @@ export default async function SenateHansard() {
         <p className="govuk-body-s" style={{ color: "#505a5f" }}>
           Data sourced from official Hansard reports of the Senate of Kenya.
         </p>
-      </main>
-    </div>
-  );
+      
+    
+  
+  </>
+);
 }

@@ -4,7 +4,6 @@ import { createClient } from 'next-sanity';
 import { PortableText } from '@portabletext/react';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import GovUKBreadcrumbs from '@/components/govuk/Breadcrumbs';
-import GovUKFeedback from '@/components/govuk/Feedback';
 
 const sanityClient = createClient({
   projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || '',
@@ -73,7 +72,8 @@ export default async function DailySittingPage({ params }: PageProps) {
 
   if (!sitting) {
     return (
-      <div className="govuk-width-container">
+  <>
+      
         <GovUKBreadcrumbs items={[
           { text: 'Home', href: '/' },
           { text: 'Legislature', href: '/legislature' },
@@ -81,18 +81,21 @@ export default async function DailySittingPage({ params }: PageProps) {
           { text: house.replace('-', ' '), href: `/legislature/hansard/${house}` },
           { text: date, href: '' },
         ]} />
-        <main className="govuk-main-wrapper">
+        
           <h1 className="govuk-heading-xl">Sitting Not Found</h1>
           <p className="govuk-body">No Hansard record found for <strong>{house.replace('-', ' ')}</strong> on <strong>{date}</strong>.</p>
-        </main>
-      </div>
-    );
+        
+      
+    
+  </>
+);
   }
 
   const enrichedContributions = await enrichContributions(sitting.contributions || []);
 
   return (
-    <div className="govuk-width-container">
+  <>
+    
       <GovUKBreadcrumbs items={[
         { text: 'Home', href: '/' },
         { text: 'Legislature', href: '/legislature' },
@@ -101,7 +104,7 @@ export default async function DailySittingPage({ params }: PageProps) {
         { text: new Date(sitting.sittingDate).toLocaleDateString('en-KE'), href: '' },
       ]} />
 
-      <main className="govuk-main-wrapper" id="main-content" role="main">
+      
         {/* Header */}
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-two-thirds">
@@ -241,11 +244,12 @@ export default async function DailySittingPage({ params }: PageProps) {
         </div>
 
         <div className="govuk-!-margin-top-8">
-          <GovUKFeedback />
         </div>
-      </main>
-    </div>
-  );
+      
+    
+  
+  </>
+);
 }
 
 // ============================================

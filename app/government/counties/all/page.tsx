@@ -3,7 +3,6 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-import GovUKFeedback from "@/components/govuk/Feedback";
 import { counties } from "@/data/counties";
 
 const regions = [
@@ -116,7 +115,8 @@ export default function AllCountiesPage() {
   };
 
   return (
-    <div className="govuk-width-container">
+  <>
+    
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
@@ -125,7 +125,7 @@ export default function AllCountiesPage() {
         ]}
       />
 
-      <main className="govuk-main-wrapper govuk-!-padding-top-2" id="main-content" role="main">
+      
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-two-thirds">
             <h1 className="govuk-heading-xl govuk-!-margin-bottom-4">Counties of Kenya</h1>
@@ -326,11 +326,12 @@ export default function AllCountiesPage() {
             )}
 
             <div className="govuk-!-margin-top-8">
-              <GovUKFeedback />
             </div>
           </div>
         </div>
-      </main>
-    </div>
-  );
+      
+    
+  
+  </>
+);
 }

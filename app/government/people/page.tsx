@@ -28,11 +28,11 @@ export default function GovernmentPeoplePage() {
   return (
     // Next.js requires a Suspense boundary when using useSearchParams()
     <Suspense fallback={
-      <div className="govuk-width-container">
-        <main className="govuk-main-wrapper">
+      
+        
           <p className="govuk-body">Loading directory...</p>
-        </main>
-      </div>
+        
+      
     }>
       <PeopleDirectoryContent />
     </Suspense>
@@ -273,7 +273,8 @@ function PeopleDirectoryContent() {
   };
 
   return (
-    <div className="govuk-width-container">
+  <>
+    
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
@@ -282,7 +283,7 @@ function PeopleDirectoryContent() {
         ]}
       />
 
-      <main className="govuk-main-wrapper" id="main-content" role="main">
+      
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-full">
             
@@ -437,7 +438,9 @@ function PeopleDirectoryContent() {
 
           </div>
         </div>
-      </main>
-    </div>
-  );
+      
+    
+  
+  </>
+);
 }

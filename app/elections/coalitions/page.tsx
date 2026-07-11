@@ -46,7 +46,8 @@ export default async function CoalitionsPage({
   // Error state
   if (error) {
     return (
-      <main className="govuk-width-container">
+  <>
+      
         <GovUKBreadcrumbs
           items={[
             { text: "Home", href: "/" },
@@ -65,8 +66,10 @@ export default async function CoalitionsPage({
         </div>
 
         
-      </main>
-    );
+      
+    
+  </>
+);
   }
 
   // Safe fallback
@@ -91,7 +94,8 @@ export default async function CoalitionsPage({
   const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
   return (
-    <main className="govuk-width-container">
+  <>
+    
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
@@ -222,6 +226,8 @@ export default async function CoalitionsPage({
       )}
 
       
-    </main>
-  );
+    
+  
+  </>
+);
 }

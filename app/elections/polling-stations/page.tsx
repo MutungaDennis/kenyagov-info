@@ -126,7 +126,8 @@ export default async function PollingStationsPage({
 
   if (error) {
     return (
-      <div className="govuk-width-container">
+  <>
+      
         <GovUKBreadcrumbs
           items={[
             { text: "Home", href: "/" },
@@ -134,16 +135,18 @@ export default async function PollingStationsPage({
             { text: "Polling stations", href: "/elections/polling-stations" },
           ]}
         />
-        <main className="govuk-main-wrapper" id="main-content" role="main">
+        
           <div className="govuk-error-summary" role="alert">
             <h2 className="govuk-error-summary__title">There is a problem</h2>
             <div className="govuk-error-summary__body">
               <p className="govuk-body">We could not load the polling station data. Please try again later.</p>
             </div>
           </div>
-        </main>
-      </div>
-    );
+        
+      
+    
+  </>
+);
   }
 
   const totalStations = count || 0;
@@ -197,7 +200,8 @@ export default async function PollingStationsPage({
   if (q) paginationParams.q = q;
 
   return (
-    <div className="govuk-width-container">
+  <>
+    
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
@@ -206,7 +210,7 @@ export default async function PollingStationsPage({
         ]}
       />
 
-      <main className="govuk-main-wrapper" id="main-content" role="main">
+      
         
         <h1 className="govuk-heading-xl">Polling stations</h1>
         
@@ -439,7 +443,7 @@ export default async function PollingStationsPage({
 
         <LastUpdated published="2026-01-01" lastUpdated="2026-07-02" />
 
-      </main>
+      
 
       <style>{`
         .app-election-year-selector {
@@ -585,6 +589,8 @@ export default async function PollingStationsPage({
           }
         }
       `}</style>
-    </div>
-  );
+    
+  
+  </>
+);
 }

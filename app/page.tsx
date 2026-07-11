@@ -17,21 +17,8 @@ export default function Home() {
 
   return (
     <>
-      <div className="govuk-width-container">
-        
-        {/* GOV.UK Phase Banner (BETA Disclosure Panel) */}
-        <div className="govuk-phase-banner">
-          <p className="govuk-phase-banner__content">
-            <strong className="govuk-tag govuk-phase-banner__content__tag">BETA</strong>
-            <span className="govuk-phase-banner__text">
-              This website is in early development. Your feedback helps us improve it.{' '}
-              <Link href="/feedback" className="govuk-link">Give feedback</Link>
-            </span>
-          </p>
-        </div>
-
-        {/* Hero using GOV.UK classes only */}
-        <div className="govuk-!-padding-top-6 govuk-!-padding-bottom-6 govuk-!-margin-bottom-8">
+        {/* Hero using GOV.UK classes only — phase banner is site-wide in layout */}
+        <div className="govuk-!-padding-top-2 govuk-!-padding-bottom-6 govuk-!-margin-bottom-8">
           <div className="govuk-grid-row">
             <div className="govuk-grid-column-two-thirds-from-desktop govuk-grid-column-full">
               <h1 className="govuk-heading-xl govuk-!-margin-bottom-4">
@@ -311,7 +298,7 @@ export default function Home() {
           </div>
         </div>
         
-      </div>
+      
 
     </>
   );

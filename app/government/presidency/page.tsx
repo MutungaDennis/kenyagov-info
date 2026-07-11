@@ -4,7 +4,8 @@ import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 
 export default function PresidencyPage() {
   return (
-    <div className="govuk-width-container">
+  <>
+    
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
@@ -13,7 +14,7 @@ export default function PresidencyPage() {
         ]}
       />
 
-      <main className="govuk-main-wrapper" id="main-content" role="main">
+      
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-two-thirds">
             
@@ -350,7 +351,9 @@ export default function PresidencyPage() {
             </aside>
           </div>
         </div>
-      </main>
-    </div>
-  );
+      
+    
+  
+  </>
+);
 }

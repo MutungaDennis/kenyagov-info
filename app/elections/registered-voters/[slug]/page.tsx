@@ -51,7 +51,8 @@ export default async function PollingStationDetailPage({ params }: PageProps) {
   const wardCode = (station.wards as any)?.ward_code || "—";
 
   return (
-    <div className="govuk-width-container">
+  <>
+    
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
@@ -61,7 +62,7 @@ export default async function PollingStationDetailPage({ params }: PageProps) {
         ]}
       />
 
-      <main className="govuk-main-wrapper govuk-!-padding-top-2" id="main-content" role="main">
+      
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-two-thirds">
             
@@ -174,7 +175,9 @@ export default async function PollingStationDetailPage({ params }: PageProps) {
         </div>
 
         
-      </main>
-    </div>
-  );
+      
+    
+  
+  </>
+);
 }

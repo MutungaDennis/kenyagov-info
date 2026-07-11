@@ -1,5 +1,4 @@
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-import GovUKFeedback from "@/components/govuk/Feedback";
 import LastUpdated from "@/components/govuk/LastUpdated";
 
 export const metadata = {
@@ -10,7 +9,8 @@ export const metadata = {
 
 export default function ByElectionsPage() {
   return (
-    <main className="govuk-width-container">
+    <>
+    
 
       {/* BREADCRUMBS */}
       <GovUKBreadcrumbs
@@ -170,8 +170,9 @@ export default function ByElectionsPage() {
       />
 
       {/* FEEDBACK */}
-      <GovUKFeedback />
 
-    </main>
-  );
+    
+  
+    </>
+);
 }

@@ -3,7 +3,6 @@
 import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-import GovUKFeedback from "@/components/govuk/Feedback";
 import { nationalAssemblyMembers, type Member } from "@/data/national-assembly-members";
 
 const ITEMS_PER_PAGE = 50;
@@ -75,7 +74,8 @@ export default function NationalAssemblyMembersPage() {
   };
 
   return (
-    <div className="govuk-width-container">
+  <>
+    
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
@@ -85,7 +85,7 @@ export default function NationalAssemblyMembersPage() {
         ]}
       />
 
-      <main className="govuk-main-wrapper govuk-!-padding-top-2" id="main-content" role="main">
+      
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-full">
             
@@ -361,10 +361,11 @@ export default function NationalAssemblyMembersPage() {
               </div>
             )}
 
-            <GovUKFeedback />
           </div>
         </div>
-      </main>
-    </div>
-  );
+      
+    
+  
+  </>
+);
 }

@@ -30,7 +30,8 @@ export default async function CulturalCalendarPage() {
   const quarters: Array<'Q1' | 'Q2' | 'Q3' | 'Q4'> = ['Q1', 'Q2', 'Q3', 'Q4']
 
   return (
-    <div className="govuk-width-container">
+    <>
+    
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
@@ -39,7 +40,7 @@ export default async function CulturalCalendarPage() {
         ]}
       />
 
-      <main className="govuk-main-wrapper" id="main-content" role="main">
+      
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-two-thirds">
             
@@ -210,7 +211,7 @@ export default async function CulturalCalendarPage() {
             </aside>
           </div>
         </div>
-      </main>
+      
 
       <style>{`
         .app-cultural-event-upcoming {
@@ -250,6 +251,8 @@ export default async function CulturalCalendarPage() {
           text-decoration-thickness: 3px;
         }
       `}</style>
-    </div>
-  )
+    
+  
+    </>
+)
 }

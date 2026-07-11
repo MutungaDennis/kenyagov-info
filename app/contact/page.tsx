@@ -103,7 +103,8 @@ export default function ContactPage() {
   // ==================== SUCCESS SCREEN ====================
   if (submissionState?.success) {
     return (
-      <div className="govuk-width-container">
+  <>
+      
         <GovUKBreadcrumbs
           items={[
             { text: "Home", href: "/" },
@@ -111,7 +112,7 @@ export default function ContactPage() {
           ]}
         />
 
-        <main className="govuk-main-wrapper" id="main-content" role="main">
+        
           <div className="govuk-grid-row">
             <div className="govuk-grid-column-two-thirds">
               <div
@@ -137,16 +138,19 @@ export default function ContactPage() {
               </div>
             </div>
           </div>
-        </main>
-      </div>
-    );
+        
+      
+    
+  </>
+);
   }
 
   // ==================== FORM ====================
   const isMessageInvalid = submissionState?.errorType === "validation" && charsRemaining < 0;
 
   return (
-    <div className="govuk-width-container">
+  <>
+    
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
@@ -154,7 +158,7 @@ export default function ContactPage() {
         ]}
       />
 
-      <main className="govuk-main-wrapper" id="main-content" role="main">
+      
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-two-thirds">
             {/* Error Summary */}
@@ -297,7 +301,9 @@ export default function ContactPage() {
 
           </div>
         </div>
-      </main>
-    </div>
-  );
+      
+    
+  
+  </>
+);
 }

@@ -58,7 +58,8 @@ export default function HeritageSitesPage() {
   }
 
   return (
-    <div className="govuk-width-container">
+    <>
+    
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
@@ -67,7 +68,7 @@ export default function HeritageSitesPage() {
         ]}
       />
 
-      <main className="govuk-main-wrapper" id="main-content" role="main">
+      
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-two-thirds">
             
@@ -237,7 +238,7 @@ export default function HeritageSitesPage() {
             </aside>
           </div>
         </div>
-      </main>
+      
 
       <style>{`
         .app-heritage-filters {
@@ -294,6 +295,8 @@ export default function HeritageSitesPage() {
           }
         }
       `}</style>
-    </div>
-  )
+    
+  
+    </>
+)
 }

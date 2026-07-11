@@ -4,7 +4,8 @@ import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 
 export default function PrivacyPage() {
   return (
-    <div className="govuk-width-container">
+    <>
+    
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
@@ -12,7 +13,7 @@ export default function PrivacyPage() {
         ]}
       />
 
-      <main className="govuk-main-wrapper" id="main-content" role="main">
+      
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-two-thirds">
             
@@ -250,7 +251,9 @@ export default function PrivacyPage() {
             </aside>
           </div>
         </div>
-      </main>
-    </div>
-  );
+      
+    
+  
+    </>
+);
 }

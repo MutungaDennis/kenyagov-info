@@ -217,7 +217,8 @@ export default async function SearchResultsPage({
   }
 
   return (
-    <div className="govuk-width-container">
+  <>
+    
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
@@ -225,7 +226,7 @@ export default async function SearchResultsPage({
         ]}
       />
 
-      <main className="govuk-main-wrapper govuk-!-padding-top-2" id="main-content" role="main">
+      
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-full">
             <h1 className="govuk-heading-l govuk-!-margin-bottom-4">Search Results</h1>
@@ -388,8 +389,10 @@ export default async function SearchResultsPage({
             
           </div>
         </div>
-      </main>
-    </div>
-  );
+      
+    
+  
+  </>
+);
 }
 

@@ -2,7 +2,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-import GovUKFeedback from "@/components/govuk/Feedback";
 
 interface SearchParams {
   q?: string;
@@ -42,14 +41,14 @@ export default async function PoliticalPartiesPage({
 
   if (error) {
     return (
-      <div className="govuk-width-container">
+      
         <div className="govuk-error-summary" role="alert">
           <h2 className="govuk-error-summary__title">There is a problem</h2>
           <div className="govuk-error-summary__body">
             <p className="govuk-body">Could not load political parties. Please try again later.</p>
           </div>
         </div>
-      </div>
+      
     );
   }
 
@@ -87,7 +86,8 @@ export default async function PoliticalPartiesPage({
   const hasActiveFilters = q || coalitionFilter;
 
   return (
-    <div className="govuk-width-container">
+  <>
+    
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
@@ -96,7 +96,7 @@ export default async function PoliticalPartiesPage({
         ]}
       />
 
-      <main className="govuk-main-wrapper" id="main-content" role="main">
+      
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-two-thirds">
             <h1 className="govuk-heading-xl">Political parties in Kenya</h1>
@@ -230,8 +230,7 @@ export default async function PoliticalPartiesPage({
           </p>
         </div>
 
-        <GovUKFeedback />
-      </main>
+      
 
       <style>{`
         .app-party-filters {
@@ -318,6 +317,8 @@ export default async function PoliticalPartiesPage({
           }
         }
       `}</style>
-    </div>
-  );
+    
+  
+  </>
+);
 }

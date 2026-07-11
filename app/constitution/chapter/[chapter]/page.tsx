@@ -63,14 +63,15 @@ export default async function ConstitutionChapterPage({ params }: Props) {
   };
 
   return (
-    <div className="govuk-width-container">
+  <>
+    
       <GovUKBreadcrumbs items={breadcrumbs} />
 
       {/* Schema.org Structured Data */}
       <JsonLd data={chapterSchema} />
       <JsonLd data={breadcrumbSchema} />
 
-      <main className="govuk-main-wrapper" id="main-content" role="main">
+      
         
         <div className="govuk-!-margin-bottom-4">
           <span className="govuk-caption-m">
@@ -163,7 +164,7 @@ export default async function ConstitutionChapterPage({ params }: Props) {
 
         </div>
 
-      </main>
+      
 
       <style dangerouslySetInnerHTML={{__html: `
         .govuk-link--no-underline { text-decoration: none !important; color: #1d70b8 !important; }
@@ -185,6 +186,8 @@ export default async function ConstitutionChapterPage({ params }: Props) {
           .mobile-only-navigation { display: none !important; }
         }
       `}} />
-    </div>
-  );
+    
+  
+  </>
+);
 }

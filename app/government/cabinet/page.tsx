@@ -11,7 +11,8 @@ import {
 
 export default function CabinetPage() {
   return (
-    <div className="govuk-width-container">
+    <>
+    
       {/* Updated to reflect the Kenyan contextual URL pathing */}
       <GovUKBreadcrumbs
         items={[
@@ -21,7 +22,7 @@ export default function CabinetPage() {
         ]}
       />
 
-      <main className="govuk-main-wrapper" id="main-content" role="main">
+      
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-two-thirds">
             
@@ -150,7 +151,9 @@ export default function CabinetPage() {
 
           </div>
         </div>
-      </main>
-    </div>
-  );
+      
+    
+  
+    </>
+);
 }

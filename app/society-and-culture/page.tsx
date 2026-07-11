@@ -59,7 +59,8 @@ export default function SocietyAndCulturePage() {
   ];
 
   return (
-    <div className="govuk-width-container">
+    <>
+    
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
@@ -67,7 +68,7 @@ export default function SocietyAndCulturePage() {
         ]}
       />
 
-      <main className="govuk-main-wrapper" id="main-content" role="main">
+      
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-two-thirds">
             <h1 className="govuk-heading-xl">Society and culture</h1>
@@ -200,7 +201,7 @@ export default function SocietyAndCulturePage() {
             </aside>
           </div>
         </div>
-      </main>
+      
 
       <style>{`
         .app-toc {
@@ -271,6 +272,8 @@ export default function SocietyAndCulturePage() {
           }
         }
       `}</style>
-    </div>
-  );
+    
+  
+    </>
+);
 }

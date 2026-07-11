@@ -12,7 +12,8 @@ export default function Vision2030Page() {
   const [activeSection, setActiveSection] = useState<VisionSection>('overview');
 
   return (
-    <div className="govuk-width-container">
+  <>
+    
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
@@ -22,7 +23,7 @@ export default function Vision2030Page() {
       />
 
       {/* Reduced padding wrapper to optimize vertical height for smartphone layouts */}
-      <main className="govuk-main-wrapper govuk-!-padding-top-2" id="main-content" role="main">
+      
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -210,7 +211,9 @@ export default function Vision2030Page() {
         </div>
 
         
-      </main>
-    </div>
-  );
+      
+    
+  
+  </>
+);
 }

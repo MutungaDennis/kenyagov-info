@@ -32,7 +32,8 @@ export default async function OpenDataPage() {
   });
 
   return (
-    <div className="govuk-width-container">
+    <>
+    
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
@@ -40,7 +41,7 @@ export default async function OpenDataPage() {
         ]}
       />
 
-      <main className="govuk-main-wrapper" id="main-content" role="main">
+      
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-two-thirds">
             
@@ -376,7 +377,9 @@ export default async function OpenDataPage() {
             </aside>
           </div>
         </div>
-      </main>
-    </div>
-  );
+      
+    
+  
+    </>
+);
 }

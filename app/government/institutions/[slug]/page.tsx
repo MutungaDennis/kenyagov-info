@@ -121,29 +121,32 @@ export default function InstitutionProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="govuk-width-container">
-        <main className="govuk-main-wrapper">
+      
+        
           <p className="govuk-body">Loading institution profile...</p>
-        </main>
-      </div>
+        
+      
     );
   }
 
   if (error || !institution) {
     return (
-      <div className="govuk-width-container">
+  <>
+      
         <GovUKBreadcrumbs items={[
           { text: "Home", href: "/" },
           { text: "Government", href: "/government" },
           { text: "Institutions", href: "/government/institutions" },
         ]} />
-        <main className="govuk-main-wrapper">
+        
           <h1 className="govuk-heading-xl">Page not found</h1>
           <p className="govuk-body">The institution you are looking for does not exist or has been removed.</p>
           <Link href="/government/institutions" className="govuk-link">Return to all institutions</Link>
-        </main>
-      </div>
-    );
+        
+      
+    
+  </>
+);
   }
 
   const currentLeaders = institution.institution_leaders?.filter((l: any) => l.is_current) || [];
@@ -151,7 +154,8 @@ export default function InstitutionProfilePage() {
   const otherLocations = institution.institution_locations?.filter((l: any) => !l.is_headquarters) || [];
 
   return (
-    <div className="govuk-width-container">
+  <>
+    
       <GovUKBreadcrumbs items={[
         { text: "Home", href: "/" },
         { text: "Government", href: "/government" },
@@ -160,7 +164,7 @@ export default function InstitutionProfilePage() {
         { text: institution.name },
       ]} />
 
-      <main className="govuk-main-wrapper" id="main-content" role="main">
+      
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-two-thirds">
 
@@ -375,7 +379,9 @@ export default function InstitutionProfilePage() {
             </aside>
           </div>
         </div>
-      </main>
-    </div>
-  );
+      
+    
+  
+  </>
+);
 }

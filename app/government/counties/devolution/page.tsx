@@ -5,7 +5,8 @@ import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 
 export default function DevolutionPage() {
   return (
-    <div className="govuk-width-container">
+  <>
+    
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
@@ -15,7 +16,7 @@ export default function DevolutionPage() {
       />
 
       {/* Tightened page padding wrapper to pull layout upwards */}
-      <main className="govuk-main-wrapper govuk-!-padding-top-2" id="main-content" role="main">
+      
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-two-thirds">
             
@@ -91,7 +92,9 @@ export default function DevolutionPage() {
             
           </div>
         </div>
-      </main>
-    </div>
-  );
+      
+    
+  
+  </>
+);
 }

@@ -5,7 +5,8 @@ import LastUpdated from "@/components/govuk/LastUpdated";
 
 export default function NationalSymbolsPage() {
   return (
-    <div className="govuk-width-container">
+  <>
+    
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
@@ -14,7 +15,7 @@ export default function NationalSymbolsPage() {
         ]}
       />
 
-      <main className="govuk-main-wrapper" id="main-content" role="main">
+      
         
         {/* Header */}
         <div className="govuk-grid-row">
@@ -327,7 +328,9 @@ export default function NationalSymbolsPage() {
             </aside>
           </div>
         </div>
-      </main>
-    </div>
-  );
+      
+    
+  
+  </>
+);
 }

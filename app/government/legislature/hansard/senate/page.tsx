@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { createClient } from "next-sanity";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-import GovUKFeedback from "@/components/govuk/Feedback";
 import { PortableText } from "@portabletext/react";
 
 const sanityClient = createClient({
@@ -70,7 +69,8 @@ export default async function SenateArchive({ searchParams }: PageProps) {
   ).sort((a, b) => b.localeCompare(a));
 
   return (
-    <div className="govuk-width-container">
+  <>
+    
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
@@ -80,7 +80,7 @@ export default async function SenateArchive({ searchParams }: PageProps) {
         ]}
       />
 
-      <main className="govuk-main-wrapper" id="main-content" role="main">
+      
         
         {/* Header */}
         <div className="govuk-grid-row">
@@ -214,9 +214,10 @@ export default async function SenateArchive({ searchParams }: PageProps) {
         </div>
 
         <div className="govuk-!-margin-top-8">
-          <GovUKFeedback />
         </div>
-      </main>
-    </div>
-  );
+      
+    
+  
+  </>
+);
 }

@@ -54,20 +54,16 @@ export default async function ServicesHubPage() {
   ]);
 
   return (
-    <div className="govuk-width-container">
-      <Suspense 
-        fallback={
-          <div className="govuk-main-wrapper">
-            <div className="govuk-grid-row">
-              <div className="govuk-grid-column-two-thirds">
-                <p className="govuk-body">Loading service directory...</p>
-              </div>
-            </div>
+    <Suspense
+      fallback={
+        <div className="govuk-grid-row">
+          <div className="govuk-grid-column-two-thirds">
+            <p className="govuk-body">Loading service directory...</p>
           </div>
-        }
-      >
-        <ServicesClientView initialServices={services} categories={categories} />
-      </Suspense>
-    </div>
+        </div>
+      }
+    >
+      <ServicesClientView initialServices={services} categories={categories} />
+    </Suspense>
   );
 }

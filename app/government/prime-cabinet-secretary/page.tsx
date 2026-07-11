@@ -4,7 +4,8 @@ import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 
 export default function PrimeCabinetSecretaryPage() {
   return (
-    <div className="govuk-width-container">
+    <>
+    
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
@@ -13,7 +14,7 @@ export default function PrimeCabinetSecretaryPage() {
         ]}
       />
 
-      <main className="govuk-main-wrapper" id="main-content" role="main">
+      
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-two-thirds">
             
@@ -159,7 +160,9 @@ export default function PrimeCabinetSecretaryPage() {
             </aside>
           </div>
         </div>
-      </main>
-    </div>
-  );
+      
+    
+  
+    </>
+);
 }

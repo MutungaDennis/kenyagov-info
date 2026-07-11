@@ -66,7 +66,8 @@ export default function GovernorsPage() {
   };
 
   return (
-    <div className="govuk-width-container">
+  <>
+    
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
@@ -75,7 +76,7 @@ export default function GovernorsPage() {
         ]}
       />
 
-      <main className="govuk-main-wrapper govuk-!-padding-top-2" id="main-content" role="main">
+      
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-full">
             
@@ -291,7 +292,9 @@ export default function GovernorsPage() {
             
           </div>
         </div>
-      </main>
-    </div>
-  );
+      
+    
+  
+  </>
+);
 }

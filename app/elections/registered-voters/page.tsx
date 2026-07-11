@@ -94,7 +94,8 @@ export default async function RegisteredVotersPage({
 
   if (error) {
     return (
-      <div className="govuk-width-container">
+  <>
+      
         <GovUKBreadcrumbs
           items={[
             { text: "Home", href: "/" },
@@ -102,16 +103,18 @@ export default async function RegisteredVotersPage({
             { text: "Registered voters", href: "/elections/registered-voters" },
           ]}
         />
-        <main className="govuk-main-wrapper" id="main-content" role="main">
+        
           <div className="govuk-error-summary" role="alert">
             <h2 className="govuk-error-summary__title">There is a problem</h2>
             <div className="govuk-error-summary__body">
               <p className="govuk-body">We could not load the polling station data. Please try again later.</p>
             </div>
           </div>
-        </main>
-      </div>
-    );
+        
+      
+    
+  </>
+);
   }
 
   const totalStations = count || 0;
@@ -150,7 +153,8 @@ export default async function RegisteredVotersPage({
   if (q) paginationParams.q = q;
 
   return (
-    <div className="govuk-width-container">
+  <>
+    
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
@@ -159,7 +163,7 @@ export default async function RegisteredVotersPage({
         ]}
       />
 
-      <main className="govuk-main-wrapper" id="main-content" role="main">
+      
         
         <h1 className="govuk-heading-xl">Registered voters and polling stations</h1>
         
@@ -345,7 +349,7 @@ export default async function RegisteredVotersPage({
 
         <LastUpdated published="2026-01-01" lastUpdated="2026-07-02" />
 
-      </main>
+      
 
       <style>{`
         .app-active-filters {
@@ -425,6 +429,8 @@ export default async function RegisteredVotersPage({
           }
         }
       `}</style>
-    </div>
-  );
+    
+  
+  </>
+);
 }

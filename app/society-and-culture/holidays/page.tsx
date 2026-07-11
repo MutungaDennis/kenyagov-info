@@ -84,7 +84,8 @@ export default function HolidaysPage() {
   const pastYears = useMemo(() => getPastYearsRange(2020), []);
 
   return (
-    <div className="govuk-width-container">
+  <>
+    
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
@@ -93,7 +94,7 @@ export default function HolidaysPage() {
         ]}
       />
 
-      <main className="govuk-main-wrapper" id="main-content" role="main">
+      
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-two-thirds">
             
@@ -307,7 +308,7 @@ export default function HolidaysPage() {
             </aside>
           </div>
         </div>
-      </main>
+      
 
       <style>{`
         .app-next-holiday-panel {
@@ -332,6 +333,8 @@ export default function HolidaysPage() {
           color: #ffffff;
         }
       `}</style>
-    </div>
-  );
+    
+  
+  </>
+);
 }

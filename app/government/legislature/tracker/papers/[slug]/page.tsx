@@ -2,7 +2,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "next-sanity";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-import GovUKFeedback from "@/components/govuk/Feedback";
 import { PortableText } from "@portabletext/react";
 
 const sanityClient = createClient({
@@ -125,7 +124,8 @@ export default async function PaperDetailPage({ params }: PageProps) {
   const hasDocuments = paper.documents && paper.documents.length > 0;
 
   return (
-    <div className="govuk-width-container">
+  <>
+    
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
@@ -136,7 +136,7 @@ export default async function PaperDetailPage({ params }: PageProps) {
         ]}
       />
 
-      <main className="govuk-main-wrapper" id="main-content" role="main">
+      
         {/* Header */}
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-two-thirds">
@@ -295,9 +295,10 @@ export default async function PaperDetailPage({ params }: PageProps) {
         </div>
 
         <div className="govuk-!-margin-top-8">
-          <GovUKFeedback />
         </div>
-      </main>
-    </div>
-  );
+      
+    
+  
+  </>
+);
 }

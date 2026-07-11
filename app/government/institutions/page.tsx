@@ -207,7 +207,8 @@ export default function GovernmentInstitutionsPage() {
 
   if (loading) {
     return (
-      <div className="govuk-width-container">
+  <>
+      
         <GovUKBreadcrumbs
           items={[
             { text: "Home", href: "/" },
@@ -215,15 +216,18 @@ export default function GovernmentInstitutionsPage() {
             { text: "Institutions", href: "/government/institutions" },
           ]}
         />
-        <main className="govuk-main-wrapper" id="main-content" role="main">
+        
           <p className="govuk-body">Loading institutions...</p>
-        </main>
-      </div>
-    );
+        
+      
+    
+  </>
+);
   }
 
   return (
-    <div className="govuk-width-container">
+  <>
+    
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
@@ -232,7 +236,7 @@ export default function GovernmentInstitutionsPage() {
         ]}
       />
 
-      <main className="govuk-main-wrapper" id="main-content" role="main">
+      
         {/* GOV.UK Style Layout: Title on left, content on right */}
         <div className="govuk-grid-row">
           {/* Left Sidebar - Large Title */}
@@ -477,7 +481,7 @@ export default function GovernmentInstitutionsPage() {
             )}
           </div>
         </div>
-      </main>
+      
 
       {/* CSS Styles */}
       <style jsx>{`
@@ -771,6 +775,8 @@ export default function GovernmentInstitutionsPage() {
           }
         }
       `}</style>
-    </div>
-  );
+    
+  
+  </>
+);
 }

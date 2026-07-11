@@ -139,7 +139,8 @@ export default async function PoliticalPartyPage({
     : party.name;
 
   return (
-    <div className="govuk-width-container">
+  <>
+    
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
@@ -149,7 +150,7 @@ export default async function PoliticalPartyPage({
         ]}
       />
 
-      <main className="govuk-main-wrapper" id="main-content" role="main">
+      
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-two-thirds">
             
@@ -387,7 +388,7 @@ export default async function PoliticalPartyPage({
             </aside>
           </div>
         </div>
-      </main>
+      
 
       <style>{`
         .app-party-tags {
@@ -397,6 +398,8 @@ export default async function PoliticalPartyPage({
           align-items: center;
         }
       `}</style>
-    </div>
-  );
+    
+  
+  </>
+);
 }

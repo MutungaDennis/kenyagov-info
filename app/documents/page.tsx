@@ -110,7 +110,8 @@ export default function NationalPolicyIndexPage() {
   };
 
   return (
-    <div className="govuk-width-container">
+  <>
+    
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
@@ -119,7 +120,7 @@ export default function NationalPolicyIndexPage() {
       />
 
       {/* Reduced padding wrapper to pull directory modules higher above the fold */}
-      <main className="govuk-main-wrapper govuk-!-padding-top-2" id="main-content" role="main">
+      
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-full">
             <h1 className="govuk-heading-l govuk-!-margin-bottom-2">National Policy &amp; Strategy Register</h1>
@@ -290,7 +291,9 @@ export default function NationalPolicyIndexPage() {
             
           </div>
         </div>
-      </main>
-    </div>
-  );
+      
+    
+  
+  </>
+);
 }

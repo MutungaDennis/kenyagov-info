@@ -112,7 +112,8 @@ export default async function PollingStationPage({
     : null;
 
   return (
-    <div className="govuk-width-container">
+  <>
+    
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
@@ -122,7 +123,7 @@ export default async function PollingStationPage({
         ]}
       />
 
-      <main className="govuk-main-wrapper" id="main-content" role="main">
+      
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-two-thirds">
             
@@ -336,7 +337,7 @@ export default async function PollingStationPage({
             </aside>
           </div>
         </div>
-      </main>
+      
 
       <style>{`
         .app-station-details {
@@ -364,6 +365,8 @@ export default async function PollingStationPage({
           border-radius: 2px;
         }
       `}</style>
-    </div>
-  );
+    
+  
+  </>
+);
 }

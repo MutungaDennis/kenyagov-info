@@ -58,7 +58,8 @@ export default function ParliamentActsListClient({ initialActs }: ParliamentActs
   }, [filteredActs]);
 
   return (
-    <div className="govuk-width-container">
+  <>
+    
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
@@ -66,7 +67,7 @@ export default function ParliamentActsListClient({ initialActs }: ParliamentActs
         ]}
       />
 
-      <main className="govuk-main-wrapper" id="main-content" role="main">
+      
         {/* Document Header Panel - Shrunk typography down to clean statutory sizes */}
         <div className="govuk-!-margin-bottom-4">
           <h1 className="govuk-heading-l govuk-!-margin-bottom-2" style={{ fontSize: "32px" }}>
@@ -212,7 +213,7 @@ export default function ParliamentActsListClient({ initialActs }: ParliamentActs
         </div>
 
        
-      </main>
+      
 
       {/* Global CSS Overrides for clean legislation element handling */}
       <style dangerouslySetInnerHTML={{__html: `
@@ -222,6 +223,8 @@ export default function ParliamentActsListClient({ initialActs }: ParliamentActs
         .govuk-link--no-underline:hover { text-decoration: underline !important; color: #003078 !important; }
         details[open] summary .summary-chevron { transform: rotate(90deg); display: inline-block; top: 4px !important; }
       `}} />
-    </div>
-  );
+    
+  
+  </>
+);
 }

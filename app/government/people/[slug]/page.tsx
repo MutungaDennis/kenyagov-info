@@ -97,18 +97,19 @@ export default function PersonProfilePage() {
   // Loading State
   if (isLoading) {
     return (
-      <div className="govuk-width-container">
-        <main className="govuk-main-wrapper">
+      
+        
           <p className="govuk-body">Loading profile...</p>
-        </main>
-      </div>
+        
+      
     );
   }
 
   // Error / 404 State
   if (error || !person) {
     return (
-      <div className="govuk-width-container">
+  <>
+      
         <GovUKBreadcrumbs
           items={[
             { text: "Home", href: "/" },
@@ -116,7 +117,7 @@ export default function PersonProfilePage() {
             { text: "People", href: "/government/people" },
           ]}
         />
-        <main className="govuk-main-wrapper">
+        
           <h1 className="govuk-heading-xl">Page not found</h1>
           <p className="govuk-body">
             The official you are looking for does not exist or has been removed.
@@ -124,9 +125,11 @@ export default function PersonProfilePage() {
           <Link href="/government/people" className="govuk-link">
             Return to all government officials
           </Link>
-        </main>
-      </div>
-    );
+        
+      
+    
+  </>
+);
   }
 
   // ==========================================
@@ -169,7 +172,8 @@ export default function PersonProfilePage() {
   };
 
   return (
-    <div className="govuk-width-container">
+  <>
+    
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
@@ -179,7 +183,7 @@ export default function PersonProfilePage() {
         ]}
       />
 
-      <main className="govuk-main-wrapper" id="main-content" role="main">
+      
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-two-thirds">
             
@@ -361,7 +365,9 @@ export default function PersonProfilePage() {
           </div>
 
         </div>
-      </main>
-    </div>
-  );
+      
+    
+  
+  </>
+);
 }

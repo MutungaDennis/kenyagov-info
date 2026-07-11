@@ -124,7 +124,7 @@ export default function ServicesClientView({ initialServices, categories }: Serv
     <div>
       <GovUKBreadcrumbs items={[{ text: "Home", href: "/" }]} />
 
-      <main className="govuk-main-wrapper govuk-!-padding-top-2" id="main-content" role="main">
+      
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-two-thirds">
             <h1 className="govuk-heading-xl govuk-!-margin-bottom-4">
@@ -348,7 +348,7 @@ export default function ServicesClientView({ initialServices, categories }: Serv
 
         </div>
       </div>
-      </main>
+      
     </div>
   );
 }

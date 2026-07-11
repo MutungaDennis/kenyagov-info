@@ -1,7 +1,6 @@
 import Link from 'next/link';
 //import GovUKBackLink from '@/components/govuk/BackLink';
 import GovUKBreadcrumbs from '@/components/govuk/Breadcrumbs';
-import GovUKFeedback from '@/components/govuk/Feedback';
 import { getGuideBySlug, getGuides } from '@/lib/sanity/client';
 import { PortableText } from '@portabletext/react';
 import type { Metadata } from 'next';
@@ -49,23 +48,21 @@ export default async function GuidePage({ params }: GuidePageProps) {
 
   if (!guide) {
     return (
-      <div className="govuk-width-container">
-        {/* <GovUKBackLink href="/guides" /> */}
-        <div className="govuk-error-summary">
-          <h2 className="govuk-error-summary__title">Guide not found</h2>
-          <div className="govuk-error-summary__body">
-            <p className="govuk-body">The guide you are looking for could not be found.</p>
-            <Link href="/guides" className="govuk-link">
-              Back to guides
-            </Link>
-          </div>
+      <div className="govuk-error-summary">
+        <h2 className="govuk-error-summary__title">Guide not found</h2>
+        <div className="govuk-error-summary__body">
+          <p className="govuk-body">The guide you are looking for could not be found.</p>
+          <Link href="/guides" className="govuk-link">
+            Back to guides
+          </Link>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="govuk-width-container">
+    <>
+    
       {/* <GovUKBackLink href="/guides" /> */}
 
       <GovUKBreadcrumbs
@@ -76,7 +73,7 @@ export default async function GuidePage({ params }: GuidePageProps) {
         ]}
       />
 
-      <main className="govuk-main-wrapper">
+      
         <article>
           <h1 className="govuk-heading-xl">{guide.title}</h1>
           
@@ -122,8 +119,9 @@ export default async function GuidePage({ params }: GuidePageProps) {
           )}
         </article>
 
-        <GovUKFeedback />
-      </main>
-    </div>
-  );
+      
+    
+  
+    </>
+);
 }

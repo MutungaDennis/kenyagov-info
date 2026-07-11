@@ -116,11 +116,11 @@ async function fetchSearchResults(activeTypes: string[]): Promise<SearchResult[]
 export default function SearchAllPage() {
   return (
     <Suspense fallback={
-      <div className="govuk-width-container">
-        <main className="govuk-main-wrapper">
+      
+        
           <p className="govuk-body">Loading search engine...</p>
-        </main>
-      </div>
+        
+      
     }>
       <SearchEngineContent />
     </Suspense>
@@ -219,7 +219,8 @@ function SearchEngineContent() {
     : 'Search all government content';
 
   return (
-    <div className="govuk-width-container">
+  <>
+    
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
@@ -227,7 +228,7 @@ function SearchEngineContent() {
         ]}
       />
 
-      <main className="govuk-main-wrapper" id="main-content" role="main">
+      
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-two-thirds">
             <h1 className="govuk-heading-xl govuk-!-margin-bottom-4">{pageTitle}</h1>
@@ -386,7 +387,9 @@ function SearchEngineContent() {
             )}
           </div>
         </div>
-      </main>
-    </div>
-  );
+      
+    
+  
+  </>
+);
 }

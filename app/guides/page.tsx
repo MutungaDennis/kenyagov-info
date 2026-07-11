@@ -21,7 +21,8 @@ export default async function GuidesPage() {
   const regularGuides = guides.filter((g: any) => !g.featured);
 
   return (
-    <div className="govuk-width-container">
+    <>
+    
       {/* <GovUKBackLink href="/" /> */}
 
       <GovUKBreadcrumbs
@@ -31,7 +32,7 @@ export default async function GuidesPage() {
         ]}
       />
 
-      <main className="govuk-main-wrapper">
+      
         <h1 className="govuk-heading-xl">Government Guides</h1>
         <p className="govuk-body-l">
           Step-by-step guides to help you navigate government services and procedures.
@@ -93,7 +94,9 @@ export default async function GuidesPage() {
         </section>
 
         
-      </main>
-    </div>
-  );
+      
+    
+  
+    </>
+);
 }

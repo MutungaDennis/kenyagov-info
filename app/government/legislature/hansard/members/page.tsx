@@ -98,7 +98,8 @@ export default async function FindMembersPage({ searchParams }: PageProps) {
   const baseUrl = buildBaseUrl();
 
   return (
-    <div className="govuk-width-container">
+  <>
+    
       <GovUKBreadcrumbs
         items={[
           { text: 'Home', href: '/' },
@@ -108,7 +109,7 @@ export default async function FindMembersPage({ searchParams }: PageProps) {
         ]}
       />
 
-      <main className="govuk-main-wrapper">
+      
         <h1 className="govuk-heading-l">Find Members of Parliament</h1>
         <p className="govuk-body">
           Search and filter Members of the National Assembly and Senate.
@@ -244,7 +245,9 @@ export default async function FindMembersPage({ searchParams }: PageProps) {
         <p className="govuk-body-s govuk-!-margin-top-6" style={{ color: '#505a5f' }}>
           Showing Members of the National Assembly and Senate. Data sourced from official parliamentary records.
         </p>
-      </main>
-    </div>
-  );
+      
+    
+  
+  </>
+);
 }

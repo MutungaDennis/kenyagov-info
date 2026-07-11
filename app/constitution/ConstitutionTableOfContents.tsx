@@ -120,7 +120,8 @@ export default function ConstitutionTableOfContents({
   };
 
   return (
-    <div className="govuk-width-container">
+  <>
+    
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
@@ -132,7 +133,7 @@ export default function ConstitutionTableOfContents({
       <JsonLd data={constitutionSchema} />
       <JsonLd data={breadcrumbSchema} />
 
-      <main className="govuk-main-wrapper" id="main-content" role="main">
+      
         {/* Header */}
         <div className="govuk-!-margin-bottom-4">
           <h1 className="govuk-heading-l govuk-!-margin-bottom-2">
@@ -294,7 +295,7 @@ export default function ConstitutionTableOfContents({
           </div>
         </div>
 
-      </main>
+      
 
       {/* CSS */}
       <style dangerouslySetInnerHTML={{
@@ -305,6 +306,8 @@ export default function ConstitutionTableOfContents({
           .govuk-link--no-underline:hover { text-decoration: underline !important; color: #003078 !important; }
         `
       }} />
-    </div>
-  );
+    
+  
+  </>
+);
 }

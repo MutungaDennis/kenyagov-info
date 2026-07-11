@@ -6,7 +6,8 @@ import LastUpdated from "@/components/govuk/LastUpdated";
 
 export default function NationalEventsPage() {
   return (
-    <div className="govuk-width-container">
+    <>
+    
       {/* GOV.UK Navigation Breadcrumbs */}
       <GovUKBreadcrumbs
         items={[
@@ -16,7 +17,7 @@ export default function NationalEventsPage() {
         ]}
       />
 
-      <main className="govuk-main-wrapper" id="main-content" role="main">
+      
         
         {/* HEADER SECTION */}
         <div className="govuk-grid-row govuk-!-margin-bottom-7">
@@ -151,7 +152,9 @@ export default function NationalEventsPage() {
           </div>
         </div>
 
-      </main>
-    </div>
-  );
+      
+    
+  
+    </>
+);
 }

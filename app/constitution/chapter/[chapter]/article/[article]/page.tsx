@@ -73,14 +73,15 @@ export default async function ConstitutionArticlePage({ params }: Props) {
   };
 
   return (
-    <div className="govuk-width-container">
+  <>
+    
       <GovUKBreadcrumbs items={breadcrumbs} />
 
       {/* Schema.org Structured Data */}
       <JsonLd data={articleSchema} />
       <JsonLd data={breadcrumbSchema} />
 
-      <main className="govuk-main-wrapper" id="main-content" role="main">
+      
         
         {/* Header */}
         <div className="govuk-!-margin-bottom-4">
@@ -255,7 +256,7 @@ export default async function ConstitutionArticlePage({ params }: Props) {
           </div>
         </div>
 
-      </main>
+      
 
       {/* CSS */}
       <style dangerouslySetInnerHTML={{
@@ -274,6 +275,8 @@ export default async function ConstitutionArticlePage({ params }: Props) {
           }
         `
       }} />
-    </div>
-  );
+    
+  
+  </>
+);
 }

@@ -33,7 +33,8 @@ export default async function WardAboutPage({ params }: AboutPageProps) {
   ]);
 
   return (
-    <div className="govuk-width-container">
+  <>
+    
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
@@ -43,7 +44,7 @@ export default async function WardAboutPage({ params }: AboutPageProps) {
         ]}
       />
 
-      <main className="govuk-main-wrapper govuk-!-padding-top-2" id="main-content" role="main">
+      
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-two-thirds">
             <h1 className="govuk-heading-l govuk-!-margin-bottom-2">{ward.name} Ward Details</h1>
@@ -185,7 +186,9 @@ export default async function WardAboutPage({ params }: AboutPageProps) {
             
           </div>
         </div>
-      </main>
-    </div>
-  );
+      
+    
+  
+  </>
+);
 }

@@ -12,7 +12,8 @@ export default function SessionalPaper2012Page() {
   const [activeSection, setActiveSection] = useState<SessionalSection>('overview');
 
   return (
-    <div className="govuk-width-container">
+  <>
+    
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
@@ -21,7 +22,7 @@ export default function SessionalPaper2012Page() {
         ]}
       />
 
-      <main className="govuk-main-wrapper govuk-!-padding-top-2" id="main-content" role="main">
+      
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-full">
             <span className="govuk-caption-l govuk-!-font-weight-bold govuk-!-text-colour-secondary">
@@ -188,7 +189,9 @@ export default function SessionalPaper2012Page() {
         </div>
 
         
-      </main>
-    </div>
-  );
+      
+    
+  
+  </>
+);
 }

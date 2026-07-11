@@ -4,7 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import GovUKSummaryList from "@/components/govuk/SummaryList";
-import GovUKFeedback from "@/components/govuk/Feedback";
 
 type SessionalSection = 'overview' | 'sap' | 'agriculture' | 'privatization' | 'legacy';
 
@@ -12,7 +11,8 @@ export default function SessionalPaper1986Page() {
   const [activeSection, setActiveSection] = useState<SessionalSection>('overview');
 
   return (
-    <div className="govuk-width-container">
+  <>
+    
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
@@ -21,7 +21,7 @@ export default function SessionalPaper1986Page() {
         ]}
       />
 
-      <main className="govuk-main-wrapper govuk-!-padding-top-2" id="main-content" role="main">
+      
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-full">
             <span className="govuk-caption-l govuk-!-font-weight-bold" style={{ textTransform: 'uppercase', color: '#505a5f' }}>
@@ -187,8 +187,9 @@ export default function SessionalPaper1986Page() {
           </div>
         </div>
 
-        <GovUKFeedback />
-      </main>
-    </div>
-  );
+      
+    
+  
+  </>
+);
 }

@@ -1,7 +1,6 @@
 import Link from "next/link";
 
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-import GovUKFeedback from "@/components/govuk/Feedback";
 import LastUpdated from "@/components/govuk/LastUpdated";
 
 const electionSections = [
@@ -45,7 +44,8 @@ const electionSections = [
 
 export default function ElectionsPage() {
   return (
-    <div className="govuk-width-container">
+    <>
+    
 
       {/* Breadcrumbs */}
       <GovUKBreadcrumbs
@@ -56,7 +56,7 @@ export default function ElectionsPage() {
         ]}
       />
 
-      <main className="govuk-main-wrapper">
+      
 
         {/* Page heading */}
         <div className="govuk-grid-row">
@@ -281,9 +281,10 @@ export default function ElectionsPage() {
               lastUpdated="2026-05-19"
             />
 
-        <GovUKFeedback />
 
-      </main>
-    </div>
-  );
+      
+    
+  
+    </>
+);
 }

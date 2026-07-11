@@ -1,11 +1,11 @@
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-import GovUKFeedback from "@/components/govuk/Feedback";
 import LastUpdated from "@/components/govuk/LastUpdated";
 import Link from "next/link";
 
 export default function VoterRegistrationPage() {
   return (
-    <main className="govuk-width-container">
+    <>
+    
 
       {/* BREADCRUMBS */}
       <GovUKBreadcrumbs
@@ -171,7 +171,8 @@ export default function VoterRegistrationPage() {
       />
 
       {/* FEEDBACK */}
-      <GovUKFeedback />
-    </main>
-  );
+    
+  
+    </>
+);
 }

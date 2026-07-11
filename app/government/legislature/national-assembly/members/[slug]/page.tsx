@@ -4,7 +4,6 @@ import { notFound, useParams } from "next/navigation";
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import GovUKSummaryList from "@/components/govuk/SummaryList";
-import GovUKFeedback from "@/components/govuk/Feedback";
 import PrintPageButton from "@/components/govuk/PrintPageButton";
 import { nationalAssemblyMembers } from "@/data/national-assembly-members";
 
@@ -27,7 +26,8 @@ export default function MemberProfilePage() {
   ];
 
   return (
-    <div className="govuk-width-container">
+  <>
+    
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
@@ -39,7 +39,7 @@ export default function MemberProfilePage() {
       />
 
       {/* Reduced layout padding top to maximize initial viewport height */}
-      <main className="govuk-main-wrapper govuk-!-padding-top-2" id="main-content" role="main">
+      
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-two-thirds">
             
@@ -103,10 +103,11 @@ export default function MemberProfilePage() {
               </Link>
             </div>
 
-            <GovUKFeedback />
           </div>
         </div>
-      </main>
-    </div>
-  );
+      
+    
+  
+  </>
+);
 }

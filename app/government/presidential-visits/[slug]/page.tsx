@@ -158,17 +158,18 @@ export default function PresidentialTripDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="govuk-width-container">
-        <main className="govuk-main-wrapper">
+      
+        
           <p className="govuk-body">Loading trip details...</p>
-        </main>
-      </div>
+        
+      
     );
   }
 
   if (error || !trip) {
     return (
-      <div className="govuk-width-container">
+  <>
+      
         <GovUKBreadcrumbs
           items={[
             { text: "Home", href: "/" },
@@ -176,7 +177,7 @@ export default function PresidentialTripDetailPage() {
             { text: "Presidential Visits", href: "/government/presidential-visits" },
           ]}
         />
-        <main className="govuk-main-wrapper">
+        
           <h1 className="govuk-heading-xl">Page not found</h1>
           <p className="govuk-body">
             The presidential trip you are looking for does not exist or has been removed.
@@ -184,13 +185,16 @@ export default function PresidentialTripDetailPage() {
           <Link href="/government/presidential-visits" className="govuk-link">
             Return to all presidential visits
           </Link>
-        </main>
-      </div>
-    );
+        
+      
+    
+  </>
+);
   }
 
   return (
-    <div className="govuk-width-container">
+  <>
+    
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
@@ -200,7 +204,7 @@ export default function PresidentialTripDetailPage() {
         ]}
       />
 
-      <main className="govuk-main-wrapper" id="main-content" role="main">
+      
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-two-thirds">
             
@@ -447,7 +451,9 @@ export default function PresidentialTripDetailPage() {
           </div>
 
         </div>
-      </main>
-    </div>
-  );
+      
+    
+  
+  </>
+);
 }

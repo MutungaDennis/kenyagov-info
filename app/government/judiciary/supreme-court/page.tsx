@@ -5,7 +5,8 @@ import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 
 export default function SupremeCourtPage() {
   return (
-    <div className="govuk-width-container">
+    <>
+    
       {/* <GovUKBackLink href="/judiciary" /> */}
 
       <GovUKBreadcrumbs
@@ -16,7 +17,7 @@ export default function SupremeCourtPage() {
         ]}
       />
 
-      <main className="govuk-main-wrapper">
+      
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-two-thirds">
             <h1 className="govuk-heading-xl">Supreme Court of Kenya</h1>
@@ -100,7 +101,9 @@ export default function SupremeCourtPage() {
             
           </div>
         </div>
-      </main>
-    </div>
-  );
+      
+    
+  
+    </>
+);
 }

@@ -160,7 +160,8 @@ export default async function MemberContributionsPage({ params, searchParams }: 
   };
 
   return (
-    <div className="govuk-width-container">
+  <>
+    
       <GovUKBreadcrumbs
         items={[
           { text: 'Home', href: '/' },
@@ -171,7 +172,7 @@ export default async function MemberContributionsPage({ params, searchParams }: 
         ]}
       />
 
-      <main className="govuk-main-wrapper">
+      
         <Link href="/legislature/hansard/members" className="govuk-back-link">← Back to all members</Link>
 
         {/* Header */}
@@ -376,9 +377,11 @@ export default async function MemberContributionsPage({ params, searchParams }: 
             })}
           </div>
         )}
-      </main>
-    </div>
-  );
+      
+    
+  
+  </>
+);
 }
 
 function extractTextFromPortableText(blocks: any[]): string {

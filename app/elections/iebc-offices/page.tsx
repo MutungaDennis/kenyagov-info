@@ -65,7 +65,8 @@ export default async function IebcOfficesPage({
   if (query) paginationParams.q = query;
 
   return (
-    <div className="govuk-width-container">
+  <>
+    
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
@@ -74,7 +75,7 @@ export default async function IebcOfficesPage({
         ]}
       />
 
-      <main className="govuk-main-wrapper" id="main-content" role="main">
+      
         
         <h1 className="govuk-heading-xl">IEBC constituency offices</h1>
         
@@ -216,7 +217,7 @@ export default async function IebcOfficesPage({
 
         <LastUpdated published="2026-01-01" lastUpdated="2026-07-02" />
 
-      </main>
+      
 
       <style>{`
         .app-iebc-search {
@@ -266,6 +267,8 @@ export default async function IebcOfficesPage({
           }
         }
       `}</style>
-    </div>
-  );
+    
+  
+  </>
+);
 }

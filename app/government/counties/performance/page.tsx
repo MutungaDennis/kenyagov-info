@@ -64,7 +64,8 @@ export default function CountyPerformancePage() {
   }
 
   return (
-    <div className="govuk-width-container">
+  <>
+    
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
@@ -73,7 +74,7 @@ export default function CountyPerformancePage() {
         ]}
       />
 
-      <main className="govuk-main-wrapper govuk-!-padding-top-2" id="main-content" role="main">
+      
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-two-thirds">
             <h1 className="govuk-heading-l govuk-!-margin-bottom-3">County Performance and Rankings</h1>
@@ -236,7 +237,9 @@ export default function CountyPerformancePage() {
             
           </div>
         </div>
-      </main>
-    </div>
-  );
+      
+    
+  
+  </>
+);
 }

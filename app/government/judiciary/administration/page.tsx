@@ -5,7 +5,8 @@ import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 
 export default function JudiciaryAdministrationPage() {
   return (
-    <div className="govuk-width-container">
+    <>
+    
       {/* <GovUKBackLink href="/judiciary" /> */}
 
       <GovUKBreadcrumbs
@@ -16,7 +17,7 @@ export default function JudiciaryAdministrationPage() {
         ]}
       />
 
-      <main className="govuk-main-wrapper">
+      
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-two-thirds">
             <h1 className="govuk-heading-xl">Judiciary Administration & Leadership</h1>
@@ -106,7 +107,9 @@ export default function JudiciaryAdministrationPage() {
             
           </div>
         </div>
-      </main>
-    </div>
-  );
+      
+    
+  
+    </>
+);
 }

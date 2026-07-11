@@ -3,7 +3,6 @@ import { createClient } from "next-sanity";
 import { PortableText } from "@portabletext/react";
 import { notFound } from "next/navigation";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-import GovUKFeedback from "@/components/govuk/Feedback";
 
 const sanityClient = createClient({
   projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || "",
@@ -102,7 +101,8 @@ export default async function PetitionDetail({ params }: PageProps) {
   const statusClass = getStatusBadgeClass(petition.status);
 
   return (
-    <div className="govuk-width-container">
+  <>
+    
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
@@ -112,7 +112,7 @@ export default async function PetitionDetail({ params }: PageProps) {
         ]}
       />
 
-      <main className="govuk-main-wrapper" id="main-content" role="main">
+      
         
         {/* Header */}
         <div className="govuk-grid-row">
@@ -283,9 +283,10 @@ export default async function PetitionDetail({ params }: PageProps) {
         </div>
 
         <div className="govuk-!-margin-top-8">
-          <GovUKFeedback />
         </div>
-      </main>
-    </div>
-  );
+      
+    
+  
+  </>
+);
 }

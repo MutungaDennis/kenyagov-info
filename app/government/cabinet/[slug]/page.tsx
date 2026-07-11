@@ -16,7 +16,8 @@ export default function MinisterDetailPage() {
   }
 
   return (
-    <div className="govuk-width-container">
+  <>
+    
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
@@ -26,7 +27,7 @@ export default function MinisterDetailPage() {
         ]}
       />
 
-      <main className="govuk-main-wrapper" id="main-content" role="main">
+      
         <div className="govuk-grid-row">
           
           {/* ==================== MAIN CONTENT (2/3) ==================== */}
@@ -159,7 +160,9 @@ export default function MinisterDetailPage() {
           </div>
 
         </div>
-      </main>
-    </div>
-  );
+      
+    
+  
+  </>
+);
 }

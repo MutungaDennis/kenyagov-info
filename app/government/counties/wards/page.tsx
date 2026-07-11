@@ -128,14 +128,17 @@ export default async function WardsPage({
   // ============================================
   if (error) {
     return (
-      <div className="govuk-width-container">
-        <main className="govuk-main-wrapper govuk-!-padding-top-2" id="main-content" role="main">
+  <>
+      
+        
           <h1 className="govuk-heading-l">System Error</h1>
           <p className="govuk-body">Unable to process your request. Please check your data filters and try again.</p>
           <pre className="govuk-!-background-grey govuk-!-padding-2 govuk-!-border-1">{error.message}</pre>
-        </main>
-      </div>
-    );
+        
+      
+    
+  </>
+);
   }
 
   const totalWards = count || 0;
@@ -169,7 +172,8 @@ export default async function WardsPage({
   };
 
   return (
-    <div className="govuk-width-container">
+  <>
+    
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
@@ -178,7 +182,7 @@ export default async function WardsPage({
         ]}
       />
 
-      <main className="govuk-main-wrapper govuk-!-padding-top-2" id="main-content" role="main">
+      
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-full">
             
@@ -345,7 +349,9 @@ export default async function WardsPage({
             
           </div>
         </div>
-      </main>
-    </div>
-  );
+      
+    
+  
+  </>
+);
 }

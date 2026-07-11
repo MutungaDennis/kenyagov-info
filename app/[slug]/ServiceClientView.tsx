@@ -78,9 +78,10 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
     ];
 
     return (
-      <div className="govuk-width-container">
+  <>
+      
         <GovUKBreadcrumbs items={fallbackBreadcrumbs} />
-        <main className="govuk-main-wrapper">
+        
           <div className="govuk-grid-row">
             <div className="govuk-grid-column-two-thirds">
               <h1 className="govuk-heading-xl">Page not found</h1>
@@ -89,9 +90,11 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
               </p>
             </div>
           </div>
-        </main>
-      </div>
-    );
+        
+      
+    
+  </>
+);
   }
 
   const breadcrumbItems = [
@@ -103,10 +106,11 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
   ];
 
   return (
-    <div className="govuk-width-container">
+  <>
+    
       <GovUKBreadcrumbs items={breadcrumbItems} />
 
-      <main className="govuk-main-wrapper" id="main-content" role="main">
+      
         <div className="govuk-grid-row">
           {/* Sidebar (one-third) - sticky contents nav like GOV.UK */}
           <div className="govuk-grid-column-one-third">
@@ -344,7 +348,9 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
           </div>
         </div>
         </div>
-      </main>
-    </div>
-  );
+      
+    
+  
+  </>
+);
 }

@@ -5,7 +5,8 @@ import LastUpdated from "@/components/govuk/LastUpdated";
 
 export default function ConstitutionAndNationalValuesPage() {
   return (
-    <div className="govuk-width-container">
+  <>
+    
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
@@ -14,7 +15,7 @@ export default function ConstitutionAndNationalValuesPage() {
         ]}
       />
 
-      <main className="govuk-main-wrapper" id="main-content" role="main">
+      
         
         {/* Header */}
         <div className="govuk-grid-row">
@@ -682,7 +683,9 @@ export default function ConstitutionAndNationalValuesPage() {
             </aside>
           </div>
         </div>
-      </main>
-    </div>
-  );
+      
+    
+  
+  </>
+);
 }

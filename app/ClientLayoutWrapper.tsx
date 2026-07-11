@@ -8,6 +8,7 @@ import GovUKHeader from "@/components/govuk/Header";
 import GovUKFooter from "@/components/govuk/Footer";
 import GovUKFeedback from "@/components/govuk/Feedback";
 import GovUKReportProblem from "@/components/govuk/ReportProblem";
+import GovUKPhaseBanner from "@/components/govuk/PhaseBanner";
 import CookieBanner from "@/components/govuk/CookieBanner";
 import { logPageView } from "@/lib/supabase/analytics";
 
@@ -70,6 +71,17 @@ export function ClientLayoutWrapper({
 
   return (
     <body className="govuk-template__body" suppressHydrationWarning={true}>
+      {/*
+        GOV.UK page template: mark JS support immediately so enhanced
+        components can initialise correctly after initAll().
+      */}
+      <script
+        dangerouslySetInnerHTML={{
+          __html:
+            "document.body.className += ' js-enabled' + ('noModule' in HTMLScriptElement.prototype ? ' govuk-frontend-supported' : '');",
+        }}
+      />
+
       {/* Google Consent Mode */}
       <Script id="google-consent-mode" strategy="afterInteractive">
         {`
@@ -118,11 +130,31 @@ export function ClientLayoutWrapper({
 
       {!isAdminRoute && <CookieBanner />}
 
+      {/* Skip link must be early in the body for keyboard/screen-reader users */}
+      {!isAdminRoute && (
+        <a
+          href="#main-content"
+          className="govuk-skip-link"
+          data-module="govuk-skip-link"
+        >
+          Skip to main content
+        </a>
+      )}
+
       {!isAdminRoute && (
         <>
           <GovUKHeader />
-          
+
+          {/*
+            Single page template shell:
+            - one width container
+            - phase banner (site-wide)
+            - one main landmark
+            Pages must NOT re-wrap in govuk-width-container or <main>.
+          */}
           <div className="govuk-width-container">
+            <GovUKPhaseBanner />
+
             <main className="govuk-main-wrapper" id="main-content" role="main">
               {children}
             </main>

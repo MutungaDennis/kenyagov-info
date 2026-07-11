@@ -21,7 +21,8 @@ export default async function ActTableOfContentsPage({ params }: Props) {
   const items = act.parts || [];
 
   return (
-    <div className="govuk-width-container">
+  <>
+    
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
@@ -30,7 +31,7 @@ export default async function ActTableOfContentsPage({ params }: Props) {
         ]}
       />
 
-      <main className="govuk-main-wrapper" id="main-content" role="main">
+      
         {/* Document Context Header Panel */}
         <div className="govuk-!-margin-bottom-4">
           <span className="govuk-caption-m" style={{ color: "#505a5f", textTransform: "uppercase", letterSpacing: "0.5px" }}>
@@ -138,7 +139,7 @@ export default async function ActTableOfContentsPage({ params }: Props) {
           </div>
         </div>
 
-      </main>
+      
 
       <style dangerouslySetInnerHTML={{__html: `
         summary::-webkit-details-marker { display: none !important; }
@@ -147,6 +148,8 @@ export default async function ActTableOfContentsPage({ params }: Props) {
         .govuk-link--no-underline:hover { text-decoration: underline !important; color: #003078 !important; }
         details[open] summary .summary-chevron { transform: rotate(90deg); display: inline-block; top: 6px !important; }
       `}} />
-    </div>
-  );
+    
+  
+  </>
+);
 }

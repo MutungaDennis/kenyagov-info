@@ -40,10 +40,11 @@ export default async function ActItemViewPage({ params }: Props) {
   ];
 
   return (
-    <div className="govuk-width-container">
+  <>
+    
       <GovUKBreadcrumbs items={breadcrumbs} />
 
-      <main className="govuk-main-wrapper" id="main-content" role="main">
+      
         
         {/* Document Top Authority Caption Panel */}
         <div className="govuk-!-margin-bottom-4">
@@ -274,7 +275,7 @@ export default async function ActItemViewPage({ params }: Props) {
         </div>
 
         
-      </main>
+      
 
             {/* Global CSS Layout Overrides safe for Next App Architecture Layout Trees */}
       <style dangerouslySetInnerHTML={{__html: `
@@ -315,6 +316,8 @@ export default async function ActItemViewPage({ params }: Props) {
         }
       `}} />
 
-    </div>
-  );
+    
+  
+  </>
+);
 }

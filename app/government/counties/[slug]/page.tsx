@@ -3,7 +3,6 @@ import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import { createClient } from "@/lib/supabase/server";
 import { counties } from "@/data/counties";
-import GovUKFeedback from "@/components/govuk/Feedback";
 import { JsonLd } from "@/components/JsonLd";
 
 export const dynamic = "force-dynamic";
@@ -254,7 +253,8 @@ export default async function CountyProfilePage({ params }: CountyProfileProps) 
   };
 
   return (
-    <div className="govuk-width-container">
+  <>
+    
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
@@ -268,7 +268,7 @@ export default async function CountyProfilePage({ params }: CountyProfileProps) 
       <JsonLd data={governmentOrganizationSchema} />
       <JsonLd data={breadcrumbSchema} />
 
-      <main className="govuk-main-wrapper govuk-!-padding-top-2" id="main-content" role="main">
+      
         
         {/* Page Header - Clean GOV.UK Style */}
         <div className="govuk-grid-row">
@@ -630,9 +630,10 @@ export default async function CountyProfilePage({ params }: CountyProfileProps) 
 
         {/* Universal GOV.UK Compliant Feedback Segment */}
         <div className="govuk-!-margin-top-8 border-t border-gray-200 pt-6">
-          <GovUKFeedback />
         </div>
-      </main>
-    </div>
-  );
+      
+    
+  
+  </>
+);
 }

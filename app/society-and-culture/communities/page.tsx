@@ -101,14 +101,15 @@ export default function CommunitiesPage() {
 
   if (isLoading && years.length === 0) {
     return (
-      <div className="govuk-width-container govuk-!-padding-top-9">
+      
         <p className="govuk-body-l">Loading census data...</p>
-      </div>
+      
     );
   }
 
   return (
-    <div className="govuk-width-container">
+    <>
+    
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
@@ -117,7 +118,7 @@ export default function CommunitiesPage() {
         ]}
       />
 
-      <main className="govuk-main-wrapper" id="main-content" role="main">
+      
         
         {/* Header */}
         <div className="govuk-grid-row">
@@ -456,7 +457,9 @@ export default function CommunitiesPage() {
 
         <LastUpdated published="2026-05-22" lastUpdated="2026-07-02" />
 
-      </main>
-    </div>
-  );
+      
+    
+  
+    </>
+);
 }

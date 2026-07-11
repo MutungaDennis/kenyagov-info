@@ -44,7 +44,8 @@ export default function CountiesAnalyticsPage() {
   };
 
   return (
-    <div className="govuk-width-container">
+  <>
+    
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
@@ -53,7 +54,7 @@ export default function CountiesAnalyticsPage() {
         ]}
       />
 
-      <main className="govuk-main-wrapper govuk-!-padding-top-2" id="main-content" role="main">
+      
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-full">
             <h1 className="govuk-heading-l govuk-!-margin-bottom-2">County Integrated Development Plan (CIDP) Analytics</h1>
@@ -365,7 +366,9 @@ export default function CountiesAnalyticsPage() {
         </div>
 
         
-      </main>
-    </div>
-  );
+      
+    
+  
+  </>
+);
 }

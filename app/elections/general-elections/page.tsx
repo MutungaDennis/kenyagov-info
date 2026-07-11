@@ -12,7 +12,8 @@ export const metadata: Metadata = {
 
 export default function GeneralElectionsPage() {
   return (
-    <div className="govuk-width-container">
+    <>
+    
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
@@ -21,7 +22,7 @@ export default function GeneralElectionsPage() {
         ]}
       />
 
-      <main className="govuk-main-wrapper" id="main-content" role="main">
+      
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-two-thirds">
             
@@ -476,7 +477,7 @@ export default function GeneralElectionsPage() {
             </aside>
           </div>
         </div>
-      </main>
+      
 
       <style>{`
         .app-next-election-panel {
@@ -501,6 +502,8 @@ export default function GeneralElectionsPage() {
           color: #ffffff;
         }
       `}</style>
-    </div>
-  );
+    
+  
+    </>
+);
 }
