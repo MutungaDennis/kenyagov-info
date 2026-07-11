@@ -248,6 +248,57 @@ body {
   font: inherit;
 }
 
+/*
+  Footer navigation on tablet (2 columns).
+  GOV.UK float packing leaves a large gap when section heights differ
+  (the 4th block — “About & legal” — drops too far). CSS grid keeps a
+  tight 2×2 layout with content aligned to the top of each cell.
+  Breakpoints match GOV.UK: tablet 40.0625em, desktop 48.0625em.
+*/
+@media (min-width: 40.0625em) and (max-width: 48.0525em) {
+  .govuk-footer .govuk-footer__navigation {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+    /* Keep GOV.UK half-gutter negative margins for edge alignment */
+    margin-right: -15px;
+    margin-left: -15px;
+  }
+
+  .govuk-footer .govuk-footer__section {
+    float: none !important;
+    width: auto !important;
+    display: block;
+    box-sizing: border-box;
+    padding-left: 15px;
+    padding-right: 15px;
+    margin-bottom: 30px;
+    vertical-align: top;
+  }
+}
+
+/* Desktop: single row of four equal columns, top-aligned */
+@media (min-width: 48.0625em) {
+  .govuk-footer .govuk-footer__navigation {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    align-items: start;
+    margin-right: -15px;
+    margin-left: -15px;
+  }
+
+  .govuk-footer .govuk-footer__section {
+    float: none !important;
+    width: auto !important;
+    display: block;
+    box-sizing: border-box;
+    padding-left: 15px;
+    padding-right: 15px;
+    margin-bottom: 30px;
+    vertical-align: top;
+  }
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #ffffff;
