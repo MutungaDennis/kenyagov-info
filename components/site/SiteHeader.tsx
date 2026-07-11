@@ -207,20 +207,13 @@ export default function SiteHeader() {
                 Services
               </Link>
 
+              {/* Mobile ribbon: Services + Government only (keeps one line); Elections is under More */}
               <Link
                 href="/government"
                 className="app-site-header__nav-link app-site-header__nav-link--mobile-only"
                 onClick={closeMenus}
               >
                 Government
-              </Link>
-
-              <Link
-                href="/elections"
-                className="app-site-header__nav-link app-site-header__nav-link--mobile-only"
-                onClick={closeMenus}
-              >
-                Elections
               </Link>
 
               <Link
