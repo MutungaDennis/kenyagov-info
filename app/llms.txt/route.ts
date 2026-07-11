@@ -90,8 +90,8 @@ Current and structured information on elected and appointed leaders, political p
 
 **Key routes:**
 - Leaders directory: https://www.citizenguide.ke/leaders
-- Political parties: https://www.citizenguide.ke/politics/political-parties
-- Individual party: /politics/political-parties/[slug]
+- Political parties: https://www.citizenguide.ke/elections/political-parties
+- Individual party: /elections/political-parties/[slug]
 
 ## 5. Public Services & Information
 Practical information on government services, documents, and processes.

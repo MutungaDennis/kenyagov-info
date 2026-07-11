@@ -1,10 +1,16 @@
 // app/open-data/page.tsx
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
+import PageIntro from "@/components/site/PageIntro";
 import GovUKSummaryList from "@/components/govuk/SummaryList";
 
 export const dynamic = 'force-dynamic';
+
+export const metadata = {
+  title: "Open data",
+  description:
+    "Download government data in open formats. Use it to build tools, do research or check facts.",
+};
 
 export default async function OpenDataPage() {
   const supabase = await createClient();
@@ -33,24 +39,17 @@ export default async function OpenDataPage() {
 
   return (
     <>
-    
-      <GovUKBreadcrumbs
-        items={[
+      <PageIntro
+        breadcrumbs={[
           { text: "Home", href: "/" },
-          { text: "Open data", href: "/open-data" },
+          { text: "Open data" },
         ]}
+        title="Open data"
+        lead="Download government data in open formats. Use it to build tools, do research or check facts."
       />
 
-      
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-two-thirds">
-            
-            <h1 className="govuk-heading-xl">Open data</h1>
-            
-            <p className="govuk-body-l">
-              Download government data in open formats. Use it to build tools, do research or check facts.
-            </p>
-
             <hr className="govuk-section-break govuk-section-break--l govuk-section-break--visible" />
 
             {/* What data is available */}

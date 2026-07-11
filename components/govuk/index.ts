@@ -16,6 +16,7 @@ export { default as GovUKEntityCard } from './EntityCard';
 export { default as GovUKFeedback } from './Feedback';
 export { default as GovUKFooter } from './Footer';
 export { default as GovUKLastUpdated } from './LastUpdated';
+export { default as GovUKNotificationBanner } from './NotificationBanner';
 export { default as GovUKPagination } from './Pagination';
 export { default as GovUKPhaseBanner } from './PhaseBanner';
 export { default as GovUKPrintPageButton } from './PrintPageButton';

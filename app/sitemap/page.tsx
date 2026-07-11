@@ -203,7 +203,7 @@ export default function SitemapPage() {
                 <Link href="/elections/political-parties" className="govuk-link">Political Parties</Link>
               </li>
               <li>
-                <Link href="/coalitions" className="govuk-link">Political Coalitions</Link>
+                <Link href="/elections/coalitions" className="govuk-link">Political Coalitions</Link>
               </li>
             </ul>
 

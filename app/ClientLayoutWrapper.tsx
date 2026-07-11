@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Script from "next/script";
 import { SiteHeader } from "@/components/site";
+import SiteNotifications from "@/components/site/SiteNotifications";
 import GovUKFooter from "@/components/govuk/Footer";
 import GovUKFeedback from "@/components/govuk/Feedback";
 import GovUKReportProblem from "@/components/govuk/ReportProblem";
@@ -154,6 +155,7 @@ export function ClientLayoutWrapper({
           */}
           <div className="govuk-width-container">
             <GovUKPhaseBanner />
+            <SiteNotifications />
 
             <main className="govuk-main-wrapper" id="main-content" role="main">
               {children}

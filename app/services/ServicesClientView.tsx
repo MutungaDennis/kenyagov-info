@@ -122,12 +122,16 @@ export default function ServicesClientView({ initialServices, categories }: Serv
 
   return (
     <div>
-      <GovUKBreadcrumbs items={[{ text: "Home", href: "/" }]} />
+      <GovUKBreadcrumbs
+        items={[
+          { text: "Home", href: "/" },
+          { text: "Services and guidance" },
+        ]}
+      />
 
-      
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-two-thirds">
-            <h1 className="govuk-heading-xl govuk-!-margin-bottom-4">
+            <h1 className="govuk-heading-xl">
               Services and guidance
             </h1>
             <p className="govuk-body-l govuk-!-margin-bottom-6">

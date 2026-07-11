@@ -8,37 +8,37 @@ const electionSections = [
     title: "General Elections",
     description:
       "Learn about presidential, parliamentary, gubernatorial, senatorial, county assembly, and women representative elections.",
-    href: "/politics/elections/general",
+    href: "/elections/general-elections",
   },
   {
     title: "By-Elections",
     description:
       "Access information about parliamentary, county, and ward by-elections held after vacancies arise.",
-    href: "/politics/elections/by-elections",
+    href: "/elections/by-elections",
   },
   {
     title: "Referendums",
     description:
       "Understand constitutional referendums, amendment procedures, and public voting processes.",
-    href: "/politics/elections/referendums",
+    href: "/elections/referendums",
   },
   {
     title: "Voter Registration",
     description:
       "Learn how citizens register as voters and understand eligibility requirements under Kenyan law.",
-    href: "/politics/elections/voter-registration",
+    href: "/elections/voter-registration",
   },
   {
     title: "Electoral Institutions",
     description:
       "Explore institutions involved in elections, including the IEBC and electoral dispute mechanisms.",
-    href: "/politics/elections/institutions",
+    href: "/elections/iebc-offices",
   },
   {
     title: "Election Results",
     description:
       "Access election results archives, official declarations, and electoral outcome summaries.",
-    href: "/politics/elections/results",
+    href: "/elections",
   },
 ];
 
@@ -51,8 +51,8 @@ export default function ElectionsPage() {
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
-          { text: "Politics", href: "/politics" },
-          { text: "Elections & Referendums", href: "/politics/elections" },
+          { text: "Elections", href: "/elections" },
+          { text: "About elections" },
         ]}
       />
 
@@ -204,7 +204,7 @@ export default function ElectionsPage() {
 
                   <li>
                     <Link
-                      href="/politics/political-parties"
+                      href="/elections/political-parties"
                       className="govuk-link"
                     >
                       Political parties

@@ -16,9 +16,9 @@ export default function ByElectionsPage() {
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
-          { text: "Politics", href: "/politics" },
-          { text: "Elections", href: "/politics/elections" },
-          { text: "By-elections", href: "/politics/elections/by-elections" },
+          { text: "Elections", href: "/elections" },
+          { text: "Elections", href: "/elections" },
+          { text: "By-elections" },
         ]}
       />
 

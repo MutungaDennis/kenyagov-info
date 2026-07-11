@@ -11,9 +11,9 @@ export default function ReferendumsPage() {
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
-          { text: "Politics", href: "/politics" },
-          { text: "Elections", href: "/politics/elections" },
-          { text: "Referendums", href: "/politics/elections/referendums" },
+          { text: "Elections", href: "/elections" },
+          { text: "Elections", href: "/elections" },
+          { text: "Referendums" },
         ]}
       />
 

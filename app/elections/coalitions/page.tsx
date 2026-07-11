@@ -51,8 +51,8 @@ export default async function CoalitionsPage({
         <GovUKBreadcrumbs
           items={[
             { text: "Home", href: "/" },
-            { text: "Politics", href: "/politics" },
-            { text: "Coalitions", href: "/coalitions" },
+            { text: "Elections", href: "/elections" },
+            { text: "Coalitions" },
           ]}
         />
 
@@ -99,8 +99,8 @@ export default async function CoalitionsPage({
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
-          { text: "Politics", href: "/politics" },
-          { text: "Coalitions", href: "/coalitions" },
+          { text: "Elections", href: "/elections" },
+          { text: "Coalitions" },
         ]}
       />
 
@@ -141,14 +141,14 @@ export default async function CoalitionsPage({
         </p>
 
         <div className="govuk-!-display-flex govuk-!-flex-wrap-wrap govuk-!-gap-2">
-          <Link className="govuk-link" href="/coalitions">
+          <Link className="govuk-link" href="/elections/coalitions">
             All
           </Link>
 
           {alphabet.map((l) => (
             <Link
               key={l}
-              href={`/coalitions?letter=${l}`}
+              href={`/elections/coalitions?letter=${l}`}
               className={`govuk-link ${letter === l ? 'govuk-!-font-weight-bold' : ''}`}
             >
               {l}

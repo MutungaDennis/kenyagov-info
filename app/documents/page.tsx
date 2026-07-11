@@ -115,17 +115,16 @@ export default function NationalPolicyIndexPage() {
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
-          { text: "Documents and Policies", href: "" },
+          { text: "Documents and policies" },
         ]}
       />
 
-      {/* Reduced padding wrapper to pull directory modules higher above the fold */}
-      
         <div className="govuk-grid-row">
-          <div className="govuk-grid-column-full">
-            <h1 className="govuk-heading-l govuk-!-margin-bottom-2">National Policy &amp; Strategy Register</h1>
+          <div className="govuk-grid-column-two-thirds">
+            <h1 className="govuk-heading-xl">Documents and policies</h1>
             <p className="govuk-body-l govuk-!-margin-bottom-6">
-              Key government plans and policies. Read the main vision for 2030, medium-term plans and important sessional papers.
+              Key government plans and policies. Read the main vision for 2030,
+              medium-term plans and important sessional papers.
             </p>
           </div>
         </div>

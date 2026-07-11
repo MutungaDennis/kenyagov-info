@@ -56,8 +56,8 @@ export default async function PollingStationDetailPage({ params }: PageProps) {
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
-          { text: "Politics & Elections", href: "/politics/elections" },
-          { text: "2022 Polling Stations", href: "/politics/votes" },
+          { text: "Elections", href: "/elections" },
+          { text: "Polling stations", href: "/elections/polling-stations" },
           { text: station.name, href: "" },
         ]}
       />
@@ -142,17 +142,16 @@ export default async function PollingStationDetailPage({ params }: PageProps) {
 
             {/* ACTION LINKS BLOCK */}
             <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap', marginBottom: '45px' }}>
-              <Link 
-                href={`/politics/votes?county=${encodeURIComponent(countyName)}&constituency=${encodeURIComponent(constituencyName)}&ward=${encodeURIComponent(wardName)}`} 
+              <Link
+                href={`/elections/polling-stations?county=${encodeURIComponent(countyName)}&constituency=${encodeURIComponent(constituencyName)}&ward=${encodeURIComponent(wardName)}`}
                 className="govuk-button"
-                style={{ background: '#1d70b8', color: '#fff', textDecoration: 'none', padding: '8px 15px', fontWeight: 'bold', display: 'inline-block' }}
+                data-module="govuk-button"
               >
                 View all stations in {wardName} Ward
               </Link>
-              <Link 
-                href="/politics/votes" 
-                className="govuk-link govuk-!-font-size-16" 
-                style={{ alignSelf: 'center' }}
+              <Link
+                href="/elections/polling-stations"
+                className="govuk-link govuk-!-font-size-16"
               >
                 Return to full search register
               </Link>
@@ -168,7 +167,7 @@ export default async function PollingStationDetailPage({ params }: PageProps) {
                 This record reflects gazetted entries accurate to the August 2022 General Election cycle mapping updates.
               </p>
               <p className="govuk-body-s govuk-!-margin-0">
-                To report anomalies or omissions, consult the local <Link href="/politics/iebc-offices" className="govuk-link">IEBC Constituency Office</Link>.
+                To report anomalies or omissions, consult the local <Link href="/elections/iebc-offices" className="govuk-link">IEBC Constituency Office</Link>.
               </p>
             </div>
           </div>

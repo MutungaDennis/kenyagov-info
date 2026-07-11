@@ -3,3 +3,6 @@
  * Distinct from components/govuk/* which wraps GOV.UK Design System patterns.
  */
 export { default as SiteHeader } from "./SiteHeader";
+export { default as SiteNotifications } from "./SiteNotifications";
+export { default as HomeSearch } from "./HomeSearch";
+export { default as PageIntro } from "./PageIntro";

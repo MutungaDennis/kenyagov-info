@@ -1,7 +1,13 @@
 // app/society-and-culture/page.tsx
 import Link from "next/link";
-import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
+import PageIntro from "@/components/site/PageIntro";
 import LastUpdated from "@/components/govuk/LastUpdated";
+
+export const metadata = {
+  title: "Society and culture",
+  description:
+    "Learn about Kenya's people, languages, heritage, national identity and social structures.",
+};
 
 export default function SocietyAndCulturePage() {
   const categories = [
@@ -60,28 +66,19 @@ export default function SocietyAndCulturePage() {
 
   return (
     <>
-    
-      <GovUKBreadcrumbs
-        items={[
+      <PageIntro
+        breadcrumbs={[
           { text: "Home", href: "/" },
-          { text: "Society and culture", href: "/society-and-culture" },
+          { text: "Society and culture" },
         ]}
-      />
-
-      
-        <div className="govuk-grid-row">
-          <div className="govuk-grid-column-two-thirds">
-            <h1 className="govuk-heading-xl">Society and culture</h1>
-            
-            <p className="govuk-body-l">
-              Learn about Kenya's people, languages, heritage, national identity and social structures.
-            </p>
-
-            <p className="govuk-body">
-              This directory provides information for citizens, students, researchers and visitors about Kenyan society and culture.
-            </p>
-          </div>
-        </div>
+        title="Society and culture"
+        lead="Learn about Kenya's people, languages, heritage, national identity and social structures."
+      >
+        <p className="govuk-body">
+          This directory provides information for citizens, students, researchers
+          and visitors about Kenyan society and culture.
+        </p>
+      </PageIntro>
 
         <div className="govuk-grid-row">
           {/* Main content - left column */}

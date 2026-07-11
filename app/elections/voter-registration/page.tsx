@@ -11,9 +11,9 @@ export default function VoterRegistrationPage() {
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
-          { text: "Politics", href: "/politics" },
-          { text: "Elections", href: "/politics/elections" },
-          { text: "Voter registration", href: "/politics/elections/voter-registration" },
+          { text: "Elections", href: "/elections" },
+          { text: "Elections", href: "/elections" },
+          { text: "Voter registration" },
         ]}
       />
 
@@ -69,7 +69,7 @@ export default function VoterRegistrationPage() {
 
         <ul className="govuk-list govuk-list--bullet">
           <li>
-            <Link className="govuk-link" href="/politics/elections/iebc-offices">
+            <Link className="govuk-link" href="/elections/iebc-offices">
               IEBC constituency offices nationwide
             </Link>
           </li>

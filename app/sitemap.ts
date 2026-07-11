@@ -278,7 +278,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/elections/referendums`, changeFrequency: 'yearly', priority: 0.7 },
     { url: `${BASE_URL}/elections/voter-registration`, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${BASE_URL}/elections/political-parties`, changeFrequency: 'monthly', priority: 0.7 },
-    { url: `${BASE_URL}/coalitions`, changeFrequency: 'monthly', priority: 0.6 },
+    { url: `${BASE_URL}/elections/coalitions`, changeFrequency: 'monthly', priority: 0.6 },
     
     // Constitution & Laws
     { url: `${BASE_URL}/constitution`, changeFrequency: 'weekly', priority: 0.9 },

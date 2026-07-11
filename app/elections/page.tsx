@@ -1,131 +1,130 @@
-// app/politics/page.tsx
 import Link from "next/link";
-import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-import LastUpdated from "@/components/govuk/LastUpdated";
+import PageIntro from "@/components/site/PageIntro";
+import GovUKDashboardCard from "@/components/govuk/DashboardCard";
 
-const politicsSections = [
+export const metadata = {
+  title: "Elections and voting",
+  description:
+    "General elections, by-elections, voter registration, political parties, polling stations and IEBC information.",
+};
+
+const electionTopics = [
   {
-    title: "Political Parties",
-    description: "Browse all registered political parties, their symbols, slogans, leadership, headquarters, and coalition affiliations.",
-    href: "/politics/political-parties",
+    title: "General elections",
+    description:
+      "National election timeline, presidential and parliamentary contests, and key dates.",
+    href: "/elections/general-elections",
   },
   {
-    title: "Elections & Referendums",
-    description: "General elections, by-elections, voter registration, IEBC, and referendum processes.",
-    href: "/politics/elections",
+    title: "By-elections",
+    description:
+      "Scheduled and recent by-elections for parliamentary and county seats.",
+    href: "/elections/by-elections",
   },
   {
-    title: "Political Funding & Compliance",
-    description: "Campaign financing, party funding disclosure, and compliance with the Political Parties Act.",
-    href: "/politics/political-funding",
+    title: "Voter registration",
+    description:
+      "How to register, check or update your voter details with the IEBC.",
+    href: "/elections/voter-registration",
   },
   {
-    title: "Public Participation",
-    description: "How citizens can participate in governance through petitions, public forums, and memoranda.",
-    href: "/politics/public-participation",
+    title: "Registered voters data",
+    description:
+      "County-level registered voter statistics and historical comparisons.",
+    href: "/elections/registered-voters",
   },
   {
-    title: "Majority & Government Side",
-    description: "The ruling coalition, Cabinet, and government leadership.",
-    href: "/politics/majority",
+    title: "Polling stations",
+    description:
+      "Find polling stations by county, constituency and ward.",
+    href: "/elections/polling-stations",
   },
   {
-    title: "Opposition & Minority Side",
-    description: "Official opposition parties and minority leadership in Parliament.",
-    href: "/politics/minority",
+    title: "Political parties",
+    description:
+      "Registered parties, symbols, leadership and membership information.",
+    href: "/elections/political-parties",
+  },
+  {
+    title: "Political coalitions",
+    description:
+      "Party alliances and coalition frameworks registered with the Registrar.",
+    href: "/elections/coalitions",
+  },
+  {
+    title: "Referendums",
+    description:
+      "Past and planned national referendums and constitutional amendment votes.",
+    href: "/elections/referendums",
+  },
+  {
+    title: "IEBC offices",
+    description:
+      "Independent Electoral and Boundaries Commission offices and contacts.",
+    href: "/elections/iebc-offices",
+  },
+  {
+    title: "About elections in Kenya",
+    description:
+      "How elections work under the Constitution, electoral cycle and institutions.",
+    href: "/elections/about",
   },
 ];
 
-export default function PoliticsPage() {
+export default function ElectionsHubPage() {
   return (
-  <>
-    
-      <GovUKBreadcrumbs
-        items={[
+    <>
+      <PageIntro
+        breadcrumbs={[
           { text: "Home", href: "/" },
-          { text: "Politics", href: "/politics" },
+          { text: "Elections" },
         ]}
+        caption="Democracy and participation"
+        title="Elections and voting"
+        lead="Find information about general elections, by-elections, voter registration, political parties, polling stations and the Independent Electoral and Boundaries Commission (IEBC)."
       />
 
-      
-        <div className="govuk-grid-row">
-          <div className="govuk-grid-column-two-thirds">
-            <span className="govuk-caption-xl">Governance & Democracy</span>
-            <h1 className="govuk-heading-xl">Politics in Kenya</h1>
+      <h2 className="govuk-heading-l govuk-!-margin-top-2">Explore topics</h2>
 
-            <p className="govuk-body-l">
-              Access clear, reliable information about Kenya’s political system, 
-              political parties, elections, public participation, and democratic institutions.
-            </p>
+      <div className="govuk-grid-row">
+        {electionTopics.map((topic) => (
+          <div
+            key={topic.href}
+            className="govuk-grid-column-one-half govuk-!-margin-bottom-2"
+          >
+            <GovUKDashboardCard
+              title={topic.title}
+              href={topic.href}
+              description={topic.description}
+            />
           </div>
+        ))}
+      </div>
+
+      <hr className="govuk-section-break govuk-section-break--l govuk-section-break--visible" />
+
+      <div className="govuk-grid-row">
+        <div className="govuk-grid-column-two-thirds">
+          <h2 className="govuk-heading-m">Related information</h2>
+          <ul className="govuk-list govuk-list--bullet">
+            <li>
+              <Link href="/government/commissions" className="govuk-link">
+                Independent commissions (including IEBC)
+              </Link>
+            </li>
+            <li>
+              <Link href="/constitution" className="govuk-link">
+                Constitution of Kenya 2010
+              </Link>
+            </li>
+            <li>
+              <Link href="/government/legislature" className="govuk-link">
+                Parliament
+              </Link>
+            </li>
+          </ul>
         </div>
-
-        {/* Main Navigation Cards */}
-        <section className="govuk-!-margin-top-9">
-          <h2 className="govuk-heading-l">Explore political topics</h2>
-
-          <div className="govuk-grid-row">
-            {politicsSections.map((section) => (
-              <div 
-                key={section.href} 
-                className="govuk-grid-column-one-half govuk-!-margin-bottom-6"
-              >
-                <div className="govuk-card govuk-card--clickable">
-                  <div className="govuk-card__content">
-                    <h3 className="govuk-heading-m govuk-!-margin-bottom-2">
-                      <Link href={section.href} className="govuk-link">
-                        {section.title}
-                      </Link>
-                    </h3>
-                    <p className="govuk-body">
-                      {section.description}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Understanding Kenya’s Political System */}
-        <section className="govuk-!-margin-top-10">
-          <div className="govuk-grid-row">
-            <div className="govuk-grid-column-two-thirds">
-              <h2 className="govuk-heading-l">Understanding Kenya’s political system</h2>
-              
-              <p className="govuk-body">
-                Kenya is a sovereign, multi-party democratic republic governed by the Constitution of Kenya 2010. 
-                Power is exercised through transparent, accountable, and participatory institutions.
-              </p>
-
-              <ul className="govuk-list govuk-list--bullet govuk-!-margin-top-6">
-                <li>Multi-party system with regular general elections every five years</li>
-                <li>Devolved system of government with 47 county governments</li>
-                <li>Strong provisions for public participation in governance</li>
-                <li>Independent institutions including IEBC, ORPP, and anti-corruption bodies</li>
-              </ul>
-            </div>
-
-            {/* Sidebar */}
-            <div className="govuk-grid-column-one-third">
-              <div className="govuk-inset-text">
-                <h3 className="govuk-heading-s">Related information</h3>
-                <ul className="govuk-list govuk-list--spaced">
-                  <li><Link href="/constitution" className="govuk-link">Constitution of Kenya</Link></li>
-                  <li><Link href="/institutions" className="govuk-link">Government Institutions</Link></li>
-                  <li><Link href="/counties" className="govuk-link">County Governments</Link></li>
-                  <li><Link href="/laws" className="govuk-link">Laws of Kenya</Link></li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <LastUpdated published="2026-05-19" lastUpdated="2026-05-19" />
-
-      
-    
-  
-  </>
-);
+      </div>
+    </>
+  );
 }
