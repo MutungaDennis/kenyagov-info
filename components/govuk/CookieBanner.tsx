@@ -2,50 +2,52 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 
+type ConsentStatus = 'hidden' | 'unanswered' | 'accepted-message' | 'rejected-message';
+
+function updateAnalyticsConsent(granted: boolean) {
+  if (typeof window === 'undefined') return;
+  const gtag = (window as Window & { gtag?: (...args: unknown[]) => void }).gtag;
+  if (!gtag) return;
+
+  gtag('consent', 'update', {
+    ad_storage: granted ? 'granted' : 'denied',
+    ad_user_data: granted ? 'granted' : 'denied',
+    ad_personalization: granted ? 'granted' : 'denied',
+    analytics_storage: granted ? 'granted' : 'denied',
+  });
+}
+
+/**
+ * GOV.UK Cookie banner — markup aligned with the Design System component.
+ * @see https://design-system.service.gov.uk/components/cookie-banner/
+ */
 export default function CookieBanner() {
-  const [consentStatus, setConsentStatus] = useState<string | null>('hidden');
+  const [consentStatus, setConsentStatus] = useState<ConsentStatus>('hidden');
 
   useEffect(() => {
-    // Check if user has already made a selection
     const savedConsent = localStorage.getItem('cookie-consent');
     if (savedConsent === 'accepted') {
-      // Update consent immediately for GA4 (GOV.UK pattern)
-      if (typeof window !== 'undefined' && (window as any).gtag) {
-        (window as any).gtag('consent', 'update', {
-          'ad_storage': 'granted',
-          'ad_user_data': 'granted',
-          'ad_personalization': 'granted',
-          'analytics_storage': 'granted'
-        });
-      }
-      setConsentStatus('hidden'); // Don't show banner if previously accepted
-    } else if (!savedConsent) {
-      setConsentStatus('unanswered');
+      updateAnalyticsConsent(true);
+      setConsentStatus('hidden');
     } else if (savedConsent === 'rejected') {
       setConsentStatus('hidden');
+    } else if (!savedConsent) {
+      setConsentStatus('unanswered');
     }
   }, []);
 
   const handleAccept = () => {
     localStorage.setItem('cookie-consent', 'accepted');
+    updateAnalyticsConsent(true);
     setConsentStatus('accepted-message');
-
-    // Dynamically update Google Analytics consent states
-    if (typeof window !== 'undefined' && (window as any).gtag) {
-      (window as any).gtag('consent', 'update', {
-        'ad_storage': 'granted',
-        'ad_user_data': 'granted',
-        'ad_personalization': 'granted',
-        'analytics_storage': 'granted'
-      });
-    }
   };
 
   const handleReject = () => {
     localStorage.setItem('cookie-consent', 'rejected');
+    updateAnalyticsConsent(false);
     setConsentStatus('rejected-message');
-    // Keeps state as denied (no code action needed since default is denied)
   };
 
   const handleHideMessage = () => {
@@ -55,82 +57,115 @@ export default function CookieBanner() {
   if (consentStatus === 'hidden') return null;
 
   return (
-    <div 
-      className="govuk-cookie-banner cookie-banner-style"
-      data-nosnippet 
-      role="region" 
-      aria-label="Cookies on Citizen Guide Kenya"
+    <div
+      className="govuk-cookie-banner"
+      data-nosnippet
+      role="region"
+      aria-label="Cookies on CitizenGuide.KE"
     >
-      <div className="govuk-width-container">
-        
-        {/* Main Banner Question */}
-        {consentStatus === 'unanswered' && (
+      {consentStatus === 'unanswered' && (
+        <div className="govuk-cookie-banner__message govuk-width-container">
           <div className="govuk-grid-row">
             <div className="govuk-grid-column-two-thirds">
-              <h2 className="govuk-cookie-banner__heading govuk-heading-m govuk-!-margin-top-0">
-                Cookies on Citizen Guide Kenya
+              <h2 className="govuk-cookie-banner__heading govuk-heading-m">
+                Cookies on CitizenGuide.KE
               </h2>
               <div className="govuk-cookie-banner__content">
                 <p className="govuk-body">
-                  We use cookies to collect information about how you use our site. We use this information 
-                  to make the website work as well as possible and improve our informational services for citizens.
+                  We use some essential cookies to make this website work.
                 </p>
-              </div>
-              <div className="govuk-button-group govuk-!-display-flex govuk-!-gap-3 govuk-!-margin-top-4">
-                <button 
-                  type="button" 
-                  className="govuk-button cookie-accept-btn"
-                  onClick={handleAccept}
-                >
-                  Accept analytics cookies
-                </button>
-                <button 
-                  type="button" 
-                  className="govuk-button cookie-reject-btn"
-                  onClick={handleReject}
-                >
-                  Reject analytics cookies
-                </button>
+                <p className="govuk-body">
+                  We&apos;d also like to use analytics cookies so we can understand
+                  how you use the site and make improvements.
+                </p>
               </div>
             </div>
           </div>
-        )}
+          <div className="govuk-button-group">
+            <button
+              type="button"
+              className="govuk-button"
+              data-module="govuk-button"
+              onClick={handleAccept}
+            >
+              Accept analytics cookies
+            </button>
+            <button
+              type="button"
+              className="govuk-button"
+              data-module="govuk-button"
+              onClick={handleReject}
+            >
+              Reject analytics cookies
+            </button>
+            <Link className="govuk-link" href="/cookies">
+              View cookies
+            </Link>
+          </div>
+        </div>
+      )}
 
-        {/* Accepted Confirmation View */}
-        {consentStatus === 'accepted-message' && (
-          <div className="govuk-cookie-banner__message govuk-width-container">
-            <p className="govuk-body">
-              You’ve accepted analytics cookies. You can change your cookie settings at any time.
-            </p>
-            <button 
-              type="button" 
-              className="govuk-link" 
+      {consentStatus === 'accepted-message' && (
+        <div
+          className="govuk-cookie-banner__message govuk-width-container"
+          role="alert"
+        >
+          <div className="govuk-grid-row">
+            <div className="govuk-grid-column-two-thirds">
+              <div className="govuk-cookie-banner__content">
+                <p className="govuk-body">
+                  You&apos;ve accepted analytics cookies. You can{' '}
+                  <Link className="govuk-link" href="/cookies">
+                    change your cookie settings
+                  </Link>{' '}
+                  at any time.
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="govuk-button-group">
+            <button
+              type="button"
+              className="govuk-button"
+              data-module="govuk-button"
               onClick={handleHideMessage}
-              style={{ background: 'none', border: 'none', padding: 0, textDecoration: 'underline', color: '#1d70b8', cursor: 'pointer' }}
             >
               Hide cookie message
             </button>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Rejected Confirmation View */}
-        {consentStatus === 'rejected-message' && (
-          <div className="govuk-cookie-banner__message govuk-width-container">
-            <p className="govuk-body">
-              You’ve rejected analytics cookies. You can change your cookie settings at any time.
-            </p>
-            <button 
-              type="button" 
-              className="govuk-link" 
+      {consentStatus === 'rejected-message' && (
+        <div
+          className="govuk-cookie-banner__message govuk-width-container"
+          role="alert"
+        >
+          <div className="govuk-grid-row">
+            <div className="govuk-grid-column-two-thirds">
+              <div className="govuk-cookie-banner__content">
+                <p className="govuk-body">
+                  You&apos;ve rejected analytics cookies. You can{' '}
+                  <Link className="govuk-link" href="/cookies">
+                    change your cookie settings
+                  </Link>{' '}
+                  at any time.
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="govuk-button-group">
+            <button
+              type="button"
+              className="govuk-button"
+              data-module="govuk-button"
               onClick={handleHideMessage}
-              style={{ background: 'none', border: 'none', padding: 0, textDecoration: 'underline', color: '#1d70b8', cursor: 'pointer' }}
             >
               Hide cookie message
             </button>
           </div>
-        )}
-
-      </div>
+        </div>
+      )}
     </div>
   );
 }

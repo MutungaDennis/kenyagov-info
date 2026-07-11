@@ -2,7 +2,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 
 interface Action {
   label: string;
@@ -16,47 +16,99 @@ interface ActionDropdownProps {
   buttonText?: string;
 }
 
-export default function ActionDropdown({ actions, buttonText = "Actions" }: ActionDropdownProps) {
+/**
+ * Compact actions menu used in admin tables.
+ * Styled with app-prefixed classes (not Tailwind utilities).
+ */
+export default function ActionDropdown({
+  actions,
+  buttonText = 'Actions',
+}: ActionDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const menuId = useId();
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const onPointerDown = (event: MouseEvent) => {
+      if (!rootRef.current?.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsOpen(false);
+    };
+
+    document.addEventListener('mousedown', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [isOpen]);
 
   return (
-    <div className="govuk-dropdown dropdown-relative">
+    <div className="app-action-dropdown" ref={rootRef}>
       <button
-        className="govuk-button govuk-button--secondary dropdown-button"
-        onClick={() => setIsOpen(!isOpen)}
+        type="button"
+        className="govuk-button govuk-button--secondary app-action-dropdown__button"
+        data-module="govuk-button"
         aria-expanded={isOpen}
+        aria-controls={menuId}
+        onClick={() => setIsOpen((open) => !open)}
       >
-        {buttonText} ▾
+        {buttonText}
+        <span className="govuk-visually-hidden"> menu</span>
+        <span aria-hidden="true" className="app-action-dropdown__caret">
+          {' '}
+          ▾
+        </span>
       </button>
 
       {isOpen && (
-        <div 
-          className="govuk-dropdown__content dropdown-content"
-          onMouseLeave={() => setIsOpen(false)}
+        <div
+          id={menuId}
+          className="app-action-dropdown__menu"
+          role="menu"
         >
-          {actions.map((action, index) => (
-            <div key={index}>
-              {action.href ? (
+          {actions.map((action, index) => {
+            const itemClass = [
+              'app-action-dropdown__item',
+              action.destructive ? 'app-action-dropdown__item--destructive' : '',
+            ]
+              .filter(Boolean)
+              .join(' ');
+
+            if (action.href) {
+              return (
                 <Link
+                  key={index}
                   href={action.href}
-                  className={`govuk-link block px-4 py-2 hover:bg-gray-100 ${action.destructive ? 'govuk-link--destructive' : ''}`}
+                  className={itemClass}
+                  role="menuitem"
                   onClick={() => setIsOpen(false)}
                 >
                   {action.label}
                 </Link>
-              ) : (
-                <button
-                  className={`govuk-link block w-full text-left px-4 py-2 hover:bg-gray-100 ${action.destructive ? 'govuk-link--destructive' : ''}`}
-                  onClick={() => {
-                    action.onClick?.();
-                    setIsOpen(false);
-                  }}
-                >
-                  {action.label}
-                </button>
-              )}
-            </div>
-          ))}
+              );
+            }
+
+            return (
+              <button
+                key={index}
+                type="button"
+                className={itemClass}
+                role="menuitem"
+                onClick={() => {
+                  action.onClick?.();
+                  setIsOpen(false);
+                }}
+              >
+                {action.label}
+              </button>
+            );
+          })}
         </div>
       )}
     </div>

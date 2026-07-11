@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState, useRef, useEffect, useTransition } from "react";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
+import GovUKCharacterCount from "@/components/govuk/CharacterCount";
 import { handleGeneralFeedback } from "./actions";
 
 export default function GeneralFeedbackPage() {
@@ -137,81 +138,66 @@ export default function GeneralFeedbackPage() {
     );
   }
 
-  const isTextareaInvalid = submissionState?.errorType === "validation" || charsRemaining < 0;
+  const isTextareaInvalid =
+    submissionState?.errorType === "validation" || charsRemaining < 0;
+  const fieldError =
+    isTextareaInvalid && submissionState?.errorType === "validation"
+      ? submissionState.error
+      : charsRemaining < 0
+        ? `Feedback must be ${MAX_CHARS.toLocaleString()} characters or less`
+        : undefined;
 
   return (
     <>
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
-          { text: "Give feedback", href: "/feedback" },
+          { text: "Give feedback" },
         ]}
       />
 
       <div className="govuk-grid-row govuk-!-margin-top-4">
         <div className="govuk-grid-column-two-thirds">
-          {/* Error Summary */}
           {submissionState?.error && (
             <div
               ref={errorSummaryRef}
               tabIndex={-1}
               className="govuk-error-summary govuk-!-margin-bottom-6"
               role="alert"
+              data-module="govuk-error-summary"
             >
               <h2 className="govuk-error-summary__title">There is a problem</h2>
               <div className="govuk-error-summary__body">
-                <p className="govuk-body govuk-!-font-weight-bold">{submissionState.error}</p>
+                <ul className="govuk-list govuk-error-summary__list">
+                  <li>
+                    <a href="#feedback_text">{submissionState.error}</a>
+                  </li>
+                </ul>
               </div>
             </div>
           )}
 
           <h1 className="govuk-heading-xl">Give feedback about CitizenGuide.KE</h1>
 
-          <p className="govuk-body-m govuk-!-margin-bottom-5">
-            Use this form to tell us about your experience using the platform or suggest overall improvements.
+          <p className="govuk-body-l govuk-!-margin-bottom-5">
+            Use this form to tell us about your experience using the platform or
+            suggest overall improvements.
           </p>
 
           <form onSubmit={handleSubmit} noValidate>
-            {/* Feedback Textarea */}
-            <div className={`govuk-form-group ${isTextareaInvalid ? "govuk-form-group--error" : ""}`}>
-              <label className="govuk-label govuk-label--m" htmlFor="feedback_text">
-                How can we improve this website?
-              </label>
+            <GovUKCharacterCount
+              ref={firstInputRef}
+              id="feedback_text"
+              name="feedback_text"
+              label="How can we improve this website?"
+              hint="Do not include sensitive personal or financial information, such as your National ID number."
+              errorMessage={fieldError}
+              maxLength={MAX_CHARS}
+              value={feedbackValue}
+              onChange={(e) => setFeedbackValue(e.target.value)}
+              rows={6}
+            />
 
-              <div id="feedback-hint" className="govuk-hint">
-                Do not include sensitive personal or financial information, such as your National ID number.
-              </div>
-
-              {isTextareaInvalid && (
-                <p id="feedback-error" className="govuk-error-message">
-                  <span className="govuk-visually-hidden">Error:</span> {submissionState?.error}
-                </p>
-              )}
-
-              <textarea
-                ref={firstInputRef}
-                className="govuk-textarea"
-                id="feedback_text"
-                name="feedback_text"
-                rows={6}
-                value={feedbackValue}
-                onChange={(e) => setFeedbackValue(e.target.value)}
-                aria-describedby={`feedback-hint feedback-info ${isTextareaInvalid ? "feedback-error" : ""}`}
-                style={isTextareaInvalid ? { border: "4px solid #d4351c" } : {}}
-              />
-
-              <div
-                id="feedback-info"
-                className={`govuk-hint govuk-character-count__message ${charsRemaining < 0 ? "govuk-error-message" : ""}`}
-                style={charsRemaining < 0 ? { color: "#d4351c", fontWeight: "bold" } : {}}
-              >
-                {charsRemaining >= 0
-                  ? `You have ${charsRemaining} characters remaining`
-                  : `You have ${Math.abs(charsRemaining)} characters too many`}
-              </div>
-            </div>
-
-            {/* Optional Fields */}
             <div className="govuk-form-group">
               <label className="govuk-label govuk-label--m" htmlFor="full_name">
                 Full name (optional)
@@ -221,6 +207,7 @@ export default function GeneralFeedbackPage() {
                 id="full_name"
                 name="full_name"
                 type="text"
+                autoComplete="name"
               />
             </div>
 
@@ -228,21 +215,34 @@ export default function GeneralFeedbackPage() {
               <label className="govuk-label govuk-label--m" htmlFor="email">
                 Email address (optional)
               </label>
+              <div id="email-hint" className="govuk-hint">
+                We will only use this if we need to follow up.
+              </div>
               <input
                 className="govuk-input govuk-!-width-two-thirds"
                 id="email"
                 name="email"
                 type="email"
+                autoComplete="email"
+                aria-describedby="email-hint"
               />
             </div>
 
-            {/* Cloudflare Turnstile */}
             <div className="govuk-form-group">
-              <div className="cf-turnstile" data-sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY} data-theme="light"></div>
+              <div
+                className="cf-turnstile"
+                data-sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
+                data-theme="light"
+              />
             </div>
 
             <div className="govuk-button-group">
-              <button type="submit" disabled={isPending} className="govuk-button">
+              <button
+                type="submit"
+                disabled={isPending}
+                className="govuk-button"
+                data-module="govuk-button"
+              >
                 {isPending ? "Submitting..." : "Submit feedback"}
               </button>
               <Link href="/" className="govuk-button govuk-button--secondary">

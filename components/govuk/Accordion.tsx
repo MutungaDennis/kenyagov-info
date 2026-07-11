@@ -1,118 +1,148 @@
 "use client";
 
-import { useState, ReactNode } from "react";
+import { useId, useState, type ReactNode } from "react";
 
-type AccordionItem = {
+export type AccordionItem = {
   id: string;
   title: string;
   content: ReactNode;
+  /** Start expanded (optional) */
+  expanded?: boolean;
 };
 
 type Props = {
   id?: string;
   items: AccordionItem[];
+  /** Heading level for section titles (default 2) */
+  headingLevel?: 2 | 3 | 4;
 };
 
+/**
+ * GOV.UK Accordion (React-controlled, Design System markup).
+ * Matches the enhanced structure from govuk-frontend without custom colours.
+ * @see https://design-system.service.gov.uk/components/accordion/
+ */
 export default function GovUKAccordion({
-  id = "govuk-accordion",
+  id,
   items,
+  headingLevel = 2,
 }: Props) {
-  const [open, setOpen] = useState<Record<string, boolean>>({});
+  const autoId = useId().replace(/:/g, "");
+  const accordionId = id ?? `accordion-${autoId}`;
+  const HeadingTag = `h${headingLevel}` as "h2" | "h3" | "h4";
+
+  const [open, setOpen] = useState<Record<string, boolean>>(() => {
+    const initial: Record<string, boolean> = {};
+    items.forEach((item) => {
+      if (item.expanded) initial[item.id] = true;
+    });
+    return initial;
+  });
+
+  const allOpen = items.length > 0 && items.every((item) => open[item.id]);
 
   const toggle = (itemId: string) => {
-    setOpen((prev) => ({
-      ...prev,
-      [itemId]: !prev[itemId],
-    }));
+    setOpen((prev) => ({ ...prev, [itemId]: !prev[itemId] }));
   };
 
-  const openAll = () => {
-    const all: Record<string, boolean> = {};
-    items.forEach((i) => (all[i.id] = true));
-    setOpen(all);
+  const toggleAll = () => {
+    if (allOpen) {
+      setOpen({});
+    } else {
+      const next: Record<string, boolean> = {};
+      items.forEach((item) => {
+        next[item.id] = true;
+      });
+      setOpen(next);
+    }
   };
 
-  const closeAll = () => {
-    setOpen({});
-  };
+  if (!items.length) return null;
 
   return (
-    <div className="govuk-accordion" id={id}>
-      
-      {/* ================= CONTROLS ================= */}
-      <div className="govuk-accordion__controls govuk-!-margin-bottom-3">
+    <div className="govuk-accordion" data-module="govuk-accordion" id={accordionId}>
+      <div className="govuk-accordion__controls">
         <button
           type="button"
-          className="govuk-button govuk-button--secondary govuk-!-margin-right-2"
-          onClick={openAll}
+          className="govuk-accordion__show-all"
+          aria-expanded={allOpen}
+          onClick={toggleAll}
         >
-          Show all
-        </button>
-
-        <button
-          type="button"
-          className="govuk-button govuk-button--secondary"
-          onClick={closeAll}
-        >
-          Hide all
+          <span
+            className={[
+              "govuk-accordion-nav__chevron",
+              allOpen ? "" : "govuk-accordion-nav__chevron--down",
+            ]
+              .filter(Boolean)
+              .join(" ")}
+          />
+          <span className="govuk-accordion__show-all-text">
+            {allOpen ? "Hide all sections" : "Show all sections"}
+          </span>
         </button>
       </div>
 
-      {/* ================= ITEMS ================= */}
       {items.map((item, index) => {
         const isOpen = !!open[item.id];
+        const headingId = `${accordionId}-heading-${index + 1}`;
+        const contentId = `${accordionId}-content-${index + 1}`;
+        const sectionClass = [
+          "govuk-accordion__section",
+          isOpen ? "govuk-accordion__section--expanded" : "",
+        ]
+          .filter(Boolean)
+          .join(" ");
 
         return (
-          <div
-            key={item.id}
-            className="govuk-accordion__section govuk-!-margin-bottom-3"
-          >
-            {/* HEADER */}
+          <div key={item.id} className={sectionClass}>
             <div className="govuk-accordion__section-header">
-
-              <h2 className="govuk-accordion__section-heading">
+              <HeadingTag className="govuk-accordion__section-heading">
                 <button
                   type="button"
-                  onClick={() => toggle(item.id)}
+                  className="govuk-accordion__section-button"
+                  id={headingId}
+                  aria-controls={contentId}
                   aria-expanded={isOpen}
-                  aria-controls={`${id}-content-${index}`}
-                  className="govuk-accordion__section-button govuk-!-text-align-left accordion-button-full"
+                  onClick={() => toggle(item.id)}
                 >
-                  
-                  {/* TITLE BAR ONLY (YELLOW) */}
-                  <div className="accordion-title-bar">
-                    <div className="govuk-heading-m govuk-!-margin-bottom-1">
+                  <span className="govuk-accordion__section-heading-text" id={`${headingId}-text`}>
+                    <span className="govuk-accordion__section-heading-text-focus">
                       {item.title}
-                    </div>
-
-                    {/* SHOW / HIDE STATE */}
-                    <div className="govuk-body-s govuk-!-margin-bottom-0">
-                      {isOpen ? (
-                        <span>
-                          Hide <span style={{ marginLeft: 6 }}>▲</span>
-                        </span>
-                      ) : (
-                        <span>
-                          Show <span style={{ marginLeft: 6 }}>▼</span>
-                        </span>
-                      )}
-                    </div>
-                  </div>
+                    </span>
+                  </span>
+                  <span className="govuk-visually-hidden govuk-accordion__section-heading-divider">
+                    ,{" "}
+                  </span>
+                  <span className="govuk-accordion__section-toggle" data-nosnippet>
+                    <span className="govuk-accordion__section-toggle-focus">
+                      <span
+                        className={[
+                          "govuk-accordion-nav__chevron",
+                          isOpen ? "" : "govuk-accordion-nav__chevron--down",
+                        ]
+                          .filter(Boolean)
+                          .join(" ")}
+                      />
+                      <span className="govuk-accordion__section-toggle-text">
+                        {isOpen ? "Hide" : "Show"}
+                        <span className="govuk-visually-hidden"> this section</span>
+                      </span>
+                    </span>
+                  </span>
                 </button>
-              </h2>
+              </HeadingTag>
             </div>
-
-            {/* CONTENT */}
             <div
-              id={`${id}-content-${index}`}
-              className="govuk-accordion__section-content govuk-!-padding-3"
+              id={contentId}
+              className="govuk-accordion__section-content"
+              aria-labelledby={headingId}
               hidden={!isOpen}
-              style={{
-                borderLeft: "4px solid #FFEB3B",
-                backgroundColor: "#fffdf0",
-              }}
             >
-              {item.content}
+              {typeof item.content === "string" ? (
+                <p className="govuk-body">{item.content}</p>
+              ) : (
+                item.content
+              )}
             </div>
           </div>
         );

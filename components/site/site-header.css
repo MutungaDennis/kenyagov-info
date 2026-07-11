@@ -1,0 +1,458 @@
+/**
+ * CitizenGuide.KE product header (custom site chrome).
+ * Not a GOV.UK Design System component — Kenya brand colours and layout.
+ *
+ * Brand tokens:
+ *   --app-brand-green       emerald nav ribbon
+ *   --app-brand-green-dark  hover / pressed green
+ *   --app-brand-red         Kenya flag red bottom bar
+ */
+
+:root {
+  --app-brand-green: #047857;
+  --app-brand-green-dark: #065f46;
+  --app-brand-red: #ce1126;
+  --app-site-header-z: 100;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Shell                                                                      */
+/* -------------------------------------------------------------------------- */
+
+.app-site-header {
+  background-color: #ffffff;
+  border-bottom: 6px solid var(--app-brand-red);
+  padding: 0;
+  margin: 0;
+  position: relative;
+  z-index: var(--app-site-header-z);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Top tier (logo + actions)                                                  */
+/* -------------------------------------------------------------------------- */
+
+.app-site-header__top {
+  border-bottom: 1px solid #e5e5e5;
+  position: relative;
+}
+
+.app-site-header__top-inner {
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px;
+  box-sizing: border-box;
+}
+
+.app-site-header__logo {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.app-site-header__logo:focus {
+  outline: 3px solid transparent;
+  color: #0b0c0c;
+  background-color: #ffdd00;
+  box-shadow: 0 -2px #ffdd00, 0 4px #0b0c0c;
+}
+
+.app-site-header__logo-image {
+  margin-right: 10px;
+  display: inline-block;
+  vertical-align: middle;
+  border-radius: 4px;
+  border: 1px solid #bfc1c3;
+}
+
+.app-site-header__brand {
+  font-weight: 800;
+  color: #0b0c0c;
+  letter-spacing: -0.4px;
+  line-height: 1;
+  font-size: 18px;
+}
+
+.app-site-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.app-site-header__icon-btn {
+  background: none;
+  border: none;
+  color: #0b0c0c;
+  cursor: pointer;
+  padding: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+}
+
+.app-site-header__icon-btn:hover {
+  background-color: rgba(0, 0, 0, 0.06);
+}
+
+.app-site-header__icon-btn:focus {
+  outline: 3px solid transparent;
+  background-color: #ffdd00;
+  box-shadow: 0 0 0 3px #ffdd00, 0 0 0 6px #0b0c0c;
+}
+
+.app-site-header__icon-btn--active {
+  background-color: rgba(0, 0, 0, 0.06);
+}
+
+/* Desktop search icon only */
+.app-site-header__search-desktop {
+  display: inline-flex;
+}
+
+/* Mobile search icon — hidden on desktop by default */
+.app-site-header__search-mobile {
+  display: none;
+}
+
+/* Support CTA — product chrome, not govuk-button */
+.app-site-header__support {
+  color: #ffffff;
+  background-color: var(--app-brand-green);
+  box-shadow: 0 2px 0 var(--app-brand-green-dark);
+  font-size: 14px;
+  font-weight: bold;
+  text-decoration: none;
+  padding: 8px 16px;
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  line-height: 1.25;
+}
+
+.app-site-header__support:hover {
+  background-color: var(--app-brand-green-dark);
+  color: #ffffff;
+  text-decoration: none;
+}
+
+.app-site-header__support:focus {
+  outline: 3px solid transparent;
+  color: #0b0c0c;
+  background-color: #ffdd00;
+  box-shadow: 0 0 0 3px #ffdd00, 0 0 0 6px #0b0c0c;
+}
+
+/* Mobile search drawer under top tier */
+.app-site-header__mobile-search {
+  background-color: #f3f2f1;
+  border-bottom: 4px solid var(--app-brand-green);
+  width: 100%;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 99;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  padding: 8px 0;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Nav ribbon (Kenya emerald)                                                 */
+/* -------------------------------------------------------------------------- */
+
+.app-site-header__nav-tier {
+  background-color: var(--app-brand-green);
+  padding-top: 8px;
+  padding-bottom: 8px;
+  position: relative;
+}
+
+.app-site-header__nav-inner {
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-left: 16px;
+  padding-right: 16px;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.app-site-header__nav {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-wrap: wrap;
+}
+
+.app-site-header__nav-link {
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: bold;
+  text-decoration: none;
+  padding: 10px 12px;
+  display: inline-flex;
+  border-radius: 4px;
+}
+
+.app-site-header__nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  text-decoration: underline;
+  color: #ffffff;
+}
+
+.app-site-header__nav-link:focus {
+  outline: 3px solid transparent;
+  color: #0b0c0c;
+  background-color: #ffdd00;
+  box-shadow: inset 0 0 0 2px #0b0c0c;
+  text-decoration: none;
+}
+
+/* Shown only on small screens (compact primary links) */
+.app-site-header__nav-link--mobile-only {
+  display: none;
+}
+
+/* Hidden on small screens */
+.app-site-header__nav-link--desktop-only {
+  display: inline-flex;
+}
+
+.app-site-header__more {
+  background-color: transparent;
+  border: none;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 10px 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 4px;
+  font-family: inherit;
+}
+
+.app-site-header__more:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.app-site-header__more:focus {
+  outline: 3px solid transparent;
+  color: #0b0c0c;
+  background-color: #ffdd00;
+  box-shadow: inset 0 0 0 2px #0b0c0c;
+}
+
+.app-site-header__more--open {
+  background-color: rgba(255, 255, 255, 0.25);
+}
+
+.app-site-header__more-icon {
+  transition: transform 0.2s ease;
+}
+
+.app-site-header__more-icon--open {
+  transform: rotate(180deg);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Mega menu                                                                  */
+/* -------------------------------------------------------------------------- */
+
+.app-site-header__mega {
+  background-color: #f3f2f1;
+  border-bottom: 4px solid var(--app-brand-green);
+  width: 100%;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 98;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  clear: both;
+}
+
+.app-site-header__mega-inner {
+  padding-top: 20px;
+  padding-bottom: 20px;
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+.app-site-header__mega-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 28px 20px;
+  align-items: flex-start;
+}
+
+.app-site-header__mega-column {
+  flex: 1 1 240px;
+  box-sizing: border-box;
+}
+
+.app-site-header__mega-heading {
+  color: #0b0c0c;
+  border-bottom: 3px solid var(--app-brand-green);
+  padding-bottom: 4px;
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.app-site-header__mega-link {
+  color: var(--app-brand-green) !important;
+  font-weight: bold;
+  font-size: 16px;
+  text-decoration: none;
+}
+
+.app-site-header__mega-link:hover {
+  text-decoration: underline !important;
+  color: var(--app-brand-green-dark) !important;
+}
+
+.app-site-header__mega-link:focus {
+  outline: 3px solid transparent;
+  color: #0b0c0c !important;
+  background-color: #ffdd00;
+  box-shadow: 0 -2px #ffdd00, 0 4px #0b0c0c;
+  text-decoration: none !important;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Expanded desktop search (below header)                                     */
+/* -------------------------------------------------------------------------- */
+
+.app-site-header__search-panel {
+  background-color: #f3f2f1;
+  border-bottom: 4px solid var(--app-brand-green);
+  padding: 12px 0;
+  position: relative;
+  z-index: 95;
+}
+
+.app-site-header__search-panel-inner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.app-site-header__search-panel-inner .autocomplete-wrapper {
+  flex: 1;
+}
+
+.app-site-header__search-close {
+  background: none;
+  border: 2px solid #0b0c0c;
+  color: #0b0c0c;
+  font-size: 16px;
+  line-height: 1;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-weight: bold;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 4px;
+  font-family: inherit;
+}
+
+.app-site-header__search-close:hover {
+  background-color: #e5e5e5;
+}
+
+.app-site-header__search-close:focus {
+  outline: 3px solid transparent;
+  background-color: #ffdd00;
+  box-shadow: 0 0 0 3px #ffdd00, 0 0 0 6px #0b0c0c;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Breakpoints                                                                */
+/* -------------------------------------------------------------------------- */
+
+@media (max-width: 40.05rem) {
+  .app-site-header__brand {
+    font-size: 19px;
+  }
+
+  .app-site-header__top-inner {
+    padding: 10px 14px;
+  }
+
+  .app-site-header__support {
+    padding: 9px 14px;
+    font-size: 14px;
+  }
+
+  .app-site-header__search-desktop {
+    display: none;
+  }
+
+  .app-site-header__nav-link--desktop-only {
+    display: none;
+  }
+
+  .app-site-header__nav-link--mobile-only {
+    display: inline-flex;
+  }
+
+  .app-site-header__search-mobile {
+    display: inline-flex;
+  }
+
+  .app-site-header__logo-image {
+    width: 34px;
+    height: 34px;
+  }
+}
+
+@media (max-width: 23rem) {
+  .app-site-header__brand {
+    font-size: 17px;
+  }
+}
+
+@media (min-width: 40.0625rem) {
+  .app-site-header__brand {
+    font-size: 24px;
+  }
+
+  .app-site-header__mobile-search {
+    display: none;
+  }
+
+  .app-site-header__search-mobile {
+    display: none;
+  }
+
+  .app-site-header__nav-link--mobile-only {
+    display: none;
+  }
+
+  .app-site-header__support {
+    padding: 10px 18px;
+    font-size: 15px;
+  }
+
+  .app-site-header__nav-tier .govuk-width-container {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+@media (max-width: 48.0625rem) {
+  .app-site-header__mega {
+    position: relative;
+    top: 0;
+  }
+}

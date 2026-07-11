@@ -4,6 +4,10 @@ import { usePathname } from "next/navigation";
 import { useState, useRef, useEffect, useTransition } from "react";
 import { handleFeedbackSubmission } from "@/app/feedback/actions";
 
+/**
+ * "Report a problem with this page" — sits with global feedback in the template.
+ * Does not wrap in govuk-width-container (layout owns the shell).
+ */
 export default function GovUKReportProblem() {
   const pathname = usePathname();
   const firstInputRef = useRef<HTMLTextAreaElement>(null);
@@ -18,34 +22,34 @@ export default function GovUKReportProblem() {
     errorType?: "validation" | "security" | "server";
   } | null>(null);
 
-  // Focus first field when drawer opens
   useEffect(() => {
     if (isOpen && firstInputRef.current) {
       firstInputRef.current.focus();
     }
   }, [isOpen]);
 
-  // Focus error summary when error appears
   useEffect(() => {
     if (submissionState?.error && errorSummaryRef.current) {
       errorSummaryRef.current.focus();
     }
   }, [submissionState]);
 
-  // Force Turnstile to render when the form becomes visible
   useEffect(() => {
-    if (isOpen && (window as any).turnstile) {
-      // Small delay to ensure the DOM element exists
-      const timer = setTimeout(() => {
-        try {
-          (window as any).turnstile.render('.cf-turnstile');
-        } catch (e) {
-          // Ignore if already rendered
-        }
-      }, 150);
+    if (!isOpen || typeof window === "undefined" || !window.turnstile) return;
 
-      return () => clearTimeout(timer);
-    }
+    const timer = setTimeout(() => {
+      try {
+        // Re-render when the form becomes visible; ignore if already mounted
+        window.turnstile?.render(".cf-turnstile", {
+          sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "",
+          theme: "light",
+        });
+      } catch {
+        // already rendered
+      }
+    }, 150);
+
+    return () => clearTimeout(timer);
   }, [isOpen]);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -91,149 +95,163 @@ export default function GovUKReportProblem() {
       if (result.success) {
         setSubmissionState({ success: true });
         targetForm.reset();
-
-        // Auto-close after success
         setTimeout(() => {
           setIsOpen(false);
           setSubmissionState(null);
         }, 2200);
       } else {
         setSubmissionState({
-          error: result.error || "We could not save your report. Please try again later.",
+          error:
+            result.error ||
+            "We could not save your report. Please try again later.",
           errorType: "server",
         });
 
-        // Reset Turnstile so user can try again
         try {
-          if ((window as any).turnstile) {
-            const widget = targetForm.querySelector(".cf-turnstile");
-            if (widget) (window as any).turnstile.reset(widget);
+          const widget = targetForm.querySelector(".cf-turnstile");
+          if (widget && window.turnstile) {
+            window.turnstile.reset(widget as HTMLElement);
           }
-        } catch (e) {}
+        } catch {
+          // ignore reset errors
+        }
       }
     });
   }
 
-  // Success State
   if (submissionState?.success) {
     return (
-      <div className="govuk-width-container govuk-!-margin-top-4" role="status" aria-live="polite">
-        <div className="govuk-inset-text govuk-!-border-color-blue govuk-!-margin-0">
-          <p className="govuk-body govuk-!-font-weight-bold">
-            Thank you. Your report has been sent.
-          </p>
+      <div className="govuk-grid-row govuk-!-margin-top-4" role="status" aria-live="polite">
+        <div className="govuk-grid-column-two-thirds">
+          <div className="govuk-inset-text govuk-!-margin-top-0 govuk-!-margin-bottom-0">
+            <p className="govuk-body govuk-!-font-weight-bold">
+              Thank you. Your report has been sent.
+            </p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="govuk-width-container govuk-!-margin-top-4">
-      <div className="govuk-grid-row">
-        <div className="govuk-grid-column-two-thirds">
-          {/* Error Summary */}
-          {submissionState?.error && (
-            <div
-              ref={errorSummaryRef}
-              tabIndex={-1}
-              className="govuk-error-summary govuk-!-margin-bottom-4"
-              role="alert"
-            >
-              <div className="govuk-error-summary__body">
-                <p className="govuk-body govuk-!-font-weight-bold">
-                  {submissionState.error}
-                </p>
-              </div>
+    <div className="govuk-grid-row govuk-!-margin-top-4">
+      <div className="govuk-grid-column-two-thirds">
+        {submissionState?.error && (
+          <div
+            ref={errorSummaryRef}
+            tabIndex={-1}
+            className="govuk-error-summary govuk-!-margin-bottom-4"
+            role="alert"
+            data-module="govuk-error-summary"
+          >
+            <h2 className="govuk-error-summary__title">There is a problem</h2>
+            <div className="govuk-error-summary__body">
+              <p className="govuk-body">{submissionState.error}</p>
             </div>
-          )}
+          </div>
+        )}
 
-          {!isOpen ? (
-            <p className="govuk-body-s">
+        {!isOpen ? (
+          <p className="govuk-body-s">
+            <button
+              type="button"
+              className="govuk-link app-button-as-link"
+              onClick={() => setIsOpen(true)}
+            >
+              Report a problem with this page
+            </button>
+          </p>
+        ) : (
+          <form onSubmit={handleSubmit} className="app-report-problem-form" noValidate>
+            <h2 className="govuk-heading-m">Help us improve CitizenGuide.KE</h2>
+
+            <div className="govuk-inset-text">
+              Do not include personal information such as your National ID number
+              or phone number.
+            </div>
+
+            <div
+              className={`govuk-form-group ${
+                submissionState?.errorType === "validation" &&
+                submissionState.error?.includes("doing")
+                  ? "govuk-form-group--error"
+                  : ""
+              }`}
+            >
+              <label className="govuk-label govuk-label--s" htmlFor="doing">
+                What were you doing?
+              </label>
+              <textarea
+                ref={firstInputRef}
+                className="govuk-textarea"
+                id="doing"
+                name="doing"
+                rows={3}
+                required
+              />
+            </div>
+
+            <div className="govuk-form-group">
+              <label className="govuk-label govuk-label--s" htmlFor="wrong">
+                What went wrong?
+              </label>
+              <textarea
+                className="govuk-textarea"
+                id="wrong"
+                name="wrong"
+                rows={4}
+                required
+              />
+            </div>
+
+            <div className="govuk-form-group">
+              <label className="govuk-label govuk-label--s" htmlFor="report-email">
+                Email address (optional)
+              </label>
+              <div id="report-email-hint" className="govuk-hint">
+                We will only use this to follow up if needed.
+              </div>
+              <input
+                className="govuk-input govuk-!-width-two-thirds"
+                id="report-email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                aria-describedby="report-email-hint"
+              />
+            </div>
+
+            <div className="govuk-form-group">
+              <div
+                className="cf-turnstile"
+                data-sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
+                data-theme="light"
+              />
+            </div>
+
+            <div className="govuk-button-group">
+              <button
+                type="submit"
+                disabled={isPending}
+                className="govuk-button"
+                data-module="govuk-button"
+              >
+                {isPending ? "Sending..." : "Submit report"}
+              </button>
               <button
                 type="button"
-                className="govuk-link report-problem-link"
-                onClick={() => setIsOpen(true)}
+                className="govuk-button govuk-button--secondary"
+                data-module="govuk-button"
+                onClick={() => {
+                  setIsOpen(false);
+                  setSubmissionState(null);
+                }}
               >
-                Report a problem with this page
+                Cancel
               </button>
-            </p>
-          ) : (
-            <form onSubmit={handleSubmit} className="report-problem-form">
-              <h2 className="govuk-heading-m">Help us improve CitizenGuide.KE</h2>
-
-              <div className="govuk-inset-text govuk-!-background-white">
-                Do not include personal information such as your National ID number or phone number.
-              </div>
-
-              <div className="govuk-form-group">
-                <label className="govuk-label govuk-label--s" htmlFor="doing">
-                  What were you doing?
-                </label>
-                <textarea
-                  ref={firstInputRef}
-                  className="govuk-textarea"
-                  id="doing"
-                  name="doing"
-                  rows={3}
-                  required
-                  placeholder="e.g. Looking for information about passport applications..."
-                />
-              </div>
-
-              <div className="govuk-form-group">
-                <label className="govuk-label govuk-label--s" htmlFor="wrong">
-                  What went wrong?
-                </label>
-                <textarea
-                  className="govuk-textarea"
-                  id="wrong"
-                  name="wrong"
-                  rows={4}
-                  required
-                  placeholder="e.g. The eCitizen link throws a timeout error..."
-                />
-              </div>
-
-              <div className="govuk-form-group">
-                <label className="govuk-label govuk-label--s" htmlFor="email">
-                  Email address (optional)
-                </label>
-                <input
-                  className="govuk-input"
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="your@email.com"
-                />
-              </div>
-
-              {/* Cloudflare Turnstile */}
-              <div className="govuk-form-group">
-                <div
-                  className="cf-turnstile"
-                  data-sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
-                  data-theme="light"
-                />
-              </div>
-
-              <div className="govuk-button-group">
-                <button type="submit" disabled={isPending} className="govuk-button">
-                  {isPending ? "Sending..." : "Submit report"}
-                </button>
-                <button
-                  type="button"
-                  className="govuk-button govuk-button--secondary"
-                  onClick={() => {
-                    setIsOpen(false);
-                    setSubmissionState(null);
-                  }}
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          )}
-        </div>
+            </div>
+          </form>
+        )}
       </div>
     </div>
   );

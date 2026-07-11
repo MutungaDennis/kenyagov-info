@@ -4,7 +4,7 @@
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Script from "next/script";
-import GovUKHeader from "@/components/govuk/Header";
+import { SiteHeader } from "@/components/site";
 import GovUKFooter from "@/components/govuk/Footer";
 import GovUKFeedback from "@/components/govuk/Feedback";
 import GovUKReportProblem from "@/components/govuk/ReportProblem";
@@ -143,7 +143,7 @@ export function ClientLayoutWrapper({
 
       {!isAdminRoute && (
         <>
-          <GovUKHeader />
+          <SiteHeader />
 
           {/*
             Single page template shell:

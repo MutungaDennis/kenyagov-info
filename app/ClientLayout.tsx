@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect } from "react";
-import GovUKHeader from "@/components/govuk/Header";
+import { SiteHeader } from "@/components/site";
 import GovUKFooter from "@/components/govuk/Footer";
 import GovUKFeedback from "@/components/govuk/Feedback";
 import GovUKReportProblem from "@/components/govuk/ReportProblem";
@@ -40,7 +40,7 @@ export function ClientLayoutWrapper({
       `}} />
 
       {/* Universal Header rendered across all pages */}
-      <GovUKHeader />
+      <SiteHeader />
       
       <div className="govuk-width-container">
         <main className="govuk-main-wrapper" id="main-content" role="main">

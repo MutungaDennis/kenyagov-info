@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState, useRef, useEffect, useTransition } from "react";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
+import GovUKCharacterCount from "@/components/govuk/CharacterCount";
 import { handleContactMessage } from "./actions";
 
 export default function ContactPage() {
@@ -108,7 +109,7 @@ export default function ContactPage() {
         <GovUKBreadcrumbs
           items={[
             { text: "Home", href: "/" },
-            { text: "Contact", href: "/contact" },
+            { text: "Contact" },
           ]}
         />
 
@@ -154,7 +155,7 @@ export default function ContactPage() {
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
-          { text: "Contact", href: "/contact" },
+          { text: "Contact" },
         ]}
       />
 
@@ -235,40 +236,23 @@ export default function ContactPage() {
                 />
               </div>
 
-              <div className={`govuk-form-group ${isMessageInvalid ? "govuk-form-group--error" : ""}`}>
-                <label className="govuk-label govuk-label--s" htmlFor="contact-message">
-                  Message
-                </label>
-                <div className="govuk-hint" id="message-hint">
-                  Include specific details, such as page names, links, or what you were looking for.
-                </div>
-
-                {isMessageInvalid && (
-                  <p id="message-error" className="govuk-error-message">
-                    <span className="govuk-visually-hidden">Error:</span> {submissionState?.error}
-                  </p>
-                )}
-
-                <textarea
-                  className={`govuk-textarea ${isMessageInvalid ? "govuk-textarea--error" : ""}`}
-                  id="contact-message"
-                  name="message"
-                  rows={8}
-                  value={messageValue}
-                  onChange={(e) => setMessageValue(e.target.value)}
-                  aria-describedby={`message-hint ${isMessageInvalid ? "message-error" : ""}`}
-                />
-
-                <div
-                  id="message-count"
-                  className={`govuk-hint govuk-character-count__message ${charsRemaining < 0 ? "govuk-error-message" : ""}`}
-                  aria-live="polite"
-                >
-                  {charsRemaining >= 0
-                    ? `You have ${charsRemaining} characters remaining`
-                    : `You have ${Math.abs(charsRemaining)} characters too many`}
-                </div>
-              </div>
+              <GovUKCharacterCount
+                id="contact-message"
+                name="message"
+                label="Message"
+                labelClassName="govuk-label govuk-label--s"
+                hint="Include specific details, such as page names, links, or what you were looking for."
+                errorMessage={
+                  isMessageInvalid
+                    ? submissionState?.error ||
+                      `Message must be ${MAX_CHARS.toLocaleString()} characters or less`
+                    : undefined
+                }
+                maxLength={MAX_CHARS}
+                value={messageValue}
+                onChange={(e) => setMessageValue(e.target.value)}
+                rows={8}
+              />
 
               {/* Cloudflare Turnstile */}
               <div className="govuk-form-group">

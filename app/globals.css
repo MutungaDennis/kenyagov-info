@@ -3,6 +3,10 @@
 :root {
   --background: #ffffff;
   --foreground: #0b0c0c;
+  /* CitizenGuide.KE product brand (header chrome — not GOV.UK palette) */
+  --app-brand-green: #047857;
+  --app-brand-green-dark: #065f46;
+  --app-brand-red: #ce1126;
 }
 
 @theme inline {
@@ -55,48 +59,97 @@ body {
 .govuk-!-background-grey { background: #f3f2f1; }
 .govuk-!-color-grey { color: #505a5f; }
 .society-top-border { border-top: 2px solid #1d70b8; padding-top: 15px; }
-.accordion-button-full {
-  display: block;
-  width: 100%;
-}
-.accordion-title-bar {
-  background-color: #FFEB3B;
-  padding: 10px 14px;
-  border-radius: 6px 6px 0 0;
-}
-.cookie-banner-style {
-  background: #f3f2f1;
-  padding: 20px 0;
-  border-bottom: 3px solid #1d70b8;
-}
-.cookie-accept-btn {
-  background: #00703c;
-  color: #fff;
-  padding: 10px 20px;
-  border: none;
-  cursor: pointer;
-  font-weight: bold;
-}
-.cookie-reject-btn {
-  background: #00703c;
-  color: #fff;
-  padding: 10px 20px;
-  border: none;
-  cursor: pointer;
-  font-weight: bold;
-}
-.report-problem-link {
+/* App utilities (not GOV.UK core) — prefer Design System classes first */
+.app-button-as-link {
   background: none;
   border: none;
   padding: 0;
   font: inherit;
   cursor: pointer;
   text-decoration: underline;
+  color: #1d70b8;
 }
-.report-problem-form {
+.app-button-as-link:hover {
+  color: #003078;
+}
+.app-button-as-link:focus {
+  outline: 3px solid transparent;
+  color: #0b0c0c;
+  background-color: #ffdd00;
+  box-shadow: 0 -2px #ffdd00, 0 4px #0b0c0c;
+  text-decoration: none;
+}
+
+.app-report-problem-form {
   background: #f3f2f1;
   padding: 20px;
-  border-radius: 4px;
+  border: 1px solid #b1b4b6;
+}
+
+/* Content cards (GOV.UK has no card component) */
+.app-card {
+  border: 1px solid #b1b4b6;
+  background: #ffffff;
+  padding: 20px;
+}
+.app-card--dashboard {
+  border-left: 5px solid #1d70b8;
+}
+.app-card__meta {
+  color: #505a5f;
+}
+.app-card__link {
+  text-decoration: none;
+}
+.app-card__link:hover {
+  text-decoration: underline;
+}
+
+/* Admin action menu */
+.app-action-dropdown {
+  position: relative;
+  display: inline-block;
+}
+.app-action-dropdown__button {
+  margin-bottom: 0;
+  font-size: 16px;
+  padding: 8px 12px;
+}
+.app-action-dropdown__menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 100;
+  min-width: 180px;
+  margin-top: 4px;
+  background: #ffffff;
+  border: 1px solid #b1b4b6;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+.app-action-dropdown__item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 10px 15px;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  color: #1d70b8;
+  text-decoration: underline;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+.app-action-dropdown__item:hover,
+.app-action-dropdown__item:focus {
+  background: #f3f2f1;
+  color: #003078;
+}
+.app-action-dropdown__item--destructive {
+  color: #d4351c;
+}
+.app-action-dropdown__item--destructive:hover,
+.app-action-dropdown__item--destructive:focus {
+  color: #942514;
 }
 .govuk-!-background-white {
   background: #ffffff;
@@ -192,26 +245,7 @@ body {
   border: none;
   padding: 0;
   cursor: pointer;
-  font-size: 1rem;
-}
-.dropdown-relative {
-  position: relative;
-  display: inline-block;
-}
-.dropdown-button {
-  padding: 6px 12px;
-  font-size: 0.9rem;
-}
-.dropdown-content {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  background: white;
-  border: 1px solid #b1b4b6;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-  z-index: 100;
-  min-width: 180px;
-  margin-top: 4px;
+  font: inherit;
 }
 
 @media (prefers-color-scheme: dark) {

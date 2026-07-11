@@ -7,18 +7,21 @@ type Props = {
   shortDesc?: string;
 };
 
+/**
+ * Entity listing card — app-prefixed styles (not a core GOV.UK component).
+ */
 export default function GovUKEntityCard({ name, type, slug, shortDesc }: Props) {
   return (
-    <div className="govuk-card govuk-card--clickable">
-      <div className="govuk-card__content">
-        <span className="govuk-caption-m">{type}</span>
-        <h3 className="govuk-card__title">
-          <Link href={`/entities/${slug}`} className="govuk-card__title-link">
-            {name}
-          </Link>
-        </h3>
-        {shortDesc && <p className="govuk-card__description">{shortDesc}</p>}
-      </div>
+    <div className="app-card app-card--dashboard govuk-!-margin-bottom-4">
+      <p className="govuk-caption-m govuk-!-margin-bottom-1">{type}</p>
+      <h3 className="govuk-heading-s govuk-!-margin-bottom-2">
+        <Link href={`/entities/${slug}`} className="govuk-link app-card__link">
+          {name}
+        </Link>
+      </h3>
+      {shortDesc && (
+        <p className="govuk-body govuk-!-margin-bottom-0">{shortDesc}</p>
+      )}
     </div>
   );
 }
