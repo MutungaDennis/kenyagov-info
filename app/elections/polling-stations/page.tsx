@@ -1,12 +1,41 @@
-// app/elections/registered-voters/page.tsx
+// app/elections/polling-stations/page.tsx
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import PollingStationFilters from "@/components/votes/polling-station-filters";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import GovUKPagination from "@/components/govuk/Pagination";
 import LastUpdated from "@/components/govuk/LastUpdated";
+import PollingStationFilters from "@/components/votes/polling-station-filters";
+
+// ============================================
+// ELECTION YEARS CONFIGURATION
+// ============================================
+// Sorted with newest first — this becomes the default selection.
+// Add new election years here as data becomes available.
+// ============================================
+
+interface ElectionYear {
+  year: number;
+  table: string;
+  votersColumn: string;
+  label: string;
+  description: string;
+}
+
+const AVAILABLE_ELECTIONS: ElectionYear[] = [
+  {
+    year: 2022,
+    table: 'polling_stations_2022',
+    votersColumn: 'registered_voters_2022',
+    label: '2022 General Election',
+    description: 'Data from the 9 August 2022 General Election',
+  },
+];
+
+const DEFAULT_ELECTION = AVAILABLE_ELECTIONS[0];
+const ITEMS_PER_PAGE = 50;
 
 interface SearchParams {
+  year?: string;
   county?: string;
   constituency?: string;
   ward?: string;
@@ -14,22 +43,24 @@ interface SearchParams {
   page?: string;
 }
 
-const ITEMS_PER_PAGE = 50;
-
-export default async function RegisteredVotersPage({
+export default async function PollingStationsPage({
   searchParams,
 }: {
   searchParams: Promise<SearchParams>;
 }) {
   const supabase = await createClient();
+  const params = await searchParams;
 
-  const parsedParams = await searchParams;
-  const county = parsedParams.county || "";
-  const constituency = parsedParams.constituency || "";
-  const ward = parsedParams.ward || "";
-  const q = parsedParams.q ? parsedParams.q.trim() : "";
+  const requestedYear = params.year ? parseInt(params.year, 10) : null;
+  const selectedElection = AVAILABLE_ELECTIONS.find(e => e.year === requestedYear) 
+    || DEFAULT_ELECTION;
+
+  const county = params.county || "";
+  const constituency = params.constituency || "";
+  const ward = params.ward || "";
+  const q = params.q ? params.q.trim() : "";
   
-  const currentPage = Math.max(1, parseInt(parsedParams.page || "1", 10));
+  const currentPage = Math.max(1, parseInt(params.page || "1", 10));
   const fromOffset = (currentPage - 1) * ITEMS_PER_PAGE;
   const toOffset = fromOffset + ITEMS_PER_PAGE - 1;
 
@@ -51,14 +82,15 @@ export default async function RegisteredVotersPage({
 
   // Build the main query
   let baseQuery = supabase
-    .from("polling_stations_2022")
+    .from(selectedElection.table)
     .select(`
       id,
       slug,
       name,
       polling_station_code,
       reg_centre_name,
-      registered_voters_2022,
+      stream_number,
+      ${selectedElection.votersColumn},
       counties ( name ),
       constituencies ( name ),
       wards ( name )
@@ -99,7 +131,7 @@ export default async function RegisteredVotersPage({
           items={[
             { text: "Home", href: "/" },
             { text: "Elections", href: "/elections" },
-            { text: "Registered voters", href: "/elections/registered-voters" },
+            { text: "Polling stations", href: "/elections/polling-stations" },
           ]}
         />
         <main className="govuk-main-wrapper" id="main-content" role="main">
@@ -118,23 +150,36 @@ export default async function RegisteredVotersPage({
   const totalPages = Math.ceil(totalStations / ITEMS_PER_PAGE);
   const hasActiveFilters = !!county || !!constituency || !!ward || !!q;
 
-  // Build URLs for pagination and filter clearing
+  // Build query string for filter links
   const buildQueryString = (overrides: Record<string, string> = {}) => {
-    const params = new URLSearchParams();
-    if (county && !overrides.county) params.set("county", county);
-    if (constituency && !overrides.constituency) params.set("constituency", constituency);
-    if (ward && !overrides.ward) params.set("ward", ward);
-    if (q && !overrides.q) params.set("q", q);
+    const currentParams: Record<string, string> = {};
+    
+    if (selectedElection.year !== DEFAULT_ELECTION.year) {
+      currentParams.year = selectedElection.year.toString();
+    }
+    if (county) currentParams.county = county;
+    if (constituency) currentParams.constituency = constituency;
+    if (ward) currentParams.ward = ward;
+    if (q) currentParams.q = q;
     
     Object.entries(overrides).forEach(([key, value]) => {
-      if (value) params.set(key, value);
+      if (value === "") {
+        delete currentParams[key];
+      } else {
+        currentParams[key] = value;
+      }
     });
     
-    return params.toString() ? `?${params.toString()}` : "";
+    const queryString = Object.entries(currentParams)
+      .map(([k, v]) => `${k}=${encodeURIComponent(v)}`)
+      .join("&");
+    
+    return queryString ? `?${queryString}` : "";
   };
 
   const getExportUrl = () => {
     const params = new URLSearchParams();
+    params.set("year", selectedElection.year.toString());
     if (county) params.set("county", county);
     if (constituency) params.set("constituency", constituency);
     if (ward) params.set("ward", ward);
@@ -142,8 +187,10 @@ export default async function RegisteredVotersPage({
     return `/api/data/exports/polling-stations?${params.toString()}`;
   };
 
-  // Query params to preserve in pagination
   const paginationParams: Record<string, string> = {};
+  if (selectedElection.year !== DEFAULT_ELECTION.year) {
+    paginationParams.year = selectedElection.year.toString();
+  }
   if (county) paginationParams.county = county;
   if (constituency) paginationParams.constituency = constituency;
   if (ward) paginationParams.ward = ward;
@@ -155,31 +202,31 @@ export default async function RegisteredVotersPage({
         items={[
           { text: "Home", href: "/" },
           { text: "Elections", href: "/elections" },
-          { text: "Registered voters", href: "/elections/registered-voters" },
+          { text: "Polling stations", href: "/elections/polling-stations" },
         ]}
       />
 
       <main className="govuk-main-wrapper" id="main-content" role="main">
         
-        <h1 className="govuk-heading-xl">Registered voters and polling stations</h1>
+        <h1 className="govuk-heading-xl">Polling stations</h1>
         
-        <p className="govuk-body">
-          Search for polling stations and see the number of registered voters in each area for the 2022 General Election.
+        <p className="govuk-body-l">
+          Search for polling stations and view registered voter numbers for each election year.
         </p>
 
         {/* Data source attribution */}
         <div className="govuk-inset-text govuk-!-margin-bottom-6">
           <p className="govuk-body govuk-!-margin-bottom-2">
-            <strong>Data source:</strong> Independent Electoral and Boundaries Commission (IEBC), 2022 voter register.
+            <strong>Data source:</strong> Independent Electoral and Boundaries Commission (IEBC).
           </p>
           <p className="govuk-body govuk-!-margin-bottom-0">
             <a 
-              href="https://www.iebc.or.ke/docs/rov_per_polling_station.pdf" 
+              href="https://www.iebc.or.ke/docs/rov_per_caw.pdf" 
               target="_blank" 
               rel="noopener noreferrer"
               className="govuk-link"
             >
-              View IEBC 2022 voter register summary (PDF)
+              View IEBC voter register summary (PDF)
               <svg 
                 xmlns="http://www.w3.org/2000/svg" 
                 width="14" 
@@ -203,7 +250,38 @@ export default async function RegisteredVotersPage({
           </p>
         </div>
 
-        {/* Filters - now side by side on desktop */}
+        {/* Election Year Selector */}
+        <div className="app-election-year-selector govuk-!-margin-bottom-6">
+          <form method="GET" action="/elections/polling-stations" className="app-election-year-form">
+            <div className="app-election-year-group">
+              <label className="govuk-label govuk-label--s" htmlFor="year">
+                Election year
+              </label>
+              <select
+                name="year"
+                id="year"
+                className="govuk-select"
+                defaultValue={selectedElection.year.toString()}
+              >
+                {AVAILABLE_ELECTIONS.map(election => (
+                  <option key={election.year} value={election.year}>
+                    {election.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="app-election-year-actions">
+              <button type="submit" className="govuk-button govuk-!-margin-bottom-0">
+                View
+              </button>
+            </div>
+          </form>
+          <p className="govuk-body-s govuk-!-margin-top-2 govuk-!-margin-bottom-0">
+            {selectedElection.description}
+          </p>
+        </div>
+
+        {/* Filters */}
         <PollingStationFilters
           counties={counties || []}
           constituencies={constituencies || []}
@@ -213,7 +291,7 @@ export default async function RegisteredVotersPage({
           selectedWard={ward}
           search={q}
           totalResults={totalStations}
-          action="/elections/registered-voters"
+          action="/elections/polling-stations"
         />
 
         {/* Active filters */}
@@ -224,26 +302,26 @@ export default async function RegisteredVotersPage({
             </p>
             <div className="app-filter-chips">
               {county && (
-                <Link href={buildQueryString({ county: "" })} className="app-filter-chip">
+                <Link href={`/elections/polling-stations${buildQueryString({ county: "" })}`} className="app-filter-chip">
                   County: {county} <span className="app-filter-chip-remove">&times;</span>
                 </Link>
               )}
               {constituency && (
-                <Link href={buildQueryString({ constituency: "" })} className="app-filter-chip">
+                <Link href={`/elections/polling-stations${buildQueryString({ constituency: "" })}`} className="app-filter-chip">
                   Constituency: {constituency} <span className="app-filter-chip-remove">&times;</span>
                 </Link>
               )}
               {ward && (
-                <Link href={buildQueryString({ ward: "" })} className="app-filter-chip">
+                <Link href={`/elections/polling-stations${buildQueryString({ ward: "" })}`} className="app-filter-chip">
                   Ward: {ward} <span className="app-filter-chip-remove">&times;</span>
                 </Link>
               )}
               {q && (
-                <Link href={buildQueryString({ q: "" })} className="app-filter-chip">
+                <Link href={`/elections/polling-stations${buildQueryString({ q: "" })}`} className="app-filter-chip">
                   Search: &ldquo;{q}&rdquo; <span className="app-filter-chip-remove">&times;</span>
                 </Link>
               )}
-              <Link href="/elections/registered-voters" className="govuk-link govuk-!-margin-left-2">
+              <Link href="/elections/polling-stations" className="govuk-link govuk-!-margin-left-2">
                 Clear all filters
               </Link>
             </div>
@@ -278,22 +356,25 @@ export default async function RegisteredVotersPage({
             <div className="app-table-responsive">
               <table className="govuk-table">
                 <caption className="govuk-table__caption govuk-visually-hidden">
-                  Polling stations with voter registration numbers
+                  Polling stations for {selectedElection.label}
                 </caption>
                 <thead className="govuk-table__head">
                   <tr className="govuk-table__row">
                     <th scope="col" className="govuk-table__header">No.</th>
                     <th scope="col" className="govuk-table__header">IEBC code</th>
                     <th scope="col" className="govuk-table__header">Polling station</th>
+                    <th scope="col" className="govuk-table__header">Stream</th>
+                    <th scope="col" className="govuk-table__header">Registration centre</th>
                     <th scope="col" className="govuk-table__header">Ward</th>
                     <th scope="col" className="govuk-table__header">Constituency</th>
                     <th scope="col" className="govuk-table__header govuk-table__header--numeric">Registered voters</th>
                   </tr>
                 </thead>
                 <tbody className="govuk-table__body">
-                  {stations?.map((station, index) => {
+                  {stations?.map((station: any, index) => {
                     const constName = (station.constituencies as any)?.name || "—";
                     const wName = (station.wards as any)?.name || "—";
+                    const voters = station[selectedElection.votersColumn];
 
                     return (
                       <tr key={station.id} className="govuk-table__row">
@@ -304,14 +385,20 @@ export default async function RegisteredVotersPage({
                           <code className="app-station-code">{station.polling_station_code}</code>
                         </td>
                         <th scope="row" className="govuk-table__header">
-                          <Link href={`/elections/registered-voters/${station.slug}`} className="govuk-link">
+                          <Link href={`/elections/polling-stations/${station.slug}`} className="govuk-link">
                             {station.name}
                           </Link>
                         </th>
+                        <td className="govuk-table__cell">
+                          {station.stream_number || "—"}
+                        </td>
+                        <td className="govuk-table__cell">
+                          {station.reg_centre_name || "—"}
+                        </td>
                         <td className="govuk-table__cell">{wName}</td>
                         <td className="govuk-table__cell">{constName}</td>
                         <td className="govuk-table__cell govuk-table__cell--numeric">
-                          {station.registered_voters_2022 ? station.registered_voters_2022.toLocaleString() : "0"}
+                          {voters ? voters.toLocaleString() : "0"}
                         </td>
                       </tr>
                     );
@@ -324,7 +411,7 @@ export default async function RegisteredVotersPage({
             <GovUKPagination
               currentPage={currentPage}
               totalPages={totalPages}
-              baseUrl="/elections/registered-voters"
+              baseUrl="/elections/polling-stations"
               queryParams={paginationParams}
             />
           </>
@@ -334,7 +421,7 @@ export default async function RegisteredVotersPage({
               No polling stations match your filters.
             </p>
             <p className="govuk-body govuk-!-margin-bottom-0">
-              <Link href="/elections/registered-voters" className="govuk-link">
+              <Link href="/elections/polling-stations" className="govuk-link">
                 Clear all filters and view all polling stations
               </Link>
             </p>
@@ -343,11 +430,71 @@ export default async function RegisteredVotersPage({
 
         <hr className="govuk-section-break govuk-section-break--l govuk-section-break--visible" />
 
+        <div className="govuk-inset-text">
+          <p className="govuk-body govuk-!-margin-bottom-0">
+            Polling station data is provided by the Independent Electoral and Boundaries Commission (IEBC). 
+            Registered voter numbers are based on the official voter register for the selected election year.
+          </p>
+        </div>
+
         <LastUpdated published="2026-01-01" lastUpdated="2026-07-02" />
 
       </main>
 
       <style>{`
+        .app-election-year-selector {
+          padding: 20px;
+          background-color: #f3f2f1;
+          border-left: 4px solid #00703c;
+        }
+
+        .app-election-year-form {
+          display: flex;
+          gap: 20px;
+          align-items: flex-end;
+          flex-wrap: wrap;
+        }
+
+        .app-election-year-group {
+          flex: 1;
+          min-width: 200px;
+        }
+
+        .app-election-year-group .govuk-select {
+          width: 100%;
+        }
+
+        .app-election-year-actions {
+          padding-bottom: 2px;
+        }
+
+        .app-filters-panel {
+          padding: 20px;
+          background-color: #f3f2f1;
+          border-left: 4px solid #1d70b8;
+        }
+
+        .app-filters-form {
+          display: flex;
+          flex-direction: column;
+          gap: 15px;
+        }
+
+        .app-filters-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          gap: 15px;
+        }
+
+        .app-filters-grid .govuk-form-group {
+          margin-bottom: 0;
+        }
+
+        .app-filters-grid .govuk-select,
+        .app-filters-grid .govuk-input {
+          width: 100%;
+        }
+
         .app-active-filters {
           padding: 15px;
           background-color: #f3f2f1;
@@ -414,6 +561,19 @@ export default async function RegisteredVotersPage({
         }
 
         @media (max-width: 40.0625rem) {
+          .app-election-year-form {
+            flex-direction: column;
+            align-items: stretch;
+          }
+
+          .app-election-year-group {
+            min-width: 100%;
+          }
+
+          .app-filters-grid {
+            grid-template-columns: 1fr;
+          }
+
           .app-export-bar {
             flex-direction: column;
             align-items: flex-start;

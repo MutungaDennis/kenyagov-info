@@ -1,6 +1,6 @@
+// schemaTypes/page.ts
 import { Rule } from 'sanity';
 
-// schemaTypes/page.ts
 export const page = {
   name: 'page',
   title: 'Page',

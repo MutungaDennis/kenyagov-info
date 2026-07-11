@@ -1,34 +1,36 @@
-"use client";
+// components/votes/polling-station-filters.tsx
+'use client';
 
-import { useRouter } from "next/navigation";
-import { useState, useTransition, useEffect } from "react";
+import { useState, useEffect, useMemo } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 
-interface CountyItem {
+interface County {
   name: string;
-  code: number;
+  code: string | number;
 }
 
-interface ConstituencyItem {
+interface Constituency {
   name: string;
-  county_code: number;
+  county_code: string | number;
   constituency_code: string;
 }
 
-interface WardItem {
+interface Ward {
   name: string;
   ward_code: string;
   constituency_code: string;
 }
 
-interface FilterProps {
-  counties: CountyItem[];
-  constituencies: ConstituencyItem[];
-  wards: WardItem[];
+interface PollingStationFiltersProps {
+  counties: County[];
+  constituencies: Constituency[];
+  wards: Ward[];
   selectedCounty: string;
   selectedConstituency: string;
   selectedWard: string;
   search: string;
-  totalResults: number; // Injected to show live filter matches dynamically
+  totalResults: number;
+  action?: string;
 }
 
 export default function PollingStationFilters({
@@ -40,218 +42,186 @@ export default function PollingStationFilters({
   selectedWard,
   search,
   totalResults,
-}: FilterProps) {
+  action = '/elections/polling-stations',
+}: PollingStationFiltersProps) {
   const router = useRouter();
-  const [isPending, startTransition] = useTransition();
+  const searchParams = useSearchParams();
 
-  // Core filter form states
   const [county, setCounty] = useState(selectedCounty);
   const [constituency, setConstituency] = useState(selectedConstituency);
   const [ward, setWard] = useState(selectedWard);
-  const [q, setQ] = useState(search);
+  const [searchQuery, setSearchQuery] = useState(search);
 
-  // Dynamic lists that change based on user context selection
-  const [visibleConstituencies, setVisibleConstituencies] = useState<ConstituencyItem[]>(constituencies);
-  const [visibleWards, setVisibleWards] = useState<WardItem[]>(wards);
+  // Filter constituencies based on selected county
+  const filteredConstituencies = useMemo(() => {
+    if (!county) return constituencies;
+    const countyObj = counties.find(co => co.name === county);
+    if (!countyObj) return [];
+    return constituencies.filter(c => String(c.county_code) === String(countyObj.code));
+  }, [county, counties, constituencies]);
 
-  // ============================================
-  // CASCADING RELATIONSHIP ENGINE
-  // ============================================
-  useEffect(() => {
-    let activeCountyCode: number | null = null;
-    let activeConstituencyCode: string | null = null;
+  // Filter wards based on selected constituency or county
+  // Deduplicate by ward_code to prevent React key errors
+  const filteredWards = useMemo(() => {
+    let result: Ward[];
 
-    // 1. If a County is selected, discover its code
-    if (county) {
-      const match = counties.find(c => c.name === county);
-      if (match) activeCountyCode = match.code;
-    }
-
-    // 2. Handle Constituency cross-linking
     if (constituency) {
-      const match = constituencies.find(c => c.name === constituency);
-      if (match) {
-        activeConstituencyCode = match.constituency_code;
-        
-        // BACK-FILL COUNTY: If no county is selected, auto-select the parent county
-        const parentCounty = counties.find(c => c.code === match.county_code);
-        if (parentCounty && county !== parentCounty.name) {
-          setCounty(parentCounty.name);
-          activeCountyCode = parentCounty.code;
-        }
-      }
-    }
-
-    // 3. Narrow constituencies dropdown list down dynamically
-    if (activeCountyCode !== null) {
-      const filtered = constituencies.filter(c => c.county_code === activeCountyCode);
-      setVisibleConstituencies(filtered);
-      
-      // Clear selection if current selection is orphaned outside the selected county
-      if (constituency && !filtered.some(c => c.name === constituency)) {
-        setConstituency("");
-        setWard("");
-        activeConstituencyCode = null;
-      }
+      const constObj = constituencies.find(c => c.name === constituency);
+      if (!constObj) return [];
+      result = wards.filter(w => w.constituency_code === constObj.constituency_code);
+    } else if (county) {
+      const countyObj = counties.find(co => co.name === county);
+      if (!countyObj) return [];
+      const constCodes = constituencies
+        .filter(c => String(c.county_code) === String(countyObj.code))
+        .map(c => c.constituency_code);
+      result = wards.filter(w => constCodes.includes(w.constituency_code));
     } else {
-      setVisibleConstituencies(constituencies);
+      result = wards;
     }
 
-    // 4. Narrow wards dropdown list down dynamically
-    if (activeConstituencyCode !== null) {
-      const filtered = wards.filter(w => w.constituency_code === activeConstituencyCode);
-      setVisibleWards(filtered);
-
-      // Clear ward selection if orphaned outside the current constituency boundary
-      if (ward && !filtered.some(w => w.name === ward)) {
-        setWard("");
-      }
-    } else if (activeCountyCode !== null) {
-      // If a county is selected but no constituency, show all wards belonging to that county's constituencies
-      const allowedConstituencies = constituencies.filter(c => c.county_code === activeCountyCode).map(c => c.constituency_code);
-      const filtered = wards.filter(w => allowedConstituencies.includes(w.constituency_code));
-      setVisibleWards(filtered);
-      
-      if (ward && !filtered.some(w => w.name === ward)) {
-        setWard("");
-      }
-    } else {
-      setVisibleWards(wards);
-    }
-
+    // Deduplicate by ward_code — keep the first occurrence of each
+    const seen = new Set<string>();
+    return result.filter(w => {
+      if (seen.has(w.ward_code)) return false;
+      seen.add(w.ward_code);
+      return true;
+    });
   }, [county, constituency, counties, constituencies, wards]);
 
-  // Submit and route layout updates
-  const handleFormSubmit = (e: React.FormEvent) => {
+  // Reset dependent filters when parent changes
+  useEffect(() => {
+    if (!county) {
+      setConstituency('');
+      setWard('');
+    }
+  }, [county]);
+
+  useEffect(() => {
+    if (!constituency) {
+      setWard('');
+    }
+  }, [constituency]);
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    startTransition(() => {
-      const params = new URLSearchParams();
-      if (county) params.set("county", county);
-      if (constituency) params.set("constituency", constituency);
-      if (ward) params.set("ward", ward);
-      if (q) params.set("q", q.trim());
-      
-      router.push(`/politics/votes?${params.toString()}`);
-    });
+    const params = new URLSearchParams();
+    if (county) params.set('county', county);
+    if (constituency) params.set('constituency', constituency);
+    if (ward) params.set('ward', ward);
+    if (searchQuery) params.set('q', searchQuery);
+    
+    // Preserve year parameter if it exists
+    const year = searchParams.get('year');
+    if (year) params.set('year', year);
+    
+    const queryString = params.toString();
+    router.push(`${action}${queryString ? `?${queryString}` : ''}`);
   };
 
-  // Reset form helper utility
   const handleReset = () => {
-    setCounty("");
-    setConstituency("");
-    setWard("");
-    setQ("");
-    startTransition(() => {
-      router.push("/politics/votes");
-    });
+    setCounty('');
+    setConstituency('');
+    setWard('');
+    setSearchQuery('');
+    router.push(action);
   };
 
   return (
-    <form onSubmit={handleFormSubmit} style={{ background: '#f3f2f1', padding: '20px', border: '1px solid #bfc1c3', marginBottom: '25px' }}>
-      
-      {/* REAL-TIME STATE DATA MONITORS */}
-      <div style={{ background: '#fff', borderLeft: '4px solid #1d70b8', padding: '10px 15px', marginBottom: '20px' }}>
-        <p className="govuk-body-s govuk-!-margin-0" aria-live="polite">
-          <strong>Database Insight:</strong> Your criteria matches <strong>{totalResults.toLocaleString()}</strong> distinct IEBC polling stream centers in real-time.
-        </p>
-      </div>
+    <div className="app-filters-panel govuk-!-margin-bottom-6">
+      <form onSubmit={handleSubmit} className="app-filters-form">
+        <div className="app-filters-grid">
+          <div className="govuk-form-group">
+            <label className="govuk-label govuk-label--s" htmlFor="county">
+              County
+            </label>
+            <select
+              id="county"
+              name="county"
+              className="govuk-select"
+              value={county}
+              onChange={(e) => setCounty(e.target.value)}
+            >
+              <option value="">All counties</option>
+              {counties.map((c) => (
+                <option key={c.code} value={c.name}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '15px', alignItems: 'end' }}>
-        
-        {/* SELECT COUNTY */}
-        <div>
-          <label className="govuk-label govuk-body-s govuk-!-font-weight-bold" htmlFor="filter-county">
-            County
-          </label>
-          <select
-            id="filter-county"
-            className="govuk-select"
-            style={{ width: '100%', height: '38px', borderColor: '#464d51' }}
-            value={county}
-            onChange={(e) => setCounty(e.target.value)}
-          >
-            <option value="">All 47 Counties</option>
-            {counties.map((c, idx) => (
-              <option key={idx} value={c.name}>{c.name}</option>
-            ))}
-          </select>
+          <div className="govuk-form-group">
+            <label className="govuk-label govuk-label--s" htmlFor="constituency">
+              Constituency
+            </label>
+            <select
+              id="constituency"
+              name="constituency"
+              className="govuk-select"
+              value={constituency}
+              onChange={(e) => setConstituency(e.target.value)}
+              disabled={!county && constituencies.length > 0}
+            >
+              <option value="">All constituencies</option>
+              {filteredConstituencies.map((c) => (
+                <option key={c.constituency_code} value={c.name}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="govuk-form-group">
+            <label className="govuk-label govuk-label--s" htmlFor="ward">
+              Ward
+            </label>
+            <select
+              id="ward"
+              name="ward"
+              className="govuk-select"
+              value={ward}
+              onChange={(e) => setWard(e.target.value)}
+              disabled={!constituency && wards.length > 0}
+            >
+              <option value="">All wards</option>
+              {filteredWards.map((w) => (
+                <option key={w.ward_code} value={w.name}>
+                  {w.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="govuk-form-group">
+            <label className="govuk-label govuk-label--s" htmlFor="q">
+              Search
+            </label>
+            <input
+              id="q"
+              name="q"
+              type="text"
+              className="govuk-input"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Station name or code"
+            />
+          </div>
         </div>
 
-        {/* SELECT CONSTITUENCY */}
-        <div>
-          <label className="govuk-label govuk-body-s govuk-!-font-weight-bold" htmlFor="filter-constituency">
-            Constituency
-          </label>
-          <select
-            id="filter-constituency"
-            className="govuk-select"
-            style={{ width: '100%', height: '38px', borderColor: '#464d51' }}
-            value={constituency}
-            onChange={(e) => setConstituency(e.target.value)}
-          >
-            <option value="">All Constituencies</option>
-            {visibleConstituencies.map((c, idx) => (
-              <option key={idx} value={c.name}>{c.name}</option>
-            ))}
-          </select>
-        </div>
-
-        {/* SELECT ELECTORAL WARD */}
-        <div>
-          <label className="govuk-label govuk-body-s govuk-!-font-weight-bold" htmlFor="filter-ward">
-            Electoral Ward
-          </label>
-          <select
-            id="filter-ward"
-            className="govuk-select"
-            style={{ width: '100%', height: '38px', borderColor: '#464d51' }}
-            value={ward}
-            onChange={(e) => setWard(e.target.value)}
-          >
-            <option value="">All Wards</option>
-            {visibleWards.map((w, idx) => (
-              <option key={idx} value={w.name}>{w.name}</option>
-            ))}
-          </select>
-        </div>
-
-        {/* SEARCH STATIONS */}
-        <div>
-          <label className="govuk-label govuk-body-s govuk-!-font-weight-bold" htmlFor="filter-search">
-            Search center name or code
-          </label>
-          <input
-            id="filter-search"
-            type="text"
-            className="govuk-input"
-            style={{ width: '100%', height: '38px', padding: '5px', boxSizing: 'border-box' }}
-            placeholder="e.g., BOMU PRIMARY"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-          />
-        </div>
-
-        {/* CTA SUBMIT AND RESET BLOCK */}
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button
-            type="submit"
-            className="govuk-button"
-            disabled={isPending}
-            style={{ flex: 2, margin: 0, height: '38px', background: '#00703c', color: '#fff', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}
-          >
-            {isPending ? "Updating..." : "Filter results"}
+        <div className="govuk-button-group">
+          <button type="submit" className="govuk-button govuk-!-margin-bottom-0">
+            Apply filters
           </button>
           <button
             type="button"
             onClick={handleReset}
-            className="govuk-button govuk-button--secondary"
-            style={{ flex: 1, margin: 0, height: '38px', background: '#e0e0e0', color: '#0b0c0c', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}
+            className="govuk-button govuk-button--secondary govuk-!-margin-bottom-0"
           >
             Reset
           </button>
         </div>
-
-      </div>
-    </form>
+      </form>
+    </div>
   );
 }

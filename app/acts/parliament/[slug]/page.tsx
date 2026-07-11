@@ -1,25 +1,14 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-import GovUKFeedback from "@/components/govuk/Feedback";
+
 import PrintPageButton from "@/components/govuk/PrintPageButton";
 import { getActOfParliamentBySlug } from "@/lib/sanity/client";
-import type { Metadata } from 'next';
 
 type Props = {
   params: Promise<{ slug: string }>;
 };
 
 export const revalidate = 60;
-
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { slug } = await params;
-  const title = slug.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
-  return {
-    title: `${title} Act of Parliament`,
-    description: `Full details, arrangement and text of the ${title} Act passed by the Parliament of Kenya.`,
-  };
-}
 
 export default async function ActTableOfContentsPage({ params }: Props) {
   const { slug } = await params;
@@ -59,14 +48,14 @@ export default async function ActTableOfContentsPage({ params }: Props) {
         <div className="govuk-!-margin-bottom-4" style={{ display: "flex", gap: "1.5rem", flexWrap: "wrap", alignItems: "center" }}>
           <PrintPageButton />
           {act.pdfDocument?.asset?.url && (
-            <Link href={act.pdfDocument.asset.url} className="govuk-link govuk-link--no-underline" target="_blank">
+            <a href={act.pdfDocument.asset.url} className="govuk-link govuk-link--no-underline" target="_blank" rel="noopener noreferrer">
               Download PDF Act
-            </Link>
+            </a>
           )}
           {act.officialKenyaLawUrl && (
-            <Link href={act.officialKenyaLawUrl} className="govuk-link govuk-link--no-underline" target="_blank">
+            <a href={act.officialKenyaLawUrl} className="govuk-link govuk-link--no-underline" target="_blank" rel="noopener noreferrer">
               View on Kenya Law
-            </Link>
+            </a>
           )}
         </div>
 
@@ -114,9 +103,9 @@ export default async function ActTableOfContentsPage({ params }: Props) {
                               <span style={{ fontWeight: "bold", minWidth: "30px", display: "inline-block", color: "#505a5f", fontSize: "14px" }}>
                                 {section.sectionNumber}.
                               </span>
-                              <Link href={`/acts/parliament/${slug}/${i}#section-${section.sectionNumber}`} className="govuk-link govuk-link--no-underline" style={{ fontSize: "15px" }}>
+                              <a href={`/acts/parliament/${slug}/${i}#section-${section.sectionNumber}`} className="govuk-link govuk-link--no-underline" style={{ fontSize: "15px" }}>
                                 {section.sectionTitle}
-                              </Link>
+                              </a>
                             </li>
                           )) || <li className="govuk-body-s govuk-!-text-colour-dark-grey">No sections loaded.</li>}
                         </ul>
@@ -127,18 +116,18 @@ export default async function ActTableOfContentsPage({ params }: Props) {
                               <span style={{ fontWeight: "bold", minWidth: "30px", display: "inline-block", color: "#505a5f", fontSize: "14px" }}>
                                 {schedItem.itemNumber}.
                               </span>
-                              <Link href={`/acts/parliament/${slug}/${i}`} className="govuk-link govuk-link--no-underline" style={{ fontSize: "15px" }}>
+                              <a href={`/acts/parliament/${slug}/${i}`} className="govuk-link govuk-link--no-underline" style={{ fontSize: "15px" }}>
                                 {schedItem.itemTitle || "Schedule Provision Clause"}
-                              </Link>
+                              </a>
                             </li>
                           )) || <li className="govuk-body-s govuk-!-text-colour-dark-grey">No schedule items loaded.</li>}
                         </ul>
                       )}
 
                       <div className="govuk-!-margin-top-3" style={{ paddingLeft: "30px" }}>
-                        <Link href={`/acts/parliament/${slug}/${i}`} className="govuk-link govuk-link--no-underline govuk-!-font-weight-bold" style={{ fontSize: "14px" }}>
+                        <a href={`/acts/parliament/${slug}/${i}`} className="govuk-link govuk-link--no-underline govuk-!-font-weight-bold" style={{ fontSize: "14px" }}>
                           Go to full text for this section →
-                        </Link>
+                        </a>
                       </div>
                     </div>
                   </details>
@@ -149,7 +138,6 @@ export default async function ActTableOfContentsPage({ params }: Props) {
           </div>
         </div>
 
-        <GovUKFeedback />
       </main>
 
       <style dangerouslySetInnerHTML={{__html: `
