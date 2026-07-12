@@ -206,7 +206,18 @@ Open the URL Wrangler prints and check:
 
 ---
 
-## 9. Troubleshooting
+## 9. Middleware note (Next.js 16 + OpenNext)
+
+Next.js 16 prefers `proxy.ts` (Node runtime). **OpenNext Cloudflare does not support Node middleware yet.**
+
+This project uses classic **`middleware.ts`** (Edge) for Supabase admin session protection.  
+That is intentional for Cloudflare. You may see a deprecation warning from Next.js; ignore it until OpenNext supports Node Proxy.
+
+Do **not** reintroduce root `proxy.ts` until OpenNext documents Node middleware support.
+
+---
+
+## 10. Troubleshooting
 
 **Build fails with missing `NEXT_PUBLIC_*`**  
 Export them in CI/build env; public vars are compile-time.
@@ -222,6 +233,16 @@ Ensure `packageManager` or lockfile is detected; this repo has `pnpm-lock.yaml` 
 
 **Preview works, production missing data**  
 Secrets set only in `.dev.vars` are local—add them in the Cloudflare dashboard for production.
+
+**Windows: `EPERM: operation not permitted, symlink`**  
+OpenNext creates symlinks while bundling. On Windows this needs either:
+
+1. **Windows Developer Mode** (Settings → Privacy & security → For developers → Developer Mode), then rebuild, or  
+2. The repo `postinstall` patch (`scripts/patch-opennext-windows.mjs`) which falls back to file copy, or  
+3. Build on **Cloudflare Git CI** (Linux) / WSL — preferred for production deploys.
+
+**Windows warning from OpenNext**  
+OpenNext recommends WSL for local builds. Cloudflare’s own build machines are Linux and do not have this issue.
 
 ---
 

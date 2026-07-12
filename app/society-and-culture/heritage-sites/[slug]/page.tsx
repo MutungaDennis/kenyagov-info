@@ -20,8 +20,16 @@ export const revalidate = 3600
 
 // Generate static params for all site slugs
 export async function generateStaticParams() {
-  const slugs = await sanityClient.fetch(HERITAGE_SITE_SLUGS_QUERY)
-  return slugs.map((s: { slug: string }) => ({ slug: s.slug }))
+  try {
+    const slugs = await sanityClient.fetch(HERITAGE_SITE_SLUGS_QUERY)
+    return (slugs ?? []).map((s: { slug: string }) => ({ slug: s.slug }))
+  } catch (error) {
+    console.warn(
+      '[heritage-sites] generateStaticParams failed; building without pre-rendered slugs:',
+      error instanceof Error ? error.message : error
+    )
+    return []
+  }
 }
 
 // SEO metadata

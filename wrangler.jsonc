@@ -3,7 +3,7 @@
   // Worker name on Cloudflare (change if you prefer)
   "name": "citizenguide-ke",
   "main": ".open-next/worker.js",
-  "compatibility_date": "2025-03-01",
+  "compatibility_date": "2025-10-01",
   "compatibility_flags": [
     // Required for Next.js on Cloudflare (Node.js APIs)
     "nodejs_compat",

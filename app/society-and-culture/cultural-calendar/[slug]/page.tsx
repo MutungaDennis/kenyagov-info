@@ -19,10 +19,18 @@ import {
 
 export const revalidate = 3600
 
-// Generate static params for all event slugs
+// Generate static params for all event slugs (tolerate CMS/network outages at build)
 export async function generateStaticParams() {
-  const slugs = await sanityClient.fetch(CULTURAL_EVENT_SLUGS_QUERY)
-  return slugs.map((s: { slug: string }) => ({ slug: s.slug }))
+  try {
+    const slugs = await sanityClient.fetch(CULTURAL_EVENT_SLUGS_QUERY)
+    return (slugs ?? []).map((s: { slug: string }) => ({ slug: s.slug }))
+  } catch (error) {
+    console.warn(
+      '[cultural-calendar] generateStaticParams failed; building without pre-rendered slugs:',
+      error instanceof Error ? error.message : error
+    )
+    return []
+  }
 }
 
 // SEO metadata
