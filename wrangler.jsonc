@@ -1,0 +1,39 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  // Worker name on Cloudflare (change if you prefer)
+  "name": "citizenguide-ke",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2025-03-01",
+  "compatibility_flags": [
+    // Required for Next.js on Cloudflare (Node.js APIs)
+    "nodejs_compat",
+    "global_fetch_strictly_public"
+  ],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  // Self-reference for OpenNext routing / ISR helpers
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "citizenguide-ke"
+    }
+  ],
+  // Optional: enable Next.js incremental cache on R2 (recommended for production)
+  // 1. Create bucket: wrangler r2 bucket create citizenguide-ke-next-cache
+  // 2. Uncomment below and set bucket_name
+  // "r2_buckets": [
+  //   {
+  //     "binding": "NEXT_INC_CACHE_R2_BUCKET",
+  //     "bucket_name": "citizenguide-ke-next-cache"
+  //   }
+  // ],
+  // Optional: Cloudflare Images binding for next/image optimization
+  // "images": {
+  //   "binding": "IMAGES"
+  // },
+  "observability": {
+    "enabled": true
+  }
+}

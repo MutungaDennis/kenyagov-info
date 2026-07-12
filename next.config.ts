@@ -1,8 +1,9 @@
 import type { NextConfig } from "next";
 import path from "path";
+import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
 
 const nextConfig: NextConfig = {
-  // 1. Tell Next.js to leave pdfjs-dist alone and resolve it directly from node_modules
+  // Tell Next.js to leave pdfjs-dist alone and resolve it from node_modules
   serverExternalPackages: ['pdfjs-dist'],
 
   sassOptions: {
@@ -14,7 +15,7 @@ const nextConfig: NextConfig = {
   webpack: (config) => {
     config.resolve.alias = {
       ...config.resolve.alias,
-      // This maps 'govuk-frontend' directly to the folder containing the assets
+      // Maps 'govuk-frontend' to the folder containing the assets
       "govuk-frontend": path.resolve(__dirname, "node_modules/govuk-frontend/dist/govuk"),
     };
     return config;
@@ -25,6 +26,7 @@ const nextConfig: NextConfig = {
       "govuk-frontend": path.resolve(__dirname, "node_modules/govuk-frontend/dist/govuk"),
     },
   },
+
 
   // ==========================================
   // REDIRECTS FOR SEO CONTINUITY
@@ -257,3 +259,7 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
+
+// OpenNext Cloudflare: enable local bindings during `next dev`.
+// https://opennext.js.org/cloudflare/get-started
+initOpenNextCloudflareForDev();
