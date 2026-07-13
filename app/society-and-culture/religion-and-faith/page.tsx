@@ -58,9 +58,10 @@ export default function ReligionAndFaithPage() {
           .order("census_year", { ascending: false });
 
         if (yearError) throw yearError;
-        setYears(data || []);
+        const yearRows = (data || []) as CensusYear[];
+        setYears(yearRows);
         
-        const activeYear = data?.find(y => y.is_active) || data?.[0];
+        const activeYear = yearRows.find((y: CensusYear) => y.is_active) || yearRows[0];
         if (activeYear) setSelectedYearId(activeYear.id);
       } catch (err: any) {
         setError(err.message || "Failed to load census years.");

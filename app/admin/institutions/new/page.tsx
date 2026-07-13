@@ -56,7 +56,12 @@ export default function NewInstitutionPage() {
         .not('institution_type', 'is', null)
         .order('institution_type');
 
-      setInstitutionTypes([...new Set(typesData?.map(item => item.institution_type) || [])]);
+      const unique = (values: (string | null | undefined)[] | undefined) =>
+        [...new Set((values ?? []).filter((v): v is string => typeof v === 'string' && v.length > 0))];
+
+      setInstitutionTypes(
+        unique(typesData?.map((item: { institution_type: string | null }) => item.institution_type)),
+      );
 
       // Government Levels
       const { data: levelsData } = await supabase
@@ -64,7 +69,9 @@ export default function NewInstitutionPage() {
         .select('government_level')
         .not('government_level', 'is', null);
 
-      setGovernmentLevels([...new Set(levelsData?.map(item => item.government_level) || [])]);
+      setGovernmentLevels(
+        unique(levelsData?.map((item: { government_level: string | null }) => item.government_level)),
+      );
 
       // MTEF Sectors
       const { data: sectorsData } = await supabase
@@ -72,7 +79,9 @@ export default function NewInstitutionPage() {
         .select('mtef_sector')
         .not('mtef_sector', 'is', null);
 
-      setMtefSectors([...new Set(sectorsData?.map(item => item.mtef_sector) || [])]);
+      setMtefSectors(
+        unique(sectorsData?.map((item: { mtef_sector: string | null }) => item.mtef_sector)),
+      );
     };
 
     fetchOptions();

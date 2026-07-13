@@ -61,9 +61,18 @@ export default function EditInstitutionPage({ params }: { params: Promise<{ id: 
         supabase.from('institutions').select('mtef_sector').not('mtef_sector', 'is', null),
       ]);
 
-      setInstitutionTypes([...new Set(typesRes.data?.map((t) => t.institution_type) || [])]);
-      setGovernmentLevels([...new Set(levelsRes.data?.map((l) => l.government_level) || [])]);
-      setMtefSectors([...new Set(sectorsRes.data?.map((s) => s.mtef_sector) || [])]);
+      const unique = (values: (string | null | undefined)[] | undefined) =>
+        [...new Set((values ?? []).filter((v): v is string => typeof v === "string" && v.length > 0))];
+
+      setInstitutionTypes(
+        unique(typesRes.data?.map((t: { institution_type: string | null }) => t.institution_type)),
+      );
+      setGovernmentLevels(
+        unique(levelsRes.data?.map((l: { government_level: string | null }) => l.government_level)),
+      );
+      setMtefSectors(
+        unique(sectorsRes.data?.map((s: { mtef_sector: string | null }) => s.mtef_sector)),
+      );
     };
 
     fetchOptions();
