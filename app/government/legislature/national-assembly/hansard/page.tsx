@@ -1,16 +1,11 @@
 import Link from "next/link";
-import { createClient } from "next-sanity";
+import { createSanityClient } from "@/lib/sanity/createSanityClient";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 
 // ============================================
 // SANITY CLIENT (same as main Hansard hub)
 // ============================================
-const sanityClient = createClient({
-  projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || "",
-  dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || "production",
-  apiVersion: "2024-01-01",
-  useCdn: true,
-});
+const sanityClient = createSanityClient();
 
 export const revalidate = 3600; // ISR: Revalidate every hour
 

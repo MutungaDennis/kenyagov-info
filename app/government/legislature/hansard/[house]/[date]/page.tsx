@@ -1,16 +1,11 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { createClient } from 'next-sanity';
+import { createSanityClient } from "@/lib/sanity/createSanityClient";
 import { PortableText } from '@portabletext/react';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import GovUKBreadcrumbs from '@/components/govuk/Breadcrumbs';
 
-const sanityClient = createClient({
-  projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || '',
-  dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || 'production',
-  apiVersion: '2024-01-01',
-  useCdn: true,
-});
+const sanityClient = createSanityClient();
 
 type ContributionType = 'spoken' | 'procedural' | 'header';
 

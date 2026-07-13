@@ -5,17 +5,12 @@ import Link from "next/link";
 import { useState, useEffect, useMemo, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-import { createClient } from "next-sanity";
+import { createSanityClient } from "@/lib/sanity/createSanityClient";
 
 // ==========================================
 // 1. SANITY CLIENT & QUERIES
 // ==========================================
-const sanityClient = createClient({
-  projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || "your-project-id",
-  dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || "production",
-  apiVersion: "2026-06-19",
-  useCdn: true,
-});
+const sanityClient = createSanityClient();
 
 // ✅ UPDATED: Added 'slug' to the query so it is fetched from Sanity
 const VISITS_QUERY = `*[_type == "presidentialTrip"] | order(departureDate desc) {

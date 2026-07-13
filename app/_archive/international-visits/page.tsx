@@ -3,15 +3,10 @@
 import { useState, useEffect, useMemo } from "react";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import Link from "next/link";
-import { createClient } from "next-sanity";
+import { createSanityClient } from "@/lib/sanity/createSanityClient";
 
 // Configure local Client pointing directly to your Sanity Studio Dataset
-const sanityClient = createClient({
-  projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || "your-project-id",
-  dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || "production",
-  apiVersion: "2026-06-19",
-  useCdn: true,
-});
+const sanityClient = createSanityClient();
 
 // Explicit TS Interfaces mapped exactly against our presidentialTrip schema types
 type SpeechItem = {

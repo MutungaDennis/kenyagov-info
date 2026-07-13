@@ -1,13 +1,7 @@
-import { createClient } from 'next-sanity';
+import { createSanityWriteClient } from "@/lib/sanity/createSanityClient";
 import Link from 'next/link';
 
-const sanity = createClient({
-  projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID!,
-  dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || 'production',
-  apiVersion: '2024-01-01',
-  useCdn: false,
-  token: process.env.SANITY_API_TOKEN, // Optional but recommended for admin
-});
+const sanity = createSanityWriteClient();
 
 interface HansardSitting {
   _id: string;

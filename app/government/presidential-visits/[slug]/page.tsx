@@ -4,17 +4,12 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { createClient } from "next-sanity";
+import { createSanityClient } from "@/lib/sanity/createSanityClient";
 import { PortableText } from "@portabletext/react";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 
 // Configure Sanity Client
-const sanityClient = createClient({
-  projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || "your-project-id",
-  dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || "production",
-  apiVersion: "2026-06-19",
-  useCdn: true,
-});
+const sanityClient = createSanityClient();
 
 // Type Definitions
 type SpeechItem = {

@@ -1,16 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { processHansardPdf } from '@/lib/hansard-processor';
-import { createClient } from 'next-sanity';
+import { createSanityWriteClient } from "@/lib/sanity/createSanityClient";
 
 export const maxDuration = 300; // 5 minutes for long Hansards
 
-const sanityClient = createClient({
-  projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID!,
-  dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || 'production',
-  apiVersion: '2024-01-01',
-  token: process.env.SANITY_API_TOKEN,
-  useCdn: false,
-});
+const sanityClient = createSanityWriteClient();
 
 export async function POST(request: NextRequest) {
   try {
