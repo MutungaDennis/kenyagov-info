@@ -67,10 +67,10 @@ export async function POST(request: Request) {
 
     const arrayBuffer = await file.arrayBuffer();
     const fileBuffer = Buffer.from(arrayBuffer);
-    
+
     const parsedPdf = await parsePdf(fileBuffer);
     const fullText: string = parsedPdf?.text || '';
-    
+
     if (typeof fullText !== 'string' || !fullText.trim()) {
       return NextResponse.json({ error: 'Extracted PDF text layer is empty or type distorted.' }, { status: 422 });
     }
@@ -93,7 +93,7 @@ export async function POST(request: Request) {
      * 11. (\d+)\s*$ -> Registered Voter Count
      */
     const lineRegex = /(\d{3})\s*(.+?)\s*(?=\d{3}\s+[A-Z]|\d{3}[A-Z])(\d{3})\s*(.+?)\s*(?=\d{4}\s+[A-Z]|\d{4}[A-Z])(\d{4})\s*(.+?)\s*(?=\d{3}\s+[A-Z]|\d{3}[A-Z])(\d{3})\s*(.+?)\s*(?=\d{15})(\d{15})\s*(.+?)\s*(\d+)\s*$/gm;
-    
+
     const records = [];
     const contentLines = cleanText.split('\n');
 
@@ -118,12 +118,12 @@ export async function POST(request: Request) {
 
       if (match) {
         let [
-          _, 
-          county_code, county_name, 
-          const_code, const_name, 
-          caw_code, caw_name, 
-          reg_centre_code, reg_centre_name, 
-          polling_station_code, name, 
+          _,
+          county_code, county_name,
+          const_code, const_name,
+          caw_code, caw_name,
+          reg_centre_code, reg_centre_name,
+          polling_station_code, name,
           registered_voters
         ] = match;
 
@@ -151,11 +151,11 @@ export async function POST(request: Request) {
       const { error } = await supabaseAdmin.rpc('bulk_insert_polling_stations', {
         station_data: chunk
       });
-      
+
       if (error) {
-        return NextResponse.json({ 
-          error: `Database write failed at batch offset index ${i}`, 
-          details: error.message 
+        return NextResponse.json({
+          error: `Database write failed at batch offset index ${i}`,
+          details: error.message
         }, { status: 500 });
       }
     }
