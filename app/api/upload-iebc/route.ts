@@ -1,14 +1,31 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { createClient as createServerSupabase } from '@/lib/supabase/server';
 
 const parsePdf = require('pdf-parse-fork');
 
-// Use service role ONLY for the privileged bulk insert (RLS bypass is intentional here)
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+/**
+ * Lazy admin client — do NOT create at module scope.
+ * Cloudflare/CI collect page data without runtime secrets; top-level
+ * createClient(undefined, …) throws "supabaseUrl is required".
+ */
+function getSupabaseAdmin(): SupabaseClient {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!url || !serviceKey) {
+    throw new Error(
+      'Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY',
+    );
+  }
+
+  return createClient(url, serviceKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
+}
 
 export async function POST(request: Request) {
   // Enforce admin role on the API itself (defense in depth)
@@ -28,6 +45,18 @@ export async function POST(request: Request) {
   if (!profile?.is_admin) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
+
+  let supabaseAdmin: SupabaseClient;
+  try {
+    supabaseAdmin = getSupabaseAdmin();
+  } catch (err: any) {
+    console.error(err);
+    return NextResponse.json(
+      { error: 'Server is not configured for bulk uploads' },
+      { status: 503 },
+    );
+  }
+
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File;
