@@ -1,7 +1,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  // Worker name on Cloudflare (change if you prefer)
-  "name": "citizenguide-ke",
+  // Must match the Cloudflare Workers/Pages project name from the dashboard
+  "name": "kenyagov-info",
   "main": ".open-next/worker.js",
   "compatibility_date": "2025-10-01",
   "compatibility_flags": [
@@ -14,19 +14,20 @@
     "binding": "ASSETS"
   },
   // Self-reference for OpenNext routing / ISR helpers
+  // "service" must match "name" above
   "services": [
     {
       "binding": "WORKER_SELF_REFERENCE",
-      "service": "citizenguide-ke"
+      "service": "kenyagov-info"
     }
   ],
   // Optional: enable Next.js incremental cache on R2 (recommended for production)
-  // 1. Create bucket: wrangler r2 bucket create citizenguide-ke-next-cache
+  // 1. Create bucket: wrangler r2 bucket create kenyagov-info-next-cache
   // 2. Uncomment below and set bucket_name
   // "r2_buckets": [
   //   {
   //     "binding": "NEXT_INC_CACHE_R2_BUCKET",
-  //     "bucket_name": "citizenguide-ke-next-cache"
+  //     "bucket_name": "kenyagov-info-next-cache"
   //   }
   // ],
   // Optional: Cloudflare Images binding for next/image optimization

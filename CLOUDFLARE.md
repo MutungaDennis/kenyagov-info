@@ -57,7 +57,7 @@ pnpm exec wrangler login
 
 **Production (Cloudflare):** set the same keys in the Worker settings:
 
-- Dashboard → Workers & Pages → `citizenguide-ke` → Settings → Variables  
+- Dashboard → Workers & Pages → `kenyagov-info` → Settings → Variables  
   **or**
 
 ```bash
@@ -96,7 +96,7 @@ Also set as **plain environment variables** (not secrets) so the browser can rea
 ISR / data cache works better with R2:
 
 ```bash
-pnpm exec wrangler r2 bucket create citizenguide-ke-next-cache
+pnpm exec wrangler r2 bucket create kenyagov-info-next-cache
 ```
 
 Then uncomment `r2_buckets` in `wrangler.jsonc` and enable `r2IncrementalCache`
@@ -126,7 +126,7 @@ in `open-next.config.ts` (see comments in those files).
 pnpm run deploy
 ```
 
-First deploy creates Worker `citizenguide-ke`.  
+First deploy creates Worker `kenyagov-info`.  
 Custom domain: Workers & Pages → your worker → **Domains & Routes** → add `www.citizenguide.ke`.
 
 ---

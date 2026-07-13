@@ -83,7 +83,7 @@ pnpm run deploy
 
 Wrangler will print a URL like:
 
-`https://citizenguide-ke.<your-subdomain>.workers.dev`
+`https://kenyagov-info.<your-subdomain>.workers.dev`
 
 Test that URL thoroughly (home, constitution, services, contact, login).
 
@@ -96,7 +96,7 @@ Test that URL thoroughly (home, constitution, services, contact, login).
 
 | Setting | Value |
 |---------|--------|
-| Project name | `citizenguide-ke` (match `wrangler.jsonc` `name` if possible) |
+| Project name | `kenyagov-info` (match `wrangler.jsonc` `name` if possible) |
 | Production branch | `main` |
 | Build command | `pnpm run cf:build` |
 | Deploy command | `npx wrangler deploy` |
@@ -124,7 +124,7 @@ Only after Phase 1 looks good on `*.workers.dev`.
 
 ### 2.1 If the domain is already on Cloudflare DNS
 
-1. Workers & Pages → `citizenguide-ke` → **Settings → Domains & Routes** (or **Custom domains**).
+1. Workers & Pages → `kenyagov-info` → **Settings → Domains & Routes** (or **Custom domains**).
 2. Add:
    - `www.citizenguide.ke`
    - `citizenguide.ke` (apex), if you use it
@@ -237,4 +237,4 @@ pnpm run deploy
 pnpm exec wrangler login
 ```
 
-Dashboard: [dash.cloudflare.com](https://dash.cloudflare.com) → **Workers & Pages** → `citizenguide-ke`.
+Dashboard: [dash.cloudflare.com](https://dash.cloudflare.com) → **Workers & Pages** → `kenyagov-info`.
