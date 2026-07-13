@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-import { createClient } from "@/lib/supabase/client";
+import { createBrowserClientAsync } from "@/lib/supabase/client";
 
 // Define the shape of the joined leader_roles data
 type LeaderRole = {
@@ -60,14 +60,13 @@ export default function PersonProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const supabase = createClient();
-
   // Fetch the specific leader and their roles from Supabase
   useEffect(() => {
     const fetchPerson = async () => {
       if (!slug) return;
 
       try {
+        const supabase = await createBrowserClientAsync();
         const { data, error: fetchError } = await supabase
           .from('leaders')
           .select(`
@@ -92,7 +91,7 @@ export default function PersonProfilePage() {
     };
 
     fetchPerson();
-  }, [slug, supabase]);
+  }, [slug]);
 
   // Loading State
   if (isLoading) {

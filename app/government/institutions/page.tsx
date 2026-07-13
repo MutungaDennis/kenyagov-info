@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { useState, useMemo, useEffect } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { createBrowserClientAsync } from "@/lib/supabase/client";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 
 type Institution = {
@@ -42,7 +42,7 @@ export default function GovernmentInstitutionsPage() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const supabase = createClient();
+      const supabase = await createBrowserClientAsync();
 
       const { data, error } = await supabase
         .from('institutions')

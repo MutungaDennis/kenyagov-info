@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState, useEffect, useMemo, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-import { createClient } from "@/lib/supabase/client";
+import { createBrowserClientAsync } from "@/lib/supabase/client";
 
 // Define the shape of the joined leader_roles data
 type LeaderRole = {
@@ -40,7 +40,6 @@ export default function GovernmentPeoplePage() {
 }
 
 function PeopleDirectoryContent() {
-  const supabase = createClient();
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -72,9 +71,13 @@ function PeopleDirectoryContent() {
   };
 
   // 1. Fetch Data from Supabase (Joining leader_roles)
+  // createClient only inside useEffect so SSG/prerender never hits missing env
   useEffect(() => {
+    let cancelled = false;
+
     const fetchLeaders = async () => {
       try {
+        const supabase = await createBrowserClientAsync();
         const { data, error: fetchError } = await supabase
           .from('leaders')
           .select(`
@@ -90,17 +93,20 @@ function PeopleDirectoryContent() {
           .order('surname', { ascending: true });
 
         if (fetchError) throw fetchError;
-        setAllLeaders(data || []);
+        if (!cancelled) setAllLeaders(data || []);
       } catch (err: any) {
         console.error('Error fetching leaders:', err);
-        setError('Failed to load government officials.');
+        if (!cancelled) setError('Failed to load government officials.');
       } finally {
-        setIsLoading(false);
+        if (!cancelled) setIsLoading(false);
       }
     };
 
     fetchLeaders();
-  }, [supabase]);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // 2. Extract Unique Departments from ACTIVE leader_roles
   const departments = useMemo(() => {

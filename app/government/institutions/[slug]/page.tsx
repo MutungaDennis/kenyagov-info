@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { createBrowserClientAsync } from "@/lib/supabase/client";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 
 type Institution = {
@@ -65,13 +65,12 @@ export default function InstitutionProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const supabase = createClient();
-
   useEffect(() => {
     const fetchInstitution = async () => {
       if (!slug) return;
 
       try {
+        const supabase = await createBrowserClientAsync();
         const { data: instData, error: instError } = await supabase
           .from('institutions')
           .select(`
@@ -117,7 +116,7 @@ export default function InstitutionProfilePage() {
     };
 
     fetchInstitution();
-  }, [slug, supabase]);
+  }, [slug]);
 
   if (isLoading) {
     return (
