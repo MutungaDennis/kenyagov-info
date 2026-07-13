@@ -140,10 +140,15 @@ Custom domain: Workers & Pages → your worker → **Domains & Routes** → add 
 
 | Setting | Value |
 |---------|--------|
-| **Build command** | `pnpm run cf:build` |
+| **Build command** | `pnpm run build` (runs OpenNext; same as `pnpm run cf:build`) |
 | **Deploy command** | `npx wrangler deploy` |
 | **Root directory** | `/` (repo root) |
 | **Package manager** | `pnpm` (enable if asked) |
+
+> **Important:** Deploy needs the OpenNext worker under `.open-next/`.  
+> A plain `next build` only is **not** enough — `pnpm run build` must be the  
+> OpenNext build (configured in this repo). If you only run Next, wrangler fails with  
+> `Could not find compiled Open Next config`.
 
 5. Add **all** env vars from section 2.3 (especially every `NEXT_PUBLIC_*` for the build).
 6. Node version: **20** or **22** (set in dashboard or `.nvmrc`).
