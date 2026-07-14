@@ -1,6 +1,7 @@
 'use client';
 
 import { useSearchParams, useRouter } from 'next/navigation';
+import { adminPath } from "@/lib/admin-path";
 import { Suspense } from 'react';
 
 function SuccessDashboardContent() {
@@ -37,7 +38,7 @@ function SuccessDashboardContent() {
 
       <div style={{ display: 'flex', gap: '12px' }}>
         <button
-          onClick={() => router.push('/admin/polling-stations/upload')}
+          onClick={() => router.push(adminPath('polling-stations/upload'))}
           style={{ flex: 1, padding: '12px', backgroundColor: '#3182ce', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer' }}
         >
           Process Next PDF Chunk

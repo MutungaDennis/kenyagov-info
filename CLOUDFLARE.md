@@ -215,7 +215,25 @@ Required env (Build **and** Runtime for `NEXT_PUBLIC_*`):
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` or `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `NEXT_PUBLIC_SANITY_PROJECT_ID`, `NEXT_PUBLIC_SANITY_DATASET`
-- Secrets at runtime: `SUPABASE_SERVICE_ROLE_KEY`, `SANITY_API_TOKEN`, Turnstile, etc.
+- `NEXT_PUBLIC_ADMIN_BASE_PATH` — secret admin URL prefix (see below)
+- `NEXT_PUBLIC_TURNSTILE_SITE_KEY` (login captcha)
+- Secrets at runtime: `SUPABASE_SERVICE_ROLE_KEY`, `SANITY_API_TOKEN`, `TURNSTILE_SECRET_KEY`, etc.
+
+### Secret admin URL (recommended)
+
+Do **not** leave the console at `/admin` in production.
+
+1. Generate a long random path, e.g. `/cg-ke-a5wkqciyjpg940u3`
+2. Set on Cloudflare (Build + Runtime):
+
+```text
+NEXT_PUBLIC_ADMIN_BASE_PATH=/cg-ke-a5wkqciyjpg940u3
+```
+
+3. Admins open: `https://www.citizenguide.ke/cg-ke-a5wkqciyjpg940u3/login`  
+4. Requests to `/admin` return **404** when a custom path is set.
+
+Local default remains `/admin` if the env var is unset.
 
 5. Add **all** env vars from section 2.3 (especially every `NEXT_PUBLIC_*` for the build).
 6. Node version: **20** or **22** (set in dashboard or `.nvmrc`).

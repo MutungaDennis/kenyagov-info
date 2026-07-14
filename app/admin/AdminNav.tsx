@@ -2,14 +2,17 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
+import { adminPath, getAdminBasePath } from "@/lib/admin-path";
 
 type NavItem = {
-  href: string;
+  /** Path under admin base, e.g. "" | "institutions" | "hansard/upload" */
+  segment: string;
   label: string;
-  /** Match only exact path (e.g. dashboard) */
   exact?: boolean;
   external?: boolean;
+  /** Full href override for external links */
+  href?: string;
 };
 
 type NavSection = {
@@ -20,28 +23,28 @@ type NavSection = {
 const NAV_SECTIONS: NavSection[] = [
   {
     heading: "Overview",
-    items: [{ href: "/admin", label: "Dashboard", exact: true }],
+    items: [{ segment: "", label: "Dashboard", exact: true }],
   },
   {
     heading: "Content",
     items: [
-      { href: "/admin/institutions", label: "Institutions" },
-      { href: "/admin/officials", label: "Officials" },
+      { segment: "institutions", label: "Institutions" },
+      { segment: "officials", label: "Officials" },
     ],
   },
   {
     heading: "Parliament",
     items: [
-      { href: "/admin/hansard", label: "Hansard sittings", exact: true },
-      { href: "/admin/hansard/upload", label: "Upload Hansard PDF" },
-      { href: "/admin/hansard/manual", label: "Manual Hansard entry" },
+      { segment: "hansard", label: "Hansard sittings", exact: true },
+      { segment: "hansard/upload", label: "Upload Hansard PDF" },
+      { segment: "hansard/manual", label: "Manual Hansard entry" },
     ],
   },
   {
     heading: "Elections data",
     items: [
       {
-        href: "/admin/polling-stations/upload",
+        segment: "polling-stations/upload",
         label: "Polling stations upload",
       },
     ],
@@ -49,55 +52,65 @@ const NAV_SECTIONS: NavSection[] = [
   {
     heading: "Feedback",
     items: [
-      { href: "/admin/feedback", label: "General feedback" },
-      { href: "/admin/bug-reports", label: "Bug reports" },
+      { segment: "feedback", label: "General feedback" },
+      { segment: "bug-reports", label: "Bug reports" },
     ],
   },
   {
     heading: "System",
     items: [
-      { href: "/admin/analytics", label: "Analytics" },
-      { href: "/admin/site-status", label: "Site status" },
-      { href: "/", label: "View public site", external: true },
+      { segment: "analytics", label: "Analytics" },
+      { segment: "site-status", label: "Site status" },
+      {
+        segment: "",
+        label: "View public site",
+        external: true,
+        href: "/",
+      },
     ],
   },
 ];
 
-function isActive(pathname: string, item: NavItem): boolean {
+function isActive(pathname: string, base: string, item: NavItem): boolean {
   if (item.external) return false;
+  const href = adminPath(item.segment);
+
   if (item.exact) {
-    if (item.href === "/admin") {
-      return pathname === "/admin" || pathname === "/admin/";
+    if (item.segment === "") {
+      return pathname === base || pathname === `${base}/`;
     }
-    return pathname === item.href || pathname === `${item.href}/`;
+    return pathname === href || pathname === `${href}/`;
   }
-  // Avoid /admin/hansard matching /admin/hansard/upload when exact siblings exist
-  if (item.href === "/admin/hansard") {
+
+  if (item.segment === "hansard") {
+    const list = adminPath("hansard");
+    const upload = adminPath("hansard/upload");
+    const manual = adminPath("hansard/manual");
     return (
-      pathname === "/admin/hansard" ||
-      pathname === "/admin/hansard/" ||
-      (pathname.startsWith("/admin/hansard/") &&
-        !pathname.startsWith("/admin/hansard/upload") &&
-        !pathname.startsWith("/admin/hansard/manual"))
+      pathname === list ||
+      pathname === `${list}/` ||
+      (pathname.startsWith(`${list}/`) &&
+        !pathname.startsWith(upload) &&
+        !pathname.startsWith(manual))
     );
   }
-  return pathname === item.href || pathname.startsWith(`${item.href}/`);
+
+  return pathname === href || pathname.startsWith(`${href}/`);
 }
 
 export default function AdminNav() {
   const pathname = usePathname();
   const panelId = useId();
   const [menuOpen, setMenuOpen] = useState(false);
+  const base = useMemo(() => getAdminBasePath(), []);
 
-  // Close mobile menu on navigation
   useEffect(() => {
     setMenuOpen(false);
   }, [pathname]);
 
-  // Desktop always shows nav; mobile uses toggle
   const activeLabel =
     NAV_SECTIONS.flatMap((s) => s.items).find((item) =>
-      isActive(pathname, item),
+      isActive(pathname, base, item),
     )?.label ?? "Menu";
 
   return (
@@ -130,10 +143,13 @@ export default function AdminNav() {
             <h2 className="admin-side-nav__heading">{section.heading}</h2>
             <ul className="admin-side-nav__list">
               {section.items.map((item) => {
-                const active = isActive(pathname, item);
+                const href = item.external
+                  ? item.href || "/"
+                  : adminPath(item.segment);
+                const active = isActive(pathname, base, item);
                 return (
                   <li
-                    key={item.href + item.label}
+                    key={href + item.label}
                     className={
                       active
                         ? "admin-side-nav__item admin-side-nav__item--active"
@@ -142,7 +158,7 @@ export default function AdminNav() {
                   >
                     {item.external ? (
                       <a
-                        href={item.href}
+                        href={href}
                         data-external="true"
                         target="_blank"
                         rel="noopener noreferrer"
@@ -155,7 +171,7 @@ export default function AdminNav() {
                       </a>
                     ) : (
                       <Link
-                        href={item.href}
+                        href={href}
                         aria-current={active ? "page" : undefined}
                       >
                         {item.label}

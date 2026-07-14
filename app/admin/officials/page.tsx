@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { adminPath } from "@/lib/admin-path";
 
 interface Official {
   id: string;
@@ -62,7 +63,7 @@ export default function OfficialsAdminPage() {
 
   return (
     <div className="govuk-width-container">
-      <Link href="/admin" className="govuk-back-link">
+      <Link href={adminPath()} className="govuk-back-link">
         Back to Admin
       </Link>
 

@@ -1,6 +1,7 @@
 import { createSanityWriteClient } from "@/lib/sanity/createSanityClient";
 import { getSanityStudioUrl } from "@/lib/sanity/studioUrl";
 import Link from 'next/link';
+import { adminPath } from "@/lib/admin-path";
 
 const sanity = createSanityWriteClient();
 const studioBase = getSanityStudioUrl();
@@ -55,7 +56,7 @@ export default async function HansardManagementPage() {
 
         {/* Big prominent Upload Button */}
         <Link 
-          href="/admin/hansard/upload" 
+          href={adminPath()} 
           className="govuk-button govuk-button--start"
           style={{ 
             backgroundColor: '#1d70b8', 
@@ -110,7 +111,7 @@ export default async function HansardManagementPage() {
         <h2 className="govuk-heading-m">Quick Actions</h2>
         <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
           <Link 
-            href="/admin/hansard/upload" 
+            href={adminPath()} 
             className="govuk-button"
             style={{ backgroundColor: '#1d70b8', color: 'white', textDecoration: 'none' }}
           >
@@ -135,7 +136,7 @@ export default async function HansardManagementPage() {
         <div className="govuk-inset-text" style={{ background: '#f3f2f1', padding: '24px', borderRadius: '4px' }}>
           <p style={{ marginBottom: '16px' }}>No Hansard sittings have been published yet.</p>
           <Link 
-            href="/admin/hansard/upload" 
+            href={adminPath()} 
             className="govuk-button"
             style={{ backgroundColor: '#1d70b8', color: 'white', textDecoration: 'none' }}
           >

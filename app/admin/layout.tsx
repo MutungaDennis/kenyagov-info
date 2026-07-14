@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient, requireAdmin } from "@/lib/supabase/server";
+import { adminPath } from "@/lib/admin-path";
 import AdminNav from "./AdminNav";
 import "./admin.css";
 
@@ -21,7 +22,7 @@ export default async function AdminDashboardLayout({
     "use server";
     const supabase = await createClient();
     await supabase.auth.signOut();
-    redirect("/admin/login");
+    redirect(adminPath("login"));
   }
 
   const displayEmail = user?.email ?? "Admin";
@@ -32,7 +33,7 @@ export default async function AdminDashboardLayout({
       <div className="admin-service">
         <header className="admin-service-header">
           <div className="admin-service-header__inner">
-            <Link href="/admin/login" className="admin-service-header__brand">
+            <Link href={adminPath("login")} className="admin-service-header__brand">
               <span className="admin-service-header__name">
                 CitizenGuide.KE
               </span>
@@ -62,7 +63,7 @@ export default async function AdminDashboardLayout({
 
       <header className="admin-service-header">
         <div className="admin-service-header__inner">
-          <Link href="/admin" className="admin-service-header__brand">
+          <Link href={adminPath()} className="admin-service-header__brand">
             <span className="admin-service-header__name">CitizenGuide.KE</span>
             <span className="admin-service-header__tag">Admin</span>
           </Link>

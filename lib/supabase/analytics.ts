@@ -7,7 +7,15 @@ export async function logPageView(path: string, referrer?: string | null) {
   const supabase = await createClient();
   
   // Avoid logging admin pages or assets if desired, but caller controls
-  if (!path || path.startsWith('/admin') || path.includes('.')) {
+  const adminBase =
+    process.env.NEXT_PUBLIC_ADMIN_BASE_PATH?.replace(/\/$/, "") || "/admin";
+  if (
+    !path ||
+    path.startsWith("/admin") ||
+    path === adminBase ||
+    path.startsWith(`${adminBase}/`) ||
+    path.includes(".")
+  ) {
     return;
   }
 

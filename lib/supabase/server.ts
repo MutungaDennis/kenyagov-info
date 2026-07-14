@@ -81,16 +81,16 @@ export async function isCurrentUserAdmin(): Promise<boolean> {
 
 /**
  * Requires an admin user.
- * - On protected admin pages: redirects to /admin/login if not admin.
- * - When already on /admin/login (or forgot/reset): returns null instead of redirecting
+ * - On protected admin pages: redirects to {adminBase}/login if not admin.
+ * - When already on login / forgot / reset: returns null instead of redirecting
  *   to avoid redirect loops.
  */
 export async function requireAdmin() {
+  const { adminPath } = await import("@/lib/admin-path");
   const headersList = await headers();
   const forwardedPath = headersList.get("x-pathname") || "";
 
-  // Very strong guard: if the proxy told us this is an auth page, never redirect.
-  // This completely prevents redirect loops on /admin/login etc.
+  // Auth pages: never redirect-loop (works with secret base path too)
   if (
     forwardedPath.includes("/login") ||
     forwardedPath.includes("/forgot-password") ||
@@ -101,10 +101,7 @@ export async function requireAdmin() {
 
   const user = await getCurrentUser();
 
-  // Detect current path (for other admin pages)
   let currentPath = forwardedPath;
-
-  // Fallbacks
   if (!currentPath) {
     const referer = headersList.get("referer") || "";
     const urlHeader = headersList.get("x-url") || referer;
@@ -116,13 +113,14 @@ export async function requireAdmin() {
   }
 
   const isAuthPage =
-    currentPath === "/admin/login" ||
-    currentPath === "/admin/forgot-password" ||
-    currentPath === "/admin/reset-password";
+    /\/(login|forgot-password|reset-password)\/?$/.test(currentPath) ||
+    currentPath.endsWith("/login") ||
+    currentPath.endsWith("/forgot-password") ||
+    currentPath.endsWith("/reset-password");
 
   if (!user) {
     if (isAuthPage) return null;
-    redirect("/admin/login");
+    redirect(adminPath("login"));
   }
 
   // Bootstrap (temporary)
@@ -135,7 +133,7 @@ export async function requireAdmin() {
     await supabase.auth.signOut();
 
     if (isAuthPage) return null;
-    redirect("/admin/login?error=unauthorized");
+    redirect(`${adminPath("login")}?error=unauthorized`);
   }
 
   return user;

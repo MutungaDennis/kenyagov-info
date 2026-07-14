@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { adminPath } from "@/lib/admin-path";
 import { createClient } from '@/lib/supabase/client';
 import GovUKBackLink from '@/components/govuk/BackLink';
 import GovUKBreadcrumbs from '@/components/govuk/Breadcrumbs';
@@ -120,7 +121,7 @@ export default function NewInstitutionPage() {
       alert('Error creating institution: ' + error.message);
     } else {
       alert('Institution created successfully!');
-      router.push('/admin/institutions');
+      router.push(adminPath('institutions'));
     }
 
     setSubmitting(false);
@@ -128,13 +129,13 @@ export default function NewInstitutionPage() {
 
   return (
     <div className="govuk-width-container">
-      <GovUKBackLink href="/admin/institutions" />
+      <GovUKBackLink href={adminPath()} />
 
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
-          { text: "Admin", href: "/admin" },
-          { text: "Institutions", href: "/admin/institutions" },
+          { text: "Admin", href: adminPath() },
+          { text: "Institutions", href: adminPath('institutions') },
           { text: "New Institution", href: "#" },
         ]}
       />
@@ -277,7 +278,7 @@ export default function NewInstitutionPage() {
                 <button type="submit" className="govuk-button" disabled={submitting}>
                   {submitting ? 'Creating Institution...' : 'Create Institution'}
                 </button>
-                <Link href="/admin/institutions" className="govuk-button govuk-button--secondary">
+                <Link href={adminPath()} className="govuk-button govuk-button--secondary">
                   Cancel
                 </Link>
               </div>

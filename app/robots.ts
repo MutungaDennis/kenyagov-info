@@ -1,5 +1,6 @@
 // app/robots.ts
 import type { MetadataRoute } from 'next';
+import { getAdminBasePath } from '@/lib/admin-path';
 
 const SITE_URL = 'https://www.citizenguide.ke';
 
@@ -10,9 +11,12 @@ const SITE_URL = 'https://www.citizenguide.ke';
  * AI discovery also uses: https://www.citizenguide.ke/llms.txt
  */
 export default function robots(): MetadataRoute.Robots {
+  const adminBase = getAdminBasePath();
   const privatePaths = [
     '/admin',
     '/admin/',
+    adminBase,
+    `${adminBase}/`,
     '/studio',
     '/studio/',
     '/api/admin',

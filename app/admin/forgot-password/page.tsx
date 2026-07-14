@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { adminPath } from "@/lib/admin-path";
 import { createClient } from "@/lib/supabase/client";
 
 export default function AdminForgotPasswordPage() {
@@ -113,7 +114,7 @@ export default function AdminForgotPasswordPage() {
       )}
 
       <div style={{ marginTop: "32px" }}>
-        <Link href="/admin/login" className="govuk-link" style={{ fontSize: "19px" }}>
+        <Link href={adminPath()} className="govuk-link" style={{ fontSize: "19px" }}>
           ← Back to sign in
         </Link>
       </div>

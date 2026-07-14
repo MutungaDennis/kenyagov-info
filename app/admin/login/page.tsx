@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useRef, useEffect, useTransition } from "react";
+import { useState, useRef, useEffect, useTransition, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Script from "next/script";
 import { createClient } from "@/lib/supabase/client";
+import { adminPath } from "@/lib/admin-path";
 
-// Extend Window for Turnstile
 declare global {
   interface Window {
     turnstile?: {
@@ -14,14 +15,16 @@ declare global {
           sitekey: string;
           theme?: string;
           callback?: (token: string) => void;
-          'error-callback'?: () => void;
-          'expired-callback'?: () => void;
-        }
+          "error-callback"?: () => void;
+          "expired-callback"?: () => void;
+          "timeout-callback"?: () => void;
+        },
       ): string | undefined;
-      reset(container?: HTMLElement | string): void;
-      getResponse(container?: HTMLElement | string): string;
-      remove(container?: HTMLElement | string): void;
+      reset(widgetId?: string | HTMLElement): void;
+      remove(widgetId?: string | HTMLElement): void;
+      getResponse(widgetId?: string | HTMLElement): string;
     };
+    onTurnstileLoad?: () => void;
   }
 }
 
@@ -34,82 +37,153 @@ export default function AdminLoginPage() {
 
   const errorSummaryRef = useRef<HTMLDivElement>(null);
   const emailInputRef = useRef<HTMLInputElement>(null);
+  const captchaWidgetRef = useRef<HTMLDivElement>(null);
+  const widgetIdRef = useRef<string | null>(null);
 
-  const [email, setEmail] = useState("dennis.mutunga14@gmail.com"); // prefilled for the main admin
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [errors, setErrors] = useState<{ email?: boolean; password?: boolean }>({});
-  const [captchaToken, setCaptchaToken] = useState<string>("");
-  const captchaWidgetRef = useRef<HTMLDivElement>(null);
+  const [errors, setErrors] = useState<{ email?: boolean; password?: boolean }>(
+    {},
+  );
+  const [captchaToken, setCaptchaToken] = useState("");
   const [captchaSolved, setCaptchaSolved] = useState(false);
+  const [turnstileReady, setTurnstileReady] = useState(false);
 
-  const isDev = process.env.NODE_ENV === 'development';
+  const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "";
+  // Production Cloudflare always needs captcha when site key is set.
+  // Dev without site key: auto-enable button.
+  const captchaRequired = Boolean(siteKey);
+  const canSubmit =
+    !isPending && (!captchaRequired || captchaSolved || Boolean(captchaToken));
 
-  // Show messages from redirects (unauthorized, password reset success, etc.)
   useEffect(() => {
     const error = searchParams.get("error");
     const message = searchParams.get("message");
 
     if (error === "unauthorized") {
-      setErrorMessage("You do not have permission to access the admin area. Please sign in with an admin account.");
+      setErrorMessage(
+        "You do not have permission to access the admin area. Please sign in with an admin account.",
+      );
     }
 
     if (message === "password-updated") {
       setErrorMessage(null);
-      setSuccessMessage("Your password has been updated successfully. Please sign in.");
+      setSuccessMessage(
+        "Your password has been updated successfully. Please sign in.",
+      );
     }
   }, [searchParams]);
 
-  // Auto-focus email field (GOV.UK pattern)
   useEffect(() => {
-    if (emailInputRef.current) emailInputRef.current.focus();
+    emailInputRef.current?.focus();
   }, []);
 
-  // Shift focus to error summary when error appears
   useEffect(() => {
     if (errorMessage && errorSummaryRef.current) {
       errorSummaryRef.current.focus();
     }
   }, [errorMessage]);
 
-  // Render Turnstile widget only in production (in dev we auto-solve to bypass captcha issues on localhost).
-  // The script is loaded globally once.
+  const mountTurnstile = useCallback(() => {
+    if (!captchaRequired) {
+      setCaptchaSolved(true);
+      return;
+    }
+    if (!window.turnstile || !captchaWidgetRef.current) return;
+    if (widgetIdRef.current) return;
+
+    // Clear any prior auto-rendered children
+    captchaWidgetRef.current.innerHTML = "";
+
+    try {
+      const id = window.turnstile.render(captchaWidgetRef.current, {
+        sitekey: siteKey,
+        theme: "light",
+        callback: (token: string) => {
+          setCaptchaToken(token);
+          setCaptchaSolved(true);
+        },
+        "error-callback": () => {
+          setCaptchaToken("");
+          setCaptchaSolved(false);
+        },
+        "expired-callback": () => {
+          setCaptchaToken("");
+          setCaptchaSolved(false);
+        },
+        "timeout-callback": () => {
+          setCaptchaToken("");
+          setCaptchaSolved(false);
+        },
+      });
+      widgetIdRef.current = id ?? "mounted";
+      setTurnstileReady(true);
+    } catch (e) {
+      console.error("Turnstile render failed:", e);
+      // Do not leave the button permanently disabled if widget fails
+      setErrorMessage(
+        "Security check failed to load. Refresh the page, or try again in a moment.",
+      );
+    }
+  }, [captchaRequired, siteKey]);
+
   useEffect(() => {
-    if (isDev) {
+    if (!captchaRequired) {
       setCaptchaSolved(true);
       return;
     }
 
-    const renderWidget = () => {
-      if (window.turnstile && captchaWidgetRef.current && !captchaWidgetRef.current.dataset.rendered) {
-        window.turnstile.render(captchaWidgetRef.current, {
-          sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!,
-          theme: 'light',
-          callback: (token: string) => {
-            setCaptchaToken(token);
-            setCaptchaSolved(true);
-          },
-          'error-callback': () => {
-            setCaptchaToken('');
-            setCaptchaSolved(false);
-          },
-        });
-        captchaWidgetRef.current.dataset.rendered = 'true';
-      }
-    };
+    // If script already present (global layout), mount immediately
+    if (window.turnstile) {
+      mountTurnstile();
+      return;
+    }
 
-    renderWidget();
+    window.onTurnstileLoad = () => {
+      mountTurnstile();
+    };
 
     const interval = setInterval(() => {
       if (window.turnstile) {
-        renderWidget();
+        mountTurnstile();
         clearInterval(interval);
       }
-    }, 50);
+    }, 100);
 
-    return () => clearInterval(interval);
-  }, [isDev]);
+    return () => {
+      clearInterval(interval);
+      try {
+        if (widgetIdRef.current && window.turnstile) {
+          window.turnstile.remove(widgetIdRef.current);
+        }
+      } catch {
+        /* ignore */
+      }
+      widgetIdRef.current = null;
+    };
+  }, [captchaRequired, mountTurnstile]);
+
+  // Fallback: if checkbox appears solved but React state missed the callback
+  useEffect(() => {
+    if (!captchaRequired || captchaSolved) return;
+    const t = setInterval(() => {
+      try {
+        const token =
+          (widgetIdRef.current &&
+            window.turnstile?.getResponse(widgetIdRef.current)) ||
+          window.turnstile?.getResponse(captchaWidgetRef.current as HTMLElement);
+        if (token && token.length > 10) {
+          setCaptchaToken(token);
+          setCaptchaSolved(true);
+        }
+      } catch {
+        /* ignore */
+      }
+    }, 500);
+    return () => clearInterval(t);
+  }, [captchaRequired, captchaSolved]);
 
   async function handleLogin(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -126,19 +200,28 @@ export default function AdminLoginPage() {
       return;
     }
 
-    startTransition(async () => {
-      const tokenToUse = isDev ? undefined : captchaToken;
-
-      if (!isDev && !tokenToUse) {
-        setErrorMessage('Please complete the Turnstile security check.');
-        setErrors({ email: true, password: true });
-        return;
+    // Re-read token at submit time (callback race safety)
+    let tokenToUse = captchaToken;
+    if (captchaRequired && !tokenToUse) {
+      try {
+        tokenToUse =
+          (widgetIdRef.current &&
+            window.turnstile?.getResponse(widgetIdRef.current)) ||
+          window.turnstile?.getResponse(
+            captchaWidgetRef.current as HTMLElement,
+          ) ||
+          "";
+      } catch {
+        tokenToUse = "";
       }
+    }
 
-      // Perform sign-in using the browser client (sets cookies via SSR helpers)
-      // Include captchaToken only when not in dev (to avoid localhost issues).
-      // In dev we skip the token; if Supabase still requires it you will get the captcha error
-      // and should disable "Enable Captcha protection" in Supabase for development.
+    if (captchaRequired && !tokenToUse) {
+      setErrorMessage("Complete the security check, then try again.");
+      return;
+    }
+
+    startTransition(async () => {
       const { error, data } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
@@ -146,349 +229,252 @@ export default function AdminLoginPage() {
       });
 
       if (error || !data.user) {
-        console.error('Supabase AuthApiError (full):', error);
+        console.error("Supabase AuthApiError:", error);
 
-        const raw = error?.message || '';
+        const raw = error?.message || "";
         const lower = raw.toLowerCase();
+        let message =
+          raw || "The email address or password you entered is incorrect.";
 
-        let message = raw || "The email address or password you entered is incorrect.";
-
-        if (lower.includes('captcha') || lower.includes('captcha_token')) {
-          message = isDev
-            ? 'Captcha error in dev (localhost token not accepted). Go to Supabase → Authentication → turn OFF “Enable Captcha protection” (or add "localhost" to your Turnstile allowed domains).'
-            : 'CAPTCHA / Turnstile token issue. Complete the security widget shown on this form, then try again.';
+        if (lower.includes("captcha") || lower.includes("captcha_token")) {
+          message =
+            "Security check failed or expired. Complete the checkbox again, then try signing in.";
         }
 
         setErrorMessage(message);
         setErrors({ email: true, password: true });
-
-        // Reset widget and clear token for retry
-        setCaptchaToken('');
+        setCaptchaToken("");
         setCaptchaSolved(false);
         try {
-          const ts = window.turnstile;
-          if (ts && captchaWidgetRef.current) {
-            ts.reset(captchaWidgetRef.current);
+          if (widgetIdRef.current && window.turnstile) {
+            window.turnstile.reset(widgetIdRef.current);
           }
-        } catch {}
+        } catch {
+          /* ignore */
+        }
         return;
       }
 
-      // Ensure a profile row exists for first-time users (is_admin=false by default).
-      // IMPORTANT: We never overwrite is_admin. An admin can safely set it to true in the database.
       try {
         const { data: existing } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('id', data.user.id)
+          .from("profiles")
+          .select("id")
+          .eq("id", data.user.id)
           .single();
 
         if (!existing) {
-          await supabase
-            .from('profiles')
-            .insert({
-              id: data.user.id,
-              email: data.user.email,
-              is_admin: false,
-            });
+          await supabase.from("profiles").insert({
+            id: data.user.id,
+            email: data.user.email,
+            is_admin: false,
+          });
         }
-      } catch {}
+      } catch {
+        /* ignore */
+      }
 
-      // Bootstrap (temporary): primary admin email always proceeds to dashboard.
-      // TODO: remove once profiles.is_admin = true is set via SQL for dennis.mutunga14@gmail.com
-      if (data.user.email === 'dennis.mutunga14@gmail.com') {
-        window.location.href = '/admin';
+      if (data.user.email === "dennis.mutunga14@gmail.com") {
+        window.location.href = adminPath();
         return;
       }
 
-      // Immediately verify admin status client-side for better UX.
-      // If not admin, sign out immediately and show clear message.
       try {
         const { data: profile } = await supabase
-          .from('profiles')
-          .select('is_admin')
-          .eq('id', data.user.id)
+          .from("profiles")
+          .select("is_admin")
+          .eq("id", data.user.id)
           .single();
 
         if (!profile?.is_admin) {
           await supabase.auth.signOut();
           setErrorMessage(
-            "This account is not yet marked as admin. Run the SQL in scripts/promote-admin.sql (or paste it in Supabase SQL Editor) to set is_admin = true for dennis.mutunga14@gmail.com."
+            "This account is not marked as admin. An existing administrator must set is_admin = true for your user in Supabase.",
           );
           setErrors({ email: true, password: true });
           return;
         }
       } catch {
-        // If profiles table doesn't exist or query fails, treat as non-admin for safety
         await supabase.auth.signOut();
-        setErrorMessage("The profiles table is missing or not accessible. Please run scripts/promote-admin.sql in Supabase SQL Editor first.");
+        setErrorMessage(
+          "Could not verify admin status. Check the profiles table in Supabase.",
+        );
         setErrors({ email: true, password: true });
         return;
       }
 
-      // Success — hard navigation so middleware and layout see fresh session.
-      window.location.href = '/admin';
+      window.location.href = adminPath();
     });
   }
 
   async function handlePasswordResetRequest() {
     if (!email.trim()) {
-      setErrorMessage("Enter your email address above, then click 'Forgot password?'");
+      setErrorMessage(
+        "Enter your email address above, then select Forgotten password.",
+      );
       setErrors({ email: true });
       return;
     }
 
     const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-      redirectTo: `${window.location.origin}/admin/reset-password`,
+      redirectTo: `${window.location.origin}${adminPath("reset-password")}`,
     });
 
     if (error) {
       setErrorMessage("Could not send password reset email. Please try again.");
     } else {
       setErrorMessage(null);
-      // Navigate to a dedicated forgot-password page for better messaging
-      router.push(`/admin/forgot-password?email=${encodeURIComponent(email.trim())}`);
+      router.push(
+        `${adminPath("forgot-password")}?email=${encodeURIComponent(email.trim())}`,
+      );
     }
   }
 
   return (
-    <div
-      className="govuk-width-container govuk-!-margin-top-8"
-      style={{ fontFamily: "sans-serif", maxWidth: "600px", margin: "40px auto", padding: "0 15px" }}
-    >
-      {/* Success banner (for password reset, etc.) */}
+    <div className="govuk-width-container govuk-!-margin-top-6 govuk-!-margin-bottom-8">
+      {/* Explicit Turnstile API (explicit render mode — no auto-render attrs) */}
+      {captchaRequired && (
+        <Script
+          src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=onTurnstileLoad"
+          strategy="afterInteractive"
+          onLoad={() => {
+            setTurnstileReady(true);
+            mountTurnstile();
+          }}
+        />
+      )}
+
       {successMessage && (
         <div
+          className="govuk-notification-banner govuk-notification-banner--success"
           role="alert"
-          style={{
-            border: "4px solid #00703c",
-            padding: "20px",
-            marginBottom: "30px",
-            background: "#f3f2f1",
-          }}
         >
-          <p style={{ color: "#00703c", fontSize: "19px", margin: 0, fontWeight: "bold" }}>
-            {successMessage}
-          </p>
+          <div className="govuk-notification-banner__content">
+            <p className="govuk-notification-banner__heading">{successMessage}</p>
+          </div>
         </div>
       )}
 
-      {/* GOV.UK Error Summary */}
       {errorMessage && (
         <div
           ref={errorSummaryRef}
           tabIndex={-1}
           className="govuk-error-summary"
           role="alert"
-          style={{
-            border: "4px solid #d4351c",
-            padding: "20px",
-            marginBottom: "30px",
-            background: "#ffffff",
-            outline: "none",
-          }}
+          aria-labelledby="error-summary-title"
         >
-          <h2
-            className="govuk-error-summary__title"
-            style={{ color: "#d4351c", fontSize: "24px", fontWeight: "bold", margin: "0 0 10px 0" }}
-          >
+          <h2 className="govuk-error-summary__title" id="error-summary-title">
             There is a problem
           </h2>
           <div className="govuk-error-summary__body">
-            <p
-              className="govuk-body"
-              style={{ color: "#d4351c", fontSize: "19px", margin: 0, fontWeight: "bold" }}
-            >
-              {errorMessage}
-            </p>
+            <p className="govuk-body">{errorMessage}</p>
           </div>
         </div>
       )}
 
-      <h1
-        className="govuk-heading-xl"
-        style={{ fontSize: "38px", fontWeight: "bold", marginBottom: "8px", color: "#0b0c0c" }}
-      >
-        Sign in to the admin console
-      </h1>
-
-      <div
-        className="govuk-inset-text"
-        style={{
-          fontSize: "16px",
-          backgroundColor: "#f3f2f1",
-          padding: "12px 16px",
-          borderLeft: "5px solid #1d70b8",
-          marginBottom: "24px",
-        }}
-      >
-        <strong>Dev mode:</strong> Widget bypassed, button enabled. If login still fails with captcha error, disable “Enable Captcha protection” in Supabase dashboard (it is separate from the widget on /feedback).
-      </div>
+      <h1 className="govuk-heading-xl">Sign in to the admin console</h1>
+      <p className="govuk-body">
+        This area is restricted to authorised administrators only.
+      </p>
 
       <form onSubmit={handleLogin} noValidate>
-        {/* Email */}
         <div
-          className={`govuk-form-group ${errors.email ? "govuk-form-group--error" : ""}`}
-          style={{ marginBottom: "25px" }}
+          className={`govuk-form-group${errors.email ? " govuk-form-group--error" : ""}`}
         >
-          <label
-            className="govuk-label"
-            htmlFor="email"
-            style={{ display: "block", fontSize: "19px", fontWeight: "bold", marginBottom: "5px", color: "#0b0c0c" }}
-          >
+          <label className="govuk-label" htmlFor="email">
             Email address
           </label>
-
           {errors.email && (
-            <p
-              id="email-error"
-              className="govuk-error-message"
-              style={{ color: "#d4351c", fontSize: "19px", fontWeight: "bold", margin: "0 0 5px 0" }}
-            >
-              <span className="govuk-visually-hidden">Error:</span> Enter your email address
+            <p id="email-error" className="govuk-error-message">
+              <span className="govuk-visually-hidden">Error:</span> Enter your
+              email address
             </p>
           )}
-
           <input
             ref={emailInputRef}
-            className="govuk-input"
+            className={`govuk-input${errors.email ? " govuk-input--error" : ""}`}
             id="email"
             name="email"
             type="email"
             autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            style={{
-              width: "100%",
-              padding: "8px",
-              fontSize: "19px",
-              fontFamily: "sans-serif",
-              border: errors.email ? "4px solid #d4351c" : "2px solid #0b0c0c",
-              borderRadius: 0,
-              boxSizing: "border-box",
-            }}
             aria-describedby={errors.email ? "email-error" : undefined}
           />
         </div>
 
-        {/* Password */}
         <div
-          className={`govuk-form-group ${errors.password ? "govuk-form-group--error" : ""}`}
-          style={{ marginBottom: "35px" }}
+          className={`govuk-form-group${errors.password ? " govuk-form-group--error" : ""}`}
         >
-          <label
-            className="govuk-label"
-            htmlFor="password"
-            style={{ display: "block", fontSize: "19px", fontWeight: "bold", marginBottom: "5px", color: "#0b0c0c" }}
-          >
+          <label className="govuk-label" htmlFor="password">
             Password
           </label>
-
           {errors.password && (
-            <p
-              id="password-error"
-              className="govuk-error-message"
-              style={{ color: "#d4351c", fontSize: "19px", fontWeight: "bold", margin: "0 0 5px 0" }}
-            >
-              <span className="govuk-visually-hidden">Error:</span> Enter your password
+            <p id="password-error" className="govuk-error-message">
+              <span className="govuk-visually-hidden">Error:</span> Enter your
+              password
             </p>
           )}
-
           <input
-            className="govuk-input"
+            className={`govuk-input${errors.password ? " govuk-input--error" : ""}`}
             id="password"
             name="password"
             type="password"
             autoComplete="current-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            style={{
-              width: "100%",
-              padding: "8px",
-              fontSize: "19px",
-              fontFamily: "sans-serif",
-              border: errors.password ? "4px solid #d4351c" : "2px solid #0b0c0c",
-              borderRadius: 0,
-              boxSizing: "border-box",
-            }}
             aria-describedby={errors.password ? "password-error" : undefined}
           />
         </div>
 
-        {/* Turnstile widget only in prod. In dev, bypass completely (button always enabled, no token sent). */}
-        {!isDev && (
-          <div className="govuk-form-group" style={{ marginBottom: "16px" }}>
-            <div
-              ref={captchaWidgetRef}
-              className="cf-turnstile"
-              data-sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
-              data-theme="light"
-            />
-            <p className="govuk-hint" style={{ fontSize: "14px", marginTop: "4px" }}>
-              Complete the security check above if prompted.
+        {captchaRequired && (
+          <div className="govuk-form-group">
+            <label className="govuk-label" htmlFor="turnstile-widget">
+              Security check
+            </label>
+            <div id="turnstile-widget" ref={captchaWidgetRef} />
+            <p className="govuk-hint">
+              {captchaSolved
+                ? "Security check complete."
+                : turnstileReady
+                  ? "Select the checkbox above to continue."
+                  : "Loading security check…"}
             </p>
           </div>
         )}
 
-        {/* Primary Sign In Button */}
         <button
           type="submit"
-          disabled={isPending || (!isDev && !captchaSolved)}
           className="govuk-button"
-          style={{
-            backgroundColor: "#00703c",
-            color: "#ffffff",
-            padding: "10px 20px",
-            fontSize: "19px",
-            fontWeight: "bold",
-            border: "none",
-            borderRadius: 0,
-            cursor: (isPending || (!isDev && !captchaSolved)) ? "not-allowed" : "pointer",
-            boxShadow: "0 2px 0 #002d18",
-            display: "block",
-            width: "100%",
-            marginBottom: "12px",
-          }}
+          data-module="govuk-button"
+          disabled={!canSubmit}
+          aria-disabled={!canSubmit}
         >
-          {isPending ? "Signing in..." : (isDev || captchaSolved ? "Sign in" : "Complete security check to sign in")}
+          {isPending
+            ? "Signing in…"
+            : canSubmit
+              ? "Sign in"
+              : "Complete security check to sign in"}
         </button>
 
-        {/* Password Reset Link */}
-        <div style={{ textAlign: "center" }}>
+        <p className="govuk-body">
           <button
             type="button"
-            onClick={handlePasswordResetRequest}
+            className="govuk-link"
             style={{
               background: "none",
               border: "none",
+              padding: 0,
+              cursor: "pointer",
+              font: "inherit",
               color: "#1d70b8",
               textDecoration: "underline",
-              fontSize: "16px",
-              cursor: "pointer",
             }}
+            onClick={handlePasswordResetRequest}
           >
-            Forgot your password?
+            Forgotten your password?
           </button>
-        </div>
+        </p>
       </form>
-
-      <p
-        style={{
-          marginTop: "40px",
-          fontSize: "14px",
-          color: "#505a5f",
-          textAlign: "center",
-        }}
-      >
-        This area is restricted to authorised administrators only.
-      </p>
-
-      <div style={{ marginTop: "20px", fontSize: "12px", color: "#666", textAlign: "center", lineHeight: 1.4 }}>
-        <strong>Having trouble signing in?</strong><br />
-        This error is often caused by CAPTCHA protection in Supabase.<br />
-        Go to Supabase Dashboard → <strong>Authentication → Providers → Email</strong> and turn <strong>OFF</strong> CAPTCHA.<br />
-        (Safe to disable for this internal admin area.)
-      </div>
     </div>
   );
 }

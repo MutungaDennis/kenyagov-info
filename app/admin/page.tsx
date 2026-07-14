@@ -1,63 +1,64 @@
 import Link from "next/link";
+import { adminPath } from "@/lib/admin-path";
 
 const TASKS = [
   {
-    href: "/admin/institutions",
+    segment: "institutions",
     title: "Institutions",
     body: "Manage ministries, departments, agencies and public bodies in Supabase.",
     group: "Content",
   },
   {
-    href: "/admin/officials",
+    segment: "officials",
     title: "Officials",
     body: "Add and update government officials and leadership data.",
     group: "Content",
   },
   {
-    href: "/admin/hansard",
+    segment: "hansard",
     title: "Hansard sittings",
     body: "Review published parliamentary sittings stored in Sanity.",
     group: "Parliament",
     accent: true,
   },
   {
-    href: "/admin/hansard/upload",
+    segment: "hansard/upload",
     title: "Upload Hansard PDF",
     body: "Upload a Hansard PDF for processing (local tools when not available on Workers).",
     group: "Parliament",
   },
   {
-    href: "/admin/hansard/manual",
+    segment: "hansard/manual",
     title: "Manual Hansard entry",
     body: "Enter sitting details and contributions without a PDF upload.",
     group: "Parliament",
   },
   {
-    href: "/admin/polling-stations/upload",
+    segment: "polling-stations/upload",
     title: "Polling stations upload",
     body: "Upload IEBC polling station data into Supabase.",
     group: "Elections data",
   },
   {
-    href: "/admin/feedback",
+    segment: "feedback",
     title: "General feedback",
     body: "Read feedback submitted by citizens on the public site.",
     group: "Feedback",
   },
   {
-    href: "/admin/bug-reports",
+    segment: "bug-reports",
     title: "Bug reports",
     body: "Review technical problem reports from citizens.",
     group: "Feedback",
   },
   {
-    href: "/admin/analytics",
+    segment: "analytics",
     title: "Analytics",
     body: "View traffic and usage metrics for the public site.",
     group: "System",
   },
   {
-    href: "/admin/site-status",
+    segment: "site-status",
     title: "Site status",
     body: "Check maintenance mode and operational status settings.",
     group: "System",
@@ -95,7 +96,7 @@ export default function AdminDashboard() {
             <div className="admin-task-grid">
               {items.map((task) => (
                 <div
-                  key={task.href}
+                  key={task.segment}
                   className={
                     "accent" in task && task.accent
                       ? "admin-task-card admin-task-card--accent"
@@ -103,7 +104,7 @@ export default function AdminDashboard() {
                   }
                 >
                   <h3 className="govuk-heading-m">
-                    <Link href={task.href} className="govuk-link">
+                    <Link href={adminPath(task.segment)} className="govuk-link">
                       {task.title}
                     </Link>
                   </h3>

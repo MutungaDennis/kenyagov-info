@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
+import { adminPath } from "@/lib/admin-path";
 import { createClient } from '@/lib/supabase/client';
 import GovUKBackLink from '@/components/govuk/BackLink';
 import GovUKBreadcrumbs from '@/components/govuk/Breadcrumbs';
@@ -147,13 +148,13 @@ export default function AdminInstitutionsPage() {
 
   return (
     <div className="govuk-width-container">
-      <GovUKBackLink href="/admin" />
+      <GovUKBackLink href={adminPath()} />
 
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
-          { text: "Admin", href: "/admin" },
-          { text: "Government Institutions", href: "/admin/institutions" },
+          { text: "Admin", href: adminPath() },
+          { text: "Government Institutions", href: adminPath('institutions') },
         ]}
       />
 
@@ -167,7 +168,7 @@ export default function AdminInstitutionsPage() {
           </div>
 
           <div className="govuk-grid-column-one-third">
-            <Link href="/admin/institutions/new" className="govuk-button">
+            <Link href={adminPath()} className="govuk-button">
               + Add New Institution
             </Link>
           </div>

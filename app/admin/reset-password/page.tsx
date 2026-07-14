@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { adminPath } from "@/lib/admin-path";
 import { createClient } from "@/lib/supabase/client";
 
 export default function AdminResetPasswordPage() {
@@ -41,7 +42,7 @@ export default function AdminResetPasswordPage() {
         setSuccess(true);
         // Give the user a moment then redirect to login
         setTimeout(() => {
-          router.push("/admin/login?message=password-updated");
+          router.push(`${adminPath('login')}?message=password-updated`);
         }, 1600);
       }
     });
@@ -139,7 +140,7 @@ export default function AdminResetPasswordPage() {
       )}
 
       <div style={{ marginTop: "24px", textAlign: "center" }}>
-        <a href="/admin/login" className="govuk-link" style={{ fontSize: "16px" }}>
+        <a href={adminPath()} className="govuk-link" style={{ fontSize: "16px" }}>
           Back to sign in
         </a>
       </div>

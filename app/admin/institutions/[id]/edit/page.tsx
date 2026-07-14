@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { adminPath } from "@/lib/admin-path";
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import GovUKBackLink from '@/components/govuk/BackLink';
@@ -91,7 +92,7 @@ export default function EditInstitutionPage({ params }: { params: Promise<{ id: 
 
       if (error || !data) {
         alert('Institution not found');
-        router.push('/admin/institutions');
+        router.push(adminPath('institutions'));
         return;
       }
 
@@ -150,7 +151,7 @@ export default function EditInstitutionPage({ params }: { params: Promise<{ id: 
       alert('Error updating institution: ' + error.message);
     } else {
       alert('Institution updated successfully!');
-      router.push('/admin/institutions');
+      router.push(adminPath('institutions'));
     }
 
     setSubmitting(false);
@@ -162,13 +163,13 @@ export default function EditInstitutionPage({ params }: { params: Promise<{ id: 
 
   return (
     <div className="govuk-width-container">
-      <GovUKBackLink href="/admin/institutions" />
+      <GovUKBackLink href={adminPath()} />
 
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
-          { text: "Admin", href: "/admin" },
-          { text: "Institutions", href: "/admin/institutions" },
+          { text: "Admin", href: adminPath() },
+          { text: "Institutions", href: adminPath('institutions') },
           { text: "Edit", href: "#" },
         ]}
       />
@@ -314,7 +315,7 @@ export default function EditInstitutionPage({ params }: { params: Promise<{ id: 
                 <button type="submit" className="govuk-button" disabled={submitting}>
                   {submitting ? 'Saving Changes...' : 'Save Changes'}
                 </button>
-                <Link href="/admin/institutions" className="govuk-button govuk-button--secondary">
+                <Link href={adminPath()} className="govuk-button govuk-button--secondary">
                   Cancel
                 </Link>
               </div>

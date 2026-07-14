@@ -19,7 +19,13 @@ export function ClientLayoutWrapper({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const isAdminRoute = pathname?.startsWith('/admin');
+  const adminBase =
+    process.env.NEXT_PUBLIC_ADMIN_BASE_PATH?.replace(/\/$/, "") || "/admin";
+  const isAdminRoute =
+    !!pathname &&
+    (pathname === adminBase ||
+      pathname.startsWith(`${adminBase}/`) ||
+      pathname.startsWith("/admin"));
 
   useEffect(() => {
     const initGovuk = async () => {
