@@ -1,9 +1,11 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { createClient, requireAdmin } from "@/lib/supabase/server";
 import AdminNav from "./AdminNav";
+import "./admin.css";
 
 // Ensure auth checks always run fresh (no caching of user sessions)
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 export default async function AdminDashboardLayout({
   children,
@@ -12,10 +14,9 @@ export default async function AdminDashboardLayout({
 }) {
   // Authoritative server-side protection.
   // On /admin/login, /forgot-password, /reset-password this returns null
-  // (to avoid redirect loops) and we render the page anyway.
+  // (to avoid redirect loops) and we render the page without chrome.
   const user = await requireAdmin();
 
-  // Server action for logout (secure, clears cookies properly)
   async function handleSignOut() {
     "use server";
     const supabase = await createClient();
@@ -25,118 +26,76 @@ export default async function AdminDashboardLayout({
 
   const displayEmail = user?.email ?? "Admin";
 
-  return (
-    <div
-      style={{
-        fontFamily: "sans-serif",
-        minHeight: "100vh",
-        display: "flex",
-        flexDirection: "column",
-        backgroundColor: "#f8f8f8",
-      }}
-    >
-      {/* Clean professional admin header - no black bg */}
-      <header
-        style={{
-          backgroundColor: "#ffffff",
-          color: "#0b0c0c",
-          padding: "12px 0",
-          borderBottom: "1px solid #b1b4b6",
-          boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-        }}
-      >
-        <div
-          style={{
-            maxWidth: "1200px",
-            margin: "0 auto",
-            padding: "0 20px",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            flexWrap: "wrap",
-            gap: "15px",
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <span
-              style={{
-                fontSize: "20px",
-                fontWeight: "bold",
-              }}
-            >
-              CitizenGuide<span style={{ color: "#1d70b8" }}>.KE</span>
-            </span>
-            <span
-              style={{
-                backgroundColor: "#1d70b8",
-                color: "#ffffff",
-                padding: "2px 10px",
-                fontSize: "11px",
-                fontWeight: "600",
-                textTransform: "uppercase",
-                borderRadius: "3px",
-                letterSpacing: "0.5px",
-              }}
-            >
-              Admin
-            </span>
-          </div>
-
-          {user && (
-            <div style={{ display: "flex", alignItems: "center", gap: "16px", fontSize: "14px" }}>
-              <span style={{ color: "#505a5f" }}>
-                {displayEmail}
+  // Auth screens: minimal GOV.UK service header, no sidebar
+  if (!user) {
+    return (
+      <div className="admin-service">
+        <header className="admin-service-header">
+          <div className="admin-service-header__inner">
+            <Link href="/admin/login" className="admin-service-header__brand">
+              <span className="admin-service-header__name">
+                CitizenGuide.KE
               </span>
+              <span className="admin-service-header__tag">Admin</span>
+            </Link>
+            <a
+              href="/"
+              className="govuk-link govuk-link--inverse"
+              style={{ color: "#fff" }}
+            >
+              Back to public site
+            </a>
+          </div>
+        </header>
+        <main className="admin-auth-main" id="main-content">
+          {children}
+        </main>
+      </div>
+    );
+  }
 
-              <form action={handleSignOut} style={{ margin: 0 }}>
-                <button
-                  type="submit"
-                  style={{
-                    background: "transparent",
-                    border: "1px solid #1d70b8",
-                    color: "#1d70b8",
-                    padding: "6px 14px",
-                    fontSize: "13px",
-                    fontWeight: "500",
-                    cursor: "pointer",
-                    borderRadius: "3px",
-                  }}
-                >
-                  Sign out
-                </button>
-              </form>
-            </div>
-          )}
+  return (
+    <div className="admin-service">
+      <a href="#main-content" className="govuk-skip-link">
+        Skip to main content
+      </a>
+
+      <header className="admin-service-header">
+        <div className="admin-service-header__inner">
+          <Link href="/admin" className="admin-service-header__brand">
+            <span className="admin-service-header__name">CitizenGuide.KE</span>
+            <span className="admin-service-header__tag">Admin</span>
+          </Link>
+
+          <div className="admin-service-header__meta">
+            <span className="admin-service-header__email">{displayEmail}</span>
+            <form action={handleSignOut} className="admin-service-header__sign-out">
+              <button type="submit">Sign out</button>
+            </form>
+          </div>
         </div>
       </header>
 
-      {/* Admin Two-Column Layout */}
-      {user ? (
-        <div
-          style={{
-            flex: "1",
-            maxWidth: "1200px",
-            width: "100%",
-            margin: "0 auto",
-            padding: "24px 20px",
-            display: "flex",
-            gap: "32px",
-            boxSizing: "border-box",
-          }}
-        >
-          {/* Clean Sidebar */}
-          <AdminNav />
+      <div className="admin-service-body">
+        <div className="govuk-phase-banner" style={{ marginBottom: "16px" }}>
+          <p className="govuk-phase-banner__content">
+            <strong className="govuk-tag govuk-phase-banner__content__tag">
+              Internal
+            </strong>
+            <span className="govuk-phase-banner__text">
+              This is the CitizenGuide.KE administration service — not a public
+              government website.
+            </span>
+          </p>
+        </div>
 
-          {/* Main Content */}
-          <main style={{ flex: "1", minWidth: "0", backgroundColor: "#fff", padding: "20px", borderRadius: "4px", boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
+        <div className="admin-service-grid">
+          <AdminNav />
+          <main className="admin-main" id="main-content">
             {children}
           </main>
         </div>
-      ) : (
-        <main style={{ flex: "1", padding: "20px" }}>{children}</main>
-      )}
+      </div>
     </div>
   );
 }
-
-

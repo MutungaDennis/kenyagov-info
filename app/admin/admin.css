@@ -1,0 +1,333 @@
+/**
+ * Admin service chrome — GOV.UK / MoJ-inspired side navigation.
+ * Uses GOV.UK colour tokens from govuk-frontend.
+ */
+
+.admin-service {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #f3f2f1;
+  color: #0b0c0c;
+}
+
+/* Top bar: service identity (GOV.UK service pattern) */
+.admin-service-header {
+  background-color: #0b0c0c;
+  color: #ffffff;
+  border-bottom: 10px solid #1d70b8;
+}
+
+.admin-service-header__inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 12px 15px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 20px;
+}
+
+.admin-service-header__brand {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 12px;
+  text-decoration: none;
+  color: #ffffff;
+}
+
+.admin-service-header__brand:hover,
+.admin-service-header__brand:focus {
+  color: #ffffff;
+}
+
+.admin-service-header__name {
+  font-family: var(--font-public-sans), "Public Sans", sans-serif;
+  font-weight: 700;
+  font-size: 1.1875rem;
+  line-height: 1.25;
+}
+
+.admin-service-header__tag {
+  display: inline-block;
+  background-color: #1d70b8;
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 8px;
+  border-radius: 0;
+}
+
+.admin-service-header__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 16px;
+  font-size: 0.875rem;
+}
+
+.admin-service-header__email {
+  color: #f3f2f1;
+  word-break: break-all;
+}
+
+.admin-service-header__sign-out {
+  margin: 0;
+}
+
+.admin-service-header__sign-out button {
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #ffffff;
+  background: transparent;
+  border: 1px solid #ffffff;
+  padding: 8px 12px;
+  cursor: pointer;
+  min-height: 40px;
+}
+
+.admin-service-header__sign-out button:hover {
+  background-color: #ffffff;
+  color: #0b0c0c;
+}
+
+.admin-service-header__sign-out button:focus {
+  outline: 3px solid #ffdd00;
+  outline-offset: 0;
+  box-shadow: inset 0 0 0 2px #0b0c0c;
+}
+
+/* Body: sidebar + main */
+.admin-service-body {
+  flex: 1;
+  max-width: 1280px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 20px 15px 40px;
+  box-sizing: border-box;
+}
+
+.admin-service-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+@media (min-width: 48.0625em) {
+  .admin-service-grid {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 30px;
+  }
+}
+
+/* Mobile menu toggle (GOV.UK service-navigation style) */
+.admin-nav-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  margin: 0 0 8px;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0b0c0c;
+  background-color: #ffffff;
+  border: 1px solid #b1b4b6;
+  cursor: pointer;
+  text-align: left;
+}
+
+.admin-nav-toggle:focus {
+  outline: 3px solid #ffdd00;
+  outline-offset: 0;
+  box-shadow: inset 0 0 0 2px #0b0c0c;
+}
+
+.admin-nav-toggle__chevron {
+  display: inline-block;
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 8px solid #0b0c0c;
+  margin-left: 8px;
+  transition: transform 0.15s ease;
+}
+
+.admin-nav-toggle[aria-expanded="true"] .admin-nav-toggle__chevron {
+  transform: rotate(180deg);
+}
+
+@media (min-width: 48.0625em) {
+  .admin-nav-toggle {
+    display: none;
+  }
+}
+
+/* Side navigation (MoJ-inspired, GOV.UK colours) */
+.admin-side-nav {
+  width: 100%;
+  flex-shrink: 0;
+  background-color: #ffffff;
+  border: 1px solid #b1b4b6;
+  box-sizing: border-box;
+}
+
+@media (min-width: 48.0625em) {
+  .admin-side-nav {
+    width: 260px;
+    position: sticky;
+    top: 16px;
+  }
+
+  .admin-side-nav[data-collapsed-mobile="true"] {
+    display: block;
+  }
+}
+
+.admin-side-nav[data-open="false"] {
+  display: none;
+}
+
+@media (min-width: 48.0625em) {
+  .admin-side-nav[data-open="false"] {
+    display: block;
+  }
+}
+
+.admin-side-nav__section {
+  border-bottom: 1px solid #b1b4b6;
+  padding: 12px 0 8px;
+}
+
+.admin-side-nav__section:last-child {
+  border-bottom: none;
+}
+
+.admin-side-nav__heading {
+  margin: 0 0 4px;
+  padding: 0 16px 4px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #505a5f;
+}
+
+.admin-side-nav__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.admin-side-nav__item a {
+  display: block;
+  padding: 12px 16px;
+  font-size: 1rem;
+  line-height: 1.25;
+  color: #1d70b8;
+  text-decoration: underline;
+  text-underline-offset: 0.1em;
+  border-left: 4px solid transparent;
+}
+
+.admin-side-nav__item a:hover {
+  color: #003078;
+  background-color: #f3f2f1;
+}
+
+.admin-side-nav__item a:focus {
+  outline: 3px solid #ffdd00;
+  outline-offset: 0;
+  background-color: #ffdd00;
+  color: #0b0c0c;
+  box-shadow: inset 0 0 0 2px #0b0c0c;
+  text-decoration: none;
+}
+
+.admin-side-nav__item--active a {
+  color: #0b0c0c;
+  font-weight: 700;
+  text-decoration: none;
+  background-color: #f3f2f1;
+  border-left-color: #1d70b8;
+}
+
+.admin-side-nav__item a[data-external="true"]::after {
+  content: "";
+  display: inline-block;
+  width: 0.65em;
+  height: 0.65em;
+  margin-left: 0.35em;
+  vertical-align: middle;
+  background: currentColor;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='black' d='M14 2v4h-1.5V4.56L7.28 9.78l-1.06-1.06 5.22-5.22H10V2h4zM3 4h4v1.5H4.5v6h6V9H12v4H3V4z'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='black' d='M14 2v4h-1.5V4.56L7.28 9.78l-1.06-1.06 5.22-5.22H10V2h4zM3 4h4v1.5H4.5v6h6V9H12v4H3V4z'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+}
+
+/* Main panel */
+.admin-main {
+  flex: 1;
+  min-width: 0;
+  background-color: #ffffff;
+  border: 1px solid #b1b4b6;
+  padding: 20px 15px 30px;
+  box-sizing: border-box;
+}
+
+@media (min-width: 40.0625em) {
+  .admin-main {
+    padding: 30px;
+  }
+}
+
+/* Auth pages (login / forgot / reset) — centred card */
+.admin-auth-main {
+  flex: 1;
+  width: 100%;
+  max-width: 580px;
+  margin: 0 auto;
+  padding: 30px 15px 60px;
+  box-sizing: border-box;
+}
+
+/* Dashboard task list cards */
+.admin-task-grid {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 40.0625em) {
+  .admin-task-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.admin-task-card {
+  border: 1px solid #b1b4b6;
+  padding: 16px 20px;
+  background: #ffffff;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.admin-task-card--accent {
+  border-left: 5px solid #1d70b8;
+}
+
+.admin-task-card h3 {
+  margin-top: 0;
+}
+
+.admin-task-card p:last-child {
+  margin-bottom: 0;
+}

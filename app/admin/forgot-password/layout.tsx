@@ -1,4 +1,8 @@
-// Clean layout for forgot password page (avoids protected admin sidebar)
-export default function ForgotPasswordLayout({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
+// Auth pages use the parent admin layout's unauthenticated chrome.
+export default function AdminForgotPasswordLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return children;
 }

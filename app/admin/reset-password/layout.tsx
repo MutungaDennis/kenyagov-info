@@ -1,4 +1,8 @@
-// Clean layout for password reset page (avoids protected admin sidebar)
-export default function ResetPasswordLayout({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
+// Auth pages use the parent admin layout's unauthenticated chrome.
+export default function AdminResetPasswordLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return children;
 }
