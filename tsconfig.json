@@ -31,5 +31,15 @@
     "**/*.mts",
     "types/**/*.d.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules",
+    "sanity/**",
+    "sanity.config.ts",
+    "sanity.cli.ts",
+    "scripts/local/**",
+    "app/_archive/**",
+    ".open-next/**",
+    ".wrangler/**",
+    ".wrangler-dry/**"
+  ]
 }

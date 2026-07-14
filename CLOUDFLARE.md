@@ -157,20 +157,43 @@ Custom domain: Workers & Pages → your worker → **Domains & Routes** → add 
 | Workers **Free** | **3 MiB** |
 | Workers **Paid** (~$5/mo) | **10 MiB** |
 
-This app is a full Next.js 16 site. After size optimizations (no Sanity Studio, no
-PDF/AI packages in the Worker), the script is still **~3 MiB gzip**. That often
-exceeds Free and always fits **Workers Paid**.
+This repo is tuned for **Workers Free** after stripping Studio / PDF / AI packages
+from the production dependency graph. `pnpm run build` runs a size gate
+(`scripts/check-worker-size.mjs`) and fails if gzip would exceed 3 MiB.
 
-**Recommended:** enable [Workers Paid](https://dash.cloudflare.com/?to=/:account/workers/plans)
-on the account so deploy can succeed.
+**If deploy still fails with code 10027:** enable
+[Workers Paid](https://dash.cloudflare.com/?to=/:account/workers/plans) (10 MiB).
 
-### Intentionally not in the CF Worker (size)
+### Production dependency policy (size)
+
+**Not installed in production** (removed from `package.json` so they cannot bloat
+the Worker): `sanity`, `@sanity/vision`, `next-sanity`, `pdf-parse*`, `ai` / AI
+SDKs, `next-auth`, `styled-components`, `sass`.
+
+Content still uses `@sanity/client` + `@portabletext/react` only.
 
 | Feature | On Cloudflare | Alternative |
 |---------|---------------|-------------|
-| Sanity Studio (`/studio`) | Stub page only | [sanity.io/manage](https://www.sanity.io/manage) or local `pnpm dev` |
-| IEBC PDF bulk upload | HTTP 501 | Local admin / separate ingestion job |
-| Hansard AI PDF process | HTTP 501 | Process locally, save via API |
+| Sanity Studio (`/studio`) | Stub page only | [sanity.io/manage](https://www.sanity.io/manage) |
+| Schema / Studio local | Keep `sanity/` folder; reinstall studio deps only when editing schema | `pnpm add -D sanity @sanity/vision` when needed |
+| IEBC PDF bulk upload | HTTP 501 | Local admin / separate job |
+| Hansard AI PDF process | HTTP 501 | `scripts/local/hansard-processor.ts` offline |
+
+### Best-practice CF settings
+
+| Setting | Value |
+|---------|--------|
+| Build command | `pnpm run build` |
+| Deploy command | `npx wrangler deploy` |
+| Node | 20 or 22 |
+| Clear build cache | After dependency-slimming commits, clear CF build cache once |
+
+Required env (Build **and** Runtime for `NEXT_PUBLIC_*`):
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` or `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `NEXT_PUBLIC_SANITY_PROJECT_ID`, `NEXT_PUBLIC_SANITY_DATASET`
+- Secrets at runtime: `SUPABASE_SERVICE_ROLE_KEY`, `SANITY_API_TOKEN`, Turnstile, etc.
 
 5. Add **all** env vars from section 2.3 (especially every `NEXT_PUBLIC_*` for the build).
 6. Node version: **20** or **22** (set in dashboard or `.nvmrc`).
