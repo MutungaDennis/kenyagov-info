@@ -3,12 +3,14 @@
   // Must match the Cloudflare Workers/Pages project name from the dashboard
   "name": "kenyagov-info",
   "main": ".open-next/worker.js",
-  "compatibility_date": "2025-10-01",
+  "compatibility_date": "2025-12-01",
   "compatibility_flags": [
     // Required for Next.js on Cloudflare (Node.js APIs)
     "nodejs_compat",
     "global_fetch_strictly_public"
   ],
+  // Keep the Worker script as small as possible (gzip limit: Free 3 MiB / Paid 10 MiB)
+  "minify": true,
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"
@@ -21,19 +23,6 @@
       "service": "kenyagov-info"
     }
   ],
-  // Optional: enable Next.js incremental cache on R2 (recommended for production)
-  // 1. Create bucket: wrangler r2 bucket create kenyagov-info-next-cache
-  // 2. Uncomment below and set bucket_name
-  // "r2_buckets": [
-  //   {
-  //     "binding": "NEXT_INC_CACHE_R2_BUCKET",
-  //     "bucket_name": "kenyagov-info-next-cache"
-  //   }
-  // ],
-  // Optional: Cloudflare Images binding for next/image optimization
-  // "images": {
-  //   "binding": "IMAGES"
-  // },
   "observability": {
     "enabled": true
   }

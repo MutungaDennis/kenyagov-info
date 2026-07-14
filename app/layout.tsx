@@ -1,17 +1,13 @@
 // app/layout.tsx
 import { Metadata, Viewport } from 'next';
-import { Public_Sans } from 'next/font/google';
 
 import "govuk-frontend/govuk-frontend.min.css";
 import "@/app/globals.css";
 
 import { ClientLayoutWrapper } from "./ClientLayoutWrapper";
 
-const publicSans = Public_Sans({
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-public-sans',
-});
+// Public Sans via stylesheet (not next/font) so fontkit / font metrics
+// are not file-traced into the Cloudflare Worker bundle.
 
 const SITE_URL = 'https://www.citizenguide.ke';
 const SITE_NAME = 'CitizenGuide.KE';
@@ -166,8 +162,18 @@ export default function RootLayout({
   };
 
   return (
-    <html lang="en-KE" className={`govuk-template ${publicSans.variable}`}>
+    <html lang="en-KE" className="govuk-template">
       <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap"
+          rel="stylesheet"
+        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{

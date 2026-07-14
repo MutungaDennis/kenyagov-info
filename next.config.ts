@@ -4,12 +4,38 @@ import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
 
 const nextConfig: NextConfig = {
   // Tell Next.js to leave pdfjs-dist alone and resolve it from node_modules
-  serverExternalPackages: ['pdfjs-dist'],
+  serverExternalPackages: ["pdfjs-dist"],
 
-  sassOptions: {
-    quietDeps: true,
-    silenceDeprecations: ["import", "if-function", "legacy-js-api"],
-    includePaths: [path.join(__dirname, "node_modules")],
+  // Keep compile-only / unused packages out of the OpenNext Worker (gzip limit).
+  // Without this, sass.dart.js (~5MB) and other tooling get file-traced into the deploy.
+  outputFileTracingExcludes: {
+    "*": [
+      "**/node_modules/sass/**/*",
+      "**/node_modules/**/sass/**/*",
+      "**/node_modules/babel-plugin-react-compiler/**/*",
+      "**/node_modules/**/babel-plugin-react-compiler/**/*",
+      "**/node_modules/**/next/dist/compiled/next-devtools/**/*",
+      "**/node_modules/**/next/dist/compiled/cssnano-simple/**/*",
+      "**/node_modules/**/next/dist/compiled/postcss-preset-env/**/*",
+      "**/node_modules/**/next/dist/server/capsize-font-metrics.json",
+      "**/node_modules/**/next/dist/compiled/@next/font/**/*",
+      "**/node_modules/**/next/dist/compiled/next-server/app-page-experimental.runtime.prod.js",
+      "**/node_modules/**/next/dist/compiled/next-server/app-page-turbo-experimental.runtime.prod.js",
+      "**/node_modules/**/next/dist/compiled/next-server/app-page-turbo.runtime.prod.js",
+      "**/node_modules/pdf-parse/**/*",
+      "**/node_modules/pdf-parse-fork/**/*",
+      "**/node_modules/pdfjs-dist/**/*",
+      "**/node_modules/@ai-sdk/**/*",
+      "**/node_modules/ai/**/*",
+      "**/node_modules/@openrouter/**/*",
+      "**/node_modules/sanity/**/*",
+      "**/node_modules/@sanity/vision/**/*",
+      "**/node_modules/styled-components/**/*",
+      "**/node_modules/next-auth/**/*",
+      "**/node_modules/esbuild/**/*",
+      "**/node_modules/webpack/**/*",
+      "**/node_modules/typescript/**/*",
+    ],
   },
 
   webpack: (config) => {

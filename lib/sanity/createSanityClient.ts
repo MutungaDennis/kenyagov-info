@@ -1,4 +1,4 @@
-import { createClient, type SanityClient } from "next-sanity";
+import { createClient, type SanityClient } from "@sanity/client";
 
 /**
  * Shared Sanity client factory with safe defaults so module evaluation

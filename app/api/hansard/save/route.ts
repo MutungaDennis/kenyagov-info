@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSanityWriteClient } from "@/lib/sanity/createSanityClient";
-import { textToPortableText } from '@/lib/hansard-processor';
+import { textToPortableText } from '@/lib/portable-text';
 
 const sanity = createSanityWriteClient();
 

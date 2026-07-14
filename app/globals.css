@@ -7,12 +7,13 @@
   --app-brand-green: #047857;
   --app-brand-green-dark: #065f46;
   --app-brand-red: #ce1126;
+  --font-public-sans: "Public Sans", sans-serif;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-public-sans), sans-serif;
+  --font-sans: "Public Sans", sans-serif;
 }
 
 /* 

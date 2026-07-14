@@ -1,24 +1,26 @@
-import { type NextRequest } from "next/server";
-import { updateSession } from "@/lib/supabase/auth";
+import { NextResponse, type NextRequest } from "next/server";
 
 /**
- * Edge Middleware for Supabase session refresh + admin protection.
+ * Lightweight Edge middleware for Cloudflare Worker size limits.
  *
- * Next.js 16 renamed this convention to `proxy.ts` (Node.js runtime by default).
- * OpenNext Cloudflare does not support Node.js middleware yet, so we keep the
- * classic `middleware.ts` Edge entry for Cloudflare deploys.
+ * Full Supabase session refresh used to pull ~750KB (gzip ~150KB+) into the
+ * middleware isolate. Admin protection remains in `app/admin/layout.tsx`
+ * via `requireAdmin()` / `getUser()` on the Node server function.
  *
- * @see https://opennext.js.org/cloudflare — Node Middleware not yet supported
+ * Pathname is still forwarded so requireAdmin can avoid redirect loops.
  */
-export async function middleware(request: NextRequest) {
-  return await updateSession(request);
+export function middleware(request: NextRequest) {
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-pathname", request.nextUrl.pathname);
+
+  return NextResponse.next({
+    request: { headers: requestHeaders },
+  });
 }
 
 export const config = {
   matcher: [
     "/admin/:path*",
-    "/protected/:path*",
-    // Session refresh on most pages; skip static assets and SEO files
     "/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

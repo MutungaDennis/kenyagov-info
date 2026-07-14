@@ -150,6 +150,28 @@ Custom domain: Workers & Pages → your worker → **Domains & Routes** → add 
 > OpenNext build (configured in this repo). If you only run Next, wrangler fails with  
 > `Could not find compiled Open Next config`.
 
+### Worker size limits (critical)
+
+| Plan | Max Worker size (gzip) |
+|------|-------------------------|
+| Workers **Free** | **3 MiB** |
+| Workers **Paid** (~$5/mo) | **10 MiB** |
+
+This app is a full Next.js 16 site. After size optimizations (no Sanity Studio, no
+PDF/AI packages in the Worker), the script is still **~3 MiB gzip**. That often
+exceeds Free and always fits **Workers Paid**.
+
+**Recommended:** enable [Workers Paid](https://dash.cloudflare.com/?to=/:account/workers/plans)
+on the account so deploy can succeed.
+
+### Intentionally not in the CF Worker (size)
+
+| Feature | On Cloudflare | Alternative |
+|---------|---------------|-------------|
+| Sanity Studio (`/studio`) | Stub page only | [sanity.io/manage](https://www.sanity.io/manage) or local `pnpm dev` |
+| IEBC PDF bulk upload | HTTP 501 | Local admin / separate ingestion job |
+| Hansard AI PDF process | HTTP 501 | Process locally, save via API |
+
 5. Add **all** env vars from section 2.3 (especially every `NEXT_PUBLIC_*` for the build).
 6. Node version: **20** or **22** (set in dashboard or `.nvmrc`).
 

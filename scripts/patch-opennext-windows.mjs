@@ -14,15 +14,28 @@ if (process.platform !== "win32") {
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const pnpmDir = path.join(root, "node_modules", ".pnpm");
 
-function findTargets(dir, out = []) {
+function findCopyTracedFiles(dir, out = []) {
   if (!fs.existsSync(dir)) return out;
-  for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
+  let entries;
+  try {
+    entries = fs.readdirSync(dir, { withFileTypes: true });
+  } catch {
+    return out;
+  }
+  for (const ent of entries) {
     const p = path.join(dir, ent.name);
     if (ent.isDirectory()) {
-      if (ent.name.startsWith("@opennextjs+aws@") || ent.name === "node_modules") {
-        findTargets(p, out);
+      // Only walk OpenNext AWS packages (and their nested tree)
+      if (
+        ent.name.startsWith("@opennextjs+aws@") ||
+        p.includes(`${path.sep}@opennextjs+aws@`)
+      ) {
+        findCopyTracedFiles(p, out);
       }
-    } else if (ent.name === "copyTracedFiles.js" && p.includes("@opennextjs+aws")) {
+    } else if (
+      ent.name === "copyTracedFiles.js" &&
+      p.includes("@opennextjs+aws")
+    ) {
       out.push(p);
     }
   }
@@ -53,7 +66,7 @@ const replacement = `if (e.code === "EEXIST") {
                     throw e;
                 }`;
 
-const targets = findTargets(pnpmDir);
+const targets = findCopyTracedFiles(pnpmDir);
 let patched = 0;
 for (const file of targets) {
   let src = fs.readFileSync(file, "utf8");
@@ -70,4 +83,4 @@ for (const file of targets) {
   patched++;
   console.log("patched:", file);
 }
-console.log(`done, patched ${patched} file(s)`);
+console.log(`done, patched ${patched} file(s) (found ${targets.length} targets)`);

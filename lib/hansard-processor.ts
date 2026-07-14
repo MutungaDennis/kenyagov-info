@@ -277,30 +277,4 @@ export async function processHansardPdf(
   };
 }
 
-// ============================================
-// HELPER: Text → Portable Text
-// ============================================
-
-export function textToPortableText(text: string) {
-  if (!text || typeof text !== 'string') return [];
-
-  const paragraphs = text
-    .split(/\n\s*\n/)
-    .map((p) => p.trim())
-    .filter(Boolean);
-
-  return paragraphs.map((paragraph) => ({
-    _type: 'block',
-    _key: Math.random().toString(36).substring(2, 12),
-    style: 'normal',
-    children: [
-      {
-        _type: 'span',
-        _key: Math.random().toString(36).substring(2, 12),
-        text: paragraph,
-        marks: [],
-      },
-    ],
-    markDefs: [],
-  }));
-}
+// textToPortableText lives in @/lib/portable-text (keeps AI/PDF deps out of CF Worker)
