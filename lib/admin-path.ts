@@ -1,26 +1,40 @@
 /**
- * Obscure admin URL prefix.
+ * Public admin URL prefix (obscurity layer — still use strong passwords + is_admin).
  *
- * Set NEXT_PUBLIC_ADMIN_BASE_PATH to a long random path (e.g. /cg-ke-m8p4w2q9x1n7).
- * Middleware rewrites that path to the internal /admin app routes and returns 404
- * for bare /admin when a custom path is configured.
- *
- * Security note: this is obscurity, not a substitute for strong passwords + admin RLS.
+ * Production default is a non-guessable path. Override with NEXT_PUBLIC_ADMIN_BASE_PATH
+ * on Cloudflare if you rotate it. Local `next dev` keeps /admin for convenience
+ * unless you set the env var.
  */
 
-const FALLBACK = "/admin";
+/** Baked-in production path (also set this on Cloudflare for consistency). */
+export const DEFAULT_PRODUCTION_ADMIN_BASE = "/cg-ke-a5wkqciyjpg940u3";
 
-function normalizeBase(raw: string | undefined): string {
-  let p = (raw || FALLBACK).trim();
+const DEV_FALLBACK = "/admin";
+
+function normalizeBase(raw: string): string {
+  let p = raw.trim();
   if (!p.startsWith("/")) p = `/${p}`;
   p = p.replace(/\/+$/, "");
-  if (!p || p === "/") return FALLBACK;
+  if (!p || p === "/") {
+    return isProd() ? DEFAULT_PRODUCTION_ADMIN_BASE : DEV_FALLBACK;
+  }
   return p;
 }
 
-/** Public URL prefix admins use in the browser (and robots.txt). */
+function isProd(): boolean {
+  // OpenNext / Cloudflare production builds set NODE_ENV=production
+  return process.env.NODE_ENV === "production";
+}
+
+/** Public URL prefix admins use in the browser. */
 export function getAdminBasePath(): string {
-  return normalizeBase(process.env.NEXT_PUBLIC_ADMIN_BASE_PATH);
+  const fromEnv = process.env.NEXT_PUBLIC_ADMIN_BASE_PATH?.trim();
+  if (fromEnv) return normalizeBase(fromEnv);
+
+  // Production: never expose well-known /admin
+  if (isProd()) return DEFAULT_PRODUCTION_ADMIN_BASE;
+
+  return DEV_FALLBACK;
 }
 
 /** Join base + subpath, e.g. adminPath('login') → /cg-…/login */
@@ -41,7 +55,7 @@ export function isAdminFilesystemPath(pathname: string): boolean {
   return pathname === "/admin" || pathname.startsWith("/admin/");
 }
 
-/** True when a custom secret path is in use (so /admin should 404). */
+/** True when public path is not /admin — bare /admin must 404. */
 export function isCustomAdminPathEnabled(): boolean {
-  return getAdminBasePath() !== FALLBACK;
+  return getAdminBasePath() !== DEV_FALLBACK;
 }

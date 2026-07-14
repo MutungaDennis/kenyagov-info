@@ -8,8 +8,8 @@ import {
 
 /**
  * Edge middleware:
- * - Maps secret admin URL → internal /admin/* (filesystem routes unchanged)
- * - Returns 404 for /admin/* when a custom base path is configured
+ * - Maps secret admin URL → internal /admin/* (app routes stay under app/admin)
+ * - Returns 404 for public /admin/* when secret path is active (production default)
  * - Forwards x-pathname for requireAdmin() auth-page detection
  */
 export function middleware(request: NextRequest) {
@@ -17,11 +17,14 @@ export function middleware(request: NextRequest) {
   const secretBase = getAdminBasePath();
   const requestHeaders = new Headers(request.headers);
 
-  // Hide well-known /admin when a random path is configured
+  // Always hide well-known /admin when secret path is active
   if (isCustomAdminPathEnabled() && isAdminFilesystemPath(pathname)) {
-    return new NextResponse("Not Found", {
-      status: 404,
-      headers: { "content-type": "text/plain; charset=utf-8" },
+    const notFound = request.nextUrl.clone();
+    notFound.pathname = "/not-found-admin";
+    requestHeaders.set("x-pathname", pathname);
+    // Keep browser URL as /admin but serve a not-found page (no login form)
+    return NextResponse.rewrite(notFound, {
+      request: { headers: requestHeaders },
     });
   }
 
@@ -29,7 +32,7 @@ export function middleware(request: NextRequest) {
   if (isAdminPublicPath(pathname)) {
     const rest = pathname.slice(secretBase.length) || "";
     const url = request.nextUrl.clone();
-    url.pathname = `/admin${rest}` || "/admin";
+    url.pathname = rest ? `/admin${rest}` : "/admin";
     requestHeaders.set("x-pathname", pathname);
     requestHeaders.set("x-admin-base", secretBase);
     return NextResponse.rewrite(url, {
@@ -44,8 +47,10 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  // Broad matcher so secret admin path is always rewritten (cannot be env-dynamic in matcher)
   matcher: [
+    /*
+     * Match all paths except static assets. Secret admin path must always be rewritten.
+     */
     "/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|map|txt|xml|woff2?)$).*)",
   ],
 };

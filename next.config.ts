@@ -54,6 +54,26 @@ const nextConfig: NextConfig = {
   },
 
 
+  // Secret admin path → internal app/admin (backup if middleware is skipped).
+  // Keep in sync with DEFAULT_PRODUCTION_ADMIN_BASE in lib/admin-path.ts
+  async rewrites() {
+    const fromEnv = process.env.NEXT_PUBLIC_ADMIN_BASE_PATH?.trim();
+    const secret =
+      fromEnv && fromEnv !== "/admin"
+        ? fromEnv.replace(/\/$/, "")
+        : process.env.NODE_ENV === "production"
+          ? "/cg-ke-a5wkqciyjpg940u3"
+          : null;
+
+    if (!secret || secret === "/admin") return [];
+
+    const base = secret.startsWith("/") ? secret : `/${secret}`;
+    return [
+      { source: base, destination: "/admin" },
+      { source: `${base}/:path*`, destination: "/admin/:path*" },
+    ];
+  },
+
   // ==========================================
   // REDIRECTS FOR SEO CONTINUITY
   // ==========================================
