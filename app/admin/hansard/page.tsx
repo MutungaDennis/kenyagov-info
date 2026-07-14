@@ -1,7 +1,9 @@
 import { createSanityWriteClient } from "@/lib/sanity/createSanityClient";
+import { getSanityStudioUrl } from "@/lib/sanity/studioUrl";
 import Link from 'next/link';
 
 const sanity = createSanityWriteClient();
+const studioBase = getSanityStudioUrl();
 
 interface HansardSitting {
   _id: string;
@@ -115,7 +117,7 @@ export default async function HansardManagementPage() {
             + Upload & Process New PDF
           </Link>
           <a 
-            href="https://your-sanity-studio-url.sanity.studio/desk/hansardSitting" 
+            href={`${studioBase}/structure/hansardSitting`} 
             target="_blank" 
             rel="noopener noreferrer"
             className="govuk-button govuk-button--secondary"
@@ -198,7 +200,7 @@ export default async function HansardManagementPage() {
                           </Link>
                         )}
                         <a 
-                          href={`https://your-sanity-studio-url.sanity.studio/desk/hansardSitting;${sitting._id}`} 
+                          href={`${studioBase}/structure/hansardSitting;${sitting._id}`} 
                           target="_blank" 
                           rel="noopener noreferrer"
                           className="govuk-link"

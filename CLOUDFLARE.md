@@ -174,10 +174,32 @@ Content still uses `@sanity/client` + `@portabletext/react` only.
 
 | Feature | On Cloudflare | Alternative |
 |---------|---------------|-------------|
-| Sanity Studio (`/studio`) | Stub page only | [sanity.io/manage](https://www.sanity.io/manage) |
-| Schema / Studio local | Keep `sanity/` folder; reinstall studio deps only when editing schema | `pnpm add -D sanity @sanity/vision` when needed |
+| Sanity Studio | **Not in Worker** — `/studio` redirects to managed Studio | `npx sanity@latest deploy` → `*.sanity.studio` |
+| Content reads | `@sanity/client` in the Worker | Same project/dataset |
 | IEBC PDF bulk upload | HTTP 501 | Local admin / separate job |
 | Hansard AI PDF process | HTTP 501 | `scripts/local/hansard-processor.ts` offline |
+
+### Sanity managed Studio (required architecture)
+
+Self-hosting Studio inside Next is what blew past the free Worker size limit.
+Use Sanity’s free managed host instead:
+
+```bash
+# From repo root (needs network; one-time / when schema changes)
+pnpm run studio:deploy
+# → e.g. https://your-name.sanity.studio
+```
+
+Then set on Cloudflare (Build + Runtime):
+
+```text
+NEXT_PUBLIC_SANITY_STUDIO_URL=https://your-name.sanity.studio
+```
+
+Also in [Sanity Manage → API → CORS origins](https://www.sanity.io/manage): add
+`https://www.citizenguide.ke` and your `*.workers.dev` preview host if needed.
+
+`/studio` on the main site redirects to that URL. Admin “Edit in Studio” links use it too.
 
 ### Best-practice CF settings
 

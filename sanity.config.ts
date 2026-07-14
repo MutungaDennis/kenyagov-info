@@ -7,7 +7,10 @@ import { schema } from './sanity/schemaTypes';
 import { structure } from './sanity/structure';
 
 export default defineConfig({
-  basePath: '/studio',
+  // Managed hosting (`npx sanity deploy` → *.sanity.studio) uses basePath "/".
+  // Self-hosting under Next at /studio is disabled (Worker size); keep config
+  // for CLI deploy only — not imported by the Cloudflare Next Worker.
+  basePath: process.env.SANITY_STUDIO_BASEPATH || "/",
   projectId,
   dataset,
 

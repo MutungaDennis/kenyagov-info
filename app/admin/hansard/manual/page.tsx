@@ -4,6 +4,19 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Link as LinkIcon, Loader2 } from 'lucide-react';
 
+/** Managed Sanity Studio (not embedded in this Next app) */
+function studioDocUrl(documentId: string) {
+  const base = (
+    process.env.NEXT_PUBLIC_SANITY_STUDIO_URL ||
+    `https://www.sanity.io/manage/project/${process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || 'egkekbgr'}`
+  ).replace(/\/$/, '');
+  // Structure tool deep-link works on *.sanity.studio; Manage falls back to project home
+  if (base.includes('sanity.studio')) {
+    return `${base}/structure/hansardSitting;${documentId}`;
+  }
+  return base;
+}
+
 type ContributionType = 'spoken' | 'procedural' | 'header';
 
 interface Contribution {
@@ -370,7 +383,7 @@ export default function ManualHansardEntry() {
             <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
               <button onClick={continueWithSameSitting} className="govuk-button">Continue adding more</button>
               <Link href={getPublicUrl()} target="_blank" className="govuk-button govuk-button--secondary">View on Public Site →</Link>
-              <a href={`https://www.sanity.io/@oPARwvA07/studio/yomntryu9cc5zo2e7odm374w/default/hansardSitting;${successData.documentId}`} target="_blank" className="govuk-button govuk-button--secondary">Edit in Sanity Studio</a>
+              <a href={studioDocUrl(successData.documentId)} target="_blank" rel="noopener noreferrer" className="govuk-button govuk-button--secondary">Edit in Sanity Studio</a>
               <button onClick={startNewSitting} className="govuk-button govuk-button--secondary">Start a new sitting</button>
             </div>
           </div>
