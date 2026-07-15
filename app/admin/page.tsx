@@ -40,16 +40,22 @@ const TASKS = [
     group: "Elections data",
   },
   {
+    segment: "contact",
+    title: "Contact messages",
+    body: "Read and manage messages from the public contact form.",
+    group: "Citizen responses",
+  },
+  {
     segment: "feedback",
     title: "General feedback",
     body: "Read feedback submitted by citizens on the public site.",
-    group: "Feedback",
+    group: "Citizen responses",
   },
   {
     segment: "bug-reports",
     title: "Bug reports",
     body: "Review technical problem reports from citizens.",
-    group: "Feedback",
+    group: "Citizen responses",
   },
   {
     segment: "analytics",
@@ -69,7 +75,7 @@ const GROUPS = [
   "Content",
   "Parliament",
   "Elections data",
-  "Feedback",
+  "Citizen responses",
   "System",
 ] as const;
 

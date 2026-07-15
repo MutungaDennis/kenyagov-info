@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { adminPath } from "@/lib/admin-path";
-import { createClient } from '@/lib/supabase/client';
+import { createBrowserClientAsync } from '@/lib/supabase/client';
 import GovUKBackLink from '@/components/govuk/BackLink';
 import GovUKBreadcrumbs from '@/components/govuk/Breadcrumbs';
 import GovUKFeedback from '@/components/govuk/Feedback';
@@ -37,25 +37,27 @@ export default function AdminInstitutionsPage() {
   const [institutionToDelete, setInstitutionToDelete] =
     useState<{ id: string; name: string } | null>(null);
 
-  const supabase = createClient();
-
   const fetchInstitutions = useCallback(async () => {
     setLoading(true);
-
-    const { data, error } = await supabase
-      .from("institutions")
-      .select(`
+    try {
+      const supabase = await createBrowserClientAsync();
+      const { data, error } = await supabase
+        .from("institutions")
+        .select(`
         id, slug, name, short_name, institution_type,
         institution_category, government_level,
         arm_of_government, mtef_sector, is_active, description
       `)
-      .order("name", { ascending: true });
+        .order("name", { ascending: true });
 
-    if (error) console.error(error);
-    else setInstitutions(data || []);
-
-    setLoading(false);
-  }, [supabase]);
+      if (error) console.error(error);
+      else setInstitutions(data || []);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     fetchInstitutions();
@@ -120,6 +122,7 @@ export default function AdminInstitutionsPage() {
   ]);
 
   const toggleActive = async (id: string, current: boolean) => {
+    const supabase = await createBrowserClientAsync();
     await supabase
       .from("institutions")
       .update({ is_active: !current })
@@ -136,6 +139,7 @@ export default function AdminInstitutionsPage() {
   const confirmDelete = async () => {
     if (!institutionToDelete) return;
 
+    const supabase = await createBrowserClientAsync();
     await supabase
       .from("institutions")
       .delete()

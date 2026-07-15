@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { adminPath } from "@/lib/admin-path";
-import { createClient } from '@/lib/supabase/client';
+import { createBrowserClientAsync } from '@/lib/supabase/client';
 import GovUKBackLink from '@/components/govuk/BackLink';
 import GovUKBreadcrumbs from '@/components/govuk/Breadcrumbs';
 import GovUKFeedback from '@/components/govuk/Feedback';
@@ -11,7 +11,6 @@ import Link from 'next/link';
 
 export default function NewInstitutionPage() {
   const router = useRouter();
-  const supabase = createClient();
 
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -50,6 +49,7 @@ export default function NewInstitutionPage() {
   // Fetch unique values for dropdowns
   useEffect(() => {
     const fetchOptions = async () => {
+      const supabase = await createBrowserClientAsync();
       // Institution Types
       const { data: typesData } = await supabase
         .from('institutions')
@@ -86,7 +86,7 @@ export default function NewInstitutionPage() {
     };
 
     fetchOptions();
-  }, [supabase]);
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -113,6 +113,7 @@ export default function NewInstitutionPage() {
     e.preventDefault();
     setSubmitting(true);
 
+    const supabase = await createBrowserClientAsync();
     const { error } = await supabase
       .from('institutions')
       .insert([formData]);

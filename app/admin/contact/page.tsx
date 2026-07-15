@@ -1,56 +1,54 @@
 import { createServiceClient, hasServiceRoleKey } from "@/lib/supabase/service";
-import { deleteBugReport } from "@/app/admin/actions";
+import { deleteContactMessage } from "@/app/admin/actions";
 import DeleteRowButton from "@/components/admin/DeleteRowButton";
 
 export const dynamic = "force-dynamic";
 
-type BugRow = {
+type ContactRow = {
   id: string;
-  what_were_you_doing: string | null;
-  what_went_wrong: string | null;
-  email_address: string | null;
-  page_path: string | null;
+  name: string | null;
+  email: string | null;
+  phone: string | null;
+  subject: string | null;
+  message: string | null;
+  contact_type: string | null;
   created_at: string;
 };
 
-async function getBugReportData(): Promise<{
-  records: BugRow[];
+async function getContactMessages(): Promise<{
+  records: ContactRow[];
   error: string | null;
 }> {
   try {
     const supabase = createServiceClient();
     const { data, error } = await supabase
-      .from("citizen_feedback")
-      .select(
-        "id, what_were_you_doing, what_went_wrong, email_address, page_path, created_at",
-      )
+      .from("contact_messages")
+      .select("id, name, email, phone, subject, message, contact_type, created_at")
       .order("created_at", { ascending: false });
 
     if (error) {
-      console.error("citizen_feedback:", error.message);
+      console.error("contact_messages:", error.message);
       return { records: [], error: error.message };
     }
-    return { records: (data as BugRow[]) || [], error: null };
+    return { records: (data as ContactRow[]) || [], error: null };
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : "Unknown error";
-    console.error("getBugReportData:", message);
+    console.error("getContactMessages:", message);
     return { records: [], error: message };
   }
 }
 
-export default async function AdminBugReportsPage() {
-  const { records, error } = await getBugReportData();
+export default async function AdminContactPage() {
+  const { records, error } = await getContactMessages();
   const total = records.length;
-  const uniquePaths = new Set(
-    records.map((r) => r.page_path || "/unknown"),
-  ).size;
+  const withEmail = records.filter((r) => r.email).length;
 
   return (
     <>
       <span className="govuk-caption-l">Citizen responses</span>
-      <h1 className="govuk-heading-xl">Bug reports</h1>
+      <h1 className="govuk-heading-xl">Contact messages</h1>
       <p className="govuk-body">
-        Technical problems reported via “report a problem on this page”.
+        Messages submitted through the public contact form.
       </p>
 
       {!hasServiceRoleKey() && (
@@ -68,7 +66,7 @@ export default async function AdminBugReportsPage() {
       {error && (
         <div className="govuk-error-summary" role="alert">
           <h2 className="govuk-error-summary__title">
-            Could not load bug reports
+            Could not load contact messages
           </h2>
           <div className="govuk-error-summary__body">
             <p className="govuk-body">{error}</p>
@@ -79,37 +77,34 @@ export default async function AdminBugReportsPage() {
       <div className="govuk-grid-row govuk-!-margin-bottom-6">
         <div className="govuk-grid-column-one-half">
           <div className="admin-task-card">
-            <p className="govuk-body-s govuk-!-margin-bottom-1">Total reports</p>
+            <p className="govuk-body-s govuk-!-margin-bottom-1">Total messages</p>
             <p className="govuk-heading-l govuk-!-margin-bottom-0">{total}</p>
           </div>
         </div>
         <div className="govuk-grid-column-one-half">
           <div className="admin-task-card">
-            <p className="govuk-body-s govuk-!-margin-bottom-1">
-              Unique page paths
-            </p>
+            <p className="govuk-body-s govuk-!-margin-bottom-1">With email</p>
             <p className="govuk-heading-l govuk-!-margin-bottom-0">
-              {uniquePaths}
+              {withEmail}
             </p>
           </div>
         </div>
       </div>
 
       {total === 0 && !error ? (
-        <div className="govuk-inset-text">No bug reports yet.</div>
+        <div className="govuk-inset-text">No contact messages yet.</div>
       ) : (
         <div style={{ overflowX: "auto" }}>
           <table className="govuk-table">
             <caption className="govuk-table__caption govuk-table__caption--m">
-              Technical issues
+              Inbox
             </caption>
             <thead className="govuk-table__head">
               <tr className="govuk-table__row">
                 <th className="govuk-table__header">Date</th>
-                <th className="govuk-table__header">Page</th>
-                <th className="govuk-table__header">What they were doing</th>
-                <th className="govuk-table__header">What went wrong</th>
-                <th className="govuk-table__header">Contact</th>
+                <th className="govuk-table__header">From</th>
+                <th className="govuk-table__header">Subject</th>
+                <th className="govuk-table__header">Message</th>
                 <th className="govuk-table__header">
                   <span className="govuk-visually-hidden">Actions</span>
                 </th>
@@ -119,40 +114,55 @@ export default async function AdminBugReportsPage() {
               {records.map((row) => {
                 const date = new Date(row.created_at).toLocaleDateString(
                   "en-KE",
-                  { day: "2-digit", month: "short", year: "numeric" },
+                  {
+                    day: "2-digit",
+                    month: "short",
+                    year: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  },
                 );
                 return (
                   <tr key={row.id} className="govuk-table__row">
                     <td className="govuk-table__cell">{date}</td>
                     <td className="govuk-table__cell">
-                      <code>{row.page_path || "/unknown"}</code>
-                    </td>
-                    <td
-                      className="govuk-table__cell"
-                      style={{ whiteSpace: "pre-wrap" }}
-                    >
-                      {row.what_were_you_doing}
-                    </td>
-                    <td
-                      className="govuk-table__cell"
-                      style={{ whiteSpace: "pre-wrap" }}
-                    >
-                      {row.what_went_wrong}
-                    </td>
-                    <td className="govuk-table__cell">
-                      {row.email_address ? (
-                        <a
-                          className="govuk-link"
-                          href={`mailto:${row.email_address}`}
-                        >
-                          {row.email_address}
+                      {row.name && (
+                        <strong className="govuk-!-display-block">
+                          {row.name}
+                        </strong>
+                      )}
+                      {row.email && (
+                        <a className="govuk-link" href={`mailto:${row.email}`}>
+                          {row.email}
                         </a>
-                      ) : (
-                        <span className="govuk-hint">—</span>
+                      )}
+                      {row.phone && (
+                        <span className="govuk-body-s govuk-!-display-block">
+                          {row.phone}
+                        </span>
+                      )}
+                      {row.contact_type && (
+                        <span className="govuk-tag govuk-tag--grey govuk-!-margin-top-1">
+                          {row.contact_type}
+                        </span>
                       )}
                     </td>
                     <td className="govuk-table__cell">
-                      <DeleteRowButton id={row.id} action={deleteBugReport} />
+                      {row.subject || (
+                        <span className="govuk-hint">No subject</span>
+                      )}
+                    </td>
+                    <td
+                      className="govuk-table__cell"
+                      style={{ whiteSpace: "pre-wrap", maxWidth: "28rem" }}
+                    >
+                      {row.message}
+                    </td>
+                    <td className="govuk-table__cell">
+                      <DeleteRowButton
+                        id={row.id}
+                        action={deleteContactMessage}
+                      />
                     </td>
                   </tr>
                 );

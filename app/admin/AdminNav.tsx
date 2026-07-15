@@ -50,8 +50,9 @@ const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
-    heading: "Feedback",
+    heading: "Citizen responses",
     items: [
+      { segment: "contact", label: "Contact messages" },
       { segment: "feedback", label: "General feedback" },
       { segment: "bug-reports", label: "Bug reports" },
     ],

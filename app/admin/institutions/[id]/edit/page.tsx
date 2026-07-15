@@ -4,14 +4,17 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { adminPath } from "@/lib/admin-path";
 import Link from 'next/link';
-import { createClient } from '@/lib/supabase/client';
+import { createBrowserClientAsync } from "@/lib/supabase/client";
 import GovUKBackLink from '@/components/govuk/BackLink';
 import GovUKBreadcrumbs from '@/components/govuk/Breadcrumbs';
 import GovUKFeedback from '@/components/govuk/Feedback';
 
+async function getSb() {
+  return createBrowserClientAsync();
+}
+
 export default function EditInstitutionPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
-  const supabase = createClient();
 
   const [id, setId] = useState<string>('');
   const [loading, setLoading] = useState(true);
@@ -57,9 +60,9 @@ export default function EditInstitutionPage({ params }: { params: Promise<{ id: 
   useEffect(() => {
     const fetchOptions = async () => {
       const [typesRes, levelsRes, sectorsRes] = await Promise.all([
-        supabase.from('institutions').select('institution_type').not('institution_type', 'is', null),
-        supabase.from('institutions').select('government_level').not('government_level', 'is', null),
-        supabase.from('institutions').select('mtef_sector').not('mtef_sector', 'is', null),
+        (await getSb()).from('institutions').select('institution_type').not('institution_type', 'is', null),
+        (await getSb()).from('institutions').select('government_level').not('government_level', 'is', null),
+        (await getSb()).from('institutions').select('mtef_sector').not('mtef_sector', 'is', null),
       ]);
 
       const unique = (values: (string | null | undefined)[] | undefined) =>
@@ -77,14 +80,14 @@ export default function EditInstitutionPage({ params }: { params: Promise<{ id: 
     };
 
     fetchOptions();
-  }, [supabase]);
+  }, []);
 
   // Fetch existing institution data
   useEffect(() => {
     if (!id) return;
 
     const fetchInstitution = async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (await getSb())
         .from('institutions')
         .select('*')
         .eq('id', id)
@@ -126,7 +129,7 @@ export default function EditInstitutionPage({ params }: { params: Promise<{ id: 
     };
 
     fetchInstitution();
-  }, [id, supabase, router]);
+  }, [id, router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -142,7 +145,7 @@ export default function EditInstitutionPage({ params }: { params: Promise<{ id: 
     e.preventDefault();
     setSubmitting(true);
 
-    const { error } = await supabase
+    const { error } = await (await getSb())
       .from('institutions')
       .update(formData)
       .eq('id', id);
