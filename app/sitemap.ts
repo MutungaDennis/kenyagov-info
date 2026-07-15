@@ -299,25 +299,69 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/guides`, changeFrequency: 'weekly', priority: 0.7 },
     { url: `${BASE_URL}/society-and-culture`, changeFrequency: 'monthly', priority: 0.6 },
     { url: `${BASE_URL}/services`, changeFrequency: 'weekly', priority: 0.8 },
+    { url: `${BASE_URL}/services/a-z`, changeFrequency: 'weekly', priority: 0.8 },
+    { url: `${BASE_URL}/topics`, changeFrequency: 'weekly', priority: 0.9 },
+
+    // Civic explainers
+    { url: `${BASE_URL}/how-government-works`, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${BASE_URL}/county-vs-national`, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${BASE_URL}/how-public-money-works`, changeFrequency: 'monthly', priority: 0.7 },
+    { url: `${BASE_URL}/ecitizen`, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${BASE_URL}/huduma-centres`, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${BASE_URL}/find-your-representatives`, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${BASE_URL}/contact-government`, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${BASE_URL}/complain-about-government`, changeFrequency: 'monthly', priority: 0.7 },
+    { url: `${BASE_URL}/access-to-information`, changeFrequency: 'monthly', priority: 0.7 },
+    { url: `${BASE_URL}/scams`, changeFrequency: 'monthly', priority: 0.7 },
+    { url: `${BASE_URL}/emergency-and-safety`, changeFrequency: 'monthly', priority: 0.6 },
     
     // Static Pages
     { url: `${BASE_URL}/about`, changeFrequency: 'monthly', priority: 0.5 },
     { url: `${BASE_URL}/help`, changeFrequency: 'monthly', priority: 0.5 },
     { url: `${BASE_URL}/contact`, changeFrequency: 'monthly', priority: 0.5 },
+    { url: `${BASE_URL}/disclaimer`, changeFrequency: 'yearly', priority: 0.5 },
+    { url: `${BASE_URL}/editorial-policy`, changeFrequency: 'yearly', priority: 0.5 },
+    { url: `${BASE_URL}/corrections`, changeFrequency: 'yearly', priority: 0.5 },
     { url: `${BASE_URL}/accessibility`, changeFrequency: 'yearly', priority: 0.3 },
     { url: `${BASE_URL}/cookies`, changeFrequency: 'yearly', priority: 0.3 },
     { url: `${BASE_URL}/privacy`, changeFrequency: 'yearly', priority: 0.3 },
     { url: `${BASE_URL}/terms`, changeFrequency: 'yearly', priority: 0.3 },
     { url: `${BASE_URL}/feedback`, changeFrequency: 'monthly', priority: 0.4 },
     { url: `${BASE_URL}/support`, changeFrequency: 'monthly', priority: 0.4 },
+    { url: `${BASE_URL}/sitemap`, changeFrequency: 'monthly', priority: 0.4 },
   ];
+
+  // Topic hub pages
+  const topicUrls: SitemapEntry[] = [
+    'identity-civil-registration',
+    'passports-travel',
+    'driving-transport',
+    'money-tax',
+    'health',
+    'education',
+    'land-property',
+    'business',
+    'work-employment',
+    'benefits-social-protection',
+    'crime-justice',
+    'local-county-services',
+    'elections-participation',
+    'environment-farming',
+    'digital-government',
+    'disability',
+    'youth',
+  ].map((slug) => ({
+    url: `${BASE_URL}/topics/${slug}`,
+    changeFrequency: 'monthly' as const,
+    priority: 0.75,
+  }));
 
   const [supabaseUrls, sanityUrls] = await Promise.all([
     getSupabaseUrls(),
     getSanityUrls(),
   ]);
 
-  const allUrls = [...staticUrls, ...supabaseUrls, ...sanityUrls];
+  const allUrls = [...staticUrls, ...topicUrls, ...supabaseUrls, ...sanityUrls];
 
   // Deduplicate
   const unique = Array.from(new Map(allUrls.map(u => [u.url, u])).values());

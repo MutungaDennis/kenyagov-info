@@ -24,6 +24,50 @@ export default function GovernmentHomePage() {
         <div className="govuk-grid-column-two-thirds">
           <section className="govuk-!-margin-bottom-8">
             <h2 className="govuk-heading-m govuk-!-margin-bottom-3">
+              For citizens
+            </h2>
+            <p className="govuk-body govuk-!-margin-bottom-3">
+              Start here if you want a plain-language overview or need to
+              contact the right level of government.
+            </p>
+            <ul className="govuk-list govuk-list--bullet">
+              <li>
+                <Link href="/how-government-works" className="govuk-link">
+                  How government works
+                </Link>
+              </li>
+              <li>
+                <Link href="/county-vs-national" className="govuk-link">
+                  County vs national government
+                </Link>
+              </li>
+              <li>
+                <Link href="/find-your-representatives" className="govuk-link">
+                  Find your representatives
+                </Link>
+              </li>
+              <li>
+                <Link href="/contact-government" className="govuk-link">
+                  Contact government
+                </Link>
+              </li>
+              <li>
+                <Link href="/how-public-money-works" className="govuk-link">
+                  How public money works
+                </Link>
+              </li>
+              <li>
+                <Link href="/complain-about-government" className="govuk-link">
+                  How to complain about government
+                </Link>
+              </li>
+            </ul>
+          </section>
+
+          <hr className="govuk-section-break govuk-section-break--l govuk-section-break--visible" />
+
+          <section className="govuk-!-margin-bottom-8">
+            <h2 className="govuk-heading-m govuk-!-margin-bottom-3">
               Departments and agencies
             </h2>
             <p className="govuk-body govuk-!-margin-bottom-3">
@@ -168,6 +212,11 @@ export default function GovernmentHomePage() {
             <h2 className="govuk-heading-m">Related information</h2>
             <ul className="govuk-list govuk-list--spaced">
               <li>
+                <Link href="/topics" className="govuk-link">
+                  Browse topics
+                </Link>
+              </li>
+              <li>
                 <Link href="/search/all" className="govuk-link">
                   Search all government content
                 </Link>
@@ -185,6 +234,11 @@ export default function GovernmentHomePage() {
               <li>
                 <Link href="/elections" className="govuk-link">
                   Elections and voting
+                </Link>
+              </li>
+              <li>
+                <Link href="/access-to-information" className="govuk-link">
+                  Access to information
                 </Link>
               </li>
             </ul>

@@ -299,13 +299,20 @@ export default function AccessibilityPage() {
             {/* Preparation of this accessibility statement */}
             <h2 className="govuk-heading-l">Preparation of this accessibility statement</h2>
             <p className="govuk-body">
-              This statement was prepared on 2 July 2026. It was last updated on 2 July 2026.
+              This statement was prepared on 2 July 2026. It was last reviewed on 15 July 2026.
             </p>
             <p className="govuk-body">
-              This website was last tested on 2 July 2026. The test was carried out by the CitizenGuide.KE team.
+              This website was last tested on 2 July 2026. The test was carried out by the CitizenGuide.KE team using automated tools and manual keyboard and screen reader checks on primary public templates.
             </p>
             <p className="govuk-body">
-              We will review this statement and update it as we make changes to the website.
+              We aim for WCAG 2.2 Level AA and alignment with Kenya Standard KS 2952-1:2022. We will review this statement when we ship major interface changes or at least once a year.
+            </p>
+            <p className="govuk-body">
+              If you need information from this website in another format, or you need to report an accessibility problem, use our{' '}
+              <Link href="/contact" className="govuk-link">
+                contact form
+              </Link>
+              .
             </p>
 
           </div>

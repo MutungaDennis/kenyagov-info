@@ -56,8 +56,76 @@ export default function Home() {
               constitution.
             </p>
 
+            <div className="govuk-inset-text govuk-!-margin-top-2">
+              <p className="govuk-body govuk-!-margin-bottom-0">
+                <strong>Independent civic guide</strong> — not a government
+                website. We do not process applications or take payments. For
+                official transactions use{" "}
+                <Link href="/ecitizen" className="govuk-link">
+                  eCitizen
+                </Link>
+                , agency portals or{" "}
+                <Link href="/huduma-centres" className="govuk-link">
+                  Huduma Centres
+                </Link>
+                .{" "}
+                <Link href="/disclaimer" className="govuk-link">
+                  Read the disclaimer
+                </Link>
+                .
+              </p>
+            </div>
+
             <HomeSearch />
           </div>
+        </div>
+      </div>
+
+      <div className="govuk-grid-row govuk-!-margin-bottom-6">
+        <div className="govuk-grid-column-full">
+          <h2 className="govuk-heading-m">Browse by topic</h2>
+          <p className="govuk-body">
+            Find guidance by what you need to do.{" "}
+            <Link href="/topics" className="govuk-link">
+              See all topics
+            </Link>
+            .
+          </p>
+          <ul className="govuk-list govuk-list--bullet">
+            <li>
+              <Link
+                href="/topics/identity-civil-registration"
+                className="govuk-link"
+              >
+                Identity and civil registration
+              </Link>
+            </li>
+            <li>
+              <Link href="/topics/money-tax" className="govuk-link">
+                Money, tax and pensions
+              </Link>
+            </li>
+            <li>
+              <Link href="/topics/driving-transport" className="govuk-link">
+                Driving and transport
+              </Link>
+            </li>
+            <li>
+              <Link href="/topics/passports-travel" className="govuk-link">
+                Passports, visas and travel
+              </Link>
+            </li>
+            <li>
+              <Link href="/topics/local-county-services" className="govuk-link">
+                Local and county services
+              </Link>
+            </li>
+            <li>
+              <Link href="/topics/digital-government" className="govuk-link">
+                Digital government (eCitizen and Huduma)
+              </Link>
+            </li>
+          </ul>
         </div>
       </div>
 
@@ -151,13 +219,24 @@ export default function Home() {
 
             <li className="govuk-!-margin-top-6">
               <Link
-                href="/services"
+                href="/services/a-z"
                 className="govuk-link govuk-!-font-weight-bold"
               >
                 Explore all services A to Z
               </Link>
               <p className="govuk-body govuk-!-margin-top-1">
-                Browse the complete index of government information.
+                Alphabetical index of service guides on this website.
+              </p>
+            </li>
+            <li>
+              <Link
+                href="/services"
+                className="govuk-link govuk-!-font-weight-bold"
+              >
+                Search and filter services
+              </Link>
+              <p className="govuk-body govuk-!-margin-top-1">
+                Filter by topic or organisation.
               </p>
             </li>
           </ul>
@@ -178,7 +257,7 @@ export default function Home() {
               </p>
             </div>
 
-            <div>
+            <div className="govuk-!-margin-bottom-3">
               <h3 className="govuk-heading-s govuk-!-margin-bottom-1">
                 <Link
                   href="/government/counties/devolution"
@@ -189,6 +268,28 @@ export default function Home() {
               </h3>
               <p className="govuk-body govuk-!-margin-0">
                 Intergovernmental grants, budgets and county performance.
+              </p>
+            </div>
+
+            <div className="govuk-!-margin-bottom-3">
+              <h3 className="govuk-heading-s govuk-!-margin-bottom-1">
+                <Link href="/find-your-representatives" className="govuk-link">
+                  Find your representatives
+                </Link>
+              </h3>
+              <p className="govuk-body govuk-!-margin-0">
+                MP, senator, governor, MCA and more.
+              </p>
+            </div>
+
+            <div>
+              <h3 className="govuk-heading-s govuk-!-margin-bottom-1">
+                <Link href="/how-government-works" className="govuk-link">
+                  How government works
+                </Link>
+              </h3>
+              <p className="govuk-body govuk-!-margin-0">
+                National and county government in plain language.
               </p>
             </div>
           </div>
@@ -376,6 +477,17 @@ export default function Home() {
               </Link>
               <p className="govuk-body govuk-!-margin-top-1">
                 How this guide works and accessibility information.
+              </p>
+            </li>
+            <li>
+              <Link
+                href="/contact-government"
+                className="govuk-link govuk-!-font-weight-bold"
+              >
+                Contact government
+              </Link>
+              <p className="govuk-body govuk-!-margin-top-1">
+                Official channels for ministries, counties and services.
               </p>
             </li>
           </ul>

@@ -119,6 +119,22 @@ export default function AboutPage() {
               We use a clean layout with high contrast and simple navigation. This makes the website easy to read on any device and accessible to people using screen readers.
             </p>
 
+            <h2 className="govuk-heading-l">Editorial standards</h2>
+            <p className="govuk-body">
+              We follow a published{" "}
+              <Link href="/editorial-policy" className="govuk-link">
+                editorial policy
+              </Link>
+              : source hierarchy, plain language, independence from party politics, and how we handle updates.
+            </p>
+            <p className="govuk-body">
+              If you find an error, use our{" "}
+              <Link href="/corrections" className="govuk-link">
+                corrections process
+              </Link>
+              .
+            </p>
+
             {/* Section 6: Help us improve */}
             <h2 className="govuk-heading-l">Help us improve</h2>
             <p className="govuk-body">
@@ -135,7 +151,12 @@ export default function AboutPage() {
               </li>
               <li>
                 <Link href="/contact" className="govuk-link">
-                  Contact us
+                  Contact this website
+                </Link>
+              </li>
+              <li>
+                <Link href="/corrections" className="govuk-link">
+                  Request a correction
                 </Link>
               </li>
             </ul>
@@ -147,34 +168,14 @@ export default function AboutPage() {
             </p>
             <p className="govuk-body">
               If you need to apply for a service, make a payment, or submit an official application, you must use the official government portals, such as the{' '}
-              <a 
-                href="https://www.ecitizen.go.ke" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="govuk-link"
-              >
+              <Link href="/ecitizen" className="govuk-link">
                 eCitizen portal
-                <svg 
-                  xmlns="http://www.w3.org/2000/svg" 
-                  width="14" 
-                  height="14" 
-                  viewBox="0 0 24 24" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  strokeWidth="2" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                  focusable="false"
-                  style={{ marginLeft: '4px', verticalAlign: 'middle', display: 'inline-block' }}
-                >
-                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                  <polyline points="15 3 21 3 21 9" />
-                  <line x1="10" y1="14" x2="21" y2="3" />
-                </svg>
-                <span className="govuk-visually-hidden"> (opens in a new tab)</span>
-              </a>
-              {' '}or the specific ministry website.
+              </Link>
+              {' '}or the specific ministry website. Read the full{' '}
+              <Link href="/disclaimer" className="govuk-link">
+                disclaimer
+              </Link>
+              .
             </p>
 
           </div>
@@ -185,6 +186,21 @@ export default function AboutPage() {
               <h2 className="govuk-heading-m">Related pages</h2>
               <nav role="navigation">
                 <ul className="govuk-list govuk-list--spaced">
+                  <li>
+                    <Link href="/editorial-policy" className="govuk-link">
+                      Editorial policy
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/disclaimer" className="govuk-link">
+                      Disclaimer
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/corrections" className="govuk-link">
+                      Corrections
+                    </Link>
+                  </li>
                   <li>
                     <Link href="/help" className="govuk-link">
                       Help and support
@@ -201,13 +217,8 @@ export default function AboutPage() {
                     </Link>
                   </li>
                   <li>
-                    <Link href="/cookies" className="govuk-link">
-                      Cookies policy
-                    </Link>
-                  </li>
-                  <li>
                     <Link href="/contact" className="govuk-link">
-                      Contact us
+                      Contact this website
                     </Link>
                   </li>
                 </ul>

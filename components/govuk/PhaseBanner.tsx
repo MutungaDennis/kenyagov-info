@@ -16,7 +16,7 @@ export default function GovUKPhaseBanner({ tag = "Beta" }: Props) {
           {tag}
         </strong>
         <span className="govuk-phase-banner__text">
-          This is a new website — your{" "}
+          This is an independent new website (not a government service) — your{" "}
           <Link className="govuk-link" href="/feedback">
             feedback
           </Link>{" "}

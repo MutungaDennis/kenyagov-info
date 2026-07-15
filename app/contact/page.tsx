@@ -185,7 +185,17 @@ export default function ContactPage() {
 
             <div className="govuk-inset-text">
               <p className="govuk-body">
-                This is an independent website. We do not provide official government services.
+                This form reaches the CitizenGuide.KE team only. We do not provide
+                official government services and cannot process applications. To
+                reach a ministry, county or agency, use{" "}
+                <Link href="/contact-government" className="govuk-link">
+                  contact government
+                </Link>
+                . To report a content error, see{" "}
+                <Link href="/corrections" className="govuk-link">
+                  corrections
+                </Link>
+                .
               </p>
             </div>
 

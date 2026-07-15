@@ -24,6 +24,96 @@ export default function SitemapPage() {
               A comprehensive directory of all sections, registers, and public information pages available on CitizenGuide.KE.
             </p>
 
+            <h2 className="govuk-heading-m govuk-!-margin-top-6 govuk-!-margin-bottom-3">
+              Topics and services
+            </h2>
+            <ul className="govuk-list govuk-list--spaced">
+              <li>
+                <Link href="/topics" className="govuk-link govuk-!-font-weight-bold govuk-!-font-size-19">
+                  Browse topics
+                </Link>
+                <p className="govuk-body-s govuk-!-margin-top-1 govuk-text-secondary">
+                  Life events and service clusters for citizens.
+                </p>
+              </li>
+              <li>
+                <Link href="/services" className="govuk-link govuk-!-font-weight-bold govuk-!-font-size-19">
+                  Public services
+                </Link>
+              </li>
+              <li>
+                <Link href="/services/a-z" className="govuk-link">
+                  Services A to Z
+                </Link>
+              </li>
+              <li>
+                <Link href="/ecitizen" className="govuk-link">
+                  eCitizen explained
+                </Link>
+              </li>
+              <li>
+                <Link href="/huduma-centres" className="govuk-link">
+                  Huduma Centres
+                </Link>
+              </li>
+              <li>
+                <Link href="/guides" className="govuk-link">
+                  Citizen guides
+                </Link>
+              </li>
+            </ul>
+
+            <h2 className="govuk-heading-m govuk-!-margin-top-6 govuk-!-margin-bottom-3">
+              Civic explainers
+            </h2>
+            <ul className="govuk-list govuk-list--spaced">
+              <li>
+                <Link href="/how-government-works" className="govuk-link">
+                  How government works
+                </Link>
+              </li>
+              <li>
+                <Link href="/county-vs-national" className="govuk-link">
+                  County vs national government
+                </Link>
+              </li>
+              <li>
+                <Link href="/how-public-money-works" className="govuk-link">
+                  How public money works
+                </Link>
+              </li>
+              <li>
+                <Link href="/find-your-representatives" className="govuk-link">
+                  Find your representatives
+                </Link>
+              </li>
+              <li>
+                <Link href="/contact-government" className="govuk-link">
+                  Contact government
+                </Link>
+              </li>
+              <li>
+                <Link href="/complain-about-government" className="govuk-link">
+                  Complain about government
+                </Link>
+              </li>
+              <li>
+                <Link href="/access-to-information" className="govuk-link">
+                  Access to information
+                </Link>
+              </li>
+              <li>
+                <Link href="/scams" className="govuk-link">
+                  Scams and fake websites
+                </Link>
+              </li>
+              <li>
+                <Link href="/emergency-and-safety" className="govuk-link">
+                  Emergency and safety
+                </Link>
+              </li>
+            </ul>
+
             {/* Category 1: Government Hub */}
             <h2 className="govuk-heading-m govuk-!-margin-top-6 govuk-!-margin-bottom-3">Government</h2>
             <ul className="govuk-list govuk-list--spaced">
@@ -280,8 +370,12 @@ export default function SitemapPage() {
             <h2 className="govuk-heading-m govuk-!-margin-top-6 govuk-!-margin-bottom-3">Platform Information</h2>
             <ul className="govuk-list govuk-list--spaced">
               <li><Link href="/about" className="govuk-link">About CitizenGuide.KE</Link></li>
+              <li><Link href="/editorial-policy" className="govuk-link">Editorial policy</Link></li>
+              <li><Link href="/disclaimer" className="govuk-link">Disclaimer</Link></li>
+              <li><Link href="/corrections" className="govuk-link">Corrections</Link></li>
               <li><Link href="/help" className="govuk-link">Help and Support Centre</Link></li>
-              <li><Link href="/contact" className="govuk-link">Contact Verification Desk</Link></li>
+              <li><Link href="/contact-government" className="govuk-link">Contact government</Link></li>
+              <li><Link href="/contact" className="govuk-link">Contact this website</Link></li>
               <li><Link href="/feedback" className="govuk-link">Feedback</Link></li>
               <li><Link href="/support" className="govuk-link">Support</Link></li>
               <li><Link href="/accessibility" className="govuk-link">Accessibility Statement</Link></li>

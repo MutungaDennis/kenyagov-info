@@ -134,8 +134,27 @@ export default function ServicesClientView({ initialServices, categories }: Serv
             <h1 className="govuk-heading-xl">
               Services and guidance
             </h1>
-            <p className="govuk-body-l govuk-!-margin-bottom-6">
+            <p className="govuk-body-l govuk-!-margin-bottom-2">
               Find services from across government. Search or filter by topic.
+            </p>
+            <p className="govuk-body govuk-!-margin-bottom-6">
+              You can also{" "}
+              <Link href="/services/a-z" className="govuk-link">
+                browse services A to Z
+              </Link>
+              ,{" "}
+              <Link href="/topics" className="govuk-link">
+                browse topics
+              </Link>
+              , or read about{" "}
+              <Link href="/ecitizen" className="govuk-link">
+                eCitizen
+              </Link>{" "}
+              and{" "}
+              <Link href="/huduma-centres" className="govuk-link">
+                Huduma Centres
+              </Link>
+              . This website does not process applications.
             </p>
           </div>
         </div>

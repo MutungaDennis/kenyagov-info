@@ -207,7 +207,15 @@ export default function SiteHeader() {
                 Services
               </Link>
 
-              {/* Mobile ribbon: Services + Government only (keeps one line); Elections is under More */}
+              <Link
+                href="/topics"
+                className="app-site-header__nav-link"
+                onClick={closeMenus}
+              >
+                Topics
+              </Link>
+
+              {/* Mobile ribbon: keep Government; Elections stays under More */}
               <Link
                 href="/government"
                 className="app-site-header__nav-link app-site-header__nav-link--mobile-only"
@@ -217,11 +225,11 @@ export default function SiteHeader() {
               </Link>
 
               <Link
-                href="/government/cabinet"
+                href="/government"
                 className="app-site-header__nav-link app-site-header__nav-link--desktop-only"
                 onClick={closeMenus}
               >
-                Cabinet
+                Government
               </Link>
 
               <Link
@@ -233,27 +241,19 @@ export default function SiteHeader() {
               </Link>
 
               <Link
+                href="/elections"
+                className="app-site-header__nav-link app-site-header__nav-link--desktop-only"
+                onClick={closeMenus}
+              >
+                Elections
+              </Link>
+
+              <Link
                 href="/constitution"
                 className="app-site-header__nav-link app-site-header__nav-link--desktop-only"
                 onClick={closeMenus}
               >
                 Constitution
-              </Link>
-
-              <Link
-                href="/government/institutions"
-                className="app-site-header__nav-link app-site-header__nav-link--desktop-only"
-                onClick={closeMenus}
-              >
-                Institutions
-              </Link>
-
-              <Link
-                href="/government/people"
-                className="app-site-header__nav-link app-site-header__nav-link--desktop-only"
-                onClick={closeMenus}
-              >
-                Officials
               </Link>
             </nav>
 
@@ -306,24 +306,44 @@ export default function SiteHeader() {
               <div className="govuk-width-container app-site-header__mega-inner">
                 <div className="app-site-header__mega-grid">
                   <div className="app-site-header__mega-column">
-                    <h2 className="app-site-header__mega-heading">Services</h2>
+                    <h2 className="app-site-header__mega-heading">
+                      Services &amp; topics
+                    </h2>
                     <ul className="govuk-list govuk-list--spaced">
                       <li className="govuk-!-margin-bottom-2">
                         <Link
-                          href="/services"
+                          href="/topics"
                           className="govuk-link app-site-header__mega-link govuk-!-font-weight-bold"
                           onClick={closeMenus}
                         >
-                          All services A–Z
+                          Browse all topics
                         </Link>
                       </li>
                       <li className="govuk-!-margin-bottom-2">
                         <Link
-                          href="/services?category=business-self-employed"
+                          href="/services/a-z"
+                          className="govuk-link app-site-header__mega-link govuk-!-font-weight-bold"
+                          onClick={closeMenus}
+                        >
+                          Services A–Z
+                        </Link>
+                      </li>
+                      <li className="govuk-!-margin-bottom-2">
+                        <Link
+                          href="/ecitizen"
                           className="govuk-link app-site-header__mega-link"
                           onClick={closeMenus}
                         >
-                          Businesses and self-employed
+                          eCitizen explained
+                        </Link>
+                      </li>
+                      <li className="govuk-!-margin-bottom-2">
+                        <Link
+                          href="/huduma-centres"
+                          className="govuk-link app-site-header__mega-link"
+                          onClick={closeMenus}
+                        >
+                          Huduma Centres
                         </Link>
                       </li>
                       <li className="govuk-!-margin-bottom-2">
@@ -337,24 +357,6 @@ export default function SiteHeader() {
                       </li>
                       <li className="govuk-!-margin-bottom-2">
                         <Link
-                          href="/services?category=driving-transport"
-                          className="govuk-link app-site-header__mega-link"
-                          onClick={closeMenus}
-                        >
-                          Driving and transport
-                        </Link>
-                      </li>
-                      <li className="govuk-!-margin-bottom-2">
-                        <Link
-                          href="/services?category=passports-travel"
-                          className="govuk-link app-site-header__mega-link"
-                          onClick={closeMenus}
-                        >
-                          Passports, travel and living abroad
-                        </Link>
-                      </li>
-                      <li className="govuk-!-margin-bottom-2">
-                        <Link
                           href="/services?category=money-tax"
                           className="govuk-link app-site-header__mega-link"
                           onClick={closeMenus}
@@ -364,11 +366,11 @@ export default function SiteHeader() {
                       </li>
                       <li>
                         <Link
-                          href="/services?category=land-property"
+                          href="/services?category=driving-transport"
                           className="govuk-link app-site-header__mega-link"
                           onClick={closeMenus}
                         >
-                          Land and property
+                          Driving and transport
                         </Link>
                       </li>
                     </ul>
@@ -381,11 +383,20 @@ export default function SiteHeader() {
                     <ul className="govuk-list govuk-list--spaced">
                       <li className="govuk-!-margin-bottom-2">
                         <Link
-                          href="/government/presidency"
+                          href="/how-government-works"
+                          className="govuk-link app-site-header__mega-link govuk-!-font-weight-bold"
+                          onClick={closeMenus}
+                        >
+                          How government works
+                        </Link>
+                      </li>
+                      <li className="govuk-!-margin-bottom-2">
+                        <Link
+                          href="/find-your-representatives"
                           className="govuk-link app-site-header__mega-link"
                           onClick={closeMenus}
                         >
-                          The Presidency
+                          Find your representatives
                         </Link>
                       </li>
                       <li className="govuk-!-margin-bottom-2">
@@ -413,15 +424,6 @@ export default function SiteHeader() {
                           onClick={closeMenus}
                         >
                           The Judiciary
-                        </Link>
-                      </li>
-                      <li className="govuk-!-margin-bottom-2">
-                        <Link
-                          href="/government/commissions"
-                          className="govuk-link app-site-header__mega-link"
-                          onClick={closeMenus}
-                        >
-                          Constitutional commissions
                         </Link>
                       </li>
                       <li>
@@ -491,7 +493,7 @@ export default function SiteHeader() {
 
                   <div className="app-site-header__mega-column">
                     <h2 className="app-site-header__mega-heading">
-                      Elections, Data &amp; Society
+                      Elections, Data &amp; Help
                     </h2>
                     <ul className="govuk-list govuk-list--spaced">
                       <li className="govuk-!-margin-bottom-2">
@@ -505,11 +507,20 @@ export default function SiteHeader() {
                       </li>
                       <li className="govuk-!-margin-bottom-2">
                         <Link
-                          href="/elections/political-parties"
+                          href="/contact-government"
                           className="govuk-link app-site-header__mega-link"
                           onClick={closeMenus}
                         >
-                          Political parties
+                          Contact government
+                        </Link>
+                      </li>
+                      <li className="govuk-!-margin-bottom-2">
+                        <Link
+                          href="/scams"
+                          className="govuk-link app-site-header__mega-link"
+                          onClick={closeMenus}
+                        >
+                          Scams and fake websites
                         </Link>
                       </li>
                       <li className="govuk-!-margin-bottom-2">
@@ -521,22 +532,13 @@ export default function SiteHeader() {
                           Open data
                         </Link>
                       </li>
-                      <li className="govuk-!-margin-bottom-2">
-                        <Link
-                          href="/society-and-culture"
-                          className="govuk-link app-site-header__mega-link"
-                          onClick={closeMenus}
-                        >
-                          Society &amp; culture
-                        </Link>
-                      </li>
                       <li>
                         <Link
-                          href="/guides"
+                          href="/help"
                           className="govuk-link app-site-header__mega-link"
                           onClick={closeMenus}
                         >
-                          Citizen guides
+                          Help and support
                         </Link>
                       </li>
                     </ul>

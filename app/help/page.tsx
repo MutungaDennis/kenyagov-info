@@ -26,36 +26,63 @@ export default function HelpPage() {
             <div className="govuk-inset-text">
               <p className="govuk-body">
                 This is an independent website. We do not provide official government services. For official transactions, use the{' '}
-                <a 
-                  href="https://www.ecitizen.go.ke" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="govuk-link"
-                >
+                <Link href="/ecitizen" className="govuk-link">
                   eCitizen portal
-                  <svg 
-                    xmlns="http://www.w3.org/2000/svg" 
-                    width="14" 
-                    height="14" 
-                    viewBox="0 0 24 24" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    strokeWidth="2" 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round"
-                    aria-hidden="true"
-                    focusable="false"
-                    style={{ marginLeft: '4px', verticalAlign: 'middle', display: 'inline-block' }}
-                  >
-                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                    <polyline points="15 3 21 3 21 9" />
-                    <line x1="10" y1="14" x2="21" y2="3" />
-                  </svg>
-                  <span className="govuk-visually-hidden"> (opens in a new tab)</span>
-                </a>
-                .
+                </Link>
+                {' '}or other official agency systems.
               </p>
             </div>
+
+            <hr className="govuk-section-break govuk-section-break--l govuk-section-break--visible" />
+
+            <h2 className="govuk-heading-l">Common tasks</h2>
+            <ul className="govuk-list govuk-list--bullet">
+              <li>
+                <Link href="/topics/identity-civil-registration" className="govuk-link">
+                  I need an ID, birth certificate or police clearance
+                </Link>
+              </li>
+              <li>
+                <Link href="/ecitizen" className="govuk-link">
+                  I need help understanding eCitizen
+                </Link>
+              </li>
+              <li>
+                <Link href="/huduma-centres" className="govuk-link">
+                  I want to visit a Huduma Centre
+                </Link>
+              </li>
+              <li>
+                <Link href="/find-your-representatives" className="govuk-link">
+                  I want to find my MP, governor or MCA
+                </Link>
+              </li>
+              <li>
+                <Link href="/contact-government" className="govuk-link">
+                  I need to contact a government office
+                </Link>
+              </li>
+              <li>
+                <Link href="/scams" className="govuk-link">
+                  I think a website or message is a scam
+                </Link>
+              </li>
+              <li>
+                <Link href="/corrections" className="govuk-link">
+                  Something on this website is wrong
+                </Link>
+              </li>
+              <li>
+                <Link href="/complain-about-government" className="govuk-link">
+                  I want to complain about a public service
+                </Link>
+              </li>
+              <li>
+                <Link href="/topics" className="govuk-link">
+                  Browse all topics
+                </Link>
+              </li>
+            </ul>
 
             <hr className="govuk-section-break govuk-section-break--l govuk-section-break--visible" />
 
