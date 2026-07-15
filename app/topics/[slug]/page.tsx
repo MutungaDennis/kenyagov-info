@@ -85,10 +85,14 @@ export default async function TopicPage({ params }: Props) {
 
           {topic.officialLinks && topic.officialLinks.length > 0 && (
             <>
-              <h2 className="govuk-heading-l">Official websites</h2>
+              <h2 className="govuk-heading-l">Where to apply or get help</h2>
+              <p className="govuk-body">
+                Prefer these on-site guides first. They explain the process and
+                link to official portals only when you need to transact.
+              </p>
               <ul className="govuk-list govuk-list--bullet">
                 {topic.officialLinks.map((link) => (
-                  <li key={link.href}>
+                  <li key={`${link.href}-${link.text}`}>
                     {link.external ? (
                       <ExternalLink href={link.href}>{link.text}</ExternalLink>
                     ) : (
@@ -119,10 +123,13 @@ export default async function TopicPage({ params }: Props) {
         </div>
 
         <RelatedNav
-          title="More topics"
+          title="Related"
           links={[
             { text: "All topics", href: "/topics" },
             { text: "Services A to Z", href: "/services/a-z" },
+            { text: "eCitizen explained", href: "/ecitizen" },
+            { text: "Contact government", href: "/contact-government" },
+            { text: "How government works", href: "/how-government-works" },
             ...otherTopics,
           ]}
         />

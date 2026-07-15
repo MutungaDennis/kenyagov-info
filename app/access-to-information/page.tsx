@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import PageIntro from "@/components/site/PageIntro";
 import RelatedNav from "@/components/site/RelatedNav";
+import { constitutionRefs } from "@/lib/constitution-links";
 
 export const metadata: Metadata = {
   title: "Access to information",
@@ -26,9 +27,22 @@ export default function AccessToInformationPage() {
         <div className="govuk-grid-column-two-thirds">
           <h2 className="govuk-heading-l">Your right in brief</h2>
           <p className="govuk-body">
-            Article 35 of the Constitution of Kenya protects access to
-            information held by the State. The Access to Information Act sets out
-            procedures, timelines and exemptions in more detail.
+            <Link
+              href={constitutionRefs.accessToInformation.href}
+              className="govuk-link"
+            >
+              {constitutionRefs.accessToInformation.label}
+            </Link>{" "}
+            protects access to information held by the State. It sits within{" "}
+            <Link href={constitutionRefs.billOfRights.href} className="govuk-link">
+              {constitutionRefs.billOfRights.label}
+            </Link>
+            . The Access to Information Act sets out procedures, timelines and
+            exemptions in more detail — see{" "}
+            <Link href="/acts/parliament" className="govuk-link">
+              Acts of Parliament
+            </Link>
+            .
           </p>
           <p className="govuk-body">
             This page is a plain-language overview. It is not legal advice.
@@ -103,17 +117,32 @@ export default function AccessToInformationPage() {
             .
           </p>
 
-          <p className="govuk-body">
-            Related:{" "}
-            <Link href="/constitution" className="govuk-link">
-              Constitution
-            </Link>
-            ,{" "}
-            <Link href="/acts/parliament" className="govuk-link">
-              Acts of Parliament
-            </Link>
-            .
-          </p>
+          <h2 className="govuk-heading-l">Related constitutional reading</h2>
+          <ul className="govuk-list govuk-list--bullet">
+            <li>
+              <Link
+                href={constitutionRefs.accessToInformation.href}
+                className="govuk-link"
+              >
+                {constitutionRefs.accessToInformation.label}
+              </Link>
+            </li>
+            <li>
+              <Link href={constitutionRefs.billOfRights.href} className="govuk-link">
+                {constitutionRefs.billOfRights.label}
+              </Link>
+            </li>
+            <li>
+              <Link href="/constitution" className="govuk-link">
+                Constitution of Kenya (full text browser)
+              </Link>
+            </li>
+            <li>
+              <Link href="/acts/parliament" className="govuk-link">
+                Acts of Parliament
+              </Link>
+            </li>
+          </ul>
         </div>
 
         <RelatedNav
@@ -123,6 +152,7 @@ export default function AccessToInformationPage() {
             { text: "Open data", href: "/open-data" },
             { text: "How public money works", href: "/how-public-money-works" },
             { text: "Editorial policy", href: "/editorial-policy" },
+            { text: "Disclaimer", href: "/disclaimer" },
           ]}
         />
       </div>

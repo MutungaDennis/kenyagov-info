@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import PageIntro from "@/components/site/PageIntro";
 import RelatedNav from "@/components/site/RelatedNav";
+import { constitutionRefs } from "@/lib/constitution-links";
 
 export const metadata: Metadata = {
   title: "How to complain about government",
@@ -43,12 +44,20 @@ export default function ComplainAboutGovernmentPage() {
             handles complaints about unfair administrative action by public
             officers and bodies within its legal mandate — for example
             unreasonable delay, abuse of power or denial of information in
-            applicable cases.
+            applicable cases. Independent commissions sit under{" "}
+            <Link href={constitutionRefs.commissions.href} className="govuk-link">
+              {constitutionRefs.commissions.label}
+            </Link>
+            .
           </p>
           <p className="govuk-body">
             Use the Commission’s official channels. See also{" "}
             <Link href="/government/commissions" className="govuk-link">
               commissions
+            </Link>{" "}
+            and{" "}
+            <Link href="/access-to-information" className="govuk-link">
+              access to information
             </Link>
             .
           </p>

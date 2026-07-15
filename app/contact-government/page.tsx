@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import PageIntro from "@/components/site/PageIntro";
 import RelatedNav from "@/components/site/RelatedNav";
-import ExternalLink from "@/components/site/ExternalLink";
 
 export const metadata: Metadata = {
   title: "Contact government",
@@ -40,28 +39,34 @@ export default function ContactGovernmentPage() {
           </div>
 
           <h2 className="govuk-heading-l">Online services and payments</h2>
+          <p className="govuk-body">
+            Use our guides first — they explain what each channel is for and then
+            point you to the official portal when you are ready to apply or pay.
+          </p>
           <ul className="govuk-list govuk-list--bullet">
             <li>
-              <ExternalLink href="https://www.ecitizen.go.ke">
-                eCitizen
-              </ExternalLink>{" "}
-              — many national services (
               <Link href="/ecitizen" className="govuk-link">
-                explained here
-              </Link>
-              )
+                eCitizen explained
+              </Link>{" "}
+              — many national services
             </li>
             <li>
-              <ExternalLink href="https://itax.kra.go.ke">
-                KRA iTax
-              </ExternalLink>{" "}
-              — tax accounts and returns
+              <Link href="/topics/money-tax" className="govuk-link">
+                Money and tax
+              </Link>{" "}
+              — KRA PIN, returns and compliance (transactions on official tax
+              systems)
             </li>
             <li>
               <Link href="/huduma-centres" className="govuk-link">
                 Huduma Centres
               </Link>{" "}
               — in-person assisted services
+            </li>
+            <li>
+              <Link href="/services" className="govuk-link">
+                All service guides
+              </Link>
             </li>
           </ul>
 

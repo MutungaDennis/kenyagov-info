@@ -8,4 +8,6 @@ export { default as HomeSearch } from "./HomeSearch";
 export { default as PageIntro } from "./PageIntro";
 export { default as ExternalLink } from "./ExternalLink";
 export { default as RelatedNav } from "./RelatedNav";
+export { default as PageContents } from "./PageContents";
+export { default as FromAttribution } from "./FromAttribution";
 

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import PageIntro from "@/components/site/PageIntro";
 import RelatedNav from "@/components/site/RelatedNav";
+import { constitutionRefs } from "@/lib/constitution-links";
 
 export const metadata: Metadata = {
   title: "County vs national government",
@@ -30,12 +31,28 @@ export default function CountyVsNationalPage() {
             Before 2010, most power sat at the centre. The Constitution
             introduced devolution so that some services and decisions happen
             closer to communities. Functions are mainly listed in the Fourth
-            Schedule of the Constitution.
+            Schedule (distribution of functions between the national government
+            and the county governments). Read{" "}
+            <Link
+              href={constitutionRefs.devolvedGovernment.href}
+              className="govuk-link"
+            >
+              {constitutionRefs.devolvedGovernment.label}
+            </Link>{" "}
+            for the full chapter text on this site.
           </p>
           <p className="govuk-body">
             Some services involve both levels — for example health policy may be
             national while many public hospitals and dispensaries are run by
-            counties.
+            counties. See also{" "}
+            <Link href="/topics/local-county-services" className="govuk-link">
+              local and county services
+            </Link>{" "}
+            and{" "}
+            <Link href="/topics/health" className="govuk-link">
+              health and social care
+            </Link>
+            .
           </p>
 
           <h2 className="govuk-heading-l">Examples of national functions</h2>
@@ -135,10 +152,15 @@ export default function CountyVsNationalPage() {
         <RelatedNav
           links={[
             { text: "How government works", href: "/how-government-works" },
+            { text: "How public money works", href: "/how-public-money-works" },
             { text: "County governments", href: "/government/counties" },
+            { text: "Devolution", href: "/government/counties/devolution" },
             { text: "Local and county services", href: "/topics/local-county-services" },
-            { text: "Constitution", href: "/constitution" },
-            { text: "Governors", href: "/government/counties/governors" },
+            {
+              text: constitutionRefs.devolvedGovernment.label,
+              href: constitutionRefs.devolvedGovernment.href,
+            },
+            { text: "Find your representatives", href: "/find-your-representatives" },
           ]}
         />
       </div>

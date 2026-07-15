@@ -1,9 +1,12 @@
 import Link from "next/link";
 
 /**
- * Site footer using GOV.UK footer component structure.
- * Navigation sections are direct children of govuk-footer__navigation
- * (no nested govuk-grid-row — that breaks mobile gutter alignment).
+ * Site footer using GOV.UK footer structure.
+ *
+ * Pattern (design-system.service.gov.uk/components/footer):
+ * - navigation: key primary destinations only (not every page)
+ * - meta: secondary legal/about links
+ * - custom meta text: independence + one official transaction pointer
  *
  * @see https://design-system.service.gov.uk/components/footer/
  */
@@ -14,108 +17,9 @@ export default function GovUKFooter() {
     <footer className="govuk-footer" role="contentinfo">
       <div className="govuk-width-container">
         <div className="govuk-footer__navigation">
-          {/*
-            Sections are direct children of govuk-footer__navigation.
-            Grid columns: full-width on mobile, half from tablet, quarter from desktop.
-          */}
           <div className="govuk-footer__section govuk-grid-column-one-half govuk-grid-column-one-quarter-from-desktop">
             <h2 className="govuk-footer__heading govuk-heading-m">
-              Government
-            </h2>
-            <ul className="govuk-footer__list">
-              <li className="govuk-footer__list-item">
-                <Link href="/government" className="govuk-footer__link">
-                  All government
-                </Link>
-              </li>
-              <li className="govuk-footer__list-item">
-                <Link
-                  href="/government/presidency"
-                  className="govuk-footer__link"
-                >
-                  The Presidency
-                </Link>
-              </li>
-              <li className="govuk-footer__list-item">
-                <Link
-                  href="/government/legislature"
-                  className="govuk-footer__link"
-                >
-                  Parliament
-                </Link>
-              </li>
-              <li className="govuk-footer__list-item">
-                <Link
-                  href="/government/judiciary"
-                  className="govuk-footer__link"
-                >
-                  Judiciary
-                </Link>
-              </li>
-              <li className="govuk-footer__list-item">
-                <Link
-                  href="/government/counties"
-                  className="govuk-footer__link"
-                >
-                  County governments
-                </Link>
-              </li>
-              <li className="govuk-footer__list-item">
-                <Link
-                  href="/government/commissions"
-                  className="govuk-footer__link"
-                >
-                  Commissions
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          <div className="govuk-footer__section govuk-grid-column-one-half govuk-grid-column-one-quarter-from-desktop">
-            <h2 className="govuk-footer__heading govuk-heading-m">
-              Institutions &amp; officials
-            </h2>
-            <ul className="govuk-footer__list">
-              <li className="govuk-footer__list-item">
-                <Link
-                  href="/government/institutions"
-                  className="govuk-footer__link"
-                >
-                  All institutions
-                </Link>
-              </li>
-              <li className="govuk-footer__list-item">
-                <Link href="/government/people" className="govuk-footer__link">
-                  Government officials
-                </Link>
-              </li>
-              <li className="govuk-footer__list-item">
-                <Link href="/government/cabinet" className="govuk-footer__link">
-                  The Cabinet
-                </Link>
-              </li>
-              <li className="govuk-footer__list-item">
-                <Link
-                  href="/government/legislature/national-assembly/members"
-                  className="govuk-footer__link"
-                >
-                  Members of Parliament
-                </Link>
-              </li>
-              <li className="govuk-footer__list-item">
-                <Link
-                  href="/government/counties/governors"
-                  className="govuk-footer__link"
-                >
-                  County governors
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          <div className="govuk-footer__section govuk-grid-column-one-half govuk-grid-column-one-quarter-from-desktop">
-            <h2 className="govuk-footer__heading govuk-heading-m">
-              Services &amp; resources
+              Services and information
             </h2>
             <ul className="govuk-footer__list">
               <li className="govuk-footer__list-item">
@@ -125,7 +29,12 @@ export default function GovUKFooter() {
               </li>
               <li className="govuk-footer__list-item">
                 <Link href="/services" className="govuk-footer__link">
-                  Public services
+                  Services
+                </Link>
+              </li>
+              <li className="govuk-footer__list-item">
+                <Link href="/services/popular" className="govuk-footer__link">
+                  Popular services
                 </Link>
               </li>
               <li className="govuk-footer__list-item">
@@ -144,18 +53,8 @@ export default function GovUKFooter() {
                 </Link>
               </li>
               <li className="govuk-footer__list-item">
-                <Link href="/constitution" className="govuk-footer__link">
-                  Constitution
-                </Link>
-              </li>
-              <li className="govuk-footer__list-item">
                 <Link href="/guides" className="govuk-footer__link">
-                  Citizen guides
-                </Link>
-              </li>
-              <li className="govuk-footer__list-item">
-                <Link href="/open-data" className="govuk-footer__link">
-                  Open data
+                  Guides
                 </Link>
               </li>
             </ul>
@@ -163,17 +62,44 @@ export default function GovUKFooter() {
 
           <div className="govuk-footer__section govuk-grid-column-one-half govuk-grid-column-one-quarter-from-desktop">
             <h2 className="govuk-footer__heading govuk-heading-m">
-              About &amp; legal
+              Government
             </h2>
             <ul className="govuk-footer__list">
               <li className="govuk-footer__list-item">
-                <Link href="/about" className="govuk-footer__link">
-                  About CitizenGuide.KE
+                <Link href="/government" className="govuk-footer__link">
+                  Government hub
                 </Link>
               </li>
               <li className="govuk-footer__list-item">
-                <Link href="/help" className="govuk-footer__link">
-                  Help &amp; support
+                <Link
+                  href="/how-government-works"
+                  className="govuk-footer__link"
+                >
+                  How government works
+                </Link>
+              </li>
+              <li className="govuk-footer__list-item">
+                <Link
+                  href="/government/counties"
+                  className="govuk-footer__link"
+                >
+                  Counties
+                </Link>
+              </li>
+              <li className="govuk-footer__list-item">
+                <Link
+                  href="/find-your-representatives"
+                  className="govuk-footer__link"
+                >
+                  Find your representatives
+                </Link>
+              </li>
+              <li className="govuk-footer__list-item">
+                <Link
+                  href="/government/people"
+                  className="govuk-footer__link"
+                >
+                  Officials
                 </Link>
               </li>
               <li className="govuk-footer__list-item">
@@ -184,34 +110,89 @@ export default function GovUKFooter() {
                   Contact government
                 </Link>
               </li>
+            </ul>
+          </div>
+
+          <div className="govuk-footer__section govuk-grid-column-one-half govuk-grid-column-one-quarter-from-desktop">
+            <h2 className="govuk-footer__heading govuk-heading-m">
+              Law and data
+            </h2>
+            <ul className="govuk-footer__list">
               <li className="govuk-footer__list-item">
-                <Link href="/contact" className="govuk-footer__link">
-                  Contact this website
+                <Link href="/constitution" className="govuk-footer__link">
+                  Constitution
                 </Link>
               </li>
               <li className="govuk-footer__list-item">
-                <Link href="/disclaimer" className="govuk-footer__link">
-                  Disclaimer
+                <Link href="/acts/parliament" className="govuk-footer__link">
+                  Acts of Parliament
                 </Link>
               </li>
               <li className="govuk-footer__list-item">
-                <Link href="/accessibility" className="govuk-footer__link">
-                  Accessibility
+                <Link href="/kenya-gazette" className="govuk-footer__link">
+                  Kenya Gazette
                 </Link>
               </li>
               <li className="govuk-footer__list-item">
-                <Link href="/privacy" className="govuk-footer__link">
-                  Privacy
+                <Link href="/documents" className="govuk-footer__link">
+                  Documents
                 </Link>
               </li>
               <li className="govuk-footer__list-item">
-                <Link href="/cookies" className="govuk-footer__link">
-                  Cookies
+                <Link href="/open-data" className="govuk-footer__link">
+                  Open data
                 </Link>
               </li>
               <li className="govuk-footer__list-item">
-                <Link href="/terms" className="govuk-footer__link">
-                  Terms and conditions
+                <Link
+                  href="/access-to-information"
+                  className="govuk-footer__link"
+                >
+                  Access to information
+                </Link>
+              </li>
+              <li className="govuk-footer__list-item">
+                <Link
+                  href="/society-and-culture"
+                  className="govuk-footer__link"
+                >
+                  Society and culture
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          <div className="govuk-footer__section govuk-grid-column-one-half govuk-grid-column-one-quarter-from-desktop">
+            <h2 className="govuk-footer__heading govuk-heading-m">
+              Help
+            </h2>
+            <ul className="govuk-footer__list">
+              <li className="govuk-footer__list-item">
+                <Link href="/help" className="govuk-footer__link">
+                  Help and support
+                </Link>
+              </li>
+              <li className="govuk-footer__list-item">
+                <Link href="/scams" className="govuk-footer__link">
+                  Scams and fake websites
+                </Link>
+              </li>
+              <li className="govuk-footer__list-item">
+                <Link href="/huduma-centres" className="govuk-footer__link">
+                  Huduma Centres
+                </Link>
+              </li>
+              <li className="govuk-footer__list-item">
+                <Link
+                  href="/complain-about-government"
+                  className="govuk-footer__link"
+                >
+                  Complain about government
+                </Link>
+              </li>
+              <li className="govuk-footer__list-item">
+                <Link href="/about" className="govuk-footer__link">
+                  About this website
                 </Link>
               </li>
               <li className="govuk-footer__list-item">
@@ -227,40 +208,86 @@ export default function GovUKFooter() {
 
         <div className="govuk-footer__meta">
           <div className="govuk-footer__meta-item govuk-footer__meta-item--grow">
-            <h2 className="govuk-visually-hidden">About this website</h2>
+            <h2 className="govuk-visually-hidden">Support links</h2>
 
-            <div className="govuk-footer__meta-custom">
-              <p className="govuk-body-s govuk-!-margin-bottom-2">
-                <strong>CitizenGuide.KE</strong> is an independent
-                citizen-facing informational platform. It is{" "}
-                <strong>not</strong> an official outlet of the Government of
-                Kenya. All information is compiled from public records.{" "}
+            {/*
+              GOV.UK meta: secondary legal/about links only.
+              Do not duplicate the full navigation tree here.
+            */}
+            <ul className="govuk-footer__inline-list">
+              <li className="govuk-footer__inline-list-item">
+                <Link href="/accessibility" className="govuk-footer__link">
+                  Accessibility
+                </Link>
+              </li>
+              <li className="govuk-footer__inline-list-item">
+                <Link href="/cookies" className="govuk-footer__link">
+                  Cookies
+                </Link>
+              </li>
+              <li className="govuk-footer__inline-list-item">
+                <Link href="/privacy" className="govuk-footer__link">
+                  Privacy
+                </Link>
+              </li>
+              <li className="govuk-footer__inline-list-item">
+                <Link href="/terms" className="govuk-footer__link">
+                  Terms and conditions
+                </Link>
+              </li>
+              <li className="govuk-footer__inline-list-item">
                 <Link href="/disclaimer" className="govuk-footer__link">
                   Disclaimer
                 </Link>
-                {" · "}
-                <Link
-                  href="/editorial-policy"
-                  className="govuk-footer__link"
-                >
+              </li>
+              <li className="govuk-footer__inline-list-item">
+                <Link href="/editorial-policy" className="govuk-footer__link">
                   Editorial policy
                 </Link>
-                {" · "}
+              </li>
+              <li className="govuk-footer__inline-list-item">
+                <Link
+                  href="/content-style-guide"
+                  className="govuk-footer__link"
+                >
+                  Content style guide
+                </Link>
+              </li>
+              <li className="govuk-footer__inline-list-item">
                 <Link href="/corrections" className="govuk-footer__link">
                   Corrections
                 </Link>
+              </li>
+              <li className="govuk-footer__inline-list-item">
+                <Link href="/contact" className="govuk-footer__link">
+                  Contact this website
+                </Link>
+              </li>
+              <li className="govuk-footer__inline-list-item">
+                <Link href="/feedback" className="govuk-footer__link">
+                  Feedback
+                </Link>
+              </li>
+            </ul>
+
+            <div className="govuk-footer__meta-custom">
+              <p className="govuk-body-s govuk-!-margin-bottom-2">
+                <strong>CitizenGuide.KE</strong> is an independent civic
+                information website. It is <strong>not</strong> run, funded or
+                endorsed by the Government of Kenya.
               </p>
               <p className="govuk-body-s govuk-!-margin-bottom-0">
-                For official transactions or records, use authorised portals
-                such as the{" "}
-                <a
-                  href="https://www.ecitizen.go.ke"
-                  target="_blank"
-                  rel="noreferrer"
+                For official applications and payments, start from our{" "}
+                <Link href="/ecitizen" className="govuk-footer__link">
+                  eCitizen guide
+                </Link>{" "}
+                (links out to the official portal) or{" "}
+                <Link
+                  href="/contact-government"
                   className="govuk-footer__link"
                 >
-                  eCitizen Gateway
-                </a>
+                  contact government
+                </Link>
                 .
               </p>
             </div>

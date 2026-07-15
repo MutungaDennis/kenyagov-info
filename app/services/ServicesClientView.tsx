@@ -99,6 +99,9 @@ export default function ServicesClientView({ initialServices, categories }: Serv
 
   const totalServicesCount = filteredAndSortedServices.length;
   const totalPages = Math.ceil(totalServicesCount / ITEMS_PER_PAGE) || 1;
+  const resultsAnnouncement = `${totalServicesCount} service${
+    totalServicesCount === 1 ? "" : "s"
+  } found`;
   
   const paginatedServices = useMemo(() => {
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -139,20 +142,20 @@ export default function ServicesClientView({ initialServices, categories }: Serv
             </p>
             <p className="govuk-body govuk-!-margin-bottom-6">
               You can also{" "}
+              <Link href="/services/popular" className="govuk-link">
+                popular services
+              </Link>
+              ,{" "}
               <Link href="/services/a-z" className="govuk-link">
-                browse services A to Z
+                services A to Z
               </Link>
               ,{" "}
               <Link href="/topics" className="govuk-link">
                 browse topics
               </Link>
-              , or read about{" "}
-              <Link href="/ecitizen" className="govuk-link">
-                eCitizen
-              </Link>{" "}
-              and{" "}
-              <Link href="/huduma-centres" className="govuk-link">
-                Huduma Centres
+              , or{" "}
+              <Link href="/guides" className="govuk-link">
+                life-event guides
               </Link>
               . This website does not process applications.
             </p>
@@ -308,10 +311,18 @@ export default function ServicesClientView({ initialServices, categories }: Serv
         {/* RESULTS LIST (two-thirds) */}
         <div className="govuk-grid-column-two-thirds">
           
-          {/* Results count */}
-          <p className="govuk-body govuk-!-margin-bottom-2">
-            <strong>{totalServicesCount.toLocaleString()}</strong> service{totalServicesCount === 1 ? '' : 's'} found
-            <span className="govuk-body-s govuk-!-margin-left-2 govuk-!-color-grey">— page {currentPage} of {totalPages}</span>
+          {/* Results count + live region for screen readers */}
+          <p
+            className="govuk-body govuk-!-margin-bottom-2"
+            aria-live="polite"
+            aria-atomic="true"
+            role="status"
+          >
+            <strong>{totalServicesCount.toLocaleString()}</strong>{" "}
+            {resultsAnnouncement.replace(/^\d+\s*/, "")}
+            <span className="govuk-body-s govuk-!-margin-left-2 govuk-!-color-grey">
+              — page {currentPage} of {totalPages}
+            </span>
           </p>
 
           {/* No results */}

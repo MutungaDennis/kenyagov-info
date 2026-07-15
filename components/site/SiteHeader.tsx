@@ -224,6 +224,10 @@ export default function SiteHeader() {
                 Government
               </Link>
 
+              {/*
+                GOV.UK-style primary nav: few top-level hubs only.
+                Deeper destinations live under More / page body links.
+              */}
               <Link
                 href="/government"
                 className="app-site-header__nav-link app-site-header__nav-link--desktop-only"
@@ -233,27 +237,11 @@ export default function SiteHeader() {
               </Link>
 
               <Link
-                href="/government/counties"
-                className="app-site-header__nav-link app-site-header__nav-link--desktop-only"
-                onClick={closeMenus}
-              >
-                Counties
-              </Link>
-
-              <Link
                 href="/elections"
                 className="app-site-header__nav-link app-site-header__nav-link--desktop-only"
                 onClick={closeMenus}
               >
                 Elections
-              </Link>
-
-              <Link
-                href="/constitution"
-                className="app-site-header__nav-link app-site-header__nav-link--desktop-only"
-                onClick={closeMenus}
-              >
-                Constitution
               </Link>
             </nav>
 
@@ -321,11 +309,29 @@ export default function SiteHeader() {
                       </li>
                       <li className="govuk-!-margin-bottom-2">
                         <Link
-                          href="/services/a-z"
+                          href="/services/popular"
                           className="govuk-link app-site-header__mega-link govuk-!-font-weight-bold"
                           onClick={closeMenus}
                         >
+                          Popular services
+                        </Link>
+                      </li>
+                      <li className="govuk-!-margin-bottom-2">
+                        <Link
+                          href="/services/a-z"
+                          className="govuk-link app-site-header__mega-link"
+                          onClick={closeMenus}
+                        >
                           Services A–Z
+                        </Link>
+                      </li>
+                      <li className="govuk-!-margin-bottom-2">
+                        <Link
+                          href="/guides"
+                          className="govuk-link app-site-header__mega-link"
+                          onClick={closeMenus}
+                        >
+                          Life-event guides
                         </Link>
                       </li>
                       <li className="govuk-!-margin-bottom-2">
@@ -348,7 +354,7 @@ export default function SiteHeader() {
                       </li>
                       <li className="govuk-!-margin-bottom-2">
                         <Link
-                          href="/services?category=civil-registration"
+                          href="/services/categories/civil-registration"
                           className="govuk-link app-site-header__mega-link"
                           onClick={closeMenus}
                         >
@@ -357,7 +363,7 @@ export default function SiteHeader() {
                       </li>
                       <li className="govuk-!-margin-bottom-2">
                         <Link
-                          href="/services?category=money-tax"
+                          href="/services/categories/money-tax"
                           className="govuk-link app-site-header__mega-link"
                           onClick={closeMenus}
                         >
@@ -366,7 +372,7 @@ export default function SiteHeader() {
                       </li>
                       <li>
                         <Link
-                          href="/services?category=driving-transport"
+                          href="/services/categories/driving-transport"
                           className="govuk-link app-site-header__mega-link"
                           onClick={closeMenus}
                         >
@@ -426,13 +432,22 @@ export default function SiteHeader() {
                           The Judiciary
                         </Link>
                       </li>
-                      <li>
+                      <li className="govuk-!-margin-bottom-2">
                         <Link
                           href="/government/counties"
                           className="govuk-link app-site-header__mega-link"
                           onClick={closeMenus}
                         >
                           County governments
+                        </Link>
+                      </li>
+                      <li>
+                        <Link
+                          href="/county-vs-national"
+                          className="govuk-link app-site-header__mega-link"
+                          onClick={closeMenus}
+                        >
+                          County vs national
                         </Link>
                       </li>
                     </ul>

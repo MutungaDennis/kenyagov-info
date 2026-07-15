@@ -26,13 +26,21 @@ export default function ECitizenPage() {
 
       <div className="govuk-grid-row">
         <div className="govuk-grid-column-two-thirds">
+          {/*
+            GOV.UK “Start now” pattern: one clear official exit from guidance.
+            Prefer this single outbound link over scattering .go.ke URLs sitewide.
+          */}
           <p className="govuk-body">
             <ExternalLink
               href="https://www.ecitizen.go.ke"
               className="govuk-button"
             >
-              Go to the official eCitizen portal
+              Start on the official eCitizen portal
             </ExternalLink>
+          </p>
+          <p className="govuk-body-s">
+            Opens the Government of Kenya eCitizen gateway in a new tab. We do
+            not host logins or payments.
           </p>
 
           <h2 className="govuk-heading-l">What eCitizen is for</h2>

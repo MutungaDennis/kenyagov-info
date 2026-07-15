@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import PageIntro from "@/components/site/PageIntro";
 import RelatedNav from "@/components/site/RelatedNav";
-import ExternalLink from "@/components/site/ExternalLink";
 
 export const metadata: Metadata = {
   title: "Scams and fake websites",
@@ -75,22 +74,25 @@ export default function ScamsPage() {
             </li>
           </ul>
 
-          <h2 className="govuk-heading-l">Official starting points</h2>
+          <h2 className="govuk-heading-l">Official starting points on this site</h2>
           <ul className="govuk-list govuk-list--bullet">
             <li>
-              <ExternalLink href="https://www.ecitizen.go.ke">
-                eCitizen
-              </ExternalLink>{" "}
-              (
               <Link href="/ecitizen" className="govuk-link">
-                what eCitizen is
-              </Link>
-              )
+                eCitizen explained
+              </Link>{" "}
+              — how the official portal works and how to open it safely
             </li>
             <li>
-              <ExternalLink href="https://itax.kra.go.ke">
-                KRA iTax
-              </ExternalLink>
+              <Link href="/topics/money-tax" className="govuk-link">
+                Money and tax
+              </Link>{" "}
+              — tax guidance; only pay through official KRA channels
+            </li>
+            <li>
+              <Link href="/topics/driving-transport" className="govuk-link">
+                Driving and transport
+              </Link>{" "}
+              — NTSA-related processes
             </li>
             <li>
               <Link href="/huduma-centres" className="govuk-link">

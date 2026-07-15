@@ -42,8 +42,18 @@ export default function SitemapPage() {
                 </Link>
               </li>
               <li>
+                <Link href="/services/popular" className="govuk-link">
+                  Popular services
+                </Link>
+              </li>
+              <li>
                 <Link href="/services/a-z" className="govuk-link">
                   Services A to Z
+                </Link>
+              </li>
+              <li>
+                <Link href="/browse" className="govuk-link">
+                  Browse (topics)
                 </Link>
               </li>
               <li>
@@ -57,8 +67,33 @@ export default function SitemapPage() {
                 </Link>
               </li>
               <li>
+                <Link href="/huduma-centres/locations" className="govuk-link">
+                  Huduma Centre locations
+                </Link>
+              </li>
+              <li>
                 <Link href="/guides" className="govuk-link">
-                  Citizen guides
+                  Guides and life events
+                </Link>
+              </li>
+              <li>
+                <Link href="/guides/having-a-baby" className="govuk-link">
+                  Having a baby
+                </Link>
+              </li>
+              <li>
+                <Link href="/guides/registering-a-death" className="govuk-link">
+                  Registering a death
+                </Link>
+              </li>
+              <li>
+                <Link href="/guides/starting-a-business" className="govuk-link">
+                  Starting a business
+                </Link>
+              </li>
+              <li>
+                <Link href="/kenya-gazette" className="govuk-link">
+                  Kenya Gazette
                 </Link>
               </li>
             </ul>
@@ -371,6 +406,7 @@ export default function SitemapPage() {
             <ul className="govuk-list govuk-list--spaced">
               <li><Link href="/about" className="govuk-link">About CitizenGuide.KE</Link></li>
               <li><Link href="/editorial-policy" className="govuk-link">Editorial policy</Link></li>
+              <li><Link href="/content-style-guide" className="govuk-link">Content style guide</Link></li>
               <li><Link href="/disclaimer" className="govuk-link">Disclaimer</Link></li>
               <li><Link href="/corrections" className="govuk-link">Corrections</Link></li>
               <li><Link href="/help" className="govuk-link">Help and Support Centre</Link></li>

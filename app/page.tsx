@@ -135,13 +135,17 @@ export default function Home() {
             Popular services
           </h2>
           <p className="govuk-body govuk-!-margin-bottom-4">
-            Common public services accessed by citizens
+            Common public services accessed by citizens.{" "}
+            <Link href="/services/popular" className="govuk-link">
+              See the curated popular list
+            </Link>
+            .
           </p>
 
           <ul className="govuk-list govuk-list--spaced">
             <li className="govuk-!-margin-bottom-4">
               <Link
-                href="/services?category=business-self-employed"
+                href="/services/categories/business-self-employed"
                 className="govuk-link govuk-!-font-weight-bold"
               >
                 Businesses and self-employed
@@ -154,7 +158,7 @@ export default function Home() {
 
             <li className="govuk-!-margin-bottom-4">
               <Link
-                href="/services?category=civil-registration"
+                href="/services/categories/civil-registration"
                 className="govuk-link govuk-!-font-weight-bold"
               >
                 Births, deaths, marriages and care
@@ -167,7 +171,7 @@ export default function Home() {
 
             <li className="govuk-!-margin-bottom-4">
               <Link
-                href="/services?category=driving-transport"
+                href="/services/categories/driving-transport"
                 className="govuk-link govuk-!-font-weight-bold"
               >
                 Driving and transport
@@ -180,7 +184,7 @@ export default function Home() {
 
             <li className="govuk-!-margin-bottom-4">
               <Link
-                href="/services?category=passports-travel"
+                href="/services/categories/passports-travel"
                 className="govuk-link govuk-!-font-weight-bold"
               >
                 Passports, travel and living abroad
@@ -193,7 +197,7 @@ export default function Home() {
 
             <li className="govuk-!-margin-bottom-4">
               <Link
-                href="/services?category=money-tax"
+                href="/services/categories/money-tax"
                 className="govuk-link govuk-!-font-weight-bold"
               >
                 Money and tax
@@ -206,7 +210,7 @@ export default function Home() {
 
             <li className="govuk-!-margin-bottom-5">
               <Link
-                href="/services?category=land-property"
+                href="/services/categories/land-property"
                 className="govuk-link govuk-!-font-weight-bold"
               >
                 Land and property

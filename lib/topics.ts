@@ -39,9 +39,9 @@ export const topics: Topic[] = [
           "National registration and immigration services are delivered through the national government. Many applications start online and may require a visit to a Huduma Centre or designated office for biometrics.",
         ],
         links: [
-          { text: "eCitizen portal", href: "https://www.ecitizen.go.ke", external: true },
+          { text: "eCitizen explained", href: "/ecitizen" },
           { text: "Huduma Centres explained", href: "/huduma-centres" },
-          { text: "Browse related services", href: "/services?category=civil-registration" },
+          { text: "Browse related services", href: "/services/categories/civil-registration" },
         ],
       },
       {
@@ -65,7 +65,7 @@ export const topics: Topic[] = [
       { text: "eCitizen explained", href: "/ecitizen" },
     ],
     officialLinks: [
-      { text: "eCitizen", href: "https://www.ecitizen.go.ke", external: true },
+      { text: "eCitizen explained", href: "/ecitizen" },
     ],
   },
   {
@@ -82,8 +82,8 @@ export const topics: Topic[] = [
           "Keep your details accurate, allow enough time before travel, and only use official payment channels. Unofficial agents cannot guarantee faster processing.",
         ],
         links: [
-          { text: "Passports and travel services", href: "/services?category=passports-travel" },
-          { text: "eCitizen", href: "https://www.ecitizen.go.ke", external: true },
+          { text: "Passports and travel services", href: "/services/categories/passports-travel" },
+          { text: "eCitizen explained", href: "/ecitizen" },
         ],
       },
       {
@@ -124,8 +124,8 @@ export const topics: Topic[] = [
           "Renewals, category upgrades and replacements follow NTSA rules. Confirm fees and documents on the official site before applying.",
         ],
         links: [
-          { text: "Driving and transport services", href: "/services?category=driving-transport" },
-          { text: "NTSA", href: "https://www.ntsa.go.ke", external: true },
+          { text: "Driving and transport services", href: "/services/categories/driving-transport" },
+          { text: "Driving and transport topic", href: "/topics/driving-transport" },
         ],
       },
       {
@@ -155,8 +155,8 @@ export const topics: Topic[] = [
           "This site does not calculate your tax liability. For obligations, deadlines and forms, use KRA’s official guidance or a licensed tax professional.",
         ],
         links: [
-          { text: "Money and tax services", href: "/services?category=money-tax" },
-          { text: "KRA iTax", href: "https://itax.kra.go.ke", external: true },
+          { text: "Money and tax services", href: "/services/categories/money-tax" },
+          { text: "Money and tax topic", href: "/topics/money-tax" },
         ],
       },
       {
@@ -195,7 +195,7 @@ export const topics: Topic[] = [
           "Check the official Social Health Authority / Ministry of Health channels for current registration steps, contribution rules and benefit packages. Do not rely on unofficial agents.",
         ],
         links: [
-          { text: "Ministry of Health (official)", href: "https://www.health.go.ke", external: true },
+          { text: "Contact government", href: "/contact-government" },
         ],
       },
       {
@@ -237,7 +237,14 @@ export const topics: Topic[] = [
         ],
         links: [
           { text: "Policy documents", href: "/documents" },
-          { text: "Constitution — education rights", href: "/constitution" },
+          {
+            text: "Article 43 — Economic and social rights",
+            href: "/constitution/chapter/4/article/43",
+          },
+          {
+            text: "Chapter 4 — The Bill of Rights",
+            href: "/constitution/chapter/4",
+          },
         ],
       },
     ],
@@ -260,7 +267,7 @@ export const topics: Topic[] = [
           "Never pay for a ‘title’ outside official channels. Confirm ownership through lawful search processes and, where needed, qualified professionals.",
         ],
         links: [
-          { text: "Land and property services", href: "/services?category=land-property" },
+          { text: "Land and property services", href: "/services/categories/land-property" },
           { text: "Scams and fake websites", href: "/scams" },
         ],
       },
@@ -291,9 +298,9 @@ export const topics: Topic[] = [
           "A single business permit is typically issued by the county government where you operate. Requirements differ by county and activity.",
         ],
         links: [
-          { text: "Business services", href: "/services?category=business-self-employed" },
-          { text: "eCitizen", href: "https://www.ecitizen.go.ke", external: true },
-          { text: "KRA iTax", href: "https://itax.kra.go.ke", external: true },
+          { text: "Business services", href: "/services/categories/business-self-employed" },
+          { text: "eCitizen explained", href: "/ecitizen" },
+          { text: "Money and tax topic", href: "/topics/money-tax" },
         ],
       },
       {
@@ -392,7 +399,14 @@ export const topics: Topic[] = [
         ],
         links: [
           { text: "The Judiciary", href: "/government/judiciary" },
-          { text: "Constitution", href: "/constitution" },
+          {
+            text: "Chapter 10 — Judiciary",
+            href: "/constitution/chapter/10",
+          },
+          {
+            text: "Chapter 4 — The Bill of Rights",
+            href: "/constitution/chapter/4",
+          },
         ],
       },
       {
@@ -402,6 +416,14 @@ export const topics: Topic[] = [
         ],
         links: [
           { text: "Access to information", href: "/access-to-information" },
+          {
+            text: "Article 35 — Access to information",
+            href: "/constitution/chapter/4/article/35",
+          },
+          {
+            text: "Chapter 15 — Commissions and independent offices",
+            href: "/constitution/chapter/15",
+          },
         ],
       },
     ],
@@ -511,7 +533,7 @@ export const topics: Topic[] = [
         ],
         links: [
           { text: "eCitizen explained", href: "/ecitizen" },
-          { text: "Open eCitizen", href: "https://www.ecitizen.go.ke", external: true },
+          { text: "Open eCitizen", href: "/ecitizen" },
         ],
       },
       {
@@ -548,7 +570,14 @@ export const topics: Topic[] = [
           "The National Council for Persons with Disabilities (NCPWD) handles registration and related programmes within its mandate.",
         ],
         links: [
-          { text: "Constitution", href: "/constitution" },
+          {
+            text: "Chapter 4 — The Bill of Rights",
+            href: "/constitution/chapter/4",
+          },
+          {
+            text: "Article 27 — Equality and freedom from discrimination",
+            href: "/constitution/chapter/4/article/27",
+          },
           { text: "Accessibility statement for this website", href: "/accessibility" },
         ],
       },

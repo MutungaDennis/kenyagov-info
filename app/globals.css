@@ -152,6 +152,54 @@ body {
 .app-action-dropdown__item--destructive:focus {
   color: #942514;
 }
+
+/* Sticky service contents (desktop) */
+@media (min-width: 40.0625em) {
+  .app-service-contents {
+    position: sticky;
+    top: 1rem;
+  }
+}
+
+/* Print: long guidance and constitution-friendly */
+@media print {
+  .govuk-phase-banner,
+  .govuk-cookie-banner,
+  .govuk-skip-link,
+  .app-site-header,
+  .govuk-footer,
+  .govuk-back-link,
+  .govuk-button,
+  .app-service-contents,
+  .govuk-!-display-none-print {
+    display: none !important;
+  }
+
+  body,
+  .govuk-template__body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  a[href]::after {
+    content: none !important;
+  }
+
+  .govuk-main-wrapper {
+    padding-top: 0 !important;
+  }
+
+  h1,
+  h2,
+  h3 {
+    page-break-after: avoid;
+  }
+
+  table,
+  .govuk-summary-list {
+    page-break-inside: avoid;
+  }
+}
 .govuk-!-background-white {
   background: #ffffff;
 }

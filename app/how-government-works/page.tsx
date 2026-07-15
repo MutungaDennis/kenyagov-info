@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import PageIntro from "@/components/site/PageIntro";
 import RelatedNav from "@/components/site/RelatedNav";
+import { constitutionRefs } from "@/lib/constitution-links";
 
 export const metadata: Metadata = {
   title: "How government works",
@@ -35,6 +36,29 @@ export default function HowGovernmentWorksPage() {
             of government, devolution, leadership and integrity, and how public
             finance should work.
           </p>
+          <ul className="govuk-list govuk-list--bullet">
+            <li>
+              <Link href={constitutionRefs.billOfRights.href} className="govuk-link">
+                {constitutionRefs.billOfRights.label}
+              </Link>
+            </li>
+            <li>
+              <Link
+                href={constitutionRefs.leadershipIntegrity.href}
+                className="govuk-link"
+              >
+                {constitutionRefs.leadershipIntegrity.label}
+              </Link>
+            </li>
+            <li>
+              <Link
+                href={constitutionRefs.nationalValues.href}
+                className="govuk-link"
+              >
+                {constitutionRefs.nationalValues.label}
+              </Link>
+            </li>
+          </ul>
 
           <h2 className="govuk-heading-l">Three arms of the national government</h2>
 
@@ -43,7 +67,11 @@ export default function HowGovernmentWorksPage() {
             The President is Head of State and Government. The Deputy President
             and Cabinet Secretaries help run ministries and state departments.
             The Executive proposes policy, implements laws and manages much of
-            day-to-day national administration.
+            day-to-day national administration. See{" "}
+            <Link href={constitutionRefs.executive.href} className="govuk-link">
+              {constitutionRefs.executive.label}
+            </Link>
+            .
           </p>
           <ul className="govuk-list govuk-list--bullet">
             <li>
@@ -68,7 +96,11 @@ export default function HowGovernmentWorksPage() {
             Parliament makes national laws, oversees the Executive and
             represents the people. It has two houses: the National Assembly and
             the Senate. The Senate has a special role in protecting counties and
-            devolution.
+            devolution. See{" "}
+            <Link href={constitutionRefs.legislature.href} className="govuk-link">
+              {constitutionRefs.legislature.label}
+            </Link>
+            .
           </p>
           <ul className="govuk-list govuk-list--bullet">
             <li>
@@ -99,7 +131,11 @@ export default function HowGovernmentWorksPage() {
             Courts interpret the law and resolve disputes independently of the
             Executive and Parliament. The system includes magistrates’ courts,
             the High Court, specialised courts, the Court of Appeal and the
-            Supreme Court.
+            Supreme Court. See{" "}
+            <Link href={constitutionRefs.judiciary.href} className="govuk-link">
+              {constitutionRefs.judiciary.label}
+            </Link>
+            .
           </p>
           <ul className="govuk-list govuk-list--bullet">
             <li>
@@ -119,7 +155,14 @@ export default function HowGovernmentWorksPage() {
             The Constitution created 47 counties so that some services and
             decisions sit closer to citizens. Each county has a governor and a
             county assembly. National and county functions are divided mainly by
-            the Fourth Schedule.
+            the Fourth Schedule (distribution of functions). Start with{" "}
+            <Link
+              href={constitutionRefs.devolvedGovernment.href}
+              className="govuk-link"
+            >
+              {constitutionRefs.devolvedGovernment.label}
+            </Link>
+            .
           </p>
           <ul className="govuk-list govuk-list--bullet">
             <li>
@@ -141,11 +184,13 @@ export default function HowGovernmentWorksPage() {
 
           <h2 className="govuk-heading-l">Independent commissions and offices</h2>
           <p className="govuk-body">
-            Chapter 15 of the Constitution establishes commissions and
-            independent offices — for example electoral management, revenue
-            allocation, human rights, administrative justice and salaries. They
-            are designed to operate without improper direction from the
-            Executive.
+            <Link href={constitutionRefs.commissions.href} className="govuk-link">
+              {constitutionRefs.commissions.label}
+            </Link>{" "}
+            establishes commissions and independent offices — for example
+            electoral management, revenue allocation, human rights,
+            administrative justice and salaries. They are designed to operate
+            without improper direction from the Executive.
           </p>
           <p className="govuk-body">
             <Link href="/government/commissions" className="govuk-link">
@@ -157,7 +202,22 @@ export default function HowGovernmentWorksPage() {
           <p className="govuk-body">
             Citizens choose the President, MPs, senators, woman representatives,
             governors and MCAs through elections run by the Independent
-            Electoral and Boundaries Commission (IEBC).
+            Electoral and Boundaries Commission (IEBC). Political rights are
+            protected under{" "}
+            <Link
+              href={constitutionRefs.politicalRights.href}
+              className="govuk-link"
+            >
+              {constitutionRefs.politicalRights.label}
+            </Link>
+            . See also{" "}
+            <Link
+              href={constitutionRefs.representationOfThePeople.href}
+              className="govuk-link"
+            >
+              {constitutionRefs.representationOfThePeople.label}
+            </Link>
+            .
           </p>
           <p className="govuk-body">
             <Link href="/elections" className="govuk-link">
@@ -168,7 +228,11 @@ export default function HowGovernmentWorksPage() {
           <h2 className="govuk-heading-l">Public money</h2>
           <p className="govuk-body">
             Taxes and other revenues fund national and county services. Sharing
-            of revenue, budgeting and audit involve several institutions.
+            of revenue, budgeting and audit involve several institutions. See{" "}
+            <Link href={constitutionRefs.publicFinance.href} className="govuk-link">
+              {constitutionRefs.publicFinance.label}
+            </Link>
+            .
           </p>
           <p className="govuk-body">
             <Link href="/how-public-money-works" className="govuk-link">
@@ -180,7 +244,11 @@ export default function HowGovernmentWorksPage() {
             <p className="govuk-body govuk-!-margin-bottom-0">
               This is a simplified overview for citizens. For legal wording, read
               the Constitution and relevant Acts. This website is independent and
-              not an official government publication.
+              not an official government publication.{" "}
+              <Link href="/disclaimer" className="govuk-link">
+                Disclaimer
+              </Link>
+              .
             </p>
           </div>
         </div>
@@ -189,9 +257,10 @@ export default function HowGovernmentWorksPage() {
           links={[
             { text: "Government hub", href: "/government" },
             { text: "Find your representatives", href: "/find-your-representatives" },
+            { text: "County vs national", href: "/county-vs-national" },
             { text: "Contact government", href: "/contact-government" },
             { text: "Browse topics", href: "/topics" },
-            { text: "Constitution", href: "/constitution" },
+            { text: "Constitution of Kenya", href: "/constitution" },
           ]}
         />
       </div>

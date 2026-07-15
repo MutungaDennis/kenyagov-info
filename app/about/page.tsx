@@ -192,6 +192,11 @@ export default function AboutPage() {
                     </Link>
                   </li>
                   <li>
+                    <Link href="/content-style-guide" className="govuk-link">
+                      Content style guide
+                    </Link>
+                  </li>
+                  <li>
                     <Link href="/disclaimer" className="govuk-link">
                       Disclaimer
                     </Link>

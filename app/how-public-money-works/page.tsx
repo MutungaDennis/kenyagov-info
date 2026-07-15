@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import PageIntro from "@/components/site/PageIntro";
 import RelatedNav from "@/components/site/RelatedNav";
+import { constitutionRefs } from "@/lib/constitution-links";
 
 export const metadata: Metadata = {
   title: "How public money works",
@@ -30,7 +31,12 @@ export default function HowPublicMoneyWorksPage() {
             The national government raises revenue through taxes administered by
             the Kenya Revenue Authority (KRA) and other sources. Counties receive
             a constitutional share of nationally raised revenue and may collect
-            local revenue such as property rates and certain fees.
+            local revenue such as property rates and certain fees. The framework
+            is in{" "}
+            <Link href={constitutionRefs.publicFinance.href} className="govuk-link">
+              {constitutionRefs.publicFinance.label}
+            </Link>
+            .
           </p>
           <p className="govuk-body">
             For your own tax account, see{" "}
@@ -120,9 +126,15 @@ export default function HowPublicMoneyWorksPage() {
 
           <div className="govuk-inset-text">
             <p className="govuk-body govuk-!-margin-bottom-0">
-              This explainer is simplified. For legal detail, consult the Public
-              Finance Management Act, the Constitution and official budget
-              documents.
+              This explainer is simplified. For legal detail, read{" "}
+              <Link href={constitutionRefs.publicFinance.href} className="govuk-link">
+                {constitutionRefs.publicFinance.label}
+              </Link>
+              , the Public Finance Management Act via{" "}
+              <Link href="/acts/parliament" className="govuk-link">
+                Acts of Parliament
+              </Link>
+              , and official budget documents.
             </p>
           </div>
         </div>
@@ -130,10 +142,15 @@ export default function HowPublicMoneyWorksPage() {
         <RelatedNav
           links={[
             { text: "How government works", href: "/how-government-works" },
+            { text: "County vs national", href: "/county-vs-national" },
             { text: "Money and tax topic", href: "/topics/money-tax" },
+            { text: "Access to information", href: "/access-to-information" },
             { text: "Commissions", href: "/government/commissions" },
             { text: "Open data", href: "/open-data" },
-            { text: "County governments", href: "/government/counties" },
+            {
+              text: constitutionRefs.publicFinance.label,
+              href: constitutionRefs.publicFinance.href,
+            },
           ]}
         />
       </div>

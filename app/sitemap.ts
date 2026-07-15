@@ -1,6 +1,7 @@
 import { MetadataRoute } from 'next';
 import { createClient } from '@/lib/supabase/server';
 import { sanityClient } from '@/lib/sanity/client';
+import { getAllTopicSlugs } from '@/lib/topics';
 
 const BASE_URL = 'https://www.citizenguide.ke';
 
@@ -279,6 +280,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/elections/voter-registration`, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${BASE_URL}/elections/political-parties`, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${BASE_URL}/elections/coalitions`, changeFrequency: 'monthly', priority: 0.6 },
+    { url: `${BASE_URL}/elections/polling-stations`, changeFrequency: 'monthly', priority: 0.7 },
+    { url: `${BASE_URL}/elections/registered-voters`, changeFrequency: 'monthly', priority: 0.6 },
+    { url: `${BASE_URL}/elections/iebc-offices`, changeFrequency: 'monthly', priority: 0.6 },
+    { url: `${BASE_URL}/elections/about`, changeFrequency: 'yearly', priority: 0.6 },
     
     // Constitution & Laws
     { url: `${BASE_URL}/constitution`, changeFrequency: 'weekly', priority: 0.9 },
@@ -300,7 +305,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/society-and-culture`, changeFrequency: 'monthly', priority: 0.6 },
     { url: `${BASE_URL}/services`, changeFrequency: 'weekly', priority: 0.8 },
     { url: `${BASE_URL}/services/a-z`, changeFrequency: 'weekly', priority: 0.8 },
+    { url: `${BASE_URL}/services/popular`, changeFrequency: 'weekly', priority: 0.85 },
     { url: `${BASE_URL}/topics`, changeFrequency: 'weekly', priority: 0.9 },
+    { url: `${BASE_URL}/browse`, changeFrequency: 'weekly', priority: 0.7 },
 
     // Civic explainers
     { url: `${BASE_URL}/how-government-works`, changeFrequency: 'monthly', priority: 0.8 },
@@ -308,12 +315,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/how-public-money-works`, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${BASE_URL}/ecitizen`, changeFrequency: 'monthly', priority: 0.8 },
     { url: `${BASE_URL}/huduma-centres`, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${BASE_URL}/huduma-centres/locations`, changeFrequency: 'monthly', priority: 0.75 },
     { url: `${BASE_URL}/find-your-representatives`, changeFrequency: 'monthly', priority: 0.8 },
     { url: `${BASE_URL}/contact-government`, changeFrequency: 'monthly', priority: 0.8 },
     { url: `${BASE_URL}/complain-about-government`, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${BASE_URL}/access-to-information`, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${BASE_URL}/scams`, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${BASE_URL}/emergency-and-safety`, changeFrequency: 'monthly', priority: 0.6 },
+    { url: `${BASE_URL}/kenya-gazette`, changeFrequency: 'monthly', priority: 0.7 },
+    { url: `${BASE_URL}/guides/having-a-baby`, changeFrequency: 'monthly', priority: 0.75 },
+    { url: `${BASE_URL}/guides/registering-a-death`, changeFrequency: 'monthly', priority: 0.75 },
+    { url: `${BASE_URL}/guides/starting-a-business`, changeFrequency: 'monthly', priority: 0.75 },
     
     // Static Pages
     { url: `${BASE_URL}/about`, changeFrequency: 'monthly', priority: 0.5 },
@@ -321,6 +333,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/contact`, changeFrequency: 'monthly', priority: 0.5 },
     { url: `${BASE_URL}/disclaimer`, changeFrequency: 'yearly', priority: 0.5 },
     { url: `${BASE_URL}/editorial-policy`, changeFrequency: 'yearly', priority: 0.5 },
+    { url: `${BASE_URL}/content-style-guide`, changeFrequency: 'yearly', priority: 0.5 },
     { url: `${BASE_URL}/corrections`, changeFrequency: 'yearly', priority: 0.5 },
     { url: `${BASE_URL}/accessibility`, changeFrequency: 'yearly', priority: 0.3 },
     { url: `${BASE_URL}/cookies`, changeFrequency: 'yearly', priority: 0.3 },
@@ -331,26 +344,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/sitemap`, changeFrequency: 'monthly', priority: 0.4 },
   ];
 
-  // Topic hub pages
-  const topicUrls: SitemapEntry[] = [
-    'identity-civil-registration',
-    'passports-travel',
-    'driving-transport',
-    'money-tax',
-    'health',
-    'education',
-    'land-property',
-    'business',
-    'work-employment',
-    'benefits-social-protection',
-    'crime-justice',
-    'local-county-services',
-    'elections-participation',
-    'environment-farming',
-    'digital-government',
-    'disability',
-    'youth',
-  ].map((slug) => ({
+  // Topic hub pages — single source of truth: lib/topics.ts
+  const topicUrls: SitemapEntry[] = getAllTopicSlugs().map((slug) => ({
     url: `${BASE_URL}/topics/${slug}`,
     changeFrequency: 'monthly' as const,
     priority: 0.75,

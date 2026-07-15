@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import PageIntro from "@/components/site/PageIntro";
 import RelatedNav from "@/components/site/RelatedNav";
-import ExternalLink from "@/components/site/ExternalLink";
 
 export const metadata: Metadata = {
   title: "Huduma Centres",
@@ -56,15 +55,23 @@ export default function HudumaCentresPage() {
           <h2 className="govuk-heading-l">Finding a centre</h2>
           <p className="govuk-body">
             Centres are located across counties, including major urban hubs.
-            Opening hours and queue systems can change. Use official Huduma
-            Kenya / government announcements and local public notices for the
-            current list and locations.
+            Opening hours and queue systems can change. Confirm with official
+            Huduma Kenya notices before you travel.
           </p>
           <p className="govuk-body">
-            <ExternalLink href="https://www.ecitizen.go.ke">
-              Start from eCitizen
-            </ExternalLink>{" "}
-            for online applications, then attend a centre if instructed.
+            <Link
+              href="/huduma-centres/locations"
+              className="govuk-link govuk-!-font-weight-bold"
+            >
+              Browse Huduma Centre locations by county
+            </Link>
+          </p>
+          <p className="govuk-body">
+            <Link href="/ecitizen" className="govuk-link">
+              Start with our eCitizen guide
+            </Link>{" "}
+            for online applications (it links to the official portal), then
+            attend a centre if instructed.
           </p>
 
           <h2 className="govuk-heading-l">Tips for your visit</h2>
@@ -102,8 +109,9 @@ export default function HudumaCentresPage() {
 
         <RelatedNav
           links={[
+            { text: "Locations by county", href: "/huduma-centres/locations" },
             { text: "eCitizen explained", href: "/ecitizen" },
-            { text: "Browse services", href: "/services" },
+            { text: "Popular services", href: "/services/popular" },
             { text: "Identity and civil registration", href: "/topics/identity-civil-registration" },
             { text: "Contact government", href: "/contact-government" },
             { text: "Scams and fake websites", href: "/scams" },

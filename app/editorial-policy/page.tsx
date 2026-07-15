@@ -84,7 +84,13 @@ export default function EditorialPolicyPage() {
           </ul>
 
           <h2 className="govuk-heading-l">How we write</h2>
-          <p className="govuk-body">We aim to follow public content principles:</p>
+          <p className="govuk-body">
+            We aim to follow public content principles. Full detail is in the{" "}
+            <Link href="/content-style-guide" className="govuk-link">
+              content style guide
+            </Link>
+            :
+          </p>
           <ul className="govuk-list govuk-list--bullet">
             <li>lead with the user need</li>
             <li>use short sentences and everyday words where possible</li>
@@ -137,6 +143,7 @@ export default function EditorialPolicyPage() {
 
         <RelatedNav
           links={[
+            { text: "Content style guide", href: "/content-style-guide" },
             { text: "About this website", href: "/about" },
             { text: "Disclaimer", href: "/disclaimer" },
             { text: "Corrections", href: "/corrections" },

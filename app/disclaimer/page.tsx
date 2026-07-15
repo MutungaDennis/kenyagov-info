@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import PageIntro from "@/components/site/PageIntro";
 import RelatedNav from "@/components/site/RelatedNav";
-import ExternalLink from "@/components/site/ExternalLink";
 
 export const metadata: Metadata = {
   title: "Disclaimer",
@@ -53,11 +52,23 @@ export default function DisclaimerPage() {
           <h2 className="govuk-heading-l">Official transactions</h2>
           <p className="govuk-body">
             For applications, payments and official records, use authorised
-            government systems — for example the{" "}
-            <ExternalLink href="https://www.ecitizen.go.ke">
-              eCitizen portal
-            </ExternalLink>
-            , agency websites, Huduma Centres or county portals.
+            government systems. Start with our{" "}
+            <Link href="/ecitizen" className="govuk-link">
+              eCitizen guide
+            </Link>
+            ,{" "}
+            <Link href="/huduma-centres" className="govuk-link">
+              Huduma Centres
+            </Link>
+            ,{" "}
+            <Link href="/contact-government" className="govuk-link">
+              contact government
+            </Link>
+            , or the official links on individual{" "}
+            <Link href="/services" className="govuk-link">
+              service guides
+            </Link>
+            .
           </p>
 
           <h2 className="govuk-heading-l">Accuracy and updates</h2>
