@@ -1,5 +1,6 @@
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
+import ChevronLinkList from "@/components/site/ChevronLinkList";
 import { getGuides } from "@/lib/sanity/client";
 
 export const metadata = {
@@ -49,110 +50,84 @@ export default async function GuidesPage() {
         ]}
       />
 
-      <div className="govuk-grid-row">
-        <div className="govuk-grid-column-two-thirds">
-          <h1 className="govuk-heading-xl">Guides and life events</h1>
-          <p className="govuk-body-l">
-            Step-by-step guides to help you navigate government services and
-            major life events. These pages explain processes — applications
-            happen on official systems.
-          </p>
+      <h1 className="govuk-heading-xl">Guides and life events</h1>
+      <p className="govuk-body-l">
+        Step-by-step guides to help you navigate government services and major
+        life events. These pages explain processes — applications happen on
+        official systems.
+      </p>
 
-          <h2 className="govuk-heading-m">Life events</h2>
-          <ul className="govuk-list govuk-list--spaced">
-            {lifeEventGuides.map((guide) => (
-              <li key={guide.href} className="govuk-!-margin-bottom-4">
-                <h3 className="govuk-heading-s govuk-!-margin-bottom-1">
-                  <Link href={guide.href} className="govuk-link">
-                    {guide.title}
-                  </Link>
-                </h3>
-                <p className="govuk-body govuk-!-margin-bottom-0">
-                  {guide.description}
-                </p>
-              </li>
-            ))}
-          </ul>
+      <h2 className="govuk-heading-m">Life events</h2>
+      <ChevronLinkList
+        ariaLabel="Life event guides"
+        items={lifeEventGuides.map((guide) => ({
+          title: guide.title,
+          href: guide.href,
+          description: guide.description,
+        }))}
+      />
 
-          <hr className="govuk-section-break govuk-section-break--l govuk-section-break--visible" />
+      <hr className="govuk-section-break govuk-section-break--l govuk-section-break--visible" />
 
-          {featuredGuides.length > 0 && (
-            <section className="govuk-!-margin-bottom-8">
-              <h2 className="govuk-heading-m">Featured guides</h2>
-              <ul className="govuk-list govuk-list--spaced">
-                {featuredGuides.map((guide: any) => (
-                  <li key={guide._id}>
-                    <Link
-                      href={`/guides/${guide.slug.current}`}
-                      className="govuk-link govuk-!-font-weight-bold"
-                    >
-                      {guide.title}
-                    </Link>
-                    {guide.description && (
-                      <p className="govuk-body-s">{guide.description}</p>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
+      {featuredGuides.length > 0 && (
+        <section className="govuk-!-margin-bottom-8">
+          <h2 className="govuk-heading-m">Featured guides</h2>
+          <ChevronLinkList
+            ariaLabel="Featured guides"
+            items={featuredGuides.map((guide: any) => ({
+              title: guide.title,
+              href: `/guides/${guide.slug.current}`,
+              description: guide.description,
+            }))}
+          />
+        </section>
+      )}
 
-          <section>
-            <h2 className="govuk-heading-m">More guides</h2>
-            {regularGuides.length > 0 ? (
-              <ul className="govuk-list govuk-list--spaced">
-                {regularGuides.map((guide: any) => (
-                  <li key={guide._id} className="govuk-!-margin-bottom-4">
-                    <h3 className="govuk-heading-s govuk-!-margin-bottom-1">
-                      <Link
-                        href={`/guides/${guide.slug.current}`}
-                        className="govuk-link"
-                      >
-                        {guide.title}
-                      </Link>
-                    </h3>
-                    {guide.description && (
-                      <p className="govuk-body-s">{guide.description}</p>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <div className="govuk-inset-text">
-                <p className="govuk-body">
-                  Additional CMS guides will appear here when published. Start
-                  with life events above, or{" "}
-                  <Link href="/topics" className="govuk-link">
-                    browse topics
-                  </Link>
-                  .
-                </p>
-              </div>
-            )}
-          </section>
-
-          <hr className="govuk-section-break govuk-section-break--l govuk-section-break--visible" />
-
-          <h2 className="govuk-heading-m">Related</h2>
-          <ul className="govuk-list govuk-list--bullet">
-            <li>
-              <Link href="/services/popular" className="govuk-link">
-                Popular services
+      <section>
+        <h2 className="govuk-heading-m">More guides</h2>
+        {regularGuides.length > 0 ? (
+          <ChevronLinkList
+            ariaLabel="More guides"
+            items={regularGuides.map((guide: any) => ({
+              title: guide.title,
+              href: `/guides/${guide.slug.current}`,
+              description: guide.description,
+            }))}
+          />
+        ) : (
+          <div className="govuk-inset-text">
+            <p className="govuk-body">
+              Additional CMS guides will appear here when published. Start with
+              life events above, or{" "}
+              <Link href="/topics" className="govuk-link">
+                browse topics
               </Link>
-            </li>
-            <li>
-              <Link href="/services/a-z" className="govuk-link">
-                Services A to Z
-              </Link>
-            </li>
-            <li>
-              <Link href="/content-style-guide" className="govuk-link">
-                Content style guide
-              </Link>
-            </li>
-          </ul>
-        </div>
-      </div>
+              .
+            </p>
+          </div>
+        )}
+      </section>
+
+      <hr className="govuk-section-break govuk-section-break--l govuk-section-break--visible" />
+
+      <h2 className="govuk-heading-m">Related</h2>
+      <ul className="govuk-list govuk-list--bullet">
+        <li>
+          <Link href="/services/popular" className="govuk-link">
+            Popular services
+          </Link>
+        </li>
+        <li>
+          <Link href="/services/a-z" className="govuk-link">
+            Services A to Z
+          </Link>
+        </li>
+        <li>
+          <Link href="/content-style-guide" className="govuk-link">
+            Content style guide
+          </Link>
+        </li>
+      </ul>
     </>
   );
 }

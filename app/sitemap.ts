@@ -2,6 +2,8 @@ import { MetadataRoute } from 'next';
 import { createClient } from '@/lib/supabase/server';
 import { sanityClient } from '@/lib/sanity/client';
 import { getAllTopicSlugs } from '@/lib/topics';
+import { getAllNationalEventSlugs } from '@/lib/data/national-events';
+import { getAllAskProfileSlugs } from '@/lib/data/ask-shows';
 
 const BASE_URL = 'https://www.citizenguide.ke';
 
@@ -303,6 +305,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // Guides & Society
     { url: `${BASE_URL}/guides`, changeFrequency: 'weekly', priority: 0.7 },
     { url: `${BASE_URL}/society-and-culture`, changeFrequency: 'monthly', priority: 0.6 },
+    { url: `${BASE_URL}/society-and-culture/national-events`, changeFrequency: 'monthly', priority: 0.7 },
+    { url: `${BASE_URL}/society-and-culture/national-events/ask-shows`, changeFrequency: 'monthly', priority: 0.75 },
     { url: `${BASE_URL}/services`, changeFrequency: 'weekly', priority: 0.8 },
     { url: `${BASE_URL}/services/a-z`, changeFrequency: 'weekly', priority: 0.8 },
     { url: `${BASE_URL}/services/popular`, changeFrequency: 'weekly', priority: 0.85 },
@@ -351,12 +355,33 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.75,
   }));
 
+  const nationalEventUrls: SitemapEntry[] = getAllNationalEventSlugs().map(
+    (slug) => ({
+      url: `${BASE_URL}/society-and-culture/national-events/${slug}`,
+      changeFrequency: 'monthly' as const,
+      priority: 0.65,
+    }),
+  );
+
+  const askProfileUrls: SitemapEntry[] = getAllAskProfileSlugs().map((slug) => ({
+    url: `${BASE_URL}/society-and-culture/national-events/ask-shows/${slug}`,
+    changeFrequency: 'monthly' as const,
+    priority: 0.6,
+  }));
+
   const [supabaseUrls, sanityUrls] = await Promise.all([
     getSupabaseUrls(),
     getSanityUrls(),
   ]);
 
-  const allUrls = [...staticUrls, ...topicUrls, ...supabaseUrls, ...sanityUrls];
+  const allUrls = [
+    ...staticUrls,
+    ...topicUrls,
+    ...nationalEventUrls,
+    ...askProfileUrls,
+    ...supabaseUrls,
+    ...sanityUrls,
+  ];
 
   // Deduplicate
   const unique = Array.from(new Map(allUrls.map(u => [u.url, u])).values());

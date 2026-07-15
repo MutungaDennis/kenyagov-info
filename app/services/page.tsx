@@ -1,5 +1,6 @@
 // app/services/page.tsx
-import React, { Suspense } from "react"; // Added Suspense import
+import React, { Suspense } from "react";
+import type { Metadata } from "next";
 import { client } from "@/sanity/lib/client";
 import ServicesClientView from "./ServicesClientView";
 
@@ -10,7 +11,7 @@ export interface GovernmentServiceSummary {
   slug: string;
   popularityWeight: number;
   executionMode: string;
-  categorySlug: string | string[]; 
+  categorySlug: string | string[];
   subcategorySlug?: string;
   providingBody: string;
 }
@@ -42,10 +43,36 @@ const ALL_CATEGORIES_QUERY = `*[_type == "governmentCategory" && !defined(parent
   }
 }`;
 
-export const metadata = {
-  title: "Services and guidance - CitizenGuide.KE",
-  description: "Find government services. Search or filter by topic.",
+const SITE_URL = "https://www.citizenguide.ke";
+
+type PageProps = {
+  searchParams: Promise<{ category?: string; subcategory?: string }>;
 };
+
+export async function generateMetadata({
+  searchParams,
+}: PageProps): Promise<Metadata> {
+  const params = await searchParams;
+  const category = params.category?.trim();
+
+  if (category && category !== "all") {
+    return {
+      title: `Services: ${category.replace(/-/g, " ")}`,
+      description: "Find government services filtered by topic.",
+      alternates: {
+        canonical: `${SITE_URL}/services/categories/${encodeURIComponent(category)}`,
+      },
+    };
+  }
+
+  return {
+    title: "Services and guidance",
+    description: "Find government services. Search or filter by topic.",
+    alternates: {
+      canonical: `${SITE_URL}/services`,
+    },
+  };
+}
 
 export default async function ServicesHubPage() {
   const [services, categories] = await Promise.all([

@@ -65,13 +65,20 @@ const nextConfig: NextConfig = {
           ? "/cg-ke-a5wkqciyjpg940u3"
           : null;
 
-    if (!secret || secret === "/admin") return [];
+    const adminRewrites =
+      !secret || secret === "/admin"
+        ? []
+        : (() => {
+            const base = secret.startsWith("/") ? secret : `/${secret}`;
+            return [
+              { source: base, destination: "/admin" },
+              { source: `${base}/:path*`, destination: "/admin/:path*" },
+            ];
+          })();
 
-    const base = secret.startsWith("/") ? secret : `/${secret}`;
-    return [
-      { source: base, destination: "/admin" },
-      { source: `${base}/:path*`, destination: "/admin/:path*" },
-    ];
+    // Category pages are real routes at app/services/categories/[slug].
+    // No rewrite needed; middleware consolidates ?category= onto those paths.
+    return adminRewrites;
   },
 
   // ==========================================
@@ -263,6 +270,46 @@ const nextConfig: NextConfig = {
         destination: '/elections/results/:slug',
         permanent: true,
       },
+      {
+        source: '/politics/coalitions',
+        destination: '/elections/coalitions',
+        permanent: true,
+      },
+      {
+        source: '/politics/polling-stations',
+        destination: '/elections/polling-stations',
+        permanent: true,
+      },
+      {
+        source: '/politics/polling-stations/:slug',
+        destination: '/elections/polling-stations/:slug',
+        permanent: true,
+      },
+      {
+        source: '/politics/registered-voters',
+        destination: '/elections/registered-voters',
+        permanent: true,
+      },
+      {
+        source: '/politics/registered-voters/:slug',
+        destination: '/elections/registered-voters/:slug',
+        permanent: true,
+      },
+      {
+        source: '/politics/iebc-offices',
+        destination: '/elections/iebc-offices',
+        permanent: true,
+      },
+      {
+        source: '/politics/about',
+        destination: '/elections/about',
+        permanent: true,
+      },
+      {
+        source: '/politics/:path*',
+        destination: '/elections/:path*',
+        permanent: true,
+      },
 
       // ==========================================
       // PRESIDENTIAL VISITS REORGANIZATION
@@ -278,6 +325,16 @@ const nextConfig: NextConfig = {
         destination: '/government/presidential-visits/:slug',
         permanent: true,
       },
+      {
+        source: '/international-visits',
+        destination: '/government/presidential-visits',
+        permanent: true,
+      },
+      {
+        source: '/international-visits/:slug',
+        destination: '/government/presidential-visits/:slug',
+        permanent: true,
+      },
 
       // ==========================================
       // WARDS REORGANIZATION
@@ -290,16 +347,318 @@ const nextConfig: NextConfig = {
       },
 
       // ==========================================
-      // CONSTITUTION URL UPDATES
+      // SHORTHAND / ALIAS PATHS (common bookmarks)
       // ==========================================
-      
-      // If you changed constitution URLs, add redirects here
-      // Example (uncomment if needed):
-      // {
-      //   source: '/constitution/article/:article',
-      //   destination: '/constitution/chapter/:article/article/:article',
-      //   permanent: true,
-      // },
+
+      {
+        source: '/cabinet',
+        destination: '/government/cabinet',
+        permanent: true,
+      },
+      {
+        source: '/presidency',
+        destination: '/government/presidency',
+        permanent: true,
+      },
+      {
+        source: '/commissions',
+        destination: '/government/commissions',
+        permanent: true,
+      },
+      {
+        source: '/people',
+        destination: '/government/people',
+        permanent: true,
+      },
+      {
+        source: '/people/:slug',
+        destination: '/government/people/:slug',
+        permanent: true,
+      },
+      {
+        source: '/government/officials',
+        destination: '/government/people',
+        permanent: true,
+      },
+      {
+        source: '/government/officials/:slug',
+        destination: '/government/people/:slug',
+        permanent: true,
+      },
+      {
+        source: '/devolution',
+        destination: '/government/counties/devolution',
+        permanent: true,
+      },
+
+      // ==========================================
+      // CIVIC / SERVICE URLS (2026 information architecture)
+      // permanent: true → HTTP 308 so search engines transfer ranking
+      // ==========================================
+
+      // GOV.UK-style browse → topics hub
+      {
+        source: '/browse',
+        destination: '/topics',
+        permanent: true,
+      },
+      {
+        source: '/browse/:path*',
+        destination: '/topics/:path*',
+        permanent: true,
+      },
+
+      // Service discovery aliases
+      {
+        source: '/a-z',
+        destination: '/services/a-z',
+        permanent: true,
+      },
+      {
+        source: '/services-a-z',
+        destination: '/services/a-z',
+        permanent: true,
+      },
+      {
+        source: '/popular-services',
+        destination: '/services/popular',
+        permanent: true,
+      },
+      {
+        source: '/services/popular-services',
+        destination: '/services/popular',
+        permanent: true,
+      },
+
+      // Digital government / portals
+      {
+        source: '/e-citizen',
+        destination: '/ecitizen',
+        permanent: true,
+      },
+      {
+        source: '/eCitizen',
+        destination: '/ecitizen',
+        permanent: true,
+      },
+      {
+        source: '/huduma',
+        destination: '/huduma-centres',
+        permanent: true,
+      },
+      {
+        source: '/huduma-centre',
+        destination: '/huduma-centres',
+        permanent: true,
+      },
+      {
+        source: '/huduma-centers',
+        destination: '/huduma-centres',
+        permanent: true,
+      },
+      {
+        source: '/huduma-centres/find',
+        destination: '/huduma-centres/locations',
+        permanent: true,
+      },
+
+      // Civic explainers
+      {
+        source: '/how-government-works-in-kenya',
+        destination: '/how-government-works',
+        permanent: true,
+      },
+      {
+        source: '/county-vs-national-government',
+        destination: '/county-vs-national',
+        permanent: true,
+      },
+      {
+        source: '/public-money',
+        destination: '/how-public-money-works',
+        permanent: true,
+      },
+      {
+        source: '/public-finance',
+        destination: '/how-public-money-works',
+        permanent: true,
+      },
+      {
+        source: '/find-representatives',
+        destination: '/find-your-representatives',
+        permanent: true,
+      },
+      {
+        source: '/find-my-representatives',
+        destination: '/find-your-representatives',
+        permanent: true,
+      },
+      {
+        source: '/my-representatives',
+        destination: '/find-your-representatives',
+        permanent: true,
+      },
+      {
+        source: '/contact-gov',
+        destination: '/contact-government',
+        permanent: true,
+      },
+      {
+        source: '/contact-the-government',
+        destination: '/contact-government',
+        permanent: true,
+      },
+      {
+        source: '/complaints',
+        destination: '/complain-about-government',
+        permanent: true,
+      },
+      {
+        source: '/complain',
+        destination: '/complain-about-government',
+        permanent: true,
+      },
+      {
+        source: '/ati',
+        destination: '/access-to-information',
+        permanent: true,
+      },
+      {
+        source: '/access-to-info',
+        destination: '/access-to-information',
+        permanent: true,
+      },
+      {
+        source: '/gazette',
+        destination: '/kenya-gazette',
+        permanent: true,
+      },
+      {
+        source: '/official-notices',
+        destination: '/kenya-gazette',
+        permanent: true,
+      },
+      {
+        source: '/kenya-gazette-notices',
+        destination: '/kenya-gazette',
+        permanent: true,
+      },
+      {
+        source: '/scams-and-phishing',
+        destination: '/scams',
+        permanent: true,
+      },
+      {
+        source: '/fake-websites',
+        destination: '/scams',
+        permanent: true,
+      },
+      {
+        source: '/emergency',
+        destination: '/emergency-and-safety',
+        permanent: true,
+      },
+      {
+        source: '/emergencies',
+        destination: '/emergency-and-safety',
+        permanent: true,
+      },
+
+      // Trust / about aliases
+      {
+        source: '/editorial',
+        destination: '/editorial-policy',
+        permanent: true,
+      },
+      {
+        source: '/style-guide',
+        destination: '/content-style-guide',
+        permanent: true,
+      },
+      {
+        source: '/writing-style',
+        destination: '/content-style-guide',
+        permanent: true,
+      },
+      {
+        source: '/corrections-policy',
+        destination: '/corrections',
+        permanent: true,
+      },
+      {
+        source: '/legal-disclaimer',
+        destination: '/disclaimer',
+        permanent: true,
+      },
+      {
+        source: '/contact-us',
+        destination: '/contact',
+        permanent: true,
+      },
+      {
+        source: '/contact-site',
+        destination: '/contact',
+        permanent: true,
+      },
+
+      // Life-event guide aliases
+      {
+        source: '/guides/having-a-baby-in-kenya',
+        destination: '/guides/having-a-baby',
+        permanent: true,
+      },
+      {
+        source: '/guides/death-registration',
+        destination: '/guides/registering-a-death',
+        permanent: true,
+      },
+      {
+        source: '/guides/register-a-death',
+        destination: '/guides/registering-a-death',
+        permanent: true,
+      },
+      {
+        source: '/guides/start-a-business',
+        destination: '/guides/starting-a-business',
+        permanent: true,
+      },
+      {
+        source: '/how-to',
+        destination: '/guides',
+        permanent: true,
+      },
+      {
+        source: '/how-to/:path*',
+        destination: '/guides/:path*',
+        permanent: true,
+      },
+
+      // Society shorthand
+      {
+        source: '/culture',
+        destination: '/society-and-culture',
+        permanent: true,
+      },
+      {
+        source: '/society',
+        destination: '/society-and-culture',
+        permanent: true,
+      },
+
+      // ==========================================
+      // CONSTITUTION — legacy flat article paths
+      // (only if older crawlers used /constitution/article/N)
+      // ==========================================
+      {
+        source: '/constitution/articles/:article',
+        destination: '/constitution',
+        permanent: true,
+      },
+      {
+        source: '/constitution/article/:article',
+        destination: '/constitution',
+        permanent: true,
+      },
     ];
   },
 };

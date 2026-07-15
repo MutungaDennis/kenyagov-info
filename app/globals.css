@@ -161,6 +161,272 @@ body {
   }
 }
 
+/* -------------------------------------------------------------------------- */
+/* Mobile-first layout + GOV.UK-style responsive tables                       */
+/* Breakpoint 40.0625em = 641px (GOV.UK tablet)                               */
+/* -------------------------------------------------------------------------- */
+
+html {
+  overflow-x: clip;
+}
+
+body.govuk-template__body {
+  overflow-x: clip;
+  max-width: 100vw;
+}
+
+img,
+video,
+svg,
+iframe {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Scroll region for wide tables (use TableScroll or auto via rule below) */
+.app-table-scroll {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-bottom: 20px;
+  /* Room for focus ring */
+  padding-bottom: 2px;
+}
+
+.app-table-scroll:focus {
+  outline: 3px solid #ffdd00;
+  outline-offset: 0;
+  box-shadow: inset 0 0 0 2px #0b0c0c;
+}
+
+.app-table-scroll .govuk-table {
+  margin-bottom: 0;
+  /* Prefer natural table width so columns stay readable while scrolling */
+  width: max-content;
+  min-width: 100%;
+  max-width: none;
+}
+
+/* Standalone govuk tables on small screens: scroll container without layout blowout */
+@media (max-width: 40.05em) {
+  .govuk-main-wrapper table.govuk-table {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: 20px;
+    font-size: 16px;
+  }
+
+  .govuk-main-wrapper table.govuk-table > thead {
+    display: table-header-group;
+  }
+
+  .govuk-main-wrapper table.govuk-table > tbody {
+    display: table-row-group;
+  }
+
+  .govuk-main-wrapper table.govuk-table > thead,
+  .govuk-main-wrapper table.govuk-table > tbody,
+  .govuk-main-wrapper table.govuk-table > tr {
+    width: max-content;
+    min-width: 100%;
+  }
+
+  /* When already inside TableScroll, keep real table layout; parent scrolls */
+  .app-table-scroll table.govuk-table {
+    display: table;
+    overflow: visible;
+    width: max-content;
+    min-width: 100%;
+    margin-bottom: 0;
+  }
+
+  .app-table-scroll table.govuk-table > thead {
+    display: table-header-group;
+  }
+
+  .app-table-scroll table.govuk-table > tbody {
+    display: table-row-group;
+  }
+
+  .govuk-main-wrapper table.govuk-table th,
+  .govuk-main-wrapper table.govuk-table td {
+    white-space: normal;
+    word-break: break-word;
+    hyphens: auto;
+  }
+
+  .govuk-main-wrapper table.govuk-table .govuk-table__header,
+  .govuk-main-wrapper table.govuk-table .govuk-table__cell {
+    padding: 10px 12px;
+  }
+
+  /* Chevron lists: stack cleanly, avoid overflow */
+  .app-popular-services__link {
+    gap: 0.5rem;
+    padding: 0.75rem 0.15rem 0.75rem 0;
+  }
+
+  .app-popular-services__title {
+    font-size: 1.0625rem; /* 17px */
+    line-height: 1.35;
+  }
+
+  .app-popular-services__description {
+    font-size: 0.9375rem; /* 15px */
+  }
+
+  .app-popular-services__chevron {
+    font-size: 1.5rem;
+    padding-right: 0;
+  }
+
+  /* Next-event / holiday panels */
+  .app-next-holiday-panel {
+    padding: 16px !important;
+  }
+
+  .app-next-holiday-panel .govuk-heading-l {
+    font-size: 1.5rem !important;
+    line-height: 1.25 !important;
+    word-break: break-word;
+  }
+
+  /* Long inset / warning text */
+  .govuk-inset-text,
+  .govuk-warning-text {
+    overflow-wrap: anywhere;
+  }
+
+  /* Summary lists on narrow screens */
+  .govuk-summary-list__key,
+  .govuk-summary-list__value {
+    word-break: break-word;
+  }
+
+  /* Grid children: ensure no min-width blowouts */
+  .govuk-grid-column-one-third,
+  .govuk-grid-column-two-thirds,
+  .govuk-grid-column-one-half,
+  .govuk-grid-column-full,
+  .govuk-grid-column-one-quarter,
+  .govuk-grid-column-three-quarters {
+    box-sizing: border-box;
+    max-width: 100%;
+  }
+
+  /* Pre / code blocks */
+  pre,
+  code {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  /* Forms full width on mobile */
+  .govuk-input,
+  .govuk-select,
+  .govuk-textarea {
+    max-width: 100%;
+  }
+
+  /* Mega-menu and main content spacing */
+  .govuk-main-wrapper {
+    padding-top: 15px;
+    padding-bottom: 15px;
+  }
+}
+
+/* Tablet: still allow table scroll if needed */
+@media (min-width: 40.0625em) and (max-width: 48.0525em) {
+  .app-table-scroll .govuk-table {
+    width: 100%;
+  }
+}
+
+/* Homepage section dividers */
+.app-home-section-break {
+  border: 0;
+  border-top: 1px solid #b1b4b6;
+  clear: both;
+}
+.app-home-section-break--strong {
+  border-top-width: 2px;
+  border-top-color: #0b0c0c;
+}
+
+/*
+ * Popular services — GOV.UK-style chevron list
+ * Full row is one link (title, description, and ›).
+ */
+.app-popular-services {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid #b1b4b6;
+}
+.app-popular-services__item {
+  margin: 0;
+  padding: 0;
+  border-bottom: 1px solid #b1b4b6;
+}
+.app-popular-services__link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 0.25rem 0.85rem 0;
+  text-decoration: none !important;
+  color: inherit;
+}
+.app-popular-services__link:hover .app-popular-services__title,
+.app-popular-services__link:focus .app-popular-services__title {
+  color: #003078;
+  text-decoration: underline;
+}
+.app-popular-services__link:focus {
+  outline: 3px solid transparent;
+  color: #0b0c0c;
+  background-color: #ffdd00;
+  box-shadow: 0 -2px #ffdd00, 0 4px #0b0c0c;
+}
+.app-popular-services__text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+  flex: 1;
+}
+.app-popular-services__meta {
+  margin: 0 !important;
+  color: #505a5f;
+}
+.app-popular-services__title {
+  font-weight: 700;
+  font-size: 1.1875rem;
+  line-height: 1.3;
+  color: #1d70b8;
+}
+.app-popular-services__description {
+  margin: 0 !important;
+  color: #0b0c0c;
+}
+.app-popular-services__chevron {
+  flex-shrink: 0;
+  font-size: 1.75rem;
+  font-weight: 400;
+  line-height: 1;
+  color: #1d70b8;
+  padding-right: 0.15rem;
+}
+.app-popular-services__link:hover .app-popular-services__chevron,
+.app-popular-services__link:focus .app-popular-services__chevron {
+  color: #003078;
+}
+
 /* Print: long guidance and constitution-friendly */
 @media print {
   .govuk-phase-banner,

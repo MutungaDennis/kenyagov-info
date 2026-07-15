@@ -8,6 +8,7 @@ export { default as GovUKBreadcrumbs } from './Breadcrumbs';
 export type { Crumb } from './Breadcrumbs';
 export { default as GovUKButton } from './Button';
 export { default as GovUKCard } from './Card';
+export { default as TableScroll } from './TableScroll';
 export { default as GovUKCharacterCount } from './CharacterCount';
 export { default as GovUKCookieBanner } from './CookieBanner';
 export { default as GovUKDashboardCard } from './DashboardCard';

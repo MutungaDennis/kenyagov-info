@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import HomeSearch from "@/components/site/HomeSearch";
+import ChevronLinkList from "@/components/site/ChevronLinkList";
 
 const SITE_URL = "https://www.citizenguide.ke";
 
@@ -81,53 +82,7 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="govuk-grid-row govuk-!-margin-bottom-6">
-        <div className="govuk-grid-column-full">
-          <h2 className="govuk-heading-m">Browse by topic</h2>
-          <p className="govuk-body">
-            Find guidance by what you need to do.{" "}
-            <Link href="/topics" className="govuk-link">
-              See all topics
-            </Link>
-            .
-          </p>
-          <ul className="govuk-list govuk-list--bullet">
-            <li>
-              <Link
-                href="/topics/identity-civil-registration"
-                className="govuk-link"
-              >
-                Identity and civil registration
-              </Link>
-            </li>
-            <li>
-              <Link href="/topics/money-tax" className="govuk-link">
-                Money, tax and pensions
-              </Link>
-            </li>
-            <li>
-              <Link href="/topics/driving-transport" className="govuk-link">
-                Driving and transport
-              </Link>
-            </li>
-            <li>
-              <Link href="/topics/passports-travel" className="govuk-link">
-                Passports, visas and travel
-              </Link>
-            </li>
-            <li>
-              <Link href="/topics/local-county-services" className="govuk-link">
-                Local and county services
-              </Link>
-            </li>
-            <li>
-              <Link href="/topics/digital-government" className="govuk-link">
-                Digital government (eCitizen and Huduma)
-              </Link>
-            </li>
-          </ul>
-        </div>
-      </div>
+      <hr className="govuk-section-break govuk-section-break--visible govuk-section-break--l govuk-!-margin-top-6 govuk-!-margin-bottom-6 app-home-section-break" />
 
       <div className="govuk-grid-row">
         <div className="govuk-grid-column-two-thirds-from-desktop govuk-grid-column-full">
@@ -142,108 +97,58 @@ export default function Home() {
             .
           </p>
 
-          <ul className="govuk-list govuk-list--spaced">
-            <li className="govuk-!-margin-bottom-4">
-              <Link
-                href="/services/categories/business-self-employed"
-                className="govuk-link govuk-!-font-weight-bold"
-              >
-                Businesses and self-employed
-              </Link>
-              <p className="govuk-body govuk-!-margin-top-1 govuk-!-margin-bottom-0">
-                Set up a business name or limited company, and file company
-                annual returns.
-              </p>
-            </li>
-
-            <li className="govuk-!-margin-bottom-4">
-              <Link
-                href="/services/categories/civil-registration"
-                className="govuk-link govuk-!-font-weight-bold"
-              >
-                Births, deaths, marriages and care
-              </Link>
-              <p className="govuk-body govuk-!-margin-top-1 govuk-!-margin-bottom-0">
-                Register a birth or death, apply for a marriage certificate, or
-                check police clearance.
-              </p>
-            </li>
-
-            <li className="govuk-!-margin-bottom-4">
-              <Link
-                href="/services/categories/driving-transport"
-                className="govuk-link govuk-!-font-weight-bold"
-              >
-                Driving and transport
-              </Link>
-              <p className="govuk-body govuk-!-margin-top-1 govuk-!-margin-bottom-0">
-                Apply for a provisional licence (PDL), renew your driving
-                licence, or transfer vehicle ownership.
-              </p>
-            </li>
-
-            <li className="govuk-!-margin-bottom-4">
-              <Link
-                href="/services/categories/passports-travel"
-                className="govuk-link govuk-!-font-weight-bold"
-              >
-                Passports, travel and living abroad
-              </Link>
-              <p className="govuk-body govuk-!-margin-top-1 govuk-!-margin-bottom-0">
-                Apply for or renew a Kenyan passport, check visa rules, and
-                manage immigration profiles.
-              </p>
-            </li>
-
-            <li className="govuk-!-margin-bottom-4">
-              <Link
-                href="/services/categories/money-tax"
-                className="govuk-link govuk-!-font-weight-bold"
-              >
-                Money and tax
-              </Link>
-              <p className="govuk-body govuk-!-margin-top-1 govuk-!-margin-bottom-0">
-                File self-assessment tax returns, request KRA PIN variations, or
-                check compliance.
-              </p>
-            </li>
-
-            <li className="govuk-!-margin-bottom-5">
-              <Link
-                href="/services/categories/land-property"
-                className="govuk-link govuk-!-font-weight-bold"
-              >
-                Land and property
-              </Link>
-              <p className="govuk-body govuk-!-margin-top-1 govuk-!-margin-bottom-0">
-                Search land and property records, settle land rates, or verify
-                title details.
-              </p>
-            </li>
-
-            <li className="govuk-!-margin-top-6">
-              <Link
-                href="/services/a-z"
-                className="govuk-link govuk-!-font-weight-bold"
-              >
-                Explore all services A to Z
-              </Link>
-              <p className="govuk-body govuk-!-margin-top-1">
-                Alphabetical index of service guides on this website.
-              </p>
-            </li>
-            <li>
-              <Link
-                href="/services"
-                className="govuk-link govuk-!-font-weight-bold"
-              >
-                Search and filter services
-              </Link>
-              <p className="govuk-body govuk-!-margin-top-1">
-                Filter by topic or organisation.
-              </p>
-            </li>
-          </ul>
+          <ChevronLinkList
+            ariaLabel="Popular services"
+            items={[
+              {
+                href: "/services/categories/business-self-employed",
+                title: "Businesses and self-employed",
+                description:
+                  "Set up a business name or limited company, and file company annual returns.",
+              },
+              {
+                href: "/services/categories/civil-registration",
+                title: "Births, deaths, marriages and care",
+                description:
+                  "Register a birth or death, apply for a marriage certificate, or check police clearance.",
+              },
+              {
+                href: "/services/categories/driving-transport",
+                title: "Driving and transport",
+                description:
+                  "Apply for a provisional licence (PDL), renew your driving licence, or transfer vehicle ownership.",
+              },
+              {
+                href: "/services/categories/passports-travel",
+                title: "Passports, travel and living abroad",
+                description:
+                  "Apply for or renew a Kenyan passport, check visa rules, and manage immigration profiles.",
+              },
+              {
+                href: "/services/categories/money-tax",
+                title: "Money and tax",
+                description:
+                  "File self-assessment tax returns, request KRA PIN variations, or check compliance.",
+              },
+              {
+                href: "/services/categories/land-property",
+                title: "Land and property",
+                description:
+                  "Search land and property records, settle land rates, or verify title details.",
+              },
+              {
+                href: "/services/a-z",
+                title: "Explore all services A to Z",
+                description:
+                  "Alphabetical index of service guides on this website.",
+              },
+              {
+                href: "/services",
+                title: "Search and filter services",
+                description: "Filter by topic or organisation.",
+              },
+            ]}
+          />
         </div>
 
         <div className="govuk-grid-column-one-third-from-desktop govuk-grid-column-full govuk-!-margin-top-4">
@@ -300,7 +205,7 @@ export default function Home() {
         </div>
       </div>
 
-      <hr className="govuk-section-break govuk-section-break--visible govuk-section-break--xl govuk-!-margin-top-8 govuk-!-margin-bottom-8" />
+      <hr className="govuk-section-break govuk-section-break--visible govuk-section-break--xl govuk-!-margin-top-8 govuk-!-margin-bottom-8 app-home-section-break app-home-section-break--strong" />
 
       <div className="govuk-grid-row">
         <div className="govuk-grid-column-one-third-from-desktop">
@@ -444,6 +349,8 @@ export default function Home() {
           </ul>
         </div>
       </div>
+
+      <hr className="govuk-section-break govuk-section-break--visible govuk-section-break--xl govuk-!-margin-top-8 govuk-!-margin-bottom-8 app-home-section-break app-home-section-break--strong" />
 
       <div className="govuk-grid-row">
         <div className="govuk-grid-column-one-third-from-desktop">

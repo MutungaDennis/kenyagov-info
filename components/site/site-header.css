@@ -186,8 +186,10 @@
 .app-site-header__nav {
   display: flex;
   align-items: center;
-  gap: 2px;
-  flex-wrap: wrap;
+  gap: 0;
+  flex-wrap: nowrap;
+  min-width: 0;
+  flex: 1 1 auto;
 }
 
 .app-site-header__nav-link {
@@ -198,6 +200,7 @@
   padding: 10px 12px;
   display: inline-flex;
   border-radius: 4px;
+  white-space: nowrap;
 }
 
 .app-site-header__nav-link:hover {
@@ -381,28 +384,56 @@
 
 @media (max-width: 40.05rem) {
   .app-site-header__brand {
-    font-size: 19px;
+    font-size: 17px;
+    max-width: 11rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .app-site-header__top-inner {
-    padding: 10px 14px;
+    padding: 8px 12px;
+    gap: 8px;
   }
 
   .app-site-header__support {
-    padding: 9px 14px;
-    font-size: 14px;
+    padding: 8px 12px;
+    font-size: 13px;
   }
 
   .app-site-header__search-desktop {
     display: none;
   }
 
+  /* Only Services + Topics on mobile; Government/Elections under More */
   .app-site-header__nav-link--desktop-only {
-    display: none;
+    display: none !important;
   }
 
   .app-site-header__nav-link--mobile-only {
-    display: inline-flex;
+    display: none !important;
+  }
+
+  .app-site-header__nav-link {
+    font-size: 14px;
+    padding: 8px 10px;
+  }
+
+  .app-site-header__more {
+    font-size: 14px;
+    padding: 8px 10px;
+    flex-shrink: 0;
+  }
+
+  .app-site-header__nav-inner {
+    padding-left: 8px;
+    padding-right: 8px;
+    gap: 4px;
+  }
+
+  .app-site-header__nav-tier {
+    padding-top: 4px;
+    padding-bottom: 4px;
   }
 
   .app-site-header__search-mobile {
@@ -410,8 +441,26 @@
   }
 
   .app-site-header__logo-image {
-    width: 34px;
-    height: 34px;
+    width: 30px;
+    height: 30px;
+  }
+
+  .app-site-header__mega-grid {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .app-site-header__mega-column {
+    flex: 1 1 auto;
+    width: 100%;
+  }
+
+  .app-site-header__mega-inner {
+    padding-top: 16px;
+    padding-bottom: 16px;
+    max-height: min(70vh, 32rem);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 }
 

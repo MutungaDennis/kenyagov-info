@@ -1,6 +1,6 @@
 import Link from "next/link";
 import PageIntro from "@/components/site/PageIntro";
-import GovUKDashboardCard from "@/components/govuk/DashboardCard";
+import ChevronLinkList from "@/components/site/ChevronLinkList";
 
 export const metadata = {
   title: "Elections and voting",
@@ -35,8 +35,7 @@ const electionTopics = [
   },
   {
     title: "Polling stations",
-    description:
-      "Find polling stations by county, constituency and ward.",
+    description: "Find polling stations by county, constituency and ward.",
     href: "/elections/polling-stations",
   },
   {
@@ -75,6 +74,7 @@ export default function ElectionsHubPage() {
   return (
     <>
       <PageIntro
+        fullWidth
         breadcrumbs={[
           { text: "Home", href: "/" },
           { text: "Elections" },
@@ -86,45 +86,33 @@ export default function ElectionsHubPage() {
 
       <h2 className="govuk-heading-l govuk-!-margin-top-2">Explore topics</h2>
 
-      <div className="govuk-grid-row">
-        {electionTopics.map((topic) => (
-          <div
-            key={topic.href}
-            className="govuk-grid-column-one-half govuk-!-margin-bottom-2"
-          >
-            <GovUKDashboardCard
-              title={topic.title}
-              href={topic.href}
-              description={topic.description}
-            />
-          </div>
-        ))}
-      </div>
+      <ChevronLinkList items={electionTopics} ariaLabel="Election topics" />
 
-      <hr className="govuk-section-break govuk-section-break--l govuk-section-break--visible" />
+      <hr className="govuk-section-break govuk-section-break--l govuk-section-break--visible govuk-!-margin-top-8" />
 
-      <div className="govuk-grid-row">
-        <div className="govuk-grid-column-two-thirds">
-          <h2 className="govuk-heading-m">Related information</h2>
-          <ul className="govuk-list govuk-list--bullet">
-            <li>
-              <Link href="/government/commissions" className="govuk-link">
-                Independent commissions (including IEBC)
-              </Link>
-            </li>
-            <li>
-              <Link href="/constitution" className="govuk-link">
-                Constitution of Kenya 2010
-              </Link>
-            </li>
-            <li>
-              <Link href="/government/legislature" className="govuk-link">
-                Parliament
-              </Link>
-            </li>
-          </ul>
-        </div>
-      </div>
+      <h2 className="govuk-heading-m">Related information</h2>
+      <ul className="govuk-list govuk-list--bullet">
+        <li>
+          <Link href="/government/commissions" className="govuk-link">
+            Independent commissions (including IEBC)
+          </Link>
+        </li>
+        <li>
+          <Link href="/constitution" className="govuk-link">
+            Constitution of Kenya 2010
+          </Link>
+        </li>
+        <li>
+          <Link href="/government/legislature" className="govuk-link">
+            Parliament
+          </Link>
+        </li>
+        <li>
+          <Link href="/topics/elections-participation" className="govuk-link">
+            Elections and participation topic
+          </Link>
+        </li>
+      </ul>
     </>
   );
 }

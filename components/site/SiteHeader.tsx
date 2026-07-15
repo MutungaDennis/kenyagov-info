@@ -199,6 +199,10 @@ export default function SiteHeader() {
               aria-label="Primary site sections"
               className="app-site-header__nav"
             >
+              {/*
+                Mobile: Services + Topics only (+ More) — keeps the ribbon one line.
+                Desktop: Services, Topics, Government, Elections (+ More).
+              */}
               <Link
                 href="/services"
                 className="app-site-header__nav-link"
@@ -215,19 +219,6 @@ export default function SiteHeader() {
                 Topics
               </Link>
 
-              {/* Mobile ribbon: keep Government; Elections stays under More */}
-              <Link
-                href="/government"
-                className="app-site-header__nav-link app-site-header__nav-link--mobile-only"
-                onClick={closeMenus}
-              >
-                Government
-              </Link>
-
-              {/*
-                GOV.UK-style primary nav: few top-level hubs only.
-                Deeper destinations live under More / page body links.
-              */}
               <Link
                 href="/government"
                 className="app-site-header__nav-link app-site-header__nav-link--desktop-only"
@@ -389,8 +380,17 @@ export default function SiteHeader() {
                     <ul className="govuk-list govuk-list--spaced">
                       <li className="govuk-!-margin-bottom-2">
                         <Link
-                          href="/how-government-works"
+                          href="/government"
                           className="govuk-link app-site-header__mega-link govuk-!-font-weight-bold"
+                          onClick={closeMenus}
+                        >
+                          Government hub
+                        </Link>
+                      </li>
+                      <li className="govuk-!-margin-bottom-2">
+                        <Link
+                          href="/how-government-works"
+                          className="govuk-link app-site-header__mega-link"
                           onClick={closeMenus}
                         >
                           How government works
@@ -517,7 +517,16 @@ export default function SiteHeader() {
                           className="govuk-link app-site-header__mega-link govuk-!-font-weight-bold"
                           onClick={closeMenus}
                         >
-                          Elections
+                          Elections and voting
+                        </Link>
+                      </li>
+                      <li className="govuk-!-margin-bottom-2">
+                        <Link
+                          href="/society-and-culture"
+                          className="govuk-link app-site-header__mega-link"
+                          onClick={closeMenus}
+                        >
+                          Society and culture
                         </Link>
                       </li>
                       <li className="govuk-!-margin-bottom-2">

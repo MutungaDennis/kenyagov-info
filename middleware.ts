@@ -17,6 +17,19 @@ export function middleware(request: NextRequest) {
   const secretBase = getAdminBasePath();
   const requestHeaders = new Headers(request.headers);
 
+  // SEO: consolidate service category query URLs onto clean paths
+  // /services?category=money-tax → /services/categories/money-tax (308)
+  // Subcategory/org filters stay on the query string of the clean path.
+  if (pathname === "/services") {
+    const category = request.nextUrl.searchParams.get("category");
+    if (category && category !== "all" && category.trim() !== "") {
+      const url = request.nextUrl.clone();
+      url.pathname = `/services/categories/${encodeURIComponent(category)}`;
+      url.searchParams.delete("category");
+      return NextResponse.redirect(url, 308);
+    }
+  }
+
   // Always hide well-known /admin when secret path is active
   if (isCustomAdminPathEnabled() && isAdminFilesystemPath(pathname)) {
     const notFound = request.nextUrl.clone();

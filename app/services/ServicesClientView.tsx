@@ -26,9 +26,15 @@ export interface GovernmentCategoryFilter {
 interface ServicesClientViewProps {
   initialServices: GovernmentServiceSummary[];
   categories: GovernmentCategoryFilter[];
+  /** When set (from /services/categories/[slug]), overrides ?category= */
+  pathCategorySlug?: string;
 }
 
-export default function ServicesClientView({ initialServices, categories }: ServicesClientViewProps) {
+export default function ServicesClientView({
+  initialServices,
+  categories,
+  pathCategorySlug,
+}: ServicesClientViewProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -38,8 +44,9 @@ export default function ServicesClientView({ initialServices, categories }: Serv
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 20;
 
-  // GOV.UK Filter States synchronized with Search URL Parameters
-  const selectedCategory = searchParams.get("category") || "all";
+  // GOV.UK Filter States synchronized with Search URL Parameters / clean path
+  const selectedCategory =
+    pathCategorySlug || searchParams.get("category") || "all";
   const selectedSubcategory = searchParams.get("subcategory") || "all";
   const selectedOrganization = searchParams.get("organization") || "all";
 
@@ -108,7 +115,7 @@ export default function ServicesClientView({ initialServices, categories }: Serv
     return filteredAndSortedServices.slice(startIndex, startIndex + ITEMS_PER_PAGE);
   }, [filteredAndSortedServices, currentPage]);
 
-  // URL Parameter Mutators
+  // URL Parameter Mutators — prefer clean category paths for SEO
   const updateUrlParams = (key: string, value: string, clearSub = false) => {
     const params = new URLSearchParams(searchParams.toString());
     if (value === "all" || !value) {
@@ -120,7 +127,19 @@ export default function ServicesClientView({ initialServices, categories }: Serv
       params.delete("subcategory");
     }
     setCurrentPage(1);
-    router.push(`/services?${params.toString()}`);
+
+    const category = params.get("category");
+    if (category && category !== "all") {
+      params.delete("category");
+      const qs = params.toString();
+      router.push(
+        `/services/categories/${encodeURIComponent(category)}${qs ? `?${qs}` : ""}`,
+      );
+      return;
+    }
+
+    const qs = params.toString();
+    router.push(qs ? `/services?${qs}` : "/services");
   };
 
   return (

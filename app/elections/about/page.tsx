@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import LastUpdated from "@/components/govuk/LastUpdated";
+import ChevronLinkList from "@/components/site/ChevronLinkList";
 
 const electionSections = [
   {
@@ -89,39 +90,12 @@ export default function ElectionsPage() {
           </div>
         </div>
 
-        {/* Main navigation cards */}
         <section className="govuk-!-margin-top-7">
-
-          <h2 className="govuk-heading-l">
-            Explore election topics
-          </h2>
-
-          <div className="govuk-grid-row">
-
-            {electionSections.map((section) => (
-              <div
-                key={section.href}
-                className="govuk-grid-column-one-half govuk-!-margin-bottom-6"
-              >
-                <div className="govuk-!-padding-5 govuk-!-border-1 govuk-!-background-white govuk-!-height-full">
-                  <h3 className="govuk-heading-m">
-                    <Link
-                      href={section.href}
-                      className="govuk-link"
-                    >
-                      {section.title}
-                    </Link>
-                  </h3>
-
-                  <p className="govuk-body">
-                    {section.description}
-                  </p>
-                </div>
-              </div>
-            ))}
-
-          </div>
-
+          <h2 className="govuk-heading-l">Explore election topics</h2>
+          <ChevronLinkList
+            items={electionSections}
+            ariaLabel="Election topics"
+          />
         </section>
 
         {/* Main content section */}

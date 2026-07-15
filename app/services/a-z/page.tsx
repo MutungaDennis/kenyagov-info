@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import PageIntro from "@/components/site/PageIntro";
+import ChevronLinkList from "@/components/site/ChevronLinkList";
 import { client } from "@/sanity/lib/client";
 
 export const metadata: Metadata = {
@@ -52,6 +53,7 @@ export default async function ServicesAZPage() {
   return (
     <>
       <PageIntro
+        fullWidth
         breadcrumbs={[
           { text: "Home", href: "/" },
           { text: "Services", href: "/services" },
@@ -61,111 +63,74 @@ export default async function ServicesAZPage() {
         lead="An alphabetical index of public service guides on this website. For applications and payments, follow the official links on each guide."
       />
 
-      <div className="govuk-grid-row">
-        <div className="govuk-grid-column-two-thirds">
-          {services.length === 0 ? (
-            <div className="govuk-inset-text">
-              <p className="govuk-body">
-                No service guides are available in the directory right now. Try
-                the{" "}
-                <Link href="/services" className="govuk-link">
-                  services search
-                </Link>{" "}
-                or{" "}
-                <Link href="/topics" className="govuk-link">
-                  browse topics
-                </Link>
-                .
-              </p>
-            </div>
-          ) : (
-            <>
-              <nav
-                className="govuk-!-margin-bottom-6"
-                aria-label="Jump to letter"
-              >
-                <p className="govuk-body govuk-!-margin-bottom-2">
-                  <strong>Jump to:</strong>
-                </p>
-                <p className="govuk-body">
-                  {letters.map((letter, index) => (
-                    <span key={letter}>
-                      {index > 0 ? " · " : null}
-                      <a className="govuk-link" href={`#letter-${letter}`}>
-                        {letter}
-                      </a>
-                    </span>
-                  ))}
-                </p>
-              </nav>
-
-              <p className="govuk-body-s">
-                Showing {services.length} service
-                {services.length === 1 ? "" : "s"}. You can also{" "}
-                <Link href="/services" className="govuk-link">
-                  filter by topic or organisation
-                </Link>
-                .
-              </p>
-
-              {letters.map((letter) => (
-                <section
-                  key={letter}
-                  id={`letter-${letter}`}
-                  className="govuk-!-margin-bottom-8"
-                >
-                  <h2 className="govuk-heading-l">{letter}</h2>
-                  <ul className="govuk-list govuk-list--spaced">
-                    {(byLetter.get(letter) ?? []).map((service) => (
-                      <li key={service.slug}>
-                        <Link
-                          href={`/${service.slug}`}
-                          className="govuk-link govuk-!-font-weight-bold"
-                        >
-                          {service.title}
-                        </Link>
-                        {service.summary ? (
-                          <p className="govuk-body-s govuk-!-margin-top-1 govuk-!-margin-bottom-0">
-                            {service.summary}
-                          </p>
-                        ) : null}
-                      </li>
-                    ))}
-                  </ul>
-                </section>
+      {services.length === 0 ? (
+        <div className="govuk-inset-text">
+          <p className="govuk-body">
+            No service guides are available in the directory right now. Try the{" "}
+            <Link href="/services" className="govuk-link">
+              services search
+            </Link>{" "}
+            or{" "}
+            <Link href="/topics" className="govuk-link">
+              browse topics
+            </Link>
+            .
+          </p>
+        </div>
+      ) : (
+        <>
+          <nav className="govuk-!-margin-bottom-6" aria-label="Jump to letter">
+            <p className="govuk-body govuk-!-margin-bottom-2">
+              <strong>Jump to:</strong>
+            </p>
+            <p className="govuk-body">
+              {letters.map((letter, index) => (
+                <span key={letter}>
+                  {index > 0 ? " · " : null}
+                  <a className="govuk-link" href={`#letter-${letter}`}>
+                    {letter}
+                  </a>
+                </span>
               ))}
-            </>
-          )}
-        </div>
+            </p>
+          </nav>
 
-        <div className="govuk-grid-column-one-third">
-          <aside role="complementary">
-            <h2 className="govuk-heading-m">Related</h2>
-            <ul className="govuk-list govuk-list--spaced">
-              <li>
-                <Link href="/services" className="govuk-link">
-                  Services search and filters
-                </Link>
-              </li>
-              <li>
-                <Link href="/topics" className="govuk-link">
-                  Browse topics
-                </Link>
-              </li>
-              <li>
-                <Link href="/ecitizen" className="govuk-link">
-                  eCitizen explained
-                </Link>
-              </li>
-              <li>
-                <Link href="/huduma-centres" className="govuk-link">
-                  Huduma Centres
-                </Link>
-              </li>
-            </ul>
-          </aside>
-        </div>
-      </div>
+          <p className="govuk-body-s govuk-!-margin-bottom-6">
+            Showing {services.length} service
+            {services.length === 1 ? "" : "s"}. You can also{" "}
+            <Link href="/services" className="govuk-link">
+              filter by topic or organisation
+            </Link>
+            ,{" "}
+            <Link href="/services/popular" className="govuk-link">
+              popular services
+            </Link>
+            , or{" "}
+            <Link href="/topics" className="govuk-link">
+              browse topics
+            </Link>
+            .
+          </p>
+
+          {letters.map((letter) => (
+            <section
+              key={letter}
+              id={`letter-${letter}`}
+              className="govuk-!-margin-bottom-8"
+            >
+              <h2 className="govuk-heading-l">{letter}</h2>
+              <ChevronLinkList
+                ariaLabel={`Services starting with ${letter}`}
+                items={(byLetter.get(letter) ?? []).map((service) => ({
+                  title: service.title,
+                  href: `/${service.slug}`,
+                  description: service.summary,
+                }))}
+              />
+            </section>
+          ))}
+        </>
+      )}
     </>
   );
 }

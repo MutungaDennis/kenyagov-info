@@ -38,36 +38,38 @@ function HolidayTable({
   }
 
   return (
-    <table className="govuk-table">
-      <caption className="govuk-table__caption govuk-visually-hidden">
-        {caption}
-      </caption>
-      <thead className="govuk-table__head">
-        <tr className="govuk-table__row">
-          <th scope="col" className="govuk-table__header">Date</th>
-          <th scope="col" className="govuk-table__header">Day</th>
-          <th scope="col" className="govuk-table__header">Holiday</th>
-        </tr>
-      </thead>
-      <tbody className="govuk-table__body">
-        {holidays.map((holiday, index) => (
-          <tr key={`${holiday.date}-${index}`} className="govuk-table__row">
-            <td className="govuk-table__cell">
-              {showYear ? formatDate(holiday.date) : formatDateShort(holiday.date)}
-            </td>
-            <td className="govuk-table__cell">
-              {getDayOfWeek(holiday.date)}
-            </td>
-            <td className="govuk-table__cell">
-              {holiday.name}
-              {getHolidaySymbol(holiday.type) && (
-                <span> {getHolidaySymbol(holiday.type)}</span>
-              )}
-            </td>
+    <div className="app-table-scroll" role="region" aria-label={caption} tabIndex={0}>
+      <table className="govuk-table">
+        <caption className="govuk-table__caption govuk-visually-hidden">
+          {caption}
+        </caption>
+        <thead className="govuk-table__head">
+          <tr className="govuk-table__row">
+            <th scope="col" className="govuk-table__header">Date</th>
+            <th scope="col" className="govuk-table__header">Day</th>
+            <th scope="col" className="govuk-table__header">Holiday</th>
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody className="govuk-table__body">
+          {holidays.map((holiday, index) => (
+            <tr key={`${holiday.date}-${index}`} className="govuk-table__row">
+              <td className="govuk-table__cell">
+                {showYear ? formatDate(holiday.date) : formatDateShort(holiday.date)}
+              </td>
+              <td className="govuk-table__cell">
+                {getDayOfWeek(holiday.date)}
+              </td>
+              <td className="govuk-table__cell">
+                {holiday.name}
+                {getHolidaySymbol(holiday.type) && (
+                  <span> {getHolidaySymbol(holiday.type)}</span>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
