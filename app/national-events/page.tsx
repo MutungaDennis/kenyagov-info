@@ -111,7 +111,7 @@ export default function NationalEventsHubPage() {
         </li>
         <li>
           <Link
-            href="/society-and-culture/national-symbols"
+            href="/national-symbols"
             className="govuk-link"
           >
             National symbols

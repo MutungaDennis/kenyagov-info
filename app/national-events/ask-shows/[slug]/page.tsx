@@ -95,11 +95,11 @@ export default async function AskShowProfilePage({ params }: Props) {
           { text: "Society and culture", href: "/society-and-culture" },
           {
             text: "National events",
-            href: "/society-and-culture/national-events",
+            href: "/national-events",
           },
           {
             text: "ASK shows",
-            href: "/society-and-culture/national-events/ask-shows",
+            href: "/national-events/ask-shows",
           },
           { text: profile.name },
         ]}
@@ -133,7 +133,7 @@ export default async function AskShowProfilePage({ params }: Props) {
           </ul>
           <p className="govuk-body">
             <Link
-              href="/society-and-culture/national-events/ask-shows"
+              href="/national-events/ask-shows"
               className="govuk-link"
             >
               Full ASK calendar and next upcoming event
@@ -219,14 +219,14 @@ export default async function AskShowProfilePage({ params }: Props) {
 
       <p className="govuk-body">
         <Link
-          href="/society-and-culture/national-events/ask-shows"
+          href="/national-events/ask-shows"
           className="govuk-link"
         >
           All ASK shows and calendar
         </Link>
         {" · "}
         <Link
-          href="/society-and-culture/national-events"
+          href="/national-events"
           className="govuk-link"
         >
           National events hub

@@ -309,10 +309,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // Guides & Society
     { url: `${BASE_URL}/guides`, changeFrequency: 'weekly', priority: 0.7 },
     { url: `${BASE_URL}/society-and-culture`, changeFrequency: 'monthly', priority: 0.6 },
-    { url: `${BASE_URL}/society-and-culture/national-events`, changeFrequency: 'monthly', priority: 0.7 },
-    { url: `${BASE_URL}/society-and-culture/national-events/ask-shows`, changeFrequency: 'monthly', priority: 0.75 },
-    { url: `${BASE_URL}/society-and-culture/national-events/devolution-conference`, changeFrequency: 'monthly', priority: 0.7 },
-    { url: `${BASE_URL}/society-and-culture/national-events/devolution-sensitisation-week`, changeFrequency: 'monthly', priority: 0.7 },
+    { url: `${BASE_URL}/national-events`, changeFrequency: 'monthly', priority: 0.7 },
+    { url: `${BASE_URL}/national-events/ask-shows`, changeFrequency: 'monthly', priority: 0.75 },
+    { url: `${BASE_URL}/national-events/devolution-conference`, changeFrequency: 'monthly', priority: 0.7 },
+    { url: `${BASE_URL}/national-events/devolution-sensitisation-week`, changeFrequency: 'monthly', priority: 0.7 },
+    { url: `${BASE_URL}/national-events/kenya-music-festival`, changeFrequency: 'monthly', priority: 0.7 },
+    { url: `${BASE_URL}/national-events/kenya-national-drama-and-film-festival`, changeFrequency: 'monthly', priority: 0.7 },
+    { url: `${BASE_URL}/national-symbols`, changeFrequency: 'yearly', priority: 0.7 },
+    { url: `${BASE_URL}/religion-and-faith`, changeFrequency: 'monthly', priority: 0.6 },
     { url: `${BASE_URL}/services`, changeFrequency: 'weekly', priority: 0.8 },
     { url: `${BASE_URL}/services/a-z`, changeFrequency: 'weekly', priority: 0.8 },
     { url: `${BASE_URL}/services/popular`, changeFrequency: 'weekly', priority: 0.85 },
@@ -363,14 +367,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const nationalEventUrls: SitemapEntry[] = getAllNationalEventSlugs().map(
     (slug) => ({
-      url: `${BASE_URL}/society-and-culture/national-events/${slug}`,
+      url: `${BASE_URL}/national-events/${slug}`,
       changeFrequency: 'monthly' as const,
       priority: 0.65,
     }),
   );
 
   const askProfileUrls: SitemapEntry[] = getAllAskProfileSlugs().map((slug) => ({
-    url: `${BASE_URL}/society-and-culture/national-events/ask-shows/${slug}`,
+    url: `${BASE_URL}/national-events/ask-shows/${slug}`,
     changeFrequency: 'monthly' as const,
     priority: 0.6,
   }));

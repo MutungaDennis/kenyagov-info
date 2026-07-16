@@ -91,16 +91,67 @@ Also set as **plain environment variables** (not secrets) so the browser can rea
 > as runtime vars. For CLI builds, export them in your shell or `.env.production`
 > before `pnpm run deploy`.
 
-### 2.4 Optional: R2 cache (recommended later)
+### 2.4 R2 incremental cache (required for solid ISR)
 
-ISR / data cache works better with R2:
+OpenNext stores regenerated HTML in R2 so Free-tier Workers do not re-render
+on every visit after `revalidate`.
+
+**One-time** (if the bucket does not exist yet):
 
 ```bash
 pnpm exec wrangler r2 bucket create kenyagov-info-next-cache
 ```
 
-Then uncomment `r2_buckets` in `wrangler.jsonc` and enable `r2IncrementalCache`
-in `open-next.config.ts` (see comments in those files).
+Repo config (already wired):
+
+- `wrangler.jsonc` → `r2_buckets` binding `NEXT_INC_CACHE_R2_BUCKET`
+- `open-next.config.ts` → `incrementalCache: r2IncrementalCache`
+
+If deploy fails with “bucket not found”, create the bucket once with the
+command above, then redeploy.
+
+### 2.5 Flattened URLs (301s)
+
+Short paths live at:
+
+| New URL | Was |
+|---------|-----|
+| `/national-events` | `/society-and-culture/national-events` |
+| `/national-events/*` | `/society-and-culture/national-events/*` |
+| `/national-symbols` | `/society-and-culture/national-symbols` |
+| `/religion-and-faith` | `/society-and-culture/religion-and-faith` |
+
+**Next.js** has permanent redirects as a backup (see `next.config.ts`).
+
+**Prefer Cloudflare Redirect Rules** (0 Worker CPU). Dashboard → Rules →
+Redirect Rules → Create:
+
+1. **National events hub**  
+   When: URI Path equals `/society-and-culture/national-events`  
+   Then: Dynamic redirect `concat("https://www.citizenguide.ke/national-events", …)` or Static to `https://www.citizenguide.ke/national-events` (301)
+
+2. **National events children**  
+   When: URI Path starts with `/society-and-culture/national-events/`  
+   Then: Dynamic  
+   `concat("https://www.citizenguide.ke/national-events/", substring(http.request.uri.path, 36))`  
+   (adjust substring length if needed:  
+   `len("/society-and-culture/national-events/")` = 36)
+
+3. **National symbols**  
+   Path equals `/society-and-culture/national-symbols` → `/national-symbols` (301)
+
+4. **Religion**  
+   Path equals `/society-and-culture/religion-and-faith` → `/religion-and-faith` (301)
+
+### 2.6 Cache Rules (HTML)
+
+Caching → Cache Rules → Create rule **Cache public HTML**:
+
+- When: URI Path starts with `/topics/` OR `/national-events` OR `/constitution` OR `/national-symbols` OR `/religion-and-faith` OR `/society-and-culture`
+- Then: Eligible for cache · Edge TTL 1 hour (or 24h for constitution)  
+- Bypass: admin path, `/api/*`, `/search*`
+
+Also enable **Tiered Cache → Smart** under Caching → Configuration.
 
 ---
 

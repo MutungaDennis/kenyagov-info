@@ -372,7 +372,7 @@ export default async function HeritageSitePage({ params }: { params: Promise<{ s
                     </Link>
                   </li>
                   <li>
-                    <Link href="/society-and-culture/national-symbols" className="govuk-link">
+                    <Link href="/national-symbols" className="govuk-link">
                       National symbols
                     </Link>
                   </li>

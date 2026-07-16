@@ -424,12 +424,12 @@ export default function CommunitiesPage() {
                     </Link>
                   </li>
                   <li>
-                    <Link href="/society-and-culture/religion-and-faith" className="govuk-link">
+                    <Link href="/religion-and-faith" className="govuk-link">
                       Religion and faith
                     </Link>
                   </li>
                   <li>
-                    <Link href="/society-and-culture/national-symbols" className="govuk-link">
+                    <Link href="/national-symbols" className="govuk-link">
                       National symbols
                     </Link>
                   </li>

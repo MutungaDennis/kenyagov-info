@@ -3,8 +3,8 @@
  * Expand items and body sections as more verified data arrives
  * (e.g. trade expositions calendars, regional festival dates).
  *
- * URLs: /society-and-culture/national-events
- *       /society-and-culture/national-events/[slug]
+ * URLs: /national-events
+ *       /national-events/[slug]
  */
 
 export type NationalEventLink = {
@@ -128,9 +128,9 @@ export const nationalEvents: NationalEvent[] = [
       },
     ],
     relatedLinks: [
-      { text: "Jamhuri Day", href: "/society-and-culture/national-events/jamhuri-day" },
-      { text: "Mashujaa Day", href: "/society-and-culture/national-events/mashujaa-day" },
-      { text: "National symbols", href: "/society-and-culture/national-symbols" },
+      { text: "Jamhuri Day", href: "/national-events/jamhuri-day" },
+      { text: "Mashujaa Day", href: "/national-events/mashujaa-day" },
+      { text: "National symbols", href: "/national-symbols" },
     ],
   },
   {
@@ -172,8 +172,8 @@ export const nationalEvents: NationalEvent[] = [
       },
     ],
     relatedLinks: [
-      { text: "Madaraka Day", href: "/society-and-culture/national-events/madaraka-day" },
-      { text: "Jamhuri Day", href: "/society-and-culture/national-events/jamhuri-day" },
+      { text: "Madaraka Day", href: "/national-events/madaraka-day" },
+      { text: "Jamhuri Day", href: "/national-events/jamhuri-day" },
       { text: "Heritage sites", href: "/society-and-culture/heritage-sites" },
     ],
   },
@@ -216,7 +216,7 @@ export const nationalEvents: NationalEvent[] = [
       },
     ],
     relatedLinks: [
-      { text: "Madaraka Day", href: "/society-and-culture/national-events/madaraka-day" },
+      { text: "Madaraka Day", href: "/national-events/madaraka-day" },
       { text: "How government works", href: "/how-government-works" },
     ],
   },
@@ -239,7 +239,7 @@ export const nationalEvents: NationalEvent[] = [
         links: [
           {
             text: "ASK shows calendar and rates",
-            href: "/society-and-culture/national-events/ask-shows",
+            href: "/national-events/ask-shows",
           },
         ],
       },
@@ -253,15 +253,15 @@ export const nationalEvents: NationalEvent[] = [
     relatedLinks: [
       {
         text: "ASK shows calendar and rates",
-        href: "/society-and-culture/national-events/ask-shows",
+        href: "/national-events/ask-shows",
       },
       {
         text: "Nairobi International Trade Fair",
-        href: "/society-and-culture/national-events/ask-shows/nairobi-international-trade-fair",
+        href: "/national-events/ask-shows/nairobi-international-trade-fair",
       },
       {
         text: "Mombasa International Show",
-        href: "/society-and-culture/national-events/ask-shows/mombasa-international-show",
+        href: "/national-events/ask-shows/mombasa-international-show",
       },
     ],
   },
@@ -282,11 +282,11 @@ export const nationalEvents: NationalEvent[] = [
         links: [
           {
             text: "Nairobi International Trade Fair — ASK profile",
-            href: "/society-and-culture/national-events/ask-shows/nairobi-international-trade-fair",
+            href: "/national-events/ask-shows/nairobi-international-trade-fair",
           },
           {
             text: "Full ASK calendar and next event",
-            href: "/society-and-culture/national-events/ask-shows",
+            href: "/national-events/ask-shows",
           },
         ],
       },
@@ -294,11 +294,11 @@ export const nationalEvents: NationalEvent[] = [
     relatedLinks: [
       {
         text: "Mombasa International Show",
-        href: "/society-and-culture/national-events/ask-shows/mombasa-international-show",
+        href: "/national-events/ask-shows/mombasa-international-show",
       },
       {
         text: "ASK shows hub",
-        href: "/society-and-culture/national-events/ask-shows",
+        href: "/national-events/ask-shows",
       },
     ],
   },
@@ -320,7 +320,7 @@ export const nationalEvents: NationalEvent[] = [
         links: [
           {
             text: "Devolution Conference — past editions and highlight",
-            href: "/society-and-culture/national-events/devolution-conference",
+            href: "/national-events/devolution-conference",
           },
         ],
       },
@@ -328,7 +328,7 @@ export const nationalEvents: NationalEvent[] = [
     relatedLinks: [
       {
         text: "Devolution Sensitisation Week",
-        href: "/society-and-culture/national-events/devolution-sensitisation-week",
+        href: "/national-events/devolution-sensitisation-week",
       },
       {
         text: "Chapter 11 — Devolved government",
@@ -354,7 +354,7 @@ export const nationalEvents: NationalEvent[] = [
         links: [
           {
             text: "Devolution Sensitisation Week — full guide",
-            href: "/society-and-culture/national-events/devolution-sensitisation-week",
+            href: "/national-events/devolution-sensitisation-week",
           },
         ],
       },
@@ -362,7 +362,7 @@ export const nationalEvents: NationalEvent[] = [
     relatedLinks: [
       {
         text: "Devolution Conference",
-        href: "/society-and-culture/national-events/devolution-conference",
+        href: "/national-events/devolution-conference",
       },
       { text: "Devolution", href: "/government/counties/devolution" },
     ],
@@ -419,7 +419,7 @@ export const nationalEvents: NationalEvent[] = [
         links: [
           {
             text: "KNDFF — editions, hosts and winners",
-            href: "/society-and-culture/national-events/kenya-national-drama-and-film-festival",
+            href: "/national-events/kenya-national-drama-and-film-festival",
           },
         ],
       },
@@ -433,7 +433,7 @@ export const nationalEvents: NationalEvent[] = [
     relatedLinks: [
       {
         text: "Kenya Music Festival",
-        href: "/society-and-culture/national-events/kenya-music-festival",
+        href: "/national-events/kenya-music-festival",
       },
       { text: "Education topic", href: "/topics/education" },
     ],
@@ -455,7 +455,7 @@ export const nationalEvents: NationalEvent[] = [
         links: [
           {
             text: "Kenya Music Festival — editions and history",
-            href: "/society-and-culture/national-events/kenya-music-festival",
+            href: "/national-events/kenya-music-festival",
           },
         ],
       },
@@ -469,7 +469,7 @@ export const nationalEvents: NationalEvent[] = [
     relatedLinks: [
       {
         text: "Kenya National Drama and Film Festival",
-        href: "/society-and-culture/national-events/kenya-national-drama-and-film-festival",
+        href: "/national-events/kenya-national-drama-and-film-festival",
       },
       {
         text: "Languages",
@@ -518,7 +518,7 @@ export const nationalEvents: NationalEvent[] = [
       },
       {
         text: "Religion and faith",
-        href: "/society-and-culture/religion-and-faith",
+        href: "/religion-and-faith",
       },
     ],
   },
@@ -554,7 +554,7 @@ export const nationalEvents: NationalEvent[] = [
     relatedLinks: [
       {
         text: "Lamu Cultural Festival",
-        href: "/society-and-culture/national-events/lamu-cultural-festival",
+        href: "/national-events/lamu-cultural-festival",
       },
       {
         text: "Cultural calendar",
@@ -589,7 +589,7 @@ export const nationalEvents: NationalEvent[] = [
     relatedLinks: [
       {
         text: "Sports and national gatherings (category)",
-        href: "/society-and-culture/national-events/sports-and-national-gatherings",
+        href: "/national-events/sports-and-national-gatherings",
       },
     ],
   },
@@ -618,7 +618,7 @@ export const nationalEvents: NationalEvent[] = [
     relatedLinks: [
       {
         text: "Safari Rally",
-        href: "/society-and-culture/national-events/safari-rally",
+        href: "/national-events/safari-rally",
       },
     ],
   },
@@ -653,9 +653,9 @@ export const nationalEvents: NationalEvent[] = [
       },
     ],
     relatedLinks: [
-      { text: "Madaraka Day", href: "/society-and-culture/national-events/madaraka-day" },
-      { text: "Mashujaa Day", href: "/society-and-culture/national-events/mashujaa-day" },
-      { text: "Jamhuri Day", href: "/society-and-culture/national-events/jamhuri-day" },
+      { text: "Madaraka Day", href: "/national-events/madaraka-day" },
+      { text: "Mashujaa Day", href: "/national-events/mashujaa-day" },
+      { text: "Jamhuri Day", href: "/national-events/jamhuri-day" },
       { text: "Public holidays", href: "/society-and-culture/holidays" },
     ],
   },
@@ -676,10 +676,10 @@ export const nationalEvents: NationalEvent[] = [
       },
     ],
     relatedLinks: [
-      { text: "ASK shows", href: "/society-and-culture/national-events/ask-shows" },
+      { text: "ASK shows", href: "/national-events/ask-shows" },
       {
         text: "Nairobi International Trade Fair",
-        href: "/society-and-culture/national-events/nairobi-international-trade-fair",
+        href: "/national-events/nairobi-international-trade-fair",
       },
     ],
   },
@@ -707,15 +707,15 @@ export const nationalEvents: NationalEvent[] = [
     relatedLinks: [
       {
         text: "Devolution Conference",
-        href: "/society-and-culture/national-events/devolution-conference",
+        href: "/national-events/devolution-conference",
       },
       {
         text: "Devolution Sensitisation Week",
-        href: "/society-and-culture/national-events/devolution-sensitisation-week",
+        href: "/national-events/devolution-sensitisation-week",
       },
       {
         text: "Civic and public participation events",
-        href: "/society-and-culture/national-events/civic-and-public-participation-events",
+        href: "/national-events/civic-and-public-participation-events",
       },
     ],
   },
@@ -738,11 +738,11 @@ export const nationalEvents: NationalEvent[] = [
     relatedLinks: [
       {
         text: "Kenya National Drama and Film Festival",
-        href: "/society-and-culture/national-events/kenya-national-drama-and-film-festival",
+        href: "/national-events/kenya-national-drama-and-film-festival",
       },
       {
         text: "Kenya Music Festival",
-        href: "/society-and-culture/national-events/kenya-music-festival",
+        href: "/national-events/kenya-music-festival",
       },
     ],
   },
@@ -765,11 +765,11 @@ export const nationalEvents: NationalEvent[] = [
     relatedLinks: [
       {
         text: "Lamu Cultural Festival",
-        href: "/society-and-culture/national-events/lamu-cultural-festival",
+        href: "/national-events/lamu-cultural-festival",
       },
       {
         text: "Regional cultural festivals overview",
-        href: "/society-and-culture/national-events/regional-cultural-festivals",
+        href: "/national-events/regional-cultural-festivals",
       },
     ],
   },
@@ -792,17 +792,17 @@ export const nationalEvents: NationalEvent[] = [
     relatedLinks: [
       {
         text: "Safari Rally",
-        href: "/society-and-culture/national-events/safari-rally",
+        href: "/national-events/safari-rally",
       },
       {
         text: "Athletics and national sporting events",
-        href: "/society-and-culture/national-events/athletics-and-national-sporting-events",
+        href: "/national-events/athletics-and-national-sporting-events",
       },
     ],
   },
 ];
 
-const BASE = "/society-and-culture/national-events";
+const BASE = "/national-events";
 
 export function nationalEventHref(slug: string): string {
   return `${BASE}/${slug}`;

@@ -277,7 +277,7 @@ export default function LanguagesPage() {
                     </Link>
                   </li>
                   <li>
-                    <Link href="/society-and-culture/national-symbols" className="govuk-link">
+                    <Link href="/national-symbols" className="govuk-link">
                       National symbols
                     </Link>
                   </li>

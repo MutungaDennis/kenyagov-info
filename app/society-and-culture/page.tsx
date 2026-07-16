@@ -22,7 +22,7 @@ const categories = [
     items: [
       {
         title: "National symbols",
-        href: "/society-and-culture/national-symbols",
+        href: "/national-symbols",
         description: "Flag, coat of arms, anthem and related national emblems.",
       },
       {
@@ -32,7 +32,7 @@ const categories = [
       },
       {
         title: "National events",
-        href: "/society-and-culture/national-events",
+        href: "/national-events",
         description:
           "National days, trade shows, governance gatherings, festivals and sports — browse by category.",
       },
@@ -70,7 +70,7 @@ const categories = [
       },
       {
         title: "Religion and faith",
-        href: "/society-and-culture/religion-and-faith",
+        href: "/religion-and-faith",
         description: "Faith communities and religious life in Kenya.",
       },
     ],

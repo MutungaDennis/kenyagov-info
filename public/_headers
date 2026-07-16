@@ -28,6 +28,18 @@
 /society-and-culture/*
   Cache-Control: public, s-maxage=3600, stale-while-revalidate=86400
 
+/national-events
+  Cache-Control: public, s-maxage=3600, stale-while-revalidate=86400
+
+/national-events/*
+  Cache-Control: public, s-maxage=3600, stale-while-revalidate=86400
+
+/national-symbols
+  Cache-Control: public, s-maxage=86400, stale-while-revalidate=604800
+
+/religion-and-faith
+  Cache-Control: public, s-maxage=86400, stale-while-revalidate=604800
+
 /topics/*
   Cache-Control: public, s-maxage=3600, stale-while-revalidate=86400
 

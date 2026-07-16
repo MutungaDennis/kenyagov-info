@@ -206,7 +206,7 @@ export default function ConstitutionAndNationalValuesPage() {
               </p>
               <ul className="govuk-list govuk-list--spaced">
                 <li>
-                  <Link href="/society-and-culture/national-symbols" className="govuk-link">
+                  <Link href="/national-symbols" className="govuk-link">
                     National symbols
                   </Link>
                   {' '}— the flag, Coat of Arms, anthem, motto and pledge
@@ -224,7 +224,7 @@ export default function ConstitutionAndNationalValuesPage() {
                   {' '}— population data on Kenya's ethnic communities
                 </li>
                 <li>
-                  <Link href="/society-and-culture/religion-and-faith" className="govuk-link">
+                  <Link href="/religion-and-faith" className="govuk-link">
                     Religion and faith
                   </Link>
                   {' '}— Kenya's diverse religious traditions
@@ -639,7 +639,7 @@ export default function ConstitutionAndNationalValuesPage() {
                     </Link>
                   </li>
                   <li>
-                    <Link href="/society-and-culture/national-symbols" className="govuk-link">
+                    <Link href="/national-symbols" className="govuk-link">
                       National symbols
                     </Link>
                   </li>
@@ -654,7 +654,7 @@ export default function ConstitutionAndNationalValuesPage() {
                     </Link>
                   </li>
                   <li>
-                    <Link href="/society-and-culture/religion-and-faith" className="govuk-link">
+                    <Link href="/religion-and-faith" className="govuk-link">
                       Religion and faith
                     </Link>
                   </li>

@@ -90,7 +90,7 @@ export default function DevolutionConferencePage() {
           { text: "Society and culture", href: "/society-and-culture" },
           {
             text: "National events",
-            href: "/society-and-culture/national-events",
+            href: "/national-events",
           },
           { text: "Devolution Conference" },
         ]}
@@ -194,7 +194,7 @@ export default function DevolutionConferencePage() {
       <ul className="govuk-list govuk-list--bullet">
         <li>
           <Link
-            href="/society-and-culture/national-events/devolution-sensitisation-week"
+            href="/national-events/devolution-sensitisation-week"
             className="govuk-link"
           >
             Devolution Sensitisation Week
@@ -217,7 +217,7 @@ export default function DevolutionConferencePage() {
         </li>
         <li>
           <Link
-            href="/society-and-culture/national-events"
+            href="/national-events"
             className="govuk-link"
           >
             All national events

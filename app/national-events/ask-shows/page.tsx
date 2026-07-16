@@ -128,7 +128,7 @@ export default function AskShowsPage() {
           { text: "Society and culture", href: "/society-and-culture" },
           {
             text: "National events",
-            href: "/society-and-culture/national-events",
+            href: "/national-events",
           },
           { text: "ASK shows" },
         ]}
@@ -362,7 +362,7 @@ export default function AskShowsPage() {
       <ul className="govuk-list govuk-list--bullet">
         <li>
           <Link
-            href="/society-and-culture/national-events"
+            href="/national-events"
             className="govuk-link"
           >
             All national events
@@ -370,7 +370,7 @@ export default function AskShowsPage() {
         </li>
         <li>
           <Link
-            href="/society-and-culture/national-events/nairobi-international-trade-fair"
+            href="/national-events/nairobi-international-trade-fair"
             className="govuk-link"
           >
             Nairobi International Trade Fair (summary)

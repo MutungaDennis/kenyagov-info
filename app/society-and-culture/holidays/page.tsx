@@ -275,7 +275,7 @@ export default function HolidaysPage() {
               <nav role="navigation">
                 <ul className="govuk-list govuk-list--spaced">
                   <li>
-                    <Link href="/society-and-culture/national-events" className="govuk-link">
+                    <Link href="/national-events" className="govuk-link">
                       National events
                     </Link>
                   </li>
@@ -285,7 +285,7 @@ export default function HolidaysPage() {
                     </Link>
                   </li>
                   <li>
-                    <Link href="/society-and-culture/national-symbols" className="govuk-link">
+                    <Link href="/national-symbols" className="govuk-link">
                       National symbols
                     </Link>
                   </li>

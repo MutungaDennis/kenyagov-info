@@ -54,7 +54,7 @@ export default async function NationalEventDetailPage({ params }: Props) {
           { text: "Society and culture", href: "/society-and-culture" },
           {
             text: "National events",
-            href: "/society-and-culture/national-events",
+            href: "/national-events",
           },
           { text: event.title },
         ]}
@@ -135,7 +135,7 @@ export default async function NationalEventDetailPage({ params }: Props) {
           </Link>
           {" · "}
           <Link
-            href="/society-and-culture/national-events"
+            href="/national-events"
             className="govuk-link"
           >
             All national events

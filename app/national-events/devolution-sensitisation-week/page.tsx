@@ -101,7 +101,7 @@ export default function DevolutionSensitisationWeekPage() {
           { text: "Society and culture", href: "/society-and-culture" },
           {
             text: "National events",
-            href: "/society-and-culture/national-events",
+            href: "/national-events",
           },
           { text: "Devolution Sensitisation Week" },
         ]}
@@ -185,7 +185,7 @@ export default function DevolutionSensitisationWeekPage() {
         <p className="govuk-body govuk-!-margin-bottom-0">
           DSW is distinct from the multi-day{" "}
           <Link
-            href="/society-and-culture/national-events/devolution-conference"
+            href="/national-events/devolution-conference"
             className="govuk-link"
           >
             Devolution Conference
@@ -222,7 +222,7 @@ export default function DevolutionSensitisationWeekPage() {
       <ul className="govuk-list govuk-list--bullet">
         <li>
           <Link
-            href="/society-and-culture/national-events/devolution-conference"
+            href="/national-events/devolution-conference"
             className="govuk-link"
           >
             Devolution Conference
@@ -240,7 +240,7 @@ export default function DevolutionSensitisationWeekPage() {
         </li>
         <li>
           <Link
-            href="/society-and-culture/national-events"
+            href="/national-events"
             className="govuk-link"
           >
             All national events

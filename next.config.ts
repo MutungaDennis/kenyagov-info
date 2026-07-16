@@ -651,13 +651,50 @@ const nextConfig: NextConfig = {
       },
       // Placeholder removed until trade/industry expo data is available
       {
-        source: '/society-and-culture/national-events/trade-and-industry-expositions',
-        destination: '/society-and-culture/national-events#agricultural-and-trade-expositions',
+        source: '/national-events/trade-and-industry-expositions',
+        destination: '/national-events#agricultural-and-trade-expositions',
+        permanent: true,
+      },
+      {
+        source: '/national-events/dsw',
+        destination: '/national-events/devolution-sensitisation-week',
+        permanent: true,
+      },
+
+      // ==========================================
+      // FLATTENED IA (2026) — old nested paths → short paths
+      // Prefer Cloudflare Redirect Rules for 0 Worker CPU; these are backup.
+      // ==========================================
+      {
+        source: '/society-and-culture/national-events',
+        destination: '/national-events',
+        permanent: true,
+      },
+      {
+        source: '/society-and-culture/national-events/:path*',
+        destination: '/national-events/:path*',
+        permanent: true,
+      },
+      {
+        source: '/society-and-culture/national-symbols',
+        destination: '/national-symbols',
+        permanent: true,
+      },
+      {
+        source: '/society-and-culture/religion-and-faith',
+        destination: '/religion-and-faith',
+        permanent: true,
+      },
+      // Legacy trade expos under old prefix
+      {
+        source:
+          '/society-and-culture/national-events/trade-and-industry-expositions',
+        destination: '/national-events#agricultural-and-trade-expositions',
         permanent: true,
       },
       {
         source: '/society-and-culture/national-events/dsw',
-        destination: '/society-and-culture/national-events/devolution-sensitisation-week',
+        destination: '/national-events/devolution-sensitisation-week',
         permanent: true,
       },
 

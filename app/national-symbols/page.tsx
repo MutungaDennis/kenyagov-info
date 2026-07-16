@@ -1,4 +1,4 @@
-// app/society-and-culture/national-symbols/page.tsx
+// app/national-symbols/page.tsx
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import LastUpdated from "@/components/govuk/LastUpdated";
@@ -14,7 +14,7 @@ export default function NationalSymbolsPage() {
         items={[
           { text: "Home", href: "/" },
           { text: "Society and culture", href: "/society-and-culture" },
-          { text: "National symbols", href: "/society-and-culture/national-symbols" },
+          { text: "National symbols", href: "/national-symbols" },
         ]}
       />
 
@@ -307,7 +307,7 @@ export default function NationalSymbolsPage() {
                     </Link>
                   </li>
                   <li>
-                    <Link href="/society-and-culture/national-events" className="govuk-link">
+                    <Link href="/national-events" className="govuk-link">
                       National events
                     </Link>
                   </li>

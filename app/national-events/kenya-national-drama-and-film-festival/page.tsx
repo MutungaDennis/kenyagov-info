@@ -91,7 +91,7 @@ export default function KenyaNationalDramaAndFilmFestivalPage() {
           { text: "Society and culture", href: "/society-and-culture" },
           {
             text: "National events",
-            href: "/society-and-culture/national-events",
+            href: "/national-events",
           },
           { text: "Kenya National Drama and Film Festival" },
         ]}
@@ -238,7 +238,7 @@ export default function KenyaNationalDramaAndFilmFestivalPage() {
       <ul className="govuk-list govuk-list--bullet">
         <li>
           <Link
-            href="/society-and-culture/national-events/kenya-music-festival"
+            href="/national-events/kenya-music-festival"
             className="govuk-link"
           >
             Kenya Music Festival
@@ -251,7 +251,7 @@ export default function KenyaNationalDramaAndFilmFestivalPage() {
         </li>
         <li>
           <Link
-            href="/society-and-culture/national-events"
+            href="/national-events"
             className="govuk-link"
           >
             All national events

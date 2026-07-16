@@ -1,4 +1,5 @@
 import { defineCloudflareConfig } from "@opennextjs/cloudflare";
+import r2IncrementalCache from "@opennextjs/cloudflare/overrides/incremental-cache/r2-incremental-cache";
 
 /**
  * OpenNext Cloudflare adapter config.
@@ -7,14 +8,14 @@ import { defineCloudflareConfig } from "@opennextjs/cloudflare";
  * OpenNext would recurse if it called `pnpm run build` again, so we point it at
  * `build:next` for the actual Next.js compile step.
  *
- * Caching: start without R2; enable r2IncrementalCache when you create a bucket.
+ * ISR: R2 incremental cache stores regenerated HTML so Free-tier Workers
+ * do not re-render on every visit after revalidate.
  *
- * @see https://opennext.js.org/cloudflare
+ * @see https://opennext.js.org/cloudflare/caching
  */
 export default {
   ...defineCloudflareConfig({
-    // Uncomment after creating R2 bucket + binding NEXT_INC_CACHE_R2_BUCKET in wrangler.jsonc:
-    // incrementalCache: r2IncrementalCache,
+    incrementalCache: r2IncrementalCache,
   }),
   buildCommand: "pnpm run build:next",
 };

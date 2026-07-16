@@ -1,4 +1,4 @@
-// app/society-and-culture/religion-and-faith/page.tsx
+// app/religion-and-faith/page.tsx
 'use client';
 
 import React, { useEffect, useState } from "react";
@@ -124,7 +124,7 @@ export default function ReligionAndFaithPage() {
         items={[
           { text: "Home", href: "/" },
           { text: "Society and culture", href: "/society-and-culture" },
-          { text: "Religion and faith", href: "/society-and-culture/religion-and-faith" },
+          { text: "Religion and faith", href: "/religion-and-faith" },
         ]}
       />
 
@@ -374,7 +374,7 @@ export default function ReligionAndFaithPage() {
                     </Link>
                   </li>
                   <li>
-                    <Link href="/society-and-culture/national-symbols" className="govuk-link">
+                    <Link href="/national-symbols" className="govuk-link">
                       National symbols
                     </Link>
                   </li>

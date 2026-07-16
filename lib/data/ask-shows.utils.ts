@@ -205,5 +205,5 @@ export function daysUntilStart(
 }
 
 export function profilePath(slug: string): string {
-  return `/society-and-culture/national-events/ask-shows/${slug}`;
+  return `/national-events/ask-shows/${slug}`;
 }

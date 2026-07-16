@@ -183,7 +183,7 @@ export const askShowProfiles: AskShowProfile[] = [
       "Stand and gate charges are published by the Nairobi branch for each edition; confirm current rates with ASK.",
     ],
     relatedHref:
-      "/society-and-culture/national-events/nairobi-international-trade-fair",
+      "/national-events/nairobi-international-trade-fair",
   },
 
   // —— National ——
