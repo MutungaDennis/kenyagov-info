@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 
 export async function GET(request: NextRequest) {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   // Parse filtering parameters directly out of the search url string context
   const { searchParams } = new URL(request.url);

@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 
 export async function GET(request: Request) {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { searchParams } = new URL(request.url);
 
   const county = searchParams.get("county") || "";

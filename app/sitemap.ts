@@ -1,9 +1,13 @@
 import { MetadataRoute } from 'next';
-import { createClient } from '@/lib/supabase/server';
+import { createPublicClient } from '@/lib/supabase/public';
 import { sanityClient } from '@/lib/sanity/client';
 import { getAllTopicSlugs } from '@/lib/topics';
 import { getAllNationalEventSlugs } from '@/lib/data/national-events';
 import { getAllAskProfileSlugs } from '@/lib/data/ask-shows';
+
+export const revalidate = 86400;
+
+/** Rebuild at most daily — crawlers must not force heavy Worker work each hit. */
 
 const BASE_URL = 'https://www.citizenguide.ke';
 
@@ -15,7 +19,7 @@ interface SitemapEntry {
 }
 
 async function getSupabaseUrls(): Promise<SitemapEntry[]> {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const urls: SitemapEntry[] = [];
 
   // 1. LEADERS (Now at /government/people/[slug])

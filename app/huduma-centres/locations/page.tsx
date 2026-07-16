@@ -3,6 +3,9 @@ import Link from "next/link";
 import PageIntro from "@/components/site/PageIntro";
 import { countiesWithHuduma, hudumaCentres } from "@/lib/huduma-centres";
 
+export const revalidate = 86400;
+export const dynamic = "force-static";
+
 export const metadata: Metadata = {
   title: "Huduma Centre locations",
   description:

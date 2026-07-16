@@ -1,12 +1,12 @@
 import { createClient } from '@sanity/client';
 import { createImageUrlBuilder } from '@sanity/image-url';
 
+/** Public read client — CDN only (no API token; token bypasses CDN and costs CPU). */
 export const sanityClient = createClient({
   projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || 'egkekbgr',
   dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || 'production',
   apiVersion: '2024-01-01',
   useCdn: true,
-  token: process.env.SANITY_API_TOKEN,
 });
 
 const builder = createImageUrlBuilder(sanityClient);
@@ -23,7 +23,6 @@ export async function getGuides() {
       title,
       slug,
       description,
-      content,
       publishedAt,
       category,
       featured,
@@ -59,7 +58,6 @@ export async function getNews() {
       title,
       slug,
       excerpt,
-      content,
       publishedAt,
       category,
       featured,
@@ -264,6 +262,7 @@ export async function getConstitutionChapter(chapter: number) {
   );
 }
 
+/** TOC listing only — full text loads on chapter/article detail pages. */
 export async function getAllConstitutionArticles() {
   return sanityClient.fetch(`
     *[_type == "constitutionArticle"] 
@@ -272,22 +271,7 @@ export async function getAllConstitutionArticles() {
         chapter,
         chapterTitle,
         articleNumber,
-        articleTitle,
-        officialText,
-        amplifiedText,
-        userIntents,
-        
-        // Fetch related data (optional but useful)
-        relatedActs[]->{
-          _id,
-          title,
-          citation
-        },
-        relatedJudgments[]->{
-          _id,
-          caseName,
-          judgmentDate
-        }
+        articleTitle
       }
   `);
 }

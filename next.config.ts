@@ -3,6 +3,11 @@ import path from "path";
 import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
 
 const nextConfig: NextConfig = {
+  // Smaller server bundles → less Worker parse CPU on Cloudflare Free
+  experimental: {
+    serverMinification: true,
+  },
+
   // Tell Next.js to leave pdfjs-dist alone and resolve it from node_modules
   serverExternalPackages: ["pdfjs-dist"],
 

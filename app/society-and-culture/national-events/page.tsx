@@ -4,9 +4,13 @@ import PageIntro from "@/components/site/PageIntro";
 import ChevronLinkList from "@/components/site/ChevronLinkList";
 import LastUpdated from "@/components/govuk/LastUpdated";
 import {
+
   getHubCategoryItems,
   getSortedCategories,
 } from "@/lib/data/national-events";
+
+export const revalidate = 86400;
+export const dynamic = "force-static";
 
 export const metadata: Metadata = {
   title: "National events",

@@ -4,7 +4,8 @@ import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import LastUpdated from "@/components/govuk/LastUpdated";
 import TableScroll from "@/components/govuk/TableScroll";
 import {
-  kmfAdjudicationNotes,
+
+kmfAdjudicationNotes,
   kmfMilestones,
   kmfNotes,
   kmfNyayoNotes,
@@ -19,6 +20,8 @@ import {
   getKmfHighlight,
   getPastKmf,
 } from "@/lib/data/kenya-music-festival.utils";
+
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: "Kenya Music Festival",

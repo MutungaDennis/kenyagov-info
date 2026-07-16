@@ -4,6 +4,10 @@ import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import LastUpdated from "@/components/govuk/LastUpdated";
 import { Metadata } from "next";
 
+export const revalidate = 86400;
+export const dynamic = "force-static";
+
+
 export const metadata: Metadata = {
   title: "General Elections in Kenya | Elections | CitizenGuide.KE",
   description:

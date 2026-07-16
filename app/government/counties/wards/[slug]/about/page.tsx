@@ -1,18 +1,21 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 
 import PrintPageButton from "@/components/govuk/PrintPageButton";
 import LastUpdated from "@/components/govuk/LastUpdated";
 
+export const revalidate = 3600;
+
+
 interface AboutPageProps {
   params: Promise<{ slug: string }>;
 }
 
 export default async function WardAboutPage({ params }: AboutPageProps) {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { slug } = await params;
   const decodedSlug = decodeURIComponent(slug);
 

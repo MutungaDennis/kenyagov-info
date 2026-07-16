@@ -1,10 +1,13 @@
 // app/elections/polling-stations/page.tsx
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import GovUKPagination from "@/components/govuk/Pagination";
 import LastUpdated from "@/components/govuk/LastUpdated";
 import PollingStationFilters from "@/components/votes/polling-station-filters";
+
+export const revalidate = 3600;
+
 
 // ============================================
 // ELECTION YEARS CONFIGURATION
@@ -48,7 +51,7 @@ export default async function PollingStationsPage({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const params = await searchParams;
 
   const requestedYear = params.year ? parseInt(params.year, 10) : null;

@@ -1,8 +1,11 @@
 // app/elections/iebc-offices/page.tsx
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import GovUKPagination from "@/components/govuk/Pagination";
 import LastUpdated from "@/components/govuk/LastUpdated";
+
+export const revalidate = 3600;
+
 
 interface PageProps {
   searchParams?: Promise<{
@@ -23,7 +26,7 @@ export default async function IebcOfficesPage({
   searchParams,
 }: PageProps) {
   const params = await searchParams;
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   const query = params?.q?.toLowerCase().trim() || "";
   const currentPage = parseInt(params?.page || "1", 10);

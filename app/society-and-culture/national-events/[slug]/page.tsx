@@ -6,12 +6,15 @@ import ChevronLinkList from "@/components/site/ChevronLinkList";
 import ExternalLink from "@/components/site/ExternalLink";
 import LastUpdated from "@/components/govuk/LastUpdated";
 import {
+
   getAllNationalEventSlugs,
   getCategoryBySlug,
   getEventsForCategory,
   getNationalEventBySlug,
   nationalEventHref,
 } from "@/lib/data/national-events";
+
+export const revalidate = 3600;
 
 type Props = {
   params: Promise<{ slug: string }>;

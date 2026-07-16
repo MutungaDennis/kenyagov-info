@@ -1,6 +1,9 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
+
+export const revalidate = 3600;
+
 
 
 interface SearchParams {
@@ -19,7 +22,7 @@ export default async function CoalitionsPage({
   const params = await searchParams;
 
   // Supabase client
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   const q = params.q?.toLowerCase() || "";
   const letter = params.letter?.toUpperCase();

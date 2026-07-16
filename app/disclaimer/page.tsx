@@ -3,6 +3,9 @@ import Link from "next/link";
 import PageIntro from "@/components/site/PageIntro";
 import RelatedNav from "@/components/site/RelatedNav";
 
+export const revalidate = 86400;
+export const dynamic = "force-static";
+
 export const metadata: Metadata = {
   title: "Disclaimer",
   description:

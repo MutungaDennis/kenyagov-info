@@ -1,7 +1,10 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import WardsFilters from "@/components/wards/wards-filters";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
+
+export const revalidate = 3600;
+
 
 
 interface SearchParams {
@@ -18,7 +21,7 @@ export default async function WardsPage({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   // ============================================
   // PARSE SEARCH PARAMS Safely

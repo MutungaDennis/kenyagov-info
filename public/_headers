@@ -12,3 +12,30 @@
 
 /logo.webp
   Cache-Control: public, max-age=604800
+
+# Long-lived static shells (prerendered HTML under assets when static)
+# OpenNext may still serve some HTML via the Worker; Cache Rules in CF dashboard
+# should mirror these paths for full free-tier relief.
+/
+  Cache-Control: public, s-maxage=3600, stale-while-revalidate=86400
+
+/constitution
+  Cache-Control: public, s-maxage=86400, stale-while-revalidate=604800
+
+/constitution/*
+  Cache-Control: public, s-maxage=86400, stale-while-revalidate=604800
+
+/society-and-culture/*
+  Cache-Control: public, s-maxage=3600, stale-while-revalidate=86400
+
+/topics/*
+  Cache-Control: public, s-maxage=3600, stale-while-revalidate=86400
+
+/how-government-works
+  Cache-Control: public, s-maxage=86400, stale-while-revalidate=604800
+
+/elections
+  Cache-Control: public, s-maxage=3600, stale-while-revalidate=86400
+
+/government
+  Cache-Control: public, s-maxage=3600, stale-while-revalidate=86400

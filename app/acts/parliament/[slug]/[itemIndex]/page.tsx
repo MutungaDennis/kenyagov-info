@@ -9,7 +9,7 @@ type Props = {
   params: Promise<{ slug: string; itemIndex: string }>;
 };
 
-export const revalidate = 60;
+export const revalidate = 3600;
 
 export default async function ActItemViewPage({ params }: Props) {
   const { slug, itemIndex } = await params;

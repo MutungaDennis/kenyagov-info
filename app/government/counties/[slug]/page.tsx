@@ -1,11 +1,12 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import { counties } from "@/data/counties";
 import { JsonLd } from "@/components/JsonLd";
 
-export const dynamic = "force-dynamic";
+/** Public county profiles — ISR, no cookies (Cloudflare Free tier). */
+export const revalidate = 3600;
 export const dynamicParams = true;
 
 interface CountyProfileProps {
@@ -85,12 +86,12 @@ export async function generateMetadata({ params }: CountyProfileProps) {
 
 export default async function CountyProfilePage({ params }: CountyProfileProps) {
   const { slug } = await params;
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   const staticCounty = counties.find((c) => c.slug === slug);
   if (!staticCounty) notFound();
 
-  // 1. Fetch complete metadata metrics
+  // 1. Fetch county metadata
   const { data: county } = await supabase
     .from("counties")
     .select(`
@@ -115,42 +116,42 @@ export default async function CountyProfilePage({ params }: CountyProfileProps) 
   let pollingStationsCount = 0;
 
   if (county) {
-    // 2. Count active constitutional wards
-    const { count: fetchedWardCount } = await supabase
-      .from("wards")
-      .select("*", { count: "exact", head: true })
-      .eq("county_id", county.id);
-    wardCount = fetchedWardCount || 0;
-
-    // 3. Count polling stations
-    const { count: fetchedPollingStationsCount } = await supabase
-      .from("polling_stations_2022")
-      .select("*", { count: "exact", head: true })
-      .eq("county_id", county.id);
-    pollingStationsCount = fetchedPollingStationsCount || 0;
-
-    // 4. Fetch constituencies
-    const { data: fetchedConstituencies } = await supabase
-      .from("constituencies")
-      .select("id, name, constituency_code, number_of_wards, registered_voters_2022")
-      .eq("county_id", county.id)
-      .eq("is_active", true)
-      .order("name", { ascending: true });
-    if (fetchedConstituencies) constituencyList = fetchedConstituencies;
-
-    // 5. Fetch wards
-    const { data: fetchedWards } = await supabase
-      .from("wards")
-      .select("id, name, ward_code, constituency_name, registered_voters_2022")
-      .eq("county_id", county.id)
-      .eq("is_active", true)
-      .order("name", { ascending: true });
-    if (fetchedWards) wardList = fetchedWards;
-
-    // 6. Fetch MCAs and process party breakdown
-    const { data: mcaRecords } = await supabase
-      .from("mcas")
-      .select(`
+    // Parallel public reads — fewer wall-clock / CPU seconds on the Worker
+    const [
+      wardCountRes,
+      pollingCountRes,
+      constituenciesRes,
+      wardsRes,
+      mcasRes,
+    ] = await Promise.all([
+      supabase
+        .from("wards")
+        .select("id", { count: "exact", head: true })
+        .eq("county_id", county.id),
+      supabase
+        .from("polling_stations_2022")
+        .select("id", { count: "exact", head: true })
+        .eq("county_id", county.id),
+      supabase
+        .from("constituencies")
+        .select(
+          "id, name, constituency_code, number_of_wards, registered_voters_2022",
+        )
+        .eq("county_id", county.id)
+        .eq("is_active", true)
+        .order("name", { ascending: true }),
+      supabase
+        .from("wards")
+        .select(
+          "id, name, ward_code, constituency_name, registered_voters_2022",
+        )
+        .eq("county_id", county.id)
+        .eq("is_active", true)
+        .order("name", { ascending: true }),
+      supabase
+        .from("mcas")
+        .select(
+          `
         id, 
         slug, 
         first_name, 
@@ -164,11 +165,19 @@ export default async function CountyProfilePage({ params }: CountyProfileProps) 
         status,
         political_parties!inner (name, abbreviation, slug),
         wards!inner (name, ward_code)
-      `)
-      .eq("county_id", county.id)
-      .in("status", ["active", "Active", "ACTIVE"])
-      .order("surname");
+      `,
+        )
+        .eq("county_id", county.id)
+        .in("status", ["active", "Active", "ACTIVE"])
+        .order("surname"),
+    ]);
 
+    wardCount = wardCountRes.count || 0;
+    pollingStationsCount = pollingCountRes.count || 0;
+    if (constituenciesRes.data) constituencyList = constituenciesRes.data;
+    if (wardsRes.data) wardList = wardsRes.data;
+
+    const mcaRecords = mcasRes.data;
     if (mcaRecords && mcaRecords.length > 0) {
       mcaList = mcaRecords as unknown as McaRowItem[];
       totalMcaSeats = mcaList.length;

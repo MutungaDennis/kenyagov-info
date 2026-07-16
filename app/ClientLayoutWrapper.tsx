@@ -11,7 +11,7 @@ import GovUKFeedback from "@/components/govuk/Feedback";
 import GovUKReportProblem from "@/components/govuk/ReportProblem";
 import GovUKPhaseBanner from "@/components/govuk/PhaseBanner";
 import CookieBanner from "@/components/govuk/CookieBanner";
-import { logPageView } from "@/lib/supabase/analytics";
+import { logPageViewClient } from "@/lib/supabase/log-page-view";
 
 export function ClientLayoutWrapper({
   children,
@@ -54,7 +54,7 @@ export function ClientLayoutWrapper({
             // ignore
           }
         }
-        logPageView(pathname, refHost);
+        void logPageViewClient(pathname, refHost);
       }
     }
   }, [pathname, isAdminRoute]);

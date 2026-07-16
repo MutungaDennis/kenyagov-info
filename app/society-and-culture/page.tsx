@@ -4,6 +4,9 @@ import PageIntro from "@/components/site/PageIntro";
 import ChevronLinkList from "@/components/site/ChevronLinkList";
 import LastUpdated from "@/components/govuk/LastUpdated";
 
+export const revalidate = 86400;
+export const dynamic = "force-static";
+
 export const metadata = {
   title: "Society and culture",
   description:

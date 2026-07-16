@@ -2,7 +2,7 @@ import { getAllActsOfParliament } from "@/lib/sanity/client";
 import ParliamentActsListClient from "./ParliamentActsListClient";
 
 // Force Next.js to revalidate the Sanity data stream every 60 seconds
-export const revalidate = 60; 
+export const revalidate = 3600; 
 
 export async function generateMetadata() {
   return {

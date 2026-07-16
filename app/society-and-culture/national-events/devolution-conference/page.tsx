@@ -4,7 +4,8 @@ import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import LastUpdated from "@/components/govuk/LastUpdated";
 import TableScroll from "@/components/govuk/TableScroll";
 import {
-  devolutionConferenceNotes,
+
+devolutionConferenceNotes,
   type DevolutionConferenceEdition,
 } from "@/lib/data/devolution-events";
 import {
@@ -12,6 +13,8 @@ import {
   getDevolutionConferenceHighlight,
   getPastDevolutionConferences,
 } from "@/lib/data/devolution-events.utils";
+
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: "Devolution Conference",

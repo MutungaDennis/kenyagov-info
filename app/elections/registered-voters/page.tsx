@@ -1,10 +1,13 @@
 // app/elections/registered-voters/page.tsx
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import PollingStationFilters from "@/components/votes/polling-station-filters";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import GovUKPagination from "@/components/govuk/Pagination";
 import LastUpdated from "@/components/govuk/LastUpdated";
+
+export const revalidate = 3600;
+
 
 interface SearchParams {
   county?: string;
@@ -21,7 +24,7 @@ export default async function RegisteredVotersPage({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   const parsedParams = await searchParams;
   const county = parsedParams.county || "";

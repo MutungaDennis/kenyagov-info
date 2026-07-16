@@ -1,7 +1,9 @@
 import { getAllConstitutionArticles, getChapters } from "@/lib/sanity/client";
 import ConstitutionTableOfContents from "./ConstitutionTableOfContents";
 
-export const revalidate = 60; // Revalidate content every minute
+/** Constitution text rarely changes — long cache for Cloudflare Free tier. */
+export const revalidate = 86400;
+export const dynamic = "force-static";
 
 export default async function ConstitutionServerPage() {
   // 1. Fetch live content from Sanity datasets on the server

@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import LastUpdated from "@/components/govuk/LastUpdated";
 
@@ -19,7 +19,7 @@ export async function generateMetadata({
 }: {
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { slug } = await params;
   const decodedSlug = decodeURIComponent(slug);
 
@@ -62,7 +62,7 @@ export default async function PollingStationPage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { slug } = await params;
   const decodedSlug = decodeURIComponent(slug);
 

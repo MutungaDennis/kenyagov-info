@@ -3,6 +3,9 @@ import Link from "next/link";
 import HomeSearch from "@/components/site/HomeSearch";
 import ChevronLinkList from "@/components/site/ChevronLinkList";
 
+export const revalidate = 86400;
+export const dynamic = "force-static";
+
 const SITE_URL = "https://www.citizenguide.ke";
 
 export const metadata: Metadata = {

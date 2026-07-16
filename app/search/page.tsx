@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import SearchAutocomplete from "@/components/govuk/SearchAutocomplete";
 import { searchSanityContent } from "@/lib/sanity/client";
@@ -15,7 +15,7 @@ export default async function SearchResultsPage({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   const parsedParams = await searchParams;
   const q = parsedParams.q ? parsedParams.q.trim() : "";

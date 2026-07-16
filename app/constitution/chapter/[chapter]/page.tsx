@@ -5,6 +5,9 @@ import { JsonLd } from "@/components/JsonLd";
 
 import { getConstitutionChapter } from "@/lib/sanity/client";
 
+export const revalidate = 3600;
+
+
 type Props = {
   params: Promise<{ chapter: string }>;
 };

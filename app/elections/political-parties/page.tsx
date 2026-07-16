@@ -1,7 +1,10 @@
 // app/elections/political-parties/page.tsx
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
+
+export const revalidate = 3600;
+
 
 interface SearchParams {
   q?: string;
@@ -13,7 +16,7 @@ export default async function PoliticalPartiesPage({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const params = await searchParams;
 
   const q = params?.q?.toLowerCase().trim();

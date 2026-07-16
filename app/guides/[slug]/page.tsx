@@ -1,4 +1,6 @@
 import Link from 'next/link';
+
+export const revalidate = 3600;
 //import GovUKBackLink from '@/components/govuk/BackLink';
 import GovUKBreadcrumbs from '@/components/govuk/Breadcrumbs';
 import { getGuideBySlug, getGuides } from '@/lib/sanity/client';

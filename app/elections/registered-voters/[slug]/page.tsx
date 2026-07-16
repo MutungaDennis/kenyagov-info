@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
+
+export const revalidate = 3600;
+
 
 
 interface PageProps {
@@ -10,7 +13,7 @@ interface PageProps {
 
 export default async function PollingStationDetailPage({ params }: PageProps) {
   const { slug } = await params;
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   // Fetch the detailed polling station entry along with parent data connections
   const { data: station, error } = await supabase

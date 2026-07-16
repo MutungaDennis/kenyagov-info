@@ -5,11 +5,14 @@ import LastUpdated from "@/components/govuk/LastUpdated";
 import TableScroll from "@/components/govuk/TableScroll";
 import type { DswEdition } from "@/lib/data/devolution-events";
 import {
-  daysUntil,
+
+daysUntil,
   formatDevolutionDateRange,
   getDswHighlight,
   getPastDsw,
 } from "@/lib/data/devolution-events.utils";
+
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: "Devolution Sensitisation Week",

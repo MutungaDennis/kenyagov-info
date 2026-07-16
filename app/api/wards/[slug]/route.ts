@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 
 export async function GET(
   req: Request,
   { params }: { params: Promise<{ slug: string }> }
 ) {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   const { slug } = await params;
 
@@ -59,45 +59,37 @@ export async function GET(
 
   const wardId = ward.id;
 
-  // =========================================
-  // 2. LEADERSHIP
-  // =========================================
-
-  const { data: leadership } = await supabase
-    .from("ward_leadership")
-    .select("*")
-    .eq("ward_id", wardId)
-    .maybeSingle();
-
-  // =========================================
-  // 3. SCHOOLS
-  // =========================================
-
-  const { data: schools } = await supabase
-    .from("ward_schools")
-    .select("*")
-    .eq("ward_id", wardId)
-    .order("name", { ascending: true });
-
-  // =========================================
-  // 4. HEALTH FACILITIES
-  // =========================================
-
-  const { data: healthFacilities } = await supabase
-    .from("ward_health_facilities")
-    .select("*")
-    .eq("ward_id", wardId)
-    .order("name", { ascending: true });
-
-  // =========================================
-  // 5. PROJECTS
-  // =========================================
-
-  const { data: projects } = await supabase
-    .from("ward_projects")
-    .select("*")
-    .eq("ward_id", wardId)
-    .order("created_at", { ascending: false });
+  // Parallel related reads (public, cookie-free) to stay under Worker CPU budget
+  const [
+    { data: leadership },
+    { data: schools },
+    { data: healthFacilities },
+    { data: projects },
+  ] = await Promise.all([
+    supabase
+      .from("ward_leadership")
+      .select("*")
+      .eq("ward_id", wardId)
+      .maybeSingle(),
+    supabase
+      .from("ward_schools")
+      .select("*")
+      .eq("ward_id", wardId)
+      .order("name", { ascending: true })
+      .limit(100),
+    supabase
+      .from("ward_health_facilities")
+      .select("*")
+      .eq("ward_id", wardId)
+      .order("name", { ascending: true })
+      .limit(100),
+    supabase
+      .from("ward_projects")
+      .select("*")
+      .eq("ward_id", wardId)
+      .order("created_at", { ascending: false })
+      .limit(50),
+  ]);
 
   // =========================================
   // RESPONSE

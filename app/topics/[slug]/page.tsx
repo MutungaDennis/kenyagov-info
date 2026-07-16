@@ -6,6 +6,8 @@ import ExternalLink from "@/components/site/ExternalLink";
 import ChevronLinkList from "@/components/site/ChevronLinkList";
 import { getAllTopicSlugs, getTopicBySlug, topics } from "@/lib/topics";
 
+export const revalidate = 3600;
+
 type Props = {
   params: Promise<{ slug: string }>;
 };

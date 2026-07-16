@@ -5,7 +5,8 @@ import LastUpdated from "@/components/govuk/LastUpdated";
 import TableScroll from "@/components/govuk/TableScroll";
 import { kndffNotes, type KndffEdition } from "@/lib/data/kndff";
 import {
-  formatKndffDateRange,
+
+formatKndffDateRange,
   formatKndffTheme,
   formatKndffVenue,
   formatKndffWinner,
@@ -13,6 +14,8 @@ import {
   getKndffHighlight,
   getPastKndff,
 } from "@/lib/data/kndff.utils";
+
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: "Kenya National Drama and Film Festival",

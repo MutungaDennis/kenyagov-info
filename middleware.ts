@@ -7,19 +7,15 @@ import {
 } from "@/lib/admin-path";
 
 /**
- * Edge middleware:
- * - Maps secret admin URL → internal /admin/* (app routes stay under app/admin)
- * - Returns 404 for public /admin/* when secret path is active (production default)
- * - Forwards x-pathname for requireAdmin() auth-page detection
+ * Edge middleware (keep CPU minimal for Cloudflare Free 10ms budget):
+ * - Secret admin rewrite / hide /admin
+ * - /services?category= consolidation redirect
+ * - Early no-op path avoids header cloning on ordinary public pages
  */
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const secretBase = getAdminBasePath();
-  const requestHeaders = new Headers(request.headers);
 
-  // SEO: consolidate service category query URLs onto clean paths
-  // /services?category=money-tax → /services/categories/money-tax (308)
-  // Subcategory/org filters stay on the query string of the clean path.
+  // SEO: /services?category=money-tax → /services/categories/money-tax
   if (pathname === "/services") {
     const category = request.nextUrl.searchParams.get("category");
     if (category && category !== "all" && category.trim() !== "") {
@@ -30,12 +26,14 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // Always hide well-known /admin when secret path is active
-  if (isCustomAdminPathEnabled() && isAdminFilesystemPath(pathname)) {
+  const secretEnabled = isCustomAdminPathEnabled();
+
+  // Hide well-known /admin when secret path is active
+  if (secretEnabled && isAdminFilesystemPath(pathname)) {
     const notFound = request.nextUrl.clone();
     notFound.pathname = "/not-found-admin";
+    const requestHeaders = new Headers(request.headers);
     requestHeaders.set("x-pathname", pathname);
-    // Keep browser URL as /admin but serve a not-found page (no login form)
     return NextResponse.rewrite(notFound, {
       request: { headers: requestHeaders },
     });
@@ -43,9 +41,11 @@ export function middleware(request: NextRequest) {
 
   // Rewrite /{secret}/… → /admin/…
   if (isAdminPublicPath(pathname)) {
+    const secretBase = getAdminBasePath();
     const rest = pathname.slice(secretBase.length) || "";
     const url = request.nextUrl.clone();
     url.pathname = rest ? `/admin${rest}` : "/admin";
+    const requestHeaders = new Headers(request.headers);
     requestHeaders.set("x-pathname", pathname);
     requestHeaders.set("x-admin-base", secretBase);
     return NextResponse.rewrite(url, {
@@ -53,16 +53,15 @@ export function middleware(request: NextRequest) {
     });
   }
 
-  requestHeaders.set("x-pathname", pathname);
-  return NextResponse.next({
-    request: { headers: requestHeaders },
-  });
+  // Public pages: zero header mutation — cheapest path for Free tier
+  return NextResponse.next();
 }
 
 export const config = {
   matcher: [
     /*
-     * Match all paths except static assets. Secret admin path must always be rewritten.
+     * Match HTML/app routes only. Skip static assets and common files.
+     * Admin secret path still matches and is rewritten above.
      */
     "/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|map|txt|xml|woff2?)$).*)",
   ],

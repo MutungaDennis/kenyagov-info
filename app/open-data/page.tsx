@@ -1,10 +1,12 @@
 // app/open-data/page.tsx
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import PageIntro from "@/components/site/PageIntro";
 import GovUKSummaryList from "@/components/govuk/SummaryList";
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 3600;
+
+/** Counts change slowly — ISR, no cookies. */
 
 export const metadata = {
   title: "Open data",
@@ -13,7 +15,7 @@ export const metadata = {
 };
 
 export default async function OpenDataPage() {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   const [countiesRes, wardsRes, institutionsRes, pollingRes, leadersRes] = await Promise.all([
     supabase.from("counties").select("id", { count: "exact", head: true }).eq("is_active", true),

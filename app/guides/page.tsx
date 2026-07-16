@@ -3,6 +3,8 @@ import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import ChevronLinkList from "@/components/site/ChevronLinkList";
 import { getGuides } from "@/lib/sanity/client";
 
+export const revalidate = 3600;
+
 export const metadata = {
   title: "Guides and life events",
   description:

@@ -4,7 +4,8 @@ import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import LastUpdated from "@/components/govuk/LastUpdated";
 import TableScroll from "@/components/govuk/TableScroll";
 import {
-  askTheme2026,
+
+askTheme2026,
   getProfilesByTier,
   type AskCalendarEvent,
 } from "@/lib/data/ask-shows";
@@ -19,6 +20,8 @@ import {
   getUpcomingAskEvents,
   profilePath,
 } from "@/lib/data/ask-shows.utils";
+
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: "Agricultural Society of Kenya (ASK) shows",

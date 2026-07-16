@@ -2,6 +2,9 @@ import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import LastUpdated from "@/components/govuk/LastUpdated";
 import Link from "next/link";
 
+export const revalidate = 86400;
+export const dynamic = "force-static";
+
 export default function ReferendumsPage() {
   return (
     <>
