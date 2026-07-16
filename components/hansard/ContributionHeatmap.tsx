@@ -136,10 +136,11 @@ export default function ContributionHeatmap({
       <h2 id="heatmap-heading" className="govuk-heading-m">
         Speaking activity
       </h2>
-      <p className="govuk-body-s" style={{ maxWidth: 40 + "rem" }}>
-        Pulse over the past year — denser squares mean more Hansard
-        contributions that day (same idea as GitHub contribution activity).
-        Hover a day for the count; select it to filter the list.
+      <p className="govuk-body-s">
+        Pulse over the past year — denser squares mean more floor contributions
+        that day (GitHub-style activity). Chair interventions are excluded so
+        Temporary / Deputy Speakers are not overstated. Hover a day for the
+        count; select it to filter the list.
       </p>
 
       <p className="govuk-body-s govuk-!-margin-bottom-3">

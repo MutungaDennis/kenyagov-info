@@ -23,9 +23,10 @@ export async function GET(request: NextRequest) {
           `*[_type == "hansardSitting" && _id == $id][0]{
             _id, title, sittingDate, houseType, sittingPeriod, parliamentaryTerm,
             youtubeUrl, officialHansardUrl, editorialSummary, isActive,
+            presidingOfficer,
             contributions[] {
               _key, order, type, supabaseLeaderId, speakerName, speakerTitle,
-              constituency, party, role, speech, startTime, sectionHeader
+              constituency, party, role, isChairContribution, speech, startTime, sectionHeader
             }
           }`,
           { id },
@@ -34,9 +35,10 @@ export async function GET(request: NextRequest) {
           `*[_type == "hansardSitting" && sittingDate == $date && houseType == $house] | order(_updatedAt desc)[0]{
             _id, title, sittingDate, houseType, sittingPeriod, parliamentaryTerm,
             youtubeUrl, officialHansardUrl, editorialSummary, isActive,
+            presidingOfficer,
             contributions[] {
               _key, order, type, supabaseLeaderId, speakerName, speakerTitle,
-              constituency, party, role, speech, startTime, sectionHeader
+              constituency, party, role, isChairContribution, speech, startTime, sectionHeader
             }
           }`,
           { date: sittingDate, house: houseType },

@@ -17,6 +17,10 @@ import {
   publicHansardDayPath,
   publicHansardHousePath,
 } from "@/lib/hansard/speech";
+import {
+  PRESIDING_ROLE_LABELS,
+  type PresidingRole,
+} from "@/lib/hansard/stats";
 
 function studioDocUrl(documentId: string) {
   const base = (
@@ -29,7 +33,7 @@ function studioDocUrl(documentId: string) {
   return base;
 }
 
-type ContributionType = "spoken" | "procedural" | "header";
+type ContributionType = "spoken" | "procedural" | "header" | "mini-header";
 
 interface Contribution {
   _key?: string;
@@ -41,6 +45,8 @@ interface Contribution {
   constituency?: string;
   party?: string;
   role?: string;
+  /** When true, excluded from member contribution stats (chair interventions) */
+  isChairContribution?: boolean;
   /** Plain text for editing; may also hold PT from load until converted */
   speech: string | unknown[];
   speechPlain?: string;
@@ -57,6 +63,10 @@ interface SittingForm {
   youtubeUrl?: string;
   officialHansardUrl?: string;
   editorialSummary?: string;
+  presidingRole: PresidingRole;
+  presidingName: string;
+  presidingLeaderId: string;
+  presidingNotes: string;
 }
 
 interface LeaderSearchResult {
@@ -114,6 +124,10 @@ export default function ManualHansardEntry({
     youtubeUrl: "",
     officialHansardUrl: "",
     editorialSummary: "",
+    presidingRole: "speaker",
+    presidingName: "",
+    presidingLeaderId: "",
+    presidingNotes: "",
   });
 
   const [contributions, setContributions] = useState<Contribution[]>([]);
@@ -133,6 +147,12 @@ export default function ManualHansardEntry({
   >([]);
   const [isSearchingLeaders, setIsSearchingLeaders] = useState(false);
   const [showLeaderDropdown, setShowLeaderDropdown] = useState(false);
+
+  const [presidingSearchResults, setPresidingSearchResults] = useState<
+    LeaderSearchResult[]
+  >([]);
+  const [isSearchingPresiding, setIsSearchingPresiding] = useState(false);
+  const [showPresidingDropdown, setShowPresidingDropdown] = useState(false);
 
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -186,6 +206,12 @@ export default function ManualHansardEntry({
         return;
       }
       const loaded = data.sitting;
+      const po = loaded.presidingOfficer || {};
+      const roleRaw = (po.role || "speaker") as string;
+      const presidingRole: PresidingRole =
+        roleRaw === "deputy-speaker" || roleRaw === "temporary-speaker"
+          ? roleRaw
+          : "speaker";
       setSitting({
         title: loaded.title || "",
         sittingDate: loaded.sittingDate,
@@ -196,18 +222,23 @@ export default function ManualHansardEntry({
         youtubeUrl: loaded.youtubeUrl || "",
         officialHansardUrl: loaded.officialHansardUrl || "",
         editorialSummary: portableTextToPlain(loaded.editorialSummary) || "",
+        presidingRole,
+        presidingName: po.displayName || "",
+        presidingLeaderId: po.supabaseLeaderId || "",
+        presidingNotes: po.notes || "",
       });
       const mapped: Contribution[] = (loaded.contributions || []).map(
         (c: Contribution & { speechPlain?: string }, i: number) => ({
           _key: c._key || `loaded-${i}`,
           order: c.order || i + 1,
-          type: c.type || "spoken",
+          type: (c.type as ContributionType) || "spoken",
           supabaseLeaderId: c.supabaseLeaderId,
           speakerName: c.speakerName || "",
           speakerTitle: c.speakerTitle,
           constituency: c.constituency,
           party: c.party,
           role: c.role,
+          isChairContribution: Boolean(c.isChairContribution),
           speech: c.speech,
           speechPlain: c.speechPlain || portableTextToPlain(c.speech),
           startTime: c.startTime,
@@ -282,9 +313,13 @@ export default function ManualHansardEntry({
         ? currentContribution.speech
         : speechToPlain(currentContribution);
 
-    if (type === "header") {
+    if (type === "header" || type === "mini-header") {
       if (!currentContribution.sectionHeader?.trim()) {
-        alert("Section / Order of Business is required for Section Headers.");
+        alert(
+          type === "mini-header"
+            ? "Mini-header title is required (e.g. topic under a main section)."
+            : "Section / Order of Business is required for Section Headers.",
+        );
         return;
       }
     } else if (type === "procedural") {
@@ -358,6 +393,12 @@ export default function ManualHansardEntry({
         youtubeUrl: sitting.youtubeUrl || undefined,
         officialHansardUrl: sitting.officialHansardUrl || undefined,
         editorialSummary: sitting.editorialSummary || undefined,
+        presidingOfficer: {
+          role: sitting.presidingRole,
+          displayName: sitting.presidingName.trim(),
+          supabaseLeaderId: sitting.presidingLeaderId.trim() || undefined,
+          notes: sitting.presidingNotes.trim() || undefined,
+        },
         status,
         isActive: status === "publish",
         contributions: sortByOrder(contributions).map((c) => ({
@@ -370,6 +411,7 @@ export default function ManualHansardEntry({
           constituency: c.constituency?.trim() || "",
           party: c.party?.trim() || "",
           role: c.role?.trim() || "",
+          isChairContribution: Boolean(c.isChairContribution),
           speech: speechForSave(c),
           startTime: c.startTime?.trim() || "",
           sectionHeader: c.sectionHeader?.trim() || "",
@@ -484,12 +526,56 @@ export default function ManualHansardEntry({
       ...currentContribution,
       supabaseLeaderId: leader.id,
       speakerName: leader.full_name || "",
-      speakerTitle: leader.title || "",
+      speakerTitle:
+        currentContribution.isChairContribution
+          ? PRESIDING_ROLE_LABELS[sitting.presidingRole]
+          : leader.title || currentContribution.speakerTitle || "",
       constituency: leader.constituency || "",
       party: leader.party || "",
       role: leader.role || "",
     });
     setShowLeaderDropdown(false);
+  };
+
+  const searchPresidingLeaders = async (query: string) => {
+    if (query.length < 2) {
+      setPresidingSearchResults([]);
+      setShowPresidingDropdown(false);
+      return;
+    }
+    setIsSearchingPresiding(true);
+    try {
+      const res = await fetch(
+        `/api/leaders/search?q=${encodeURIComponent(query)}`,
+      );
+      if (res.ok) {
+        const data = await res.json();
+        setPresidingSearchResults(data.leaders || []);
+        setShowPresidingDropdown(true);
+      }
+    } catch (err) {
+      console.error("Presiding leader search failed", err);
+    } finally {
+      setIsSearchingPresiding(false);
+    }
+  };
+
+  const selectPresidingLeader = (leader: LeaderSearchResult) => {
+    setSitting((s) => ({
+      ...s,
+      presidingName: leader.full_name || "",
+      presidingLeaderId: leader.id,
+    }));
+    setShowPresidingDropdown(false);
+    setPresidingSearchResults([]);
+  };
+
+  const applyChairRoleToContribution = (role: PresidingRole) => {
+    setCurrentContribution((c) => ({
+      ...c,
+      isChairContribution: true,
+      speakerTitle: PRESIDING_ROLE_LABELS[role],
+    }));
   };
 
   return (
@@ -708,6 +794,137 @@ export default function ManualHansardEntry({
           }
         />
       </div>
+
+      {/* Presiding officer */}
+      <h2 className="govuk-heading-m">Presiding officer (this sitting)</h2>
+      <p className="govuk-hint">
+        When the Speaker is absent, the Deputy Speaker presides. If both are
+        absent, the House elects a Member as Temporary Speaker. Link Temporary /
+        Deputy Speakers to Supabase so their chair interventions can be excluded
+        from personal contribution stats.
+      </p>
+      <div className="govuk-grid-row">
+        <div className="govuk-grid-column-one-third">
+          <div className="govuk-form-group">
+            <label className="govuk-label" htmlFor="presidingRole">
+              Chair role
+            </label>
+            <select
+              id="presidingRole"
+              className="govuk-select"
+              value={sitting.presidingRole}
+              onChange={(e) =>
+                setSitting({
+                  ...sitting,
+                  presidingRole: e.target.value as PresidingRole,
+                })
+              }
+            >
+              <option value="speaker">The Speaker</option>
+              <option value="deputy-speaker">The Deputy Speaker</option>
+              <option value="temporary-speaker">
+                The Temporary Speaker (elected Member)
+              </option>
+            </select>
+          </div>
+        </div>
+        <div className="govuk-grid-column-two-thirds">
+          <div className="govuk-form-group">
+            <label className="govuk-label" htmlFor="presidingSearch">
+              Search Member / leader (optional link)
+            </label>
+            <input
+              id="presidingSearch"
+              className="govuk-input"
+              onChange={(e) => searchPresidingLeaders(e.target.value)}
+              placeholder="Type name to link Supabase leader…"
+            />
+            {isSearchingPresiding && (
+              <p className="govuk-hint">Searching…</p>
+            )}
+            {showPresidingDropdown && presidingSearchResults.length > 0 && (
+              <ul
+                className="govuk-list"
+                style={{
+                  border: "1px solid #b1b4b6",
+                  maxHeight: 180,
+                  overflow: "auto",
+                }}
+              >
+                {presidingSearchResults.map((l) => (
+                  <li key={l.id}>
+                    <button
+                      type="button"
+                      className="govuk-link"
+                      style={{
+                        background: "none",
+                        border: "none",
+                        cursor: "pointer",
+                        textAlign: "left",
+                        padding: 8,
+                        width: "100%",
+                      }}
+                      onClick={() => selectPresidingLeader(l)}
+                    >
+                      {l.full_name}
+                      {l.constituency ? ` — ${l.constituency}` : ""}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      </div>
+      <div className="govuk-form-group">
+        <label className="govuk-label" htmlFor="presidingName">
+          Name in Hansard
+        </label>
+        <input
+          id="presidingName"
+          className="govuk-input"
+          value={sitting.presidingName}
+          onChange={(e) =>
+            setSitting({ ...sitting, presidingName: e.target.value })
+          }
+          placeholder="e.g. Hon. Moses Wetang'ula"
+        />
+      </div>
+      {sitting.presidingLeaderId && (
+        <p className="govuk-body-s">
+          Linked leader ID: <code>{sitting.presidingLeaderId}</code>{" "}
+          <button
+            type="button"
+            className="govuk-link"
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              color: "#d4351c",
+            }}
+            onClick={() =>
+              setSitting({ ...sitting, presidingLeaderId: "" })
+            }
+          >
+            Unlink
+          </button>
+        </p>
+      )}
+      <div className="govuk-form-group">
+        <label className="govuk-label" htmlFor="presidingNotes">
+          Notes (optional)
+        </label>
+        <input
+          id="presidingNotes"
+          className="govuk-input"
+          value={sitting.presidingNotes}
+          onChange={(e) =>
+            setSitting({ ...sitting, presidingNotes: e.target.value })
+          }
+          placeholder="e.g. Speaker absent; Temporary Speaker elected at 14:45"
+        />
+      </div>
+
       <div className="govuk-form-group">
         <label className="govuk-label" htmlFor="pdf">
           Official Hansard PDF URL (source of truth)
@@ -840,6 +1057,11 @@ export default function ManualHansardEntry({
                       {contrib.type === "header" && (
                         <span className="govuk-tag govuk-tag--grey">Header</span>
                       )}
+                      {contrib.type === "mini-header" && (
+                        <span className="govuk-tag govuk-tag--turquoise">
+                          Mini header
+                        </span>
+                      )}
                     </td>
                     <td className="govuk-table__cell">
                       {contrib.sectionHeader && (
@@ -850,6 +1072,11 @@ export default function ManualHansardEntry({
                       <strong>{contrib.speakerName || "—"}</strong>
                       {contrib.supabaseLeaderId && (
                         <span className="govuk-body-s"> · linked</span>
+                      )}
+                      {contrib.isChairContribution && (
+                        <span className="govuk-tag govuk-tag--yellow govuk-!-margin-left-1">
+                          Chair
+                        </span>
                       )}
                     </td>
                     <td className="govuk-table__cell" style={{ maxWidth: 360 }}>
@@ -1035,20 +1262,36 @@ export default function ManualHansardEntry({
                   setCurrentContribution({
                     ...currentContribution,
                     type: e.target.value as ContributionType,
+                    isChairContribution:
+                      e.target.value === "spoken"
+                        ? currentContribution.isChairContribution
+                        : false,
                   })
                 }
               >
                 <option value="spoken">Spoken contribution</option>
                 <option value="procedural">Procedural note</option>
-                <option value="header">Section header</option>
+                <option value="header">Section header (main)</option>
+                <option value="mini-header">
+                  Mini header (under a section)
+                </option>
               </select>
+              <p className="govuk-hint">
+                Main example: REQUESTS FOR STATEMENTS. Mini under it:
+                IMPORTATION OF REFINED SUGAR INTO THE COUNTRY.
+              </p>
             </div>
 
             {(currentContribution.type === "header" ||
+              currentContribution.type === "mini-header" ||
               currentContribution.type === "spoken") && (
               <div className="govuk-form-group">
                 <label className="govuk-label">
-                  Section / order of business
+                  {currentContribution.type === "mini-header"
+                    ? "Mini-header title"
+                    : currentContribution.type === "header"
+                      ? "Section header (order of business)"
+                      : "Section / topic (optional)"}
                 </label>
                 <input
                   className="govuk-input"
@@ -1059,7 +1302,11 @@ export default function ManualHansardEntry({
                       sectionHeader: e.target.value,
                     })
                   }
-                  placeholder='e.g. "PAPERS LAID"'
+                  placeholder={
+                    currentContribution.type === "mini-header"
+                      ? 'e.g. "IMPORTATION OF REFINED SUGAR INTO THE COUNTRY"'
+                      : 'e.g. "REQUESTS FOR STATEMENTS"'
+                  }
                 />
               </div>
             )}
@@ -1114,10 +1361,85 @@ export default function ManualHansardEntry({
                     }
                   />
                 </div>
+                <div className="govuk-form-group">
+                  <label className="govuk-label">Title / how addressed</label>
+                  <input
+                    className="govuk-input"
+                    value={currentContribution.speakerTitle || ""}
+                    onChange={(e) =>
+                      setCurrentContribution({
+                        ...currentContribution,
+                        speakerTitle: e.target.value,
+                      })
+                    }
+                    placeholder="Hon., The Temporary Speaker, …"
+                  />
+                </div>
+                <div className="govuk-checkboxes">
+                  <div className="govuk-checkboxes__item">
+                    <input
+                      className="govuk-checkboxes__input"
+                      id="isChairContribution"
+                      type="checkbox"
+                      checked={Boolean(currentContribution.isChairContribution)}
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+                        setCurrentContribution({
+                          ...currentContribution,
+                          isChairContribution: checked,
+                          speakerTitle: checked
+                            ? currentContribution.speakerTitle ||
+                              PRESIDING_ROLE_LABELS[sitting.presidingRole]
+                            : currentContribution.speakerTitle,
+                        });
+                      }}
+                    />
+                    <label
+                      className="govuk-label govuk-checkboxes__label"
+                      htmlFor="isChairContribution"
+                    >
+                      Speaking as Chair (exclude from this Member&apos;s
+                      contribution stats)
+                    </label>
+                  </div>
+                </div>
+                <p className="govuk-hint">
+                  Use for Speaker, Deputy Speaker, or Temporary Speaker
+                  interventions while in the chair. Floor speeches by the same
+                  person (as MP) should leave this unticked.
+                </p>
+                <div className="govuk-button-group">
+                  <button
+                    type="button"
+                    className="govuk-button govuk-button--secondary"
+                    onClick={() => applyChairRoleToContribution("speaker")}
+                  >
+                    Mark as The Speaker
+                  </button>
+                  <button
+                    type="button"
+                    className="govuk-button govuk-button--secondary"
+                    onClick={() =>
+                      applyChairRoleToContribution("deputy-speaker")
+                    }
+                  >
+                    Mark as Deputy Speaker
+                  </button>
+                  <button
+                    type="button"
+                    className="govuk-button govuk-button--secondary"
+                    onClick={() =>
+                      applyChairRoleToContribution("temporary-speaker")
+                    }
+                  >
+                    Mark as Temporary Speaker
+                  </button>
+                </div>
               </>
             )}
 
-            {currentContribution.type !== "header" && (
+            {currentContribution.type !== "header" &&
+              currentContribution.type !== "mini-header" && (
               <div className="govuk-form-group">
                 <label className="govuk-label">
                   Content / speech (plain text; paragraphs separated by blank

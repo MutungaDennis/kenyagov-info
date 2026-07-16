@@ -32,6 +32,51 @@ export default defineType({
     defineField({ name: 'editorialSummary', title: 'Editorial Summary (Citizen-friendly)', type: 'array', of: [{ type: 'block' }] }),
 
     // ============================================
+    // WHO IS IN THE CHAIR FOR THIS SITTING
+    // ============================================
+    defineField({
+      name: 'presidingOfficer',
+      title: 'Presiding officer (this sitting)',
+      type: 'object',
+      description:
+        'Who chairs the sitting. When the Speaker is absent, the Deputy Speaker presides; if both are absent, the House elects a Temporary Speaker (a Member).',
+      fields: [
+        defineField({
+          name: 'role',
+          title: 'Chair role',
+          type: 'string',
+          options: {
+            list: [
+              { title: 'The Speaker', value: 'speaker' },
+              { title: 'The Deputy Speaker', value: 'deputy-speaker' },
+              { title: 'The Temporary Speaker (elected Member)', value: 'temporary-speaker' },
+            ],
+          },
+          initialValue: 'speaker',
+          validation: Rule => Rule.required(),
+        }),
+        defineField({
+          name: 'displayName',
+          title: 'Name as shown in Hansard',
+          type: 'string',
+          description: 'e.g. Hon. Moses Wetang\'ula or Hon. [Member elected Temporary Speaker]',
+        }),
+        defineField({
+          name: 'supabaseLeaderId',
+          title: 'Supabase Leader ID',
+          type: 'string',
+          description: 'Link to leaders table — especially for Temporary / Deputy Speakers who are MPs.',
+        }),
+        defineField({
+          name: 'notes',
+          title: 'Notes',
+          type: 'string',
+          description: 'Optional, e.g. "Speaker absent; Temporary Speaker elected at 2:45 p.m."',
+        }),
+      ],
+    }),
+
+    // ============================================
     // IMPROVED CONTRIBUTIONS ARRAY
     // ============================================
     defineField({
@@ -49,7 +94,6 @@ export default defineType({
               validation: Rule => Rule.required().min(1),
             }),
 
-            // === NEW: Entry Type ===
             defineField({
               name: 'type',
               title: 'Entry Type',
@@ -58,7 +102,8 @@ export default defineType({
                 list: [
                   { title: 'Spoken Contribution (MP speech)', value: 'spoken' },
                   { title: 'Procedural Note (Laughter, consultations, Chair changes, etc.)', value: 'procedural' },
-                  { title: 'Section Header (Papers, Bill, Motion, Adjournment, etc.)', value: 'header' },
+                  { title: 'Section Header (main order of business)', value: 'header' },
+                  { title: 'Mini Header (under a section header)', value: 'mini-header' },
                 ],
               },
               initialValue: 'spoken',
@@ -85,7 +130,7 @@ export default defineType({
               name: 'speakerTitle',
               title: 'Speaker Title / Honorific',
               type: 'string',
-              description: 'e.g. Hon., The Speaker, Leader of the Majority Party',
+              description: 'e.g. Hon., The Speaker, The Temporary Speaker, Leader of the Majority Party',
             }),
             defineField({
               name: 'constituency',
@@ -104,14 +149,24 @@ export default defineType({
               description: 'Optional role label from the sitting (e.g. Cabinet Secretary, Whip).',
             }),
 
+            defineField({
+              name: 'isChairContribution',
+              title: 'Speaking as Chair (exclude from member stats)',
+              type: 'boolean',
+              description:
+                'Tick when this intervention is made as Speaker / Deputy Speaker / Temporary Speaker in the chair. Chair turns do not count toward the member\'s Hansard contribution total (they speak far more often than floor members).',
+              initialValue: false,
+            }),
+
             defineField({ name: 'startTime', title: 'Start Time (e.g. 10:23)', type: 'string' }),
 
-            // Section header (used for both headers and grouping spoken contributions)
+            // Section header (main) or mini-header title, or topic tag on spoken rows
             defineField({
               name: 'sectionHeader',
-              title: 'Section / Order of Business',
+              title: 'Section / mini-header title',
               type: 'string',
-              description: 'e.g. "PAPERS LAID", "THE SUPPLEMENTARY APPROPRIATION BILL – Second Reading"',
+              description:
+                'Main: "REQUESTS FOR STATEMENTS". Mini: "IMPORTATION OF REFINED SUGAR INTO THE COUNTRY". Optional topic tag on spoken rows.',
             }),
 
             defineField({
@@ -119,8 +174,7 @@ export default defineType({
               title: 'Content / Speech',
               type: 'array',
               of: [{ type: 'block' }],
-              description: 'Full spoken words OR procedural note. Use (Laughter), (Applause), [interjections] in square brackets.',
-              validation: Rule => Rule.required(),
+              description: 'Full spoken words OR procedural note. Empty for pure headers. Use (Laughter), (Applause), [interjections] in square brackets.',
             }),
           ],
           preview: {
@@ -130,19 +184,24 @@ export default defineType({
               section: 'sectionHeader',
               speaker: 'speakerName',
               leaderId: 'supabaseLeaderId',
+              chair: 'isChairContribution',
             },
-            prepare({ order, type, section, speaker, leaderId }) {
-              const typeLabel = type === 'spoken' ? '🗣️' : type === 'procedural' ? '📝' : '📌';
+            prepare({ order, type, section, speaker, leaderId, chair }) {
+              const typeLabel =
+                type === 'spoken' ? '🗣️' :
+                type === 'procedural' ? '📝' :
+                type === 'mini-header' ? '▸' : '📌';
               const who = speaker || (leaderId ? `leader:${String(leaderId).slice(0, 8)}` : '');
+              const chairMark = chair ? ' [Chair]' : '';
               return {
-                title: `${order}. ${typeLabel} ${who || section || ''}`.trim(),
+                title: `${order}. ${typeLabel} ${who || section || ''}`.trim() + chairMark,
                 subtitle: section && who ? section : undefined,
               };
             },
           },
         },
       ],
-      description: 'All speeches, procedural notes, and section headers in chronological order.',
+      description: 'All speeches, procedural notes, section headers, and mini-headers in chronological order.',
     }),
 
     // ============================================

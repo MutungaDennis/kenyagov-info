@@ -9,6 +9,7 @@ import {
   publicHansardHousePath,
   portableTextToPlain,
 } from "@/lib/hansard/speech";
+import { countsTowardMemberStats } from "@/lib/hansard/stats";
 
 export const revalidate = 3600;
 
@@ -35,6 +36,12 @@ interface Contribution {
   startTime?: string;
   sectionHeader?: string;
   speech: unknown[];
+  isChairContribution?: boolean;
+  type?: string;
+  speakerTitle?: string;
+  speakerName?: string;
+  role?: string;
+  supabaseLeaderId?: string;
   sittingDate: string;
   houseType: string;
   sittingTitle: string;
@@ -99,18 +106,33 @@ export default async function MemberContributionsPage({
     sittingDate: string;
     houseType: string;
     title: string;
+    presidingOfficer?: {
+      role?: string;
+      displayName?: string;
+      supabaseLeaderId?: string;
+    };
     matchingContributions: Array<{
       _key: string;
       order: number;
       startTime?: string;
       sectionHeader?: string;
       speech: unknown[];
+      isChairContribution?: boolean;
+      type?: string;
+      speakerTitle?: string;
+      role?: string;
+      speakerName?: string;
+      supabaseLeaderId?: string;
     }>;
   }> = await sanityClient.fetch(
-    `*[_type == "hansardSitting" && isActive != false && count(contributions[supabaseLeaderId == $leaderId]) > 0] | order(sittingDate desc) {
-      sittingDate, houseType, title,
+    `*[_type == "hansardSitting" && isActive != false && (
+      count(contributions[supabaseLeaderId == $leaderId]) > 0 ||
+      presidingOfficer.supabaseLeaderId == $leaderId
+    )] | order(sittingDate desc) {
+      sittingDate, houseType, title, presidingOfficer,
       "matchingContributions": contributions[supabaseLeaderId == $leaderId] {
-        _key, order, startTime, sectionHeader, speech
+        _key, order, startTime, sectionHeader, speech, isChairContribution, type,
+        speakerTitle, role, speakerName, supabaseLeaderId
       }
     }`,
     { leaderId: leader.id },
@@ -122,12 +144,42 @@ export default async function MemberContributionsPage({
       sittingDate: sitting.sittingDate,
       houseType: sitting.houseType,
       sittingTitle: sitting.title,
+      // Carry sitting chair so stats can exclude Temporary Speaker sittings
+      _presidingOfficer: sitting.presidingOfficer,
     })),
   );
 
-  // Heatmap uses the full unfiltered record (true activity pulse)
+  type Row = Contribution & {
+    _presidingOfficer?: {
+      role?: string;
+      displayName?: string;
+      supabaseLeaderId?: string;
+    };
+  };
+
+  const asStatsCtx = (c: Row) => ({
+    type: c.type || "spoken",
+    isChairContribution: c.isChairContribution,
+    speakerTitle: c.speakerTitle,
+    role: c.role,
+    speakerName: c.speakerName || c.speakerTitle,
+    supabaseLeaderId: c.supabaseLeaderId || leader.id,
+    presidingOfficer: c._presidingOfficer,
+  });
+
+  // Floor debates only — exclude when this member was the sitting's Temporary/Deputy/Speaker
+  const memberRecord = (fullRecord as Row[]).filter((c) =>
+    countsTowardMemberStats(asStatsCtx(c)),
+  );
+  const chairOnlyCount = (fullRecord as Row[]).filter(
+    (c) =>
+      (c.type || "spoken") === "spoken" &&
+      !countsTowardMemberStats(asStatsCtx(c)),
+  ).length;
+
+  // Heatmap: member floor activity (not chair turns)
   const dayCountMap = new Map<string, number>();
-  fullRecord.forEach((c) => {
+  memberRecord.forEach((c) => {
     dayCountMap.set(c.sittingDate, (dayCountMap.get(c.sittingDate) || 0) + 1);
   });
   const heatmapDays = Array.from(dayCountMap.entries()).map(([date, count]) => ({
@@ -135,7 +187,7 @@ export default async function MemberContributionsPage({
     count,
   }));
 
-  let allContributions = [...fullRecord];
+  let allContributions = [...memberRecord];
 
   const keyword = filters.keyword?.toLowerCase().trim();
   let dateFrom = filters.dateFrom;
@@ -173,23 +225,23 @@ export default async function MemberContributionsPage({
   );
 
   const total = allContributions.length;
-  const totalAll = fullRecord.length;
-  const uniqueSittings = new Set(fullRecord.map((c) => c.sittingDate)).size;
+  const totalAll = memberRecord.length;
+  const uniqueSittings = new Set(memberRecord.map((c) => c.sittingDate)).size;
   const firstSpeech =
-    fullRecord.length > 0
-      ? [...fullRecord].sort((a, b) =>
+    memberRecord.length > 0
+      ? [...memberRecord].sort((a, b) =>
           a.sittingDate.localeCompare(b.sittingDate),
         )[0].sittingDate
       : null;
   const lastSpeech =
-    fullRecord.length > 0
-      ? [...fullRecord].sort((a, b) =>
+    memberRecord.length > 0
+      ? [...memberRecord].sort((a, b) =>
           b.sittingDate.localeCompare(a.sittingDate),
         )[0].sittingDate
       : null;
 
   const houseMap = new Map<string, number>();
-  fullRecord.forEach((c) => {
+  memberRecord.forEach((c) => {
     houseMap.set(c.houseType, (houseMap.get(c.houseType) || 0) + 1);
   });
   const houseBreakdown = Array.from(houseMap.entries()).sort(
@@ -318,8 +370,8 @@ export default async function MemberContributionsPage({
         }}
       >
         {[
-          { label: "Contributions", value: String(totalAll) },
-          { label: "Sittings", value: String(uniqueSittings) },
+          { label: "Floor contributions", value: String(totalAll) },
+          { label: "Sittings spoken in", value: String(uniqueSittings) },
           {
             label: "First recorded",
             value: firstSpeech
@@ -363,7 +415,19 @@ export default async function MemberContributionsPage({
         ))}
       </dl>
 
-      {/* GitHub-style contribution pulse — primary visual */}
+      {chairOnlyCount > 0 && (
+        <div className="govuk-inset-text govuk-!-margin-bottom-4">
+          <p className="govuk-body-s govuk-!-margin-bottom-0">
+            <strong>{chairOnlyCount}</strong> intervention
+            {chairOnlyCount === 1 ? "" : "s"} as Speaker, Deputy Speaker, or
+            Temporary Speaker (moderating the House) are{" "}
+            <strong>not included</strong> in floor totals, the activity chart, or
+            the list below. Those are chairing duties, not debate contributions.
+          </p>
+        </div>
+      )}
+
+      {/* GitHub-style contribution pulse — floor activity only */}
       {heatmapDays.length > 0 && (
         <ContributionHeatmap
           days={heatmapDays}
@@ -555,11 +619,15 @@ export default async function MemberContributionsPage({
         </div>
       </form>
 
-      {/* List */}
+      {/* List — floor debate only */}
       <h2 className="govuk-heading-m">
-        Spoken contributions
+        Floor contributions
         {hasActiveFilter ? ` (${total} of ${totalAll})` : ` (${total})`}
       </h2>
+      <p className="govuk-hint">
+        Speeches made as a Member in debate. Does not include turns as Speaker,
+        Deputy Speaker, or Temporary Speaker while moderating the sitting.
+      </p>
       {hasActiveFilter && (
         <p className="govuk-body-s">
           Filters applied.{" "}

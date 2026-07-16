@@ -3,6 +3,12 @@
 import { useId, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { PortableText } from "@portabletext/react";
+import {
+  chairRoleDisplayLabel,
+  resolveChairRole,
+  type PresidingOfficerRef,
+  type PresidingRole,
+} from "@/lib/hansard/stats";
 
 export type EnrichedSpeaker = {
   full_name: string;
@@ -12,7 +18,7 @@ export type EnrichedSpeaker = {
   current_county?: string;
   slug?: string;
   image_url?: string | null;
-  /** Total published Hansard contributions for this member */
+  /** Member floor stats total (excludes chair interventions) */
   contributionCount?: number;
 };
 
@@ -25,6 +31,11 @@ export type ContributionCardProps = {
   speakerTitle?: string;
   constituency?: string;
   party?: string;
+  role?: string;
+  isChairContribution?: boolean;
+  supabaseLeaderId?: string;
+  /** Sitting-level “Presiding officer” from admin — labels Temporary Speaker etc. */
+  presidingOfficer?: PresidingOfficerRef | null;
   enrichedSpeaker?: EnrichedSpeaker;
 };
 
@@ -33,9 +44,9 @@ const speechComponents = {
     normal: ({ children }: { children?: ReactNode }) => (
       <p
         style={{
-          margin: "0 0 0.65em",
-          fontSize: "0.95rem",
-          lineHeight: 1.55,
+          margin: "0 0 0.75em",
+          fontSize: "1.0625rem",
+          lineHeight: 1.6,
           color: "#0b0c0c",
         }}
       >
@@ -46,8 +57,8 @@ const speechComponents = {
 };
 
 /**
- * Public Hansard spoken contribution — NZ/Canada style: clickable member name,
- * Expand for brief meta (no bio), slightly smaller speech text for long reading.
+ * Public Hansard spoken contribution.
+ * Chair interventions are labelled The Speaker / Temporary Speaker / etc.
  */
 export default function ContributionCard({
   order,
@@ -58,23 +69,50 @@ export default function ContributionCard({
   speakerTitle,
   constituency,
   party,
+  role,
+  isChairContribution: isChairFlag,
+  supabaseLeaderId,
+  presidingOfficer,
   enrichedSpeaker,
 }: ContributionCardProps) {
   const [expanded, setExpanded] = useState(false);
   const panelId = useId();
 
+  const chairRole: PresidingRole | null = resolveChairRole({
+    isChairContribution: isChairFlag,
+    speakerTitle,
+    role,
+    speakerName,
+    supabaseLeaderId,
+    presidingOfficer,
+  });
+  const isChair = chairRole !== null;
+  const chairLabel = chairRoleDisplayLabel(chairRole);
+
   const displayName =
     enrichedSpeaker?.full_name || speakerName || "Speaker not linked";
-  const displayTitle = enrichedSpeaker?.title || speakerTitle;
-  const displayParty = enrichedSpeaker?.current_party || party;
-  const displayConst =
-    enrichedSpeaker?.current_constituency || constituency;
+  // Floor members: Hansard honorific first, else Supabase title.
+  // Chair: always use chair role label (not personal job title from Supabase).
+  const displayTitle = isChair
+    ? chairLabel
+    : speakerTitle || enrichedSpeaker?.title;
+  const displayParty = isChair
+    ? undefined
+    : enrichedSpeaker?.current_party || party;
+  const displayConst = isChair
+    ? undefined
+    : enrichedSpeaker?.current_constituency || constituency;
   const displayCounty = enrichedSpeaker?.current_county;
   const slug = enrichedSpeaker?.slug;
   const imageUrl = enrichedSpeaker?.image_url;
   const contributionCount = enrichedSpeaker?.contributionCount;
   const canExpand = Boolean(
-    enrichedSpeaker || displayParty || displayConst || displayCounty || displayTitle,
+    enrichedSpeaker ||
+      displayParty ||
+      displayConst ||
+      displayCounty ||
+      isChair ||
+      displayTitle,
   );
 
   const initials = displayName
@@ -107,10 +145,9 @@ export default function ContributionCard({
       id={`contribution-${order}`}
       style={{
         borderTop: "1px solid #b1b4b6",
-        paddingTop: "0.85rem",
+        paddingTop: "1rem",
       }}
     >
-      {/* Speaker line — ourcommons / NZ style */}
       <div
         style={{
           display: "flex",
@@ -118,47 +155,66 @@ export default function ContributionCard({
           alignItems: "baseline",
           flexWrap: "wrap",
           gap: "0.5rem 1rem",
-          marginBottom: "0.35rem",
+          marginBottom: "0.4rem",
         }}
       >
         <h3
           className="govuk-heading-s"
           style={{
             margin: 0,
-            fontSize: "1.05rem",
-            lineHeight: 1.35,
+            fontSize: "1.15rem",
+            lineHeight: 1.4,
           }}
         >
-          {displayTitle ? (
-            <span style={{ fontWeight: 400, color: "#505a5f" }}>
-              {displayTitle}{" "}
-            </span>
-          ) : null}
-          {nameEl}
-          {displayParty && (
-            <span
-              className="govuk-body-s"
-              style={{
-                marginLeft: "0.5rem",
-                color: "#505a5f",
-                fontWeight: 400,
-              }}
-            >
-              ({displayParty}
-              {displayConst ? ` · ${displayConst}` : ""})
-            </span>
-          )}
-          {!displayParty && displayConst && (
-            <span
-              className="govuk-body-s"
-              style={{
-                marginLeft: "0.5rem",
-                color: "#505a5f",
-                fontWeight: 400,
-              }}
-            >
-              ({displayConst})
-            </span>
+          {isChair && chairLabel ? (
+            <>
+              <span
+                style={{
+                  fontWeight: 700,
+                  color: "#0b0c0c",
+                  marginRight: "0.35rem",
+                }}
+              >
+                {chairLabel}
+              </span>
+              <span style={{ fontWeight: 400, color: "#505a5f" }}>(</span>
+              {nameEl}
+              <span style={{ fontWeight: 400, color: "#505a5f" }}>)</span>
+            </>
+          ) : (
+            <>
+              {displayTitle ? (
+                <span style={{ fontWeight: 400, color: "#505a5f" }}>
+                  {displayTitle}{" "}
+                </span>
+              ) : null}
+              {nameEl}
+              {displayParty && (
+                <span
+                  style={{
+                    marginLeft: "0.5rem",
+                    color: "#505a5f",
+                    fontWeight: 400,
+                    fontSize: "1rem",
+                  }}
+                >
+                  ({displayParty}
+                  {displayConst ? ` · ${displayConst}` : ""})
+                </span>
+              )}
+              {!displayParty && displayConst && (
+                <span
+                  style={{
+                    marginLeft: "0.5rem",
+                    color: "#505a5f",
+                    fontWeight: 400,
+                    fontSize: "1rem",
+                  }}
+                >
+                  ({displayConst})
+                </span>
+              )}
+            </>
           )}
         </h3>
         <div
@@ -170,7 +226,7 @@ export default function ContributionCard({
           }}
         >
           {startTime && (
-            <span className="govuk-body-s" style={{ color: "#505a5f" }}>
+            <span style={{ color: "#505a5f", fontSize: "0.95rem" }}>
               {startTime}
             </span>
           )}
@@ -185,7 +241,7 @@ export default function ContributionCard({
                 font: "inherit",
                 color: "#1d70b8",
                 padding: 0,
-                fontSize: "0.875rem",
+                fontSize: "0.95rem",
               }}
               aria-expanded={expanded}
               aria-controls={panelId}
@@ -199,14 +255,16 @@ export default function ContributionCard({
 
       {sectionHeader && (
         <p
-          className="govuk-body-s"
-          style={{ margin: "0 0 0.5rem", color: "#505a5f" }}
+          style={{
+            margin: "0 0 0.55rem",
+            color: "#505a5f",
+            fontSize: "0.95rem",
+          }}
         >
           {sectionHeader}
         </p>
       )}
 
-      {/* Brief member strip — no bio */}
       {expanded && (
         <div
           id={panelId}
@@ -215,10 +273,10 @@ export default function ContributionCard({
             gap: 12,
             alignItems: "center",
             flexWrap: "wrap",
-            marginBottom: "0.75rem",
-            padding: "0.65rem 0.85rem",
-            background: "#f3f2f1",
-            borderLeft: "4px solid #1d70b8",
+            marginBottom: "0.85rem",
+            padding: "0.7rem 0.9rem",
+            background: isChair ? "#fff7e6" : "#f3f2f1",
+            borderLeft: isChair ? "4px solid #f47738" : "4px solid #1d70b8",
           }}
         >
           {imageUrl ? (
@@ -226,11 +284,11 @@ export default function ContributionCard({
             <img
               src={imageUrl}
               alt=""
-              width={40}
-              height={40}
+              width={44}
+              height={44}
               style={{
-                width: 40,
-                height: 40,
+                width: 44,
+                height: 44,
                 borderRadius: "50%",
                 objectFit: "cover",
                 border: "1px solid #b1b4b6",
@@ -240,16 +298,16 @@ export default function ContributionCard({
             <div
               aria-hidden
               style={{
-                width: 40,
-                height: 40,
+                width: 44,
+                height: 44,
                 borderRadius: "50%",
-                background: "#1d70b8",
+                background: isChair ? "#f47738" : "#1d70b8",
                 color: "#fff",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 fontWeight: 700,
-                fontSize: 13,
+                fontSize: 14,
                 flexShrink: 0,
               }}
             >
@@ -260,12 +318,24 @@ export default function ContributionCard({
             <p
               style={{
                 margin: 0,
-                fontSize: "0.9rem",
+                fontSize: "1rem",
                 fontWeight: 700,
                 lineHeight: 1.3,
               }}
             >
-              {memberHref ? (
+              {isChair && chairLabel ? (
+                <>
+                  {chairLabel}
+                  {" — "}
+                  {memberHref ? (
+                    <Link href={memberHref} className="govuk-link">
+                      {displayName}
+                    </Link>
+                  ) : (
+                    displayName
+                  )}
+                </>
+              ) : memberHref ? (
                 <Link href={memberHref} className="govuk-link">
                   {displayName}
                 </Link>
@@ -276,22 +346,43 @@ export default function ContributionCard({
             <p
               style={{
                 margin: "0.15rem 0 0",
-                fontSize: "0.8125rem",
+                fontSize: "0.9rem",
                 color: "#505a5f",
                 lineHeight: 1.35,
               }}
             >
-              {[displayParty, displayConst, displayCounty]
-                .filter(Boolean)
-                .join(" · ") || "Member"}
-              {typeof contributionCount === "number" && (
+              {isChair ? (
                 <>
-                  {" · "}
-                  <strong style={{ color: "#0b0c0c" }}>
-                    {contributionCount} contribution
-                    {contributionCount === 1 ? "" : "s"}
-                  </strong>
-                  {" in Hansard"}
+                  Moderating this sitting (not a floor debate contribution).
+                  {typeof contributionCount === "number" && (
+                    <>
+                      {" "}
+                      Member floor total:{" "}
+                      <strong style={{ color: "#0b0c0c" }}>
+                        {contributionCount}
+                      </strong>
+                      .
+                    </>
+                  )}
+                </>
+              ) : (
+                <>
+                  {[
+                    enrichedSpeaker?.current_party || party,
+                    enrichedSpeaker?.current_constituency || constituency,
+                    displayCounty,
+                  ]
+                    .filter(Boolean)
+                    .join(" · ") || "Member"}
+                  {typeof contributionCount === "number" && (
+                    <>
+                      {" · "}
+                      <strong style={{ color: "#0b0c0c" }}>
+                        {contributionCount} floor contribution
+                        {contributionCount === 1 ? "" : "s"}
+                      </strong>
+                    </>
+                  )}
                 </>
               )}
             </p>
@@ -306,7 +397,7 @@ export default function ContributionCard({
             components={speechComponents as never}
           />
         ) : (
-          <p className="govuk-hint" style={{ fontSize: "0.9rem" }}>
+          <p className="govuk-hint" style={{ fontSize: "1rem" }}>
             No speech text recorded.
           </p>
         )}

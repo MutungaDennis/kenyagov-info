@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSanityWriteClient } from "@/lib/sanity/createSanityClient";
 import { normalizeSpeechForSanity } from "@/lib/hansard/speech";
+import type { PresidingRole } from "@/lib/hansard/stats";
 
 const sanity = createSanityWriteClient();
+
+type ContributionType =
+  | "spoken"
+  | "procedural"
+  | "header"
+  | "mini-header";
 
 interface SaveHansardRequest {
   houseType: "national-assembly" | "senate" | "county-assembly";
@@ -13,25 +20,30 @@ interface SaveHansardRequest {
   parliamentaryTerm?: string;
   youtubeUrl?: string;
   officialHansardUrl?: string;
+  presidingOfficer?: {
+    role?: PresidingRole | string;
+    displayName?: string;
+    supabaseLeaderId?: string;
+    notes?: string;
+  };
   contributions: Array<{
     _key?: string;
     order: number;
-    type: "spoken" | "procedural" | "header";
+    type: ContributionType;
     supabaseLeaderId?: string;
     speakerName?: string;
     speakerTitle?: string;
     constituency?: string;
     party?: string;
     role?: string;
+    isChairContribution?: boolean;
     speech: string | unknown[];
     startTime?: string;
     sectionHeader?: string;
   }>;
   editorialSummary?: string;
   existingDocumentId?: string;
-  /** true = public; false = draft */
   isActive?: boolean;
-  /** draft | publish — convenience; maps to isActive */
   status?: "draft" | "publish";
 }
 
@@ -39,8 +51,26 @@ function resolveIsActive(body: SaveHansardRequest): boolean {
   if (typeof body.isActive === "boolean") return body.isActive;
   if (body.status === "draft") return false;
   if (body.status === "publish") return true;
-  // Default: create published, update keep existing via patch only if not specified
   return true;
+}
+
+function normalizePresiding(
+  raw: SaveHansardRequest["presidingOfficer"] | undefined,
+) {
+  if (!raw) return undefined;
+  const role = (raw.role || "speaker").toString().trim();
+  const displayName = raw.displayName?.trim() || "";
+  const supabaseLeaderId = raw.supabaseLeaderId?.trim() || undefined;
+  const notes = raw.notes?.trim() || undefined;
+  if (!displayName && !supabaseLeaderId && !notes && role === "speaker") {
+    // still store role so public can show "The Speaker" even without name
+  }
+  return {
+    role: role || "speaker",
+    displayName,
+    supabaseLeaderId,
+    notes,
+  };
 }
 
 export async function POST(request: NextRequest) {
@@ -57,33 +87,40 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const slugBase =
-      body.slug || `${body.houseType}-${body.sittingDate}`;
+    const slugBase = body.slug || `${body.houseType}-${body.sittingDate}`;
     const slug = slugBase
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-+|-+$/g, "");
 
-    // Sort by order then process — never wipe PT by treating arrays as empty strings
     const sorted = [...body.contributions].sort((a, b) => a.order - b.order);
 
     const processedContributions = sorted.map((contrib, index) => {
-      const speech = normalizeSpeechForSanity(contrib.speech);
+      const type = (contrib.type || "spoken") as ContributionType;
+      const isHeader = type === "header" || type === "mini-header";
+      // Headers may have empty speech; spoken/procedural still normalize
+      const speech = isHeader
+        ? normalizeSpeechForSanity(contrib.speech || "")
+        : normalizeSpeechForSanity(contrib.speech);
       const key =
         contrib._key && String(contrib._key).trim()
           ? String(contrib._key)
           : `contrib-${index}-${Math.random().toString(36).slice(2, 9)}`;
 
+      const isChair =
+        type === "spoken" ? Boolean(contrib.isChairContribution) : false;
+
       return {
         _key: key,
-        order: index + 1, // contiguous public order
-        type: contrib.type || "spoken",
+        order: index + 1,
+        type,
         supabaseLeaderId: contrib.supabaseLeaderId || undefined,
         speakerName: contrib.speakerName?.trim() || "",
         speakerTitle: contrib.speakerTitle?.trim() || "",
         constituency: contrib.constituency?.trim() || "",
         party: contrib.party?.trim() || "",
         role: contrib.role?.trim() || "",
+        isChairContribution: isChair,
         startTime: contrib.startTime?.trim() || "",
         sectionHeader: contrib.sectionHeader?.trim() || "",
         speech,
@@ -91,6 +128,7 @@ export async function POST(request: NextRequest) {
     });
 
     const isActive = resolveIsActive(body);
+    const presidingOfficer = normalizePresiding(body.presidingOfficer);
 
     const meta = {
       title: body.title.trim(),
@@ -102,11 +140,11 @@ export async function POST(request: NextRequest) {
       editorialSummary: body.editorialSummary
         ? normalizeSpeechForSanity(body.editorialSummary)
         : undefined,
+      presidingOfficer: presidingOfficer || undefined,
       contributions: processedContributions,
       isActive,
     };
 
-    // ==================== UPDATE EXISTING ====================
     if (body.existingDocumentId) {
       const updated = await sanity
         .patch(body.existingDocumentId)
@@ -127,7 +165,6 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // ==================== CREATE NEW ====================
     const document = {
       _type: "hansardSitting",
       title: meta.title,
@@ -138,6 +175,7 @@ export async function POST(request: NextRequest) {
       parliamentaryTerm: meta.parliamentaryTerm,
       youtubeUrl: meta.youtubeUrl,
       officialHansardUrl: meta.officialHansardUrl,
+      presidingOfficer: meta.presidingOfficer,
       contributions: meta.contributions,
       editorialSummary: meta.editorialSummary || [],
       isActive,

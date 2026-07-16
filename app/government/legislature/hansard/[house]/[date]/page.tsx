@@ -10,12 +10,23 @@ import {
   publicHansardDayPath,
   publicHansardHousePath,
 } from "@/lib/hansard/speech";
+import {
+  countsTowardMemberStats,
+  isPresidingOfficerContribution,
+  chairRoleDisplayLabel,
+  resolveChairRole,
+  presidingRoleLabel,
+} from "@/lib/hansard/stats";
 
 export const revalidate = 3600;
 
 const sanityClient = createSanityClient({ useCdn: true, token: null });
 
-type ContributionType = "spoken" | "procedural" | "header";
+type ContributionType =
+  | "spoken"
+  | "procedural"
+  | "header"
+  | "mini-header";
 
 interface Contribution {
   _key: string;
@@ -26,6 +37,8 @@ interface Contribution {
   speakerTitle?: string;
   constituency?: string;
   party?: string;
+  role?: string;
+  isChairContribution?: boolean;
   startTime?: string;
   sectionHeader?: string;
   speech: unknown[];
@@ -44,6 +57,13 @@ interface EnrichedContribution extends Contribution {
   };
 }
 
+interface PresidingOfficer {
+  role?: string;
+  displayName?: string;
+  supabaseLeaderId?: string;
+  notes?: string;
+}
+
 interface Sitting {
   _id: string;
   title: string;
@@ -57,6 +77,7 @@ interface Sitting {
   editorialSummary?: unknown[];
   keyEvents?: string[];
   topics?: string[];
+  presidingOfficer?: PresidingOfficer;
   contributions: Contribution[];
 }
 
@@ -89,9 +110,10 @@ export default async function DailySittingPage({ params }: PageProps) {
     `*[_type == "hansardSitting" && houseType == $house && sittingDate == $date && isActive != false][0] {
       _id, title, houseType, countyName, sittingDate, sittingPeriod, parliamentaryTerm,
       youtubeUrl, officialHansardUrl, editorialSummary, keyEvents, topics,
+      presidingOfficer,
       contributions[] {
         _key, order, type, supabaseLeaderId, speakerName, speakerTitle,
-        constituency, party, startTime, sectionHeader, speech
+        constituency, party, role, isChairContribution, startTime, sectionHeader, speech
       }
     }`,
     { house, date },
@@ -130,32 +152,60 @@ export default async function DailySittingPage({ params }: PageProps) {
     );
   }
 
-  const enriched = await enrichContributions(sitting.contributions || []);
+  const enriched = await enrichContributions(
+    sitting.contributions || [],
+    sitting.presidingOfficer,
+  );
   const ordered = [...enriched].sort((a, b) => a.order - b.order);
 
   const speakersInSitting = ordered
     .filter((c) => c.type === "spoken")
     .reduce<
-      Array<{ name: string; slug?: string; order: number; key: string }>
+      Array<{
+        name: string;
+        slug?: string;
+        order: number;
+        key: string;
+        chairLabel?: string | null;
+      }>
     >((acc, c) => {
       const name =
         c.enrichedSpeaker?.full_name || c.speakerName || "Unknown";
       if (acc.some((s) => s.name === name && s.order === c.order)) return acc;
+      const chair = resolveChairRole({
+        isChairContribution: c.isChairContribution,
+        speakerTitle: c.speakerTitle,
+        role: c.role,
+        speakerName: c.speakerName,
+        supabaseLeaderId: c.supabaseLeaderId,
+        presidingOfficer: sitting.presidingOfficer,
+      });
       acc.push({
         name,
         slug: c.enrichedSpeaker?.slug,
         order: c.order,
         key: c._key,
+        chairLabel: chairRoleDisplayLabel(chair),
       });
       return acc;
     }, []);
+
+  const chair = sitting.presidingOfficer;
+  const chairLabel = chair
+    ? [
+        presidingRoleLabel(chair.role),
+        chair.displayName ? `(${chair.displayName})` : null,
+      ]
+        .filter(Boolean)
+        .join(" ")
+    : null;
 
   return (
     <>
       <GovUKBreadcrumbs items={crumbs} />
 
       <div className="govuk-grid-row">
-        <div className="govuk-grid-column-two-thirds">
+        <div className="govuk-grid-column-full">
           <span className="govuk-caption-l">
             {houseLabel(sitting.houseType)}
             {sitting.parliamentaryTerm
@@ -177,6 +227,14 @@ export default async function DailySittingPage({ params }: PageProps) {
           </p>
           {sitting.countyName && (
             <p className="govuk-body">{sitting.countyName} County Assembly</p>
+          )}
+          {chairLabel && (
+            <p className="govuk-body govuk-!-margin-bottom-1">
+              <strong>In the Chair:</strong> {chairLabel}
+              {chair?.notes ? (
+                <span className="govuk-hint"> — {chair.notes}</span>
+              ) : null}
+            </p>
           )}
           <PrintPageButton />
         </div>
@@ -216,7 +274,7 @@ export default async function DailySittingPage({ params }: PageProps) {
         sitting.editorialSummary.length > 0 && (
           <div className="govuk-inset-text">
             <h2 className="govuk-heading-s">Summary</h2>
-            <div className="govuk-body" style={{ fontSize: "0.95rem" }}>
+            <div className="govuk-body" style={{ fontSize: "1.05rem" }}>
               <PortableText value={sitting.editorialSummary as never} />
             </div>
           </div>
@@ -246,6 +304,10 @@ export default async function DailySittingPage({ params }: PageProps) {
             <ul className="govuk-list govuk-list--bullet">
               {speakersInSitting.map((s) => (
                 <li key={`${s.key}-${s.order}`}>
+                  {s.chairLabel ? (
+                    <strong>{s.chairLabel}</strong>
+                  ) : null}
+                  {s.chairLabel ? " — " : null}
                   {s.slug ? (
                     <Link
                       href={`/government/legislature/hansard/member/${s.slug}`}
@@ -274,9 +336,10 @@ export default async function DailySittingPage({ params }: PageProps) {
         {ordered.length === 1 ? "entry" : "entries"})
       </h2>
       <p className="govuk-hint govuk-!-margin-bottom-4">
-        Select a member&apos;s name for their full speaking record. Use{" "}
-        <strong>[Expand]</strong> for party, constituency, county, and how often
-        they appear in Hansard.
+        Select a member&apos;s name for their speaking record. The Speaker,
+        Deputy Speaker, or Temporary Speaker are labelled as such when they are
+        in the Chair. Use <strong>[Expand]</strong> for brief member details;
+        floor contribution counts exclude moderating turns.
       </p>
 
       {ordered.length === 0 ? (
@@ -284,30 +347,51 @@ export default async function DailySittingPage({ params }: PageProps) {
           No contributions have been published for this sitting yet.
         </div>
       ) : (
-        <div
-          className="hansard-debate"
-          style={{ maxWidth: "42rem" }}
-        >
+        <div className="hansard-debate govuk-grid-column-full" style={{ float: "none", width: "100%", padding: 0 }}>
           {ordered.map((contrib) => {
             if (contrib.type === "header") {
               return (
                 <div
                   key={contrib._key}
-                  className="govuk-!-margin-top-7 govuk-!-margin-bottom-3"
+                  className="govuk-!-margin-top-8 govuk-!-margin-bottom-3"
                   id={`contribution-${contrib.order}`}
                 >
                   <h3
-                    className="govuk-heading-s"
+                    className="govuk-heading-m"
                     style={{
-                      marginBottom: "0.35rem",
-                      letterSpacing: "0.02em",
+                      marginBottom: "0.4rem",
+                      letterSpacing: "0.03em",
                       textTransform: "uppercase",
-                      color: "#505a5f",
+                      fontSize: "1.2rem",
                     }}
                   >
                     {contrib.sectionHeader || "Section"}
                   </h3>
                   <hr className="govuk-section-break govuk-section-break--visible" />
+                </div>
+              );
+            }
+
+            if (contrib.type === "mini-header") {
+              return (
+                <div
+                  key={contrib._key}
+                  className="govuk-!-margin-top-5 govuk-!-margin-bottom-2"
+                  id={`contribution-${contrib.order}`}
+                >
+                  <h4
+                    className="govuk-heading-s"
+                    style={{
+                      marginBottom: "0.25rem",
+                      fontSize: "1.05rem",
+                      letterSpacing: "0.02em",
+                      textTransform: "uppercase",
+                      color: "#1d70b8",
+                      fontWeight: 700,
+                    }}
+                  >
+                    {contrib.sectionHeader || "Topic"}
+                  </h4>
                 </div>
               );
             }
@@ -318,11 +402,11 @@ export default async function DailySittingPage({ params }: PageProps) {
                   key={contrib._key}
                   id={`contribution-${contrib.order}`}
                   style={{
-                    margin: "0.75rem 0",
-                    padding: "0.5rem 0.75rem",
+                    margin: "0.85rem 0",
+                    padding: "0.55rem 0.85rem",
                     borderLeft: "3px solid #b1b4b6",
                     background: "#f8f8f8",
-                    fontSize: "0.9rem",
+                    fontSize: "1rem",
                     color: "#505a5f",
                     fontStyle: "italic",
                   }}
@@ -352,6 +436,10 @@ export default async function DailySittingPage({ params }: PageProps) {
                 speakerTitle={contrib.speakerTitle}
                 constituency={contrib.constituency}
                 party={contrib.party}
+                role={contrib.role}
+                supabaseLeaderId={contrib.supabaseLeaderId}
+                isChairContribution={Boolean(contrib.isChairContribution)}
+                presidingOfficer={sitting.presidingOfficer}
                 enrichedSpeaker={contrib.enrichedSpeaker}
               />
             );
@@ -377,12 +465,19 @@ export default async function DailySittingPage({ params }: PageProps) {
 
 async function enrichContributions(
   contributions: Contribution[],
+  sittingPresiding?: {
+    role?: string;
+    displayName?: string;
+    supabaseLeaderId?: string;
+  } | null,
 ): Promise<EnrichedContribution[]> {
+  // Also resolve leaders who are only linked as presiding officer
   const leaderIds = Array.from(
     new Set(
-      contributions
-        .map((c) => c.supabaseLeaderId)
-        .filter(Boolean) as string[],
+      [
+        ...contributions.map((c) => c.supabaseLeaderId),
+        sittingPresiding?.supabaseLeaderId,
+      ].filter(Boolean) as string[],
     ),
   );
 
@@ -401,25 +496,76 @@ async function enrichContributions(
 
     const leaderMap = new Map((leaders || []).map((l) => [l.id, l]));
 
-    // Total published contribution counts per leader (for Expand panel)
-    const countRows: Array<{ id?: string }> = await sanityClient.fetch(
-      `*[_type == "hansardSitting" && isActive != false].contributions[supabaseLeaderId in $ids]{
-        "id": supabaseLeaderId
+    // Floor speeches only — exclude sitting-level Temporary Speaker etc.
+    const sittingRows: Array<{
+      presidingOfficer?: {
+        role?: string;
+        displayName?: string;
+        supabaseLeaderId?: string;
+      };
+      contributions?: Array<{
+        id?: string;
+        speakerName?: string;
+        isChairContribution?: boolean;
+        type?: string;
+        speakerTitle?: string;
+        role?: string;
+      }>;
+    }> = await sanityClient.fetch(
+      `*[_type == "hansardSitting" && isActive != false]{
+        presidingOfficer,
+        "contributions": contributions[supabaseLeaderId in $ids]{
+          "id": supabaseLeaderId,
+          speakerName,
+          isChairContribution,
+          type,
+          speakerTitle,
+          role
+        }
       }`,
       { ids: leaderIds },
     );
+
     const totalByLeader = new Map<string, number>();
-    for (const row of countRows || []) {
-      if (!row?.id) continue;
-      totalByLeader.set(row.id, (totalByLeader.get(row.id) || 0) + 1);
+    for (const sitting of sittingRows || []) {
+      const po = sitting.presidingOfficer;
+      for (const row of sitting.contributions || []) {
+        if (!row?.id) continue;
+        if (
+          !countsTowardMemberStats({
+            type: row.type,
+            isChairContribution: row.isChairContribution,
+            speakerTitle: row.speakerTitle,
+            role: row.role,
+            speakerName: row.speakerName,
+            supabaseLeaderId: row.id,
+            presidingOfficer: po,
+          })
+        ) {
+          continue;
+        }
+        totalByLeader.set(row.id, (totalByLeader.get(row.id) || 0) + 1);
+      }
     }
 
     return contributions.map((contrib) => {
-      const leader = contrib.supabaseLeaderId
-        ? leaderMap.get(contrib.supabaseLeaderId)
-        : null;
+      // Prefer explicit link; if unlinked but matches sitting chair, use chair's leader
+      let leaderId = contrib.supabaseLeaderId;
+      if (
+        !leaderId &&
+        sittingPresiding?.supabaseLeaderId &&
+        isPresidingOfficerContribution(
+          { speakerName: contrib.speakerName },
+          sittingPresiding,
+        )
+      ) {
+        leaderId = sittingPresiding.supabaseLeaderId;
+      }
+
+      const leader = leaderId ? leaderMap.get(leaderId) : null;
       return {
         ...contrib,
+        supabaseLeaderId: leaderId || contrib.supabaseLeaderId,
         enrichedSpeaker: leader
           ? {
               full_name: leader.full_name,
@@ -429,7 +575,7 @@ async function enrichContributions(
               current_county: leader.current_county,
               slug: leader.slug,
               image_url: leader.image_url,
-              contributionCount: totalByLeader.get(leader.id),
+              contributionCount: totalByLeader.get(leader.id) ?? 0,
             }
           : undefined,
       };
