@@ -302,93 +302,69 @@ export const nationalEvents: NationalEvent[] = [
       },
     ],
   },
-  {
-    slug: "trade-and-industry-expositions",
-    title: "Trade and industry expositions",
-    summary:
-      "National and sector trade fairs for manufacturing, housing, ICT, energy and investment — overview for expansion.",
-    meta: "Various · Announced annually",
-    categorySlug: "agricultural-and-trade-expositions",
-    lead: "Beyond ASK agricultural shows, Kenya hosts sector trade expositions organised by industry associations, government agencies and private partners. This page is a summary placeholder for a fuller directory.",
-    sections: [
-      {
-        heading: "What belongs here",
-        paragraphs: [
-          "Events that are national or multi-county in profile and focused on trade, investment, manufacturing, housing, digital economy, energy or related industries. Local market days are better covered under county or cultural calendar content.",
-        ],
-      },
-      {
-        heading: "How we will expand this page",
-        paragraphs: [
-          "As verified calendars and organisers are supplied, this section can list major recurring expos with typical months, venues, hosts and public access notes — in the same way ASK and NITF are covered.",
-        ],
-        bullets: [
-          "Name and organiser",
-          "Typical time of year",
-          "Venue or host city",
-          "Whether the public can attend",
-          "Link to official announcement source",
-        ],
-      },
-    ],
-    relatedLinks: [
-      {
-        text: "ASK shows",
-        href: "/society-and-culture/national-events/ask-shows",
-      },
-      { text: "Starting a business guide", href: "/guides/starting-a-business" },
-    ],
-  },
-
   // —— Governance ——
   {
     slug: "devolution-conference",
     title: "Devolution Conference",
     summary:
-      "Major intergovernmental conference on devolution, county performance and accountability — not an agricultural show.",
-    meta: "Recurring · Rotating host counties",
+      "Council of Governors conference — 9 editions since 2014; most recent Homa Bay 2025. Next (2027) not yet announced.",
+    meta: "Biennial · Most recent: Aug 2025",
     categorySlug: "governance-and-civic-events",
-    lead: "The Devolution Conference is a high-profile governance event focused on Kenya’s devolved system of government. It brings together national and county leaders, public officers, development partners and civil society. It is not an Agricultural Society of Kenya trade show.",
+    lead: "The Devolution Conference is the main intergovernmental forum on Kenya’s devolved system, convened with the Council of Governors. Open the full page for past hosts, venues and themes, and the next or most recent conference as dates change.",
     sections: [
       {
-        heading: "What it is",
+        heading: "Past conferences and current highlight",
         paragraphs: [
-          "The conference is associated with dialogue on devolution implementation, service delivery, intergovernmental relations and accountability. Hosting is often rotated among counties. Frequency and exact branding can vary; treat each edition’s programme as announced by the organisers (including the Council of Governors and partners).",
-        ],
-      },
-      {
-        heading: "Why it sits under governance, not trade expos",
-        paragraphs: [
-          "Unlike ASK shows, the conference is about public administration and the constitutional system of counties. For agricultural exhibitions, see ASK shows and the Nairobi International Trade Fair.",
+          "See past editions (most recent first), notes on the 2020 COVID hiatus and the biennial cycle, and a green highlight that shows the conference happening now, next, or most recently held.",
         ],
         links: [
           {
-            text: "County vs national government",
-            href: "/county-vs-national",
+            text: "Devolution Conference — past editions and highlight",
+            href: "/society-and-culture/national-events/devolution-conference",
           },
-          {
-            text: "Devolution",
-            href: "/government/counties/devolution",
-          },
-          {
-            text: "How government works",
-            href: "/how-government-works",
-          },
-        ],
-      },
-      {
-        heading: "Public access",
-        paragraphs: [
-          "Some sessions may be open or livestreamed; others are for registered delegates. Check the official conference announcement for each year.",
         ],
       },
     ],
     relatedLinks: [
       {
+        text: "Devolution Sensitisation Week",
+        href: "/society-and-culture/national-events/devolution-sensitisation-week",
+      },
+      {
         text: "Chapter 11 — Devolved government",
         href: "/constitution/chapter/11",
       },
       { text: "County governments", href: "/government/counties" },
+    ],
+  },
+  {
+    slug: "devolution-sensitisation-week",
+    title: "Devolution Sensitisation Week",
+    summary:
+      "Public education weeks on devolution — next in Garissa, 27 July – 1 August 2026.",
+    meta: "Upcoming · Garissa 2026",
+    categorySlug: "governance-and-civic-events",
+    lead: "Devolution Sensitisation Week (DSW) is a Council of Governors public-facing programme to explain devolution and gather feedback. It is separate from the multi-day Devolution Conference.",
+    sections: [
+      {
+        heading: "Next, ongoing or most recent week",
+        paragraphs: [
+          "The highlight card updates from next week, to happening now while the week runs, then to most recent once it ends. The 4th edition is listed for Garissa County, 27 July – 1 August 2026; earlier editions include Nairobi (2017), Mombasa (2018) and Homa Bay (2025).",
+        ],
+        links: [
+          {
+            text: "Devolution Sensitisation Week — full guide",
+            href: "/society-and-culture/national-events/devolution-sensitisation-week",
+          },
+        ],
+      },
+    ],
+    relatedLinks: [
+      {
+        text: "Devolution Conference",
+        href: "/society-and-culture/national-events/devolution-conference",
+      },
+      { text: "Devolution", href: "/government/counties/devolution" },
     ],
   },
   {
@@ -430,21 +406,27 @@ export const nationalEvents: NationalEvent[] = [
     slug: "kenya-national-drama-and-film-festival",
     title: "Kenya National Drama and Film Festival (KNDFF)",
     summary:
-      "National creative arts festival for schools, colleges and universities — theatre, spoken word and student film.",
-    meta: "Annual · Education sector",
+      "National co-curricular finals for schools and colleges — most recent 64th edition (Kagumo TTC, Nyeri, April 2026).",
+    meta: "Annual · Most recent: Apr 2026",
     categorySlug: "education-arts-and-youth",
-    lead: "The Kenya National Drama and Film Festival is a major national platform for student performance and film. It showcases theatre, spoken word, and related creative work from educational institutions.",
+    lead: "The Kenya National Drama and Film Festival is the national platform for student theatre, film and related performance under the Ministry of Education. The full page lists next, ongoing or most recent finals, plus past hosts, themes and secondary-school play winners where recorded.",
     sections: [
       {
-        heading: "Who takes part",
+        heading: "Most recent finals and archive",
         paragraphs: [
-          "Primary and secondary schools, colleges and universities typically progress through local and regional stages toward national finals. Exact rules and calendars are set by the education and festival organising structures each year.",
+          "The green highlight updates automatically: festival happening now, next announced edition, or most recent past finals. Past national finals (from 1985 in this dataset) are listed most recent first. The compiled high-school winners list records a COVID break for 2020–2022. The 64th State Concert was at State House Grounds, Nairobi.",
+        ],
+        links: [
+          {
+            text: "KNDFF — editions, hosts and winners",
+            href: "/society-and-culture/national-events/kenya-national-drama-and-film-festival",
+          },
         ],
       },
       {
-        heading: "Why it matters",
+        heading: "Who takes part",
         paragraphs: [
-          "The festival is part of Kenya’s public cultural and education life. It develops talent, preserves performance traditions and gives young people a national stage.",
+          "Pre-primary through university learners progress through local and regional stages toward national finals. Rules and calendars are set by the education and festival organising structures each year.",
         ],
       },
     ],
@@ -460,21 +442,27 @@ export const nationalEvents: NationalEvent[] = [
     slug: "kenya-music-festival",
     title: "Kenya Music Festival",
     summary:
-      "Long-running national music, dance and elocution festival rooted in schools and colleges.",
-    meta: "Annual · Education sector",
+      "Ministry of Education national music, dance and elocution festival — next Meru cycle August 2026; archive from 1985.",
+    meta: "Annual · Next: Aug 2026 (Meru)",
     categorySlug: "education-arts-and-youth",
-    lead: "The Kenya Music Festival is one of Africa’s longest-running school-centred festivals of music, dance and elocution. It celebrates indigenous and contemporary performance.",
+    lead: "The Kenya Music Festival is one of Africa’s longest-running school-centred festivals of music, dance and elocution. The full page shows next, ongoing or most recent national finals, past editions (no winners column), and history from 1927.",
     sections: [
+      {
+        heading: "Next finals and archive",
+        paragraphs: [
+          "The green highlight updates automatically for festival happening now, next announced edition, or most recent past finals. COVID-19 skipped full nationals in 2020 and 2021 (93rd in 2019, 94th in 2022). Past national finals from 1985 list edition, dates, venue and theme.",
+        ],
+        links: [
+          {
+            text: "Kenya Music Festival — editions and history",
+            href: "/society-and-culture/national-events/kenya-music-festival",
+          },
+        ],
+      },
       {
         heading: "What it includes",
         paragraphs: [
           "Classes typically cover choral music, instrumental work, traditional dance, verse speaking and related categories. Institutions compete through progressive levels toward national adjudication.",
-        ],
-      },
-      {
-        heading: "History in brief",
-        paragraphs: [
-          "The festival has operated for many decades and remains a fixture of the education and culture calendar. Venue and dates for national finals are announced annually.",
         ],
       },
     ],
@@ -693,17 +681,13 @@ export const nationalEvents: NationalEvent[] = [
         text: "Nairobi International Trade Fair",
         href: "/society-and-culture/national-events/nairobi-international-trade-fair",
       },
-      {
-        text: "Trade and industry expositions",
-        href: "/society-and-culture/national-events/trade-and-industry-expositions",
-      },
     ],
   },
   {
     slug: "governance-and-civic-events",
     title: "Governance and civic events (overview)",
     summary:
-      "Devolution Conference and public participation — how Kenya debates government in public forums.",
+      "Devolution Conference, Devolution Sensitisation Week and public participation.",
     meta: "Category overview",
     categorySlug: "governance-and-civic-events",
     lead: "These events are about how Kenya is governed: devolution, accountability and public participation. They are separate from agricultural trade fairs.",
@@ -724,6 +708,10 @@ export const nationalEvents: NationalEvent[] = [
       {
         text: "Devolution Conference",
         href: "/society-and-culture/national-events/devolution-conference",
+      },
+      {
+        text: "Devolution Sensitisation Week",
+        href: "/society-and-culture/national-events/devolution-sensitisation-week",
       },
       {
         text: "Civic and public participation events",

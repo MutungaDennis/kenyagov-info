@@ -307,6 +307,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/society-and-culture`, changeFrequency: 'monthly', priority: 0.6 },
     { url: `${BASE_URL}/society-and-culture/national-events`, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${BASE_URL}/society-and-culture/national-events/ask-shows`, changeFrequency: 'monthly', priority: 0.75 },
+    { url: `${BASE_URL}/society-and-culture/national-events/devolution-conference`, changeFrequency: 'monthly', priority: 0.7 },
+    { url: `${BASE_URL}/society-and-culture/national-events/devolution-sensitisation-week`, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${BASE_URL}/services`, changeFrequency: 'weekly', priority: 0.8 },
     { url: `${BASE_URL}/services/a-z`, changeFrequency: 'weekly', priority: 0.8 },
     { url: `${BASE_URL}/services/popular`, changeFrequency: 'weekly', priority: 0.85 },

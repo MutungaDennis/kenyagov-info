@@ -644,6 +644,17 @@ const nextConfig: NextConfig = {
         destination: '/society-and-culture',
         permanent: true,
       },
+      // Placeholder removed until trade/industry expo data is available
+      {
+        source: '/society-and-culture/national-events/trade-and-industry-expositions',
+        destination: '/society-and-culture/national-events#agricultural-and-trade-expositions',
+        permanent: true,
+      },
+      {
+        source: '/society-and-culture/national-events/dsw',
+        destination: '/society-and-culture/national-events/devolution-sensitisation-week',
+        permanent: true,
+      },
 
       // ==========================================
       // CONSTITUTION — legacy flat article paths

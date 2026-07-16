@@ -12,9 +12,9 @@ import {
   daysUntilStart,
   formatAskDateRange,
   formatAskDayOfWeek,
+  getAskHighlight,
   getAskTierLabel,
   getCurrentYear,
-  getNextAskEvent,
   getPastAskEvents,
   getUpcomingAskEvents,
   profilePath,
@@ -104,13 +104,18 @@ function EventTable({
 export default function AskShowsPage() {
   const currentYear = getCurrentYear();
   const calendarYear = askTheme2026.year;
-  const nextEvent = getNextAskEvent();
+  const highlight = getAskHighlight();
+  const highlightEvent = highlight?.event ?? null;
   const upcoming = getUpcomingAskEvents(calendarYear);
   const past = getPastAskEvents(calendarYear);
   const international = getProfilesByTier("international");
   const national = getProfilesByTier("national");
   const regional = getProfilesByTier("regional");
   const satellite = getProfilesByTier("satellite");
+  const days =
+    highlightEvent && highlight?.status === "upcoming"
+      ? daysUntilStart(highlightEvent)
+      : null;
 
   return (
     <>
@@ -135,48 +140,58 @@ export default function AskShowsPage() {
         {calendarYear}.
       </p>
 
-      {/* Next event first — no scroll past long intro */}
-      {nextEvent && (
+      {/* Highlight: ongoing → next → most recent */}
+      {highlight && highlightEvent && (
         <div className="app-next-holiday-panel govuk-!-margin-bottom-6">
           <h2 className="govuk-heading-m govuk-!-margin-bottom-2">
-            Next ASK event
+            {highlight.status === "ongoing"
+              ? "ASK event happening now"
+              : highlight.status === "upcoming"
+                ? "Next ASK event"
+                : "Most recent ASK event"}
           </h2>
           <p className="govuk-heading-l govuk-!-margin-bottom-1">
-            {formatAskDateRange(nextEvent.startDate, nextEvent.endDate)}
+            {formatAskDateRange(
+              highlightEvent.startDate,
+              highlightEvent.endDate,
+            )}
           </p>
           <p className="govuk-body-l govuk-!-margin-bottom-2">
-            {formatAskDayOfWeek(nextEvent.startDate)}
-            {nextEvent.startDate !== nextEvent.endDate
-              ? ` – ${formatAskDayOfWeek(nextEvent.endDate)}`
+            {formatAskDayOfWeek(highlightEvent.startDate)}
+            {highlightEvent.startDate !== highlightEvent.endDate
+              ? ` – ${formatAskDayOfWeek(highlightEvent.endDate)}`
               : ""}{" "}
-            — {nextEvent.name}
+            — {highlightEvent.name}
           </p>
           <p className="govuk-body govuk-!-margin-bottom-1">
-            {nextEvent.place}
-            {nextEvent.venue ? ` · ${nextEvent.venue}` : ""} ·{" "}
-            {getAskTierLabel(nextEvent.tier)}
+            {highlightEvent.place}
+            {highlightEvent.venue ? ` · ${highlightEvent.venue}` : ""} ·{" "}
+            {getAskTierLabel(highlightEvent.tier)}
           </p>
-          {daysUntilStart(nextEvent) > 0 && (
+          {highlight.status === "upcoming" && days !== null && days > 0 && (
             <p className="govuk-body govuk-!-margin-bottom-2">
-              Starts in {daysUntilStart(nextEvent)} day
-              {daysUntilStart(nextEvent) === 1 ? "" : "s"}
+              Starts in {days} day{days === 1 ? "" : "s"}
             </p>
           )}
-          {daysUntilStart(nextEvent) === 0 && (
-            <p className="govuk-body govuk-!-margin-bottom-2">
-              Starts today (or is ongoing)
-            </p>
-          )}
-          {daysUntilStart(nextEvent) < 0 && (
+          {highlight.status === "ongoing" && (
             <p className="govuk-body govuk-!-margin-bottom-2">
               Ongoing until{" "}
-              {formatAskDateRange(nextEvent.endDate, nextEvent.endDate)}
+              {formatAskDateRange(
+                highlightEvent.endDate,
+                highlightEvent.endDate,
+              )}
             </p>
           )}
-          {nextEvent.profileSlug && (
+          {highlight.status === "recent" && (
+            <p className="govuk-body govuk-!-margin-bottom-2">
+              This is the last event in the loaded calendar. Check with ASK for
+              the next published programme.
+            </p>
+          )}
+          {highlightEvent.profileSlug && (
             <p className="govuk-body govuk-!-margin-bottom-0">
               <Link
-                href={profilePath(nextEvent.profileSlug)}
+                href={profilePath(highlightEvent.profileSlug)}
                 className="govuk-link"
               >
                 Show details, stand rates and gate charges
@@ -186,15 +201,15 @@ export default function AskShowsPage() {
         </div>
       )}
 
-      {!nextEvent && (
+      {!highlight && (
         <div className="govuk-warning-text">
           <span className="govuk-warning-text__icon" aria-hidden="true">
             !
           </span>
           <strong className="govuk-warning-text__text">
             <span className="govuk-visually-hidden">Warning </span>
-            There are no upcoming events left in the loaded calendar years. Check
-            with ASK for the next published programme.
+            There are no events in the loaded calendar years. Check with ASK for
+            the published programme.
           </strong>
         </div>
       )}

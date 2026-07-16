@@ -51,6 +51,24 @@ export function isAskEventPast(
   return !isAskEventUpcoming(event, today);
 }
 
+/** Dynamic panel state: future, in progress, or last held. */
+export type AskHighlightStatus = "upcoming" | "ongoing" | "recent";
+
+function isAskOngoing(
+  event: AskCalendarEvent,
+  today: Date = new Date(),
+): boolean {
+  const t = startOfDay(today);
+  return parseIso(event.startDate) <= t && parseIso(event.endDate) >= t;
+}
+
+function isAskFuture(
+  event: AskCalendarEvent,
+  today: Date = new Date(),
+): boolean {
+  return parseIso(event.startDate) > startOfDay(today);
+}
+
 /** Next event that has not yet finished (includes multi-day shows in progress). */
 export function getNextAskEvent(
   today: Date = new Date(),
@@ -62,6 +80,51 @@ export function getNextAskEvent(
       (a, b) => parseIso(a.startDate).getTime() - parseIso(b.startDate).getTime(),
     );
   return all[0] ?? null;
+}
+
+/** Most recent event that has already started (includes ongoing). */
+export function getLatestAskEvent(
+  today: Date = new Date(),
+): AskCalendarEvent | null {
+  const all = Object.values(askCalendarByYear)
+    .flat()
+    .filter((e) => parseIso(e.startDate) <= startOfDay(today))
+    .sort(
+      (a, b) =>
+        parseIso(b.endDate).getTime() - parseIso(a.endDate).getTime(),
+    );
+  return all[0] ?? null;
+}
+
+/**
+ * Green-panel highlight: ongoing → next upcoming → most recent past.
+ */
+export function getAskHighlight(today: Date = new Date()): {
+  event: AskCalendarEvent;
+  status: AskHighlightStatus;
+} | null {
+  const all = Object.values(askCalendarByYear).flat();
+
+  const ongoing = all
+    .filter((e) => isAskOngoing(e, today))
+    .sort(
+      (a, b) =>
+        parseIso(a.startDate).getTime() - parseIso(b.startDate).getTime(),
+    )[0];
+  if (ongoing) return { event: ongoing, status: "ongoing" };
+
+  const upcoming = all
+    .filter((e) => isAskFuture(e, today))
+    .sort(
+      (a, b) =>
+        parseIso(a.startDate).getTime() - parseIso(b.startDate).getTime(),
+    )[0];
+  if (upcoming) return { event: upcoming, status: "upcoming" };
+
+  const latest = getLatestAskEvent(today);
+  if (latest) return { event: latest, status: "recent" };
+
+  return null;
 }
 
 export function getUpcomingAskEvents(

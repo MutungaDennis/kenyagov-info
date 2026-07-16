@@ -2,21 +2,82 @@
 
 import { Holiday, holidays } from './holidays';
 
-export function getNextHoliday(allHolidays: Record<number, Holiday[]> = holidays): Holiday | null {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+function startOfDay(d: Date = new Date()): Date {
+  const x = new Date(d);
+  x.setHours(0, 0, 0, 0);
+  return x;
+}
+
+function parseHolidayDate(dateString: string): Date {
+  const d = new Date(dateString);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+/** Dynamic panel state: future, today, or last observed. */
+export type HolidayHighlightStatus = "upcoming" | "today" | "recent";
+
+export function getNextHoliday(
+  allHolidays: Record<number, Holiday[]> = holidays,
+  today: Date = new Date(),
+): Holiday | null {
+  const t = startOfDay(today);
 
   const allHolidayList = Object.values(allHolidays).flat();
-  
+
   const upcoming = allHolidayList
-    .filter(h => {
-      const holidayDate = new Date(h.date);
-      holidayDate.setHours(0, 0, 0, 0);
-      return holidayDate >= today;
-    })
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    .filter((h) => parseHolidayDate(h.date) >= t)
+    .sort(
+      (a, b) =>
+        parseHolidayDate(a.date).getTime() - parseHolidayDate(b.date).getTime(),
+    );
 
   return upcoming[0] || null;
+}
+
+/** Most recent holiday that has already occurred (or is today). */
+export function getLatestHoliday(
+  allHolidays: Record<number, Holiday[]> = holidays,
+  today: Date = new Date(),
+): Holiday | null {
+  const t = startOfDay(today);
+  const pastOrToday = Object.values(allHolidays)
+    .flat()
+    .filter((h) => parseHolidayDate(h.date) <= t)
+    .sort(
+      (a, b) =>
+        parseHolidayDate(b.date).getTime() - parseHolidayDate(a.date).getTime(),
+    );
+  return pastOrToday[0] ?? null;
+}
+
+/**
+ * Green-panel highlight: today → next upcoming → most recent past.
+ */
+export function getHolidayHighlight(
+  allHolidays: Record<number, Holiday[]> = holidays,
+  today: Date = new Date(),
+): { holiday: Holiday; status: HolidayHighlightStatus } | null {
+  const t = startOfDay(today);
+  const all = Object.values(allHolidays).flat();
+
+  const onToday = all.find(
+    (h) => parseHolidayDate(h.date).getTime() === t.getTime(),
+  );
+  if (onToday) return { holiday: onToday, status: "today" };
+
+  const upcoming = all
+    .filter((h) => parseHolidayDate(h.date) > t)
+    .sort(
+      (a, b) =>
+        parseHolidayDate(a.date).getTime() - parseHolidayDate(b.date).getTime(),
+    )[0];
+  if (upcoming) return { holiday: upcoming, status: "upcoming" };
+
+  const latest = getLatestHoliday(allHolidays, today);
+  if (latest) return { holiday: latest, status: "recent" };
+
+  return null;
 }
 
 export function getAvailableYears(allHolidays: Record<number, Holiday[]> = holidays): number[] {

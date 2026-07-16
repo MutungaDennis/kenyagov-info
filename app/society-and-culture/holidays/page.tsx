@@ -6,7 +6,7 @@ import GovUKBreadcrumbs from '@/components/govuk/Breadcrumbs';
 import LastUpdated from '@/components/govuk/LastUpdated';
 import { holidays, Holiday } from '@/lib/data/holidays';
 import {
-  getNextHoliday,
+  getHolidayHighlight,
   getUpcomingHolidaysThisYear,
   getPastHolidaysThisYear,
   getHolidaysForYear,
@@ -78,12 +78,13 @@ export default function HolidaysPage() {
   const nextYear = currentYear + 1;
   const yearAfterNext = currentYear + 2;
 
-  const nextHoliday = useMemo(() => getNextHoliday(), []);
+  const highlight = useMemo(() => getHolidayHighlight(), []);
   const upcomingThisYear = useMemo(() => getUpcomingHolidaysThisYear(), []);
   const pastThisYear = useMemo(() => getPastHolidaysThisYear(), []);
   const nextYearHolidays = useMemo(() => getHolidaysForYear(nextYear), [nextYear]);
   const yearAfterNextHolidays = useMemo(() => getHolidaysForYear(yearAfterNext), [yearAfterNext]);
   const pastYears = useMemo(() => getPastYearsRange(2020), []);
+  const highlightHoliday = highlight?.holiday ?? null;
 
   return (
   <>
@@ -102,17 +103,23 @@ export default function HolidaysPage() {
             
             <h1 className="govuk-heading-xl">Public holidays in Kenya</h1>
 
-            {/* Next Holiday Panel */}
-            {nextHoliday && (
+            {/* Highlight: today → next → most recent */}
+            {highlight && highlightHoliday && (
               <div className="app-next-holiday-panel govuk-!-margin-bottom-8">
-                <h2 className="govuk-heading-m govuk-!-margin-bottom-2">Next public holiday</h2>
+                <h2 className="govuk-heading-m govuk-!-margin-bottom-2">
+                  {highlight.status === "today"
+                    ? "Public holiday today"
+                    : highlight.status === "upcoming"
+                      ? "Next public holiday"
+                      : "Most recent public holiday"}
+                </h2>
                 <p className="govuk-heading-l govuk-!-margin-bottom-1">
-                  {formatDate(nextHoliday.date)}
+                  {formatDate(highlightHoliday.date)}
                 </p>
                 <p className="govuk-body-l govuk-!-margin-bottom-0">
-                  {getDayOfWeek(nextHoliday.date)} — {nextHoliday.name}
-                  {getHolidaySymbol(nextHoliday.type) && (
-                    <span> {getHolidaySymbol(nextHoliday.type)}</span>
+                  {getDayOfWeek(highlightHoliday.date)} — {highlightHoliday.name}
+                  {getHolidaySymbol(highlightHoliday.type) && (
+                    <span> {getHolidaySymbol(highlightHoliday.type)}</span>
                   )}
                 </p>
               </div>
