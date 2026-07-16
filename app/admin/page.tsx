@@ -16,22 +16,10 @@ const TASKS = [
   },
   {
     segment: "hansard",
-    title: "Hansard sittings",
-    body: "Review published parliamentary sittings stored in Sanity.",
+    title: "Hansard",
+    body: "Browse sittings, enter contributions manually, or upload a PDF for Grok extraction — all on one page.",
     group: "Parliament",
     accent: true,
-  },
-  {
-    segment: "hansard/upload",
-    title: "Upload Hansard PDF",
-    body: "Upload a Hansard PDF for processing (local tools when not available on Workers).",
-    group: "Parliament",
-  },
-  {
-    segment: "hansard/manual",
-    title: "Manual Hansard entry",
-    body: "Enter sitting details and contributions without a PDF upload.",
-    group: "Parliament",
   },
   {
     segment: "polling-stations/upload",

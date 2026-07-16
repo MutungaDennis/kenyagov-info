@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { createClient as createSupabaseClient } from '@supabase/supabase-js';
+import { createPublicClient } from '@/lib/supabase/public';
 import GovUKBreadcrumbs from '@/components/govuk/Breadcrumbs';
 import Pagination from '@/components/govuk/Pagination';
 
@@ -19,10 +19,7 @@ export default async function FindMembersPage({ searchParams }: PageProps) {
   const filters = await searchParams;
   const currentPage = Math.max(1, parseInt(filters.page || '1', 10));
 
-  const supabase = createSupabaseClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
-  );
+  const supabase = createPublicClient();
 
   // Build query
   let query = supabase
@@ -92,7 +89,7 @@ export default async function FindMembersPage({ searchParams }: PageProps) {
     if (filters.party) params.set('party', filters.party);
     if (filters.county) params.set('county', filters.county);
     if (filters.house) params.set('house', filters.house);
-    return `/legislature/hansard/members${params.toString() ? `?${params.toString()}` : ''}`;
+    return `/government/legislature/hansard/members${params.toString() ? `?${params.toString()}` : ''}`;
   };
 
   const baseUrl = buildBaseUrl();
@@ -103,9 +100,10 @@ export default async function FindMembersPage({ searchParams }: PageProps) {
       <GovUKBreadcrumbs
         items={[
           { text: 'Home', href: '/' },
-          { text: 'Legislature', href: '/legislature' },
-          { text: 'Hansard', href: '/legislature/hansard' },
-          { text: 'Find Members', href: '' },
+          { text: 'Government', href: '/government' },
+          { text: 'Legislature', href: '/government/legislature' },
+          { text: 'Hansard', href: '/government/legislature/hansard/national-assembly' },
+          { text: 'Find Members' },
         ]}
       />
 
@@ -173,7 +171,7 @@ export default async function FindMembersPage({ searchParams }: PageProps) {
 
           <div className="govuk-button-group">
             <button type="submit" className="govuk-button">Search</button>
-            <Link href="/legislature/hansard/members" className="govuk-button govuk-button--secondary">
+            <Link href="/government/legislature/hansard/members" className="govuk-button govuk-button--secondary">
               Clear filters
             </Link>
           </div>
@@ -220,7 +218,7 @@ export default async function FindMembersPage({ searchParams }: PageProps) {
                     </td>
                     <td className="govuk-table__cell govuk-table__cell--numeric">
                       <Link
-                        href={`/legislature/hansard/member/${leader.slug}`}
+                        href={`/government/legislature/hansard/member/${leader.slug}`}
                         className="govuk-button govuk-button--secondary govuk-!-margin-bottom-0"
                       >
                         View contributions →

@@ -83,7 +83,7 @@ export default async function SenateHansard() {
           </div>
           <div className="govuk-grid-column-one-half">
             <Link 
-              href="/legislature/hansard/members?house=Senate" 
+              href="/government/legislature/hansard/members?house=Senate" 
               className="govuk-button govuk-!-width-full"
             >
               Find Senate Members →

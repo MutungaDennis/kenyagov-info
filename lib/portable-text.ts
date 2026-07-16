@@ -1,27 +1,10 @@
 /**
- * Lightweight Portable Text helpers — keep out of AI/PDF bundles.
+ * Lightweight Portable Text helpers — re-export Hansard-safe implementations.
+ * Keep this module free of AI/PDF deps for Cloudflare Worker size.
  */
 
-export function textToPortableText(text: string) {
-  if (!text || typeof text !== "string") return [];
-
-  const paragraphs = text
-    .split(/\n\s*\n/)
-    .map((p) => p.trim())
-    .filter(Boolean);
-
-  return paragraphs.map((paragraph) => ({
-    _type: "block" as const,
-    _key: Math.random().toString(36).substring(2, 12),
-    style: "normal" as const,
-    children: [
-      {
-        _type: "span" as const,
-        _key: Math.random().toString(36).substring(2, 12),
-        text: paragraph,
-        marks: [] as string[],
-      },
-    ],
-    markDefs: [] as unknown[],
-  }));
-}
+export {
+  textToPortableText,
+  portableTextToPlain,
+  normalizeSpeechForSanity,
+} from "@/lib/hansard/speech";

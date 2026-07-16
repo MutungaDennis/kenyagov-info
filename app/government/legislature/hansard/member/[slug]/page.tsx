@@ -1,10 +1,18 @@
-import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import Link from "next/link";
+import { notFound } from "next/navigation";
 import { createSanityClient } from "@/lib/sanity/createSanityClient";
-import { createClient as createSupabaseClient } from '@supabase/supabase-js';
-import GovUKBreadcrumbs from '@/components/govuk/Breadcrumbs';
+import { createPublicClient } from "@/lib/supabase/public";
+import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
+import ContributionHeatmap from "@/components/hansard/ContributionHeatmap";
+import {
+  publicHansardDayPath,
+  publicHansardHousePath,
+  portableTextToPlain,
+} from "@/lib/hansard/speech";
 
-const sanityClient = createSanityClient();
+export const revalidate = 3600;
+
+const sanityClient = createSanityClient({ useCdn: true, token: null });
 
 interface Leader {
   id: string;
@@ -16,15 +24,9 @@ interface Leader {
   current_county?: string | null;
   bio?: string | null;
   image_url?: string | null;
-  gender?: string | null;
-  date_of_birth?: string | null;
   official_website?: string | null;
-  social_media?: Record<string, string> | null;
   contact_email?: string | null;
   phone?: string | null;
-  category?: string | null;
-  level?: string | null;
-  status?: string | null;
 }
 
 interface Contribution {
@@ -32,7 +34,7 @@ interface Contribution {
   order: number;
   startTime?: string;
   sectionHeader?: string;
-  speech: any[];
+  speech: unknown[];
   sittingDate: string;
   houseType: string;
   sittingTitle: string;
@@ -44,26 +46,43 @@ interface PageProps {
     keyword?: string;
     dateFrom?: string;
     dateTo?: string;
-    sort?: 'newest' | 'oldest';
+    sort?: "newest" | "oldest";
     section?: string;
-    view?: 'chart' | 'table';
     month?: string;
   }>;
 }
 
-export default async function MemberContributionsPage({ params, searchParams }: PageProps) {
+function houseLabel(house: string) {
+  if (house === "national-assembly") return "National Assembly";
+  if (house === "senate") return "Senate";
+  if (house === "county-assembly") return "County Assembly";
+  return house.replace(/-/g, " ");
+}
+
+export async function generateMetadata({ params }: PageProps) {
+  const { slug } = await params;
+  return {
+    title: `Hansard contributions — ${slug.replace(/-/g, " ")}`,
+    description: `Parliamentary speaking record and contribution activity.`,
+  };
+}
+
+export default async function MemberContributionsPage({
+  params,
+  searchParams,
+}: PageProps) {
   const { slug } = await params;
   const filters = await searchParams;
+  const memberPath = `/government/legislature/hansard/member/${slug}`;
 
-  const supabase = createSupabaseClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
-  );
+  const supabase = createPublicClient();
 
   const { data: leaderData } = await supabase
-    .from('leaders')
-    .select(`id, slug, full_name, title, current_party, current_constituency, current_county, bio, image_url, gender, date_of_birth, official_website, social_media, contact_email, phone, category, level, status`)
-    .eq('slug', slug)
+    .from("leaders")
+    .select(
+      `id, slug, full_name, title, current_party, current_constituency, current_county, bio, image_url, official_website, contact_email, phone`,
+    )
+    .eq("slug", slug)
     .single();
 
   if (!leaderData) notFound();
@@ -71,315 +90,568 @@ export default async function MemberContributionsPage({ params, searchParams }: 
   const leader = leaderData as Leader;
 
   const { data: historicalRoles } = await supabase
-    .from('leader_roles')
-    .select('title, party, constituency, term_start_date, term_end_date')
-    .eq('leader_id', leader.id)
-    .order('term_start_date', { ascending: false });
+    .from("leader_roles")
+    .select("title, party, constituency, term_start_date, term_end_date")
+    .eq("leader_id", leader.id)
+    .order("term_start_date", { ascending: false });
 
-  const rawSittings: any[] = await sanityClient.fetch(
-    `*[_type == "hansardSitting" && count(contributions[supabaseLeaderId == $leaderId]) > 0] | order(sittingDate desc) {
-      sittingDate, houseType, title, sittingPeriod,
+  const rawSittings: Array<{
+    sittingDate: string;
+    houseType: string;
+    title: string;
+    matchingContributions: Array<{
+      _key: string;
+      order: number;
+      startTime?: string;
+      sectionHeader?: string;
+      speech: unknown[];
+    }>;
+  }> = await sanityClient.fetch(
+    `*[_type == "hansardSitting" && isActive != false && count(contributions[supabaseLeaderId == $leaderId]) > 0] | order(sittingDate desc) {
+      sittingDate, houseType, title,
       "matchingContributions": contributions[supabaseLeaderId == $leaderId] {
         _key, order, startTime, sectionHeader, speech
       }
     }`,
-    { leaderId: leader.id }
+    { leaderId: leader.id },
   );
 
-  let allContributions: Contribution[] = rawSittings.flatMap((sitting) =>
-    sitting.matchingContributions.map((c: any) => ({
+  const fullRecord: Contribution[] = rawSittings.flatMap((sitting) =>
+    (sitting.matchingContributions || []).map((c) => ({
       ...c,
       sittingDate: sitting.sittingDate,
       houseType: sitting.houseType,
       sittingTitle: sitting.title,
-    }))
+    })),
   );
 
-  // Filters
+  // Heatmap uses the full unfiltered record (true activity pulse)
+  const dayCountMap = new Map<string, number>();
+  fullRecord.forEach((c) => {
+    dayCountMap.set(c.sittingDate, (dayCountMap.get(c.sittingDate) || 0) + 1);
+  });
+  const heatmapDays = Array.from(dayCountMap.entries()).map(([date, count]) => ({
+    date,
+    count,
+  }));
+
+  let allContributions = [...fullRecord];
+
   const keyword = filters.keyword?.toLowerCase().trim();
   let dateFrom = filters.dateFrom;
   let dateTo = filters.dateTo;
-  const sort = filters.sort || 'newest';
-  const sectionFilter = filters.section;
-  const viewMode = filters.view === 'table' ? 'table' : 'chart';
+  const sort = filters.sort || "newest";
 
   if (filters.month) {
     dateFrom = `${filters.month}-01`;
-    const lastDay = new Date(new Date(dateFrom).getFullYear(), new Date(dateFrom).getMonth() + 1, 0).getDate();
-    dateTo = `${filters.month}-${lastDay.toString().padStart(2, '0')}`;
+    const lastDay = new Date(
+      new Date(dateFrom).getFullYear(),
+      new Date(dateFrom).getMonth() + 1,
+      0,
+    ).getDate();
+    dateTo = `${filters.month}-${lastDay.toString().padStart(2, "0")}`;
   }
 
   if (keyword) {
-    allContributions = allContributions.filter((c) => extractTextFromPortableText(c.speech).toLowerCase().includes(keyword));
+    allContributions = allContributions.filter((c) =>
+      portableTextToPlain(c.speech).toLowerCase().includes(keyword),
+    );
   }
-  if (dateFrom) allContributions = allContributions.filter((c) => c.sittingDate >= dateFrom);
-  if (dateTo) allContributions = allContributions.filter((c) => c.sittingDate <= dateTo);
-  if (sectionFilter && sectionFilter !== 'All') {
-    allContributions = allContributions.filter((c) => c.sectionHeader === sectionFilter);
+  if (dateFrom) {
+    allContributions = allContributions.filter(
+      (c) => c.sittingDate >= dateFrom!,
+    );
+  }
+  if (dateTo) {
+    allContributions = allContributions.filter((c) => c.sittingDate <= dateTo!);
   }
 
-  allContributions.sort((a, b) => sort === 'oldest' ? a.sittingDate.localeCompare(b.sittingDate) : b.sittingDate.localeCompare(a.sittingDate));
+  allContributions.sort((a, b) =>
+    sort === "oldest"
+      ? a.sittingDate.localeCompare(b.sittingDate)
+      : b.sittingDate.localeCompare(a.sittingDate),
+  );
 
   const total = allContributions.length;
+  const totalAll = fullRecord.length;
+  const uniqueSittings = new Set(fullRecord.map((c) => c.sittingDate)).size;
+  const firstSpeech =
+    fullRecord.length > 0
+      ? [...fullRecord].sort((a, b) =>
+          a.sittingDate.localeCompare(b.sittingDate),
+        )[0].sittingDate
+      : null;
+  const lastSpeech =
+    fullRecord.length > 0
+      ? [...fullRecord].sort((a, b) =>
+          b.sittingDate.localeCompare(a.sittingDate),
+        )[0].sittingDate
+      : null;
 
-  const uniqueSittings = new Set(allContributions.map((c) => c.sittingDate)).size;
-  const firstSpeech = allContributions.length > 0 ? allContributions[allContributions.length - 1].sittingDate : null;
-  const lastSpeech = allContributions.length > 0 ? allContributions[0].sittingDate : null;
-  const yearsActive = firstSpeech ? new Date().getFullYear() - new Date(firstSpeech).getFullYear() + 1 : 0;
-
-  const monthlyMap = new Map<string, number>();
-  allContributions.forEach((c) => {
-    const key = c.sittingDate.slice(0, 7);
-    monthlyMap.set(key, (monthlyMap.get(key) || 0) + 1);
+  const houseMap = new Map<string, number>();
+  fullRecord.forEach((c) => {
+    houseMap.set(c.houseType, (houseMap.get(c.houseType) || 0) + 1);
   });
-  const timelineData = Array.from(monthlyMap.entries()).sort(([a], [b]) => a.localeCompare(b));
-  const maxCount = Math.max(...timelineData.map(([, count]) => count), 1);
+  const houseBreakdown = Array.from(houseMap.entries()).sort(
+    (a, b) => b[1] - a[1],
+  );
 
   const currentRole = historicalRoles?.[0];
-
-  const hasContact = leader.contact_email || leader.phone || leader.official_website || (leader.social_media && Object.keys(leader.social_media).length > 0);
+  const hasContact =
+    leader.contact_email || leader.phone || leader.official_website;
   const hasBio = !!leader.bio;
-  const hasExtraInfo = leader.gender || leader.date_of_birth || leader.category || leader.level || leader.status;
+  const hasHistory = Boolean(historicalRoles && historicalRoles.length > 0);
 
-  const buildUrl = (overrides: Record<string, string | undefined> = {}) => {
-    const params = new URLSearchParams();
-    if (keyword) params.set('keyword', keyword);
-    if (dateFrom) params.set('dateFrom', dateFrom);
-    if (dateTo) params.set('dateTo', dateTo);
-    if (sort !== 'newest') params.set('sort', sort);
-    if (sectionFilter && sectionFilter !== 'All') params.set('section', sectionFilter);
-    if (viewMode === 'table') params.set('view', 'table');
-    Object.entries(overrides).forEach(([k, v]) => { if (!v) params.delete(k); else params.set(k, v); });
-    const qs = params.toString();
-    return `/legislature/hansard/member/${slug}${qs ? `?${qs}` : ''}`;
-  };
+  const initials = leader.full_name
+    .split(" ")
+    .filter(Boolean)
+    .map((n) => n[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
+  const hasActiveFilter = Boolean(
+    keyword || dateFrom || dateTo || filters.month,
+  );
 
   return (
-  <>
-    
+    <>
       <GovUKBreadcrumbs
         items={[
-          { text: 'Home', href: '/' },
-          { text: 'Legislature', href: '/legislature' },
-          { text: 'Hansard', href: '/legislature/hansard' },
-          { text: 'Find Members', href: '/legislature/hansard/members' },
-          { text: leader.full_name.split(' ').slice(-1)[0] || 'Member', href: '' },
+          { text: "Home", href: "/" },
+          { text: "Government", href: "/government" },
+          { text: "Legislature", href: "/government/legislature" },
+          {
+            text: "Hansard",
+            href: "/government/legislature/hansard/national-assembly",
+          },
+          {
+            text: "Members",
+            href: "/government/legislature/hansard/members",
+          },
+          { text: leader.full_name },
         ]}
       />
 
-      
-        <Link href="/legislature/hansard/members" className="govuk-back-link">← Back to all members</Link>
+      <Link
+        href="/government/legislature/hansard/members"
+        className="govuk-back-link"
+      >
+        Back to members
+      </Link>
 
-        {/* Header */}
-        <div className="govuk-panel govuk-panel--confirmation" style={{ backgroundColor: '#f3e8ff', padding: '24px', borderRadius: '4px', marginBottom: '32px' }}>
-          <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
-            {leader.image_url ? (
-              <img src={leader.image_url} alt={leader.full_name} style={{ width: '110px', height: '110px', borderRadius: '50%', objectFit: 'cover', border: '4px solid #f3f2f1' }} />
-            ) : (
-              <div style={{ width: '110px', height: '110px', borderRadius: '50%', backgroundColor: '#1d70b8', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '38px', fontWeight: 700, flexShrink: 0 }}>
-                {leader.full_name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
-              </div>
-            )}
-
-            <div style={{ flex: 1, minWidth: '260px' }}>
-              <h1 className="govuk-heading-xl govuk-!-margin-bottom-1">{leader.full_name}</h1>
-              <p className="govuk-body-l govuk-!-margin-bottom-1" style={{ color: '#505a5f' }}>
-                {leader.current_party} {leader.current_constituency && `• ${leader.current_constituency}`} {leader.current_county && `• ${leader.current_county}`}
-              </p>
-              {leader.title && <p className="govuk-body">{leader.title}</p>}
-              {currentRole && <p className="govuk-body-s govuk-!-margin-top-1">{currentRole.title}</p>}
-            </div>
-          </div>
-        </div>
-
-        {/* Stats */}
-        <div className="govuk-grid-row govuk-!-margin-bottom-6">
-          {[
-            { label: 'Total Contributions', value: total },
-            { label: 'Sittings Spoken In', value: uniqueSittings },
-            { label: 'Years Active', value: yearsActive },
-            { label: 'Latest Activity', value: lastSpeech ? new Date(lastSpeech).toLocaleDateString('en-KE', { month: 'short', year: 'numeric' }) : '—' }
-          ].map((stat, i) => (
-            <div key={i} className="govuk-grid-column-one-quarter">
-              <div className="govuk-summary-card">
-                <div className="govuk-summary-card__title-wrapper"><h3 className="govuk-summary-card__title">{stat.label}</h3></div>
-                <div className="govuk-summary-card__content"><p className="govuk-heading-xl govuk-!-margin-bottom-0">{stat.value}</p></div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Bio */}
-        {hasBio && (
-          <div className="govuk-!-margin-bottom-6">
-            <h2 className="govuk-heading-m">About</h2>
-            <div className="govuk-body" style={{ whiteSpace: 'pre-line' }}>{leader.bio}</div>
-          </div>
-        )}
-
-        {/* Contact */}
-        {hasContact && (
-          <details className="govuk-details govuk-!-margin-bottom-6">
-            <summary className="govuk-details__summary"><span className="govuk-details__summary-text">Contact &amp; Online Presence</span></summary>
-            <div className="govuk-details__text">
-              <ul className="govuk-list govuk-list--bullet">
-                {leader.contact_email && <li><a href={`mailto:${leader.contact_email}`} className="govuk-link">{leader.contact_email}</a></li>}
-                {leader.phone && <li><a href={`tel:${leader.phone}`} className="govuk-link">{leader.phone}</a></li>}
-                {leader.official_website && <li><a href={leader.official_website} target="_blank" rel="noopener" className="govuk-link">Official website →</a></li>}
-              </ul>
-            </div>
-          </details>
-        )}
-
-        {/* Extra Info */}
-        {hasExtraInfo && (
-          <div className="govuk-!-margin-bottom-6">
-            <h2 className="govuk-heading-s">Additional Information</h2>
-            <div className="govuk-grid-row">
-              {leader.gender && <div className="govuk-grid-column-one-quarter"><p className="govuk-body-s"><strong>Gender:</strong> {leader.gender}</p></div>}
-              {leader.date_of_birth && <div className="govuk-grid-column-one-quarter"><p className="govuk-body-s"><strong>Born:</strong> {new Date(leader.date_of_birth).toLocaleDateString('en-KE', { day: 'numeric', month: 'long', year: 'numeric' })}</p></div>}
-              {leader.category && <div className="govuk-grid-column-one-quarter"><p className="govuk-body-s"><strong>Category:</strong> {leader.category}</p></div>}
-              {leader.level && <div className="govuk-grid-column-one-quarter"><p className="govuk-body-s"><strong>Level:</strong> {leader.level}</p></div>}
-              {leader.status && <div className="govuk-grid-column-one-quarter"><p className="govuk-body-s"><strong>Status:</strong> {leader.status}</p></div>}
-            </div>
+      {/* Identity — compact */}
+      <div
+        className="govuk-!-margin-bottom-5"
+        style={{
+          display: "flex",
+          gap: 20,
+          alignItems: "flex-start",
+          flexWrap: "wrap",
+        }}
+      >
+        {leader.image_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={leader.image_url}
+            alt=""
+            width={80}
+            height={80}
+            style={{
+              width: 80,
+              height: 80,
+              borderRadius: "50%",
+              objectFit: "cover",
+              border: "2px solid #b1b4b6",
+            }}
+          />
+        ) : (
+          <div
+            aria-hidden
+            style={{
+              width: 80,
+              height: 80,
+              borderRadius: "50%",
+              backgroundColor: "#1d70b8",
+              color: "white",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 28,
+              fontWeight: 700,
+              flexShrink: 0,
+            }}
+          >
+            {initials}
           </div>
         )}
 
-        {/* Parliamentary History */}
-        {historicalRoles && historicalRoles.length > 0 && (
-          <details className="govuk-details govuk-!-margin-bottom-6">
-            <summary className="govuk-details__summary"><span className="govuk-details__summary-text">Parliamentary History &amp; Role Changes</span></summary>
-            <div className="govuk-details__text">
-              <ul className="govuk-list govuk-list--bullet">
-                {historicalRoles.map((role, idx) => (
-                  <li key={idx}>
-                    <strong>{new Date(role.term_start_date).getFullYear()} – {role.term_end_date ? new Date(role.term_end_date).getFullYear() : 'Present'}</strong>: {role.title} {role.constituency && `for ${role.constituency}`}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </details>
-        )}
-
-        {/* Filters */}
-        <form method="GET" className="govuk-!-margin-bottom-6" style={{ backgroundColor: '#f8f8f8', padding: '20px', borderRadius: '4px' }}>
-          <div className="govuk-grid-row">
-            <div className="govuk-grid-column-two-thirds">
-              <div className="govuk-form-group">
-                <label className="govuk-label" htmlFor="keyword">Keyword(s)</label>
-                <input className="govuk-input" id="keyword" name="keyword" type="text" defaultValue={keyword} placeholder="Search speeches..." />
-              </div>
-            </div>
-          </div>
-
-          <div className="govuk-grid-row">
-            <div className="govuk-grid-column-one-third">
-              <div className="govuk-form-group"><label className="govuk-label">Date from</label><input className="govuk-input" type="date" name="dateFrom" defaultValue={dateFrom} /></div>
-            </div>
-            <div className="govuk-grid-column-one-third">
-              <div className="govuk-form-group"><label className="govuk-label">Date to</label><input className="govuk-input" type="date" name="dateTo" defaultValue={dateTo} /></div>
-            </div>
-            <div className="govuk-grid-column-one-third">
-              <div className="govuk-form-group"><label className="govuk-label">Sort by</label>
-                <select className="govuk-select" name="sort" defaultValue={sort}>
-                  <option value="newest">Date (newest first)</option>
-                  <option value="oldest">Date (oldest first)</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <div className="govuk-button-group">
-            <button type="submit" className="govuk-button">Search</button>
-            <Link href={buildUrl({ keyword: undefined, dateFrom: undefined, dateTo: undefined, month: undefined })} className="govuk-button govuk-button--secondary">Clear filters</Link>
-          </div>
-        </form>
-
-        {/* Timeline */}
-        <div className="govuk-!-margin-bottom-6">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-            <h2 className="govuk-heading-m govuk-!-margin-bottom-2">Results timeline (accessibility information)</h2>
-            <Link href={buildUrl({ view: viewMode === 'chart' ? 'table' : undefined })} className="govuk-button govuk-button--secondary govuk-!-margin-bottom-2">
-              {viewMode === 'chart' ? 'Change to Table View' : 'Change to chart view'}
-            </Link>
-          </div>
-
-          <div className="govuk-inset-text govuk-!-margin-bottom-4" style={{ fontSize: '0.95rem' }}>
-            The results timeline offers another way of graphically showing results. Unfortunately, the technology used for it is not compatible with assistive technologies.
-          </div>
-
-          {viewMode === 'chart' ? (
-            timelineData.length > 0 ? (
-              <div style={{ overflowX: 'auto' }}>
-                <div style={{ display: 'flex', alignItems: 'flex-end', gap: '4px', minWidth: `${timelineData.length * 32}px`, height: '160px', borderBottom: '2px solid #b1b4b6', paddingBottom: '4px' }}>
-                  {timelineData.map(([month, count]) => {
-                    const height = Math.max((count / maxCount) * 100, 10);
-                    const monthLabel = new Date(month + '-01').toLocaleDateString('en-KE', { month: 'short', year: '2-digit' });
-                    return (
-                      <Link key={month} href={buildUrl({ month, view: 'table' })} style={{ flex: '0 0 28px', textAlign: 'center', textDecoration: 'none' }} title={`${monthLabel}: ${count} contributions`}>
-                        <div style={{ height: `${height}%`, backgroundColor: '#1d70b8', borderRadius: '2px 2px 0 0', minHeight: '8px' }} />
-                        <div style={{ fontSize: '9px', color: '#505a5f', marginTop: '4px', transform: 'rotate(-45deg)', whiteSpace: 'nowrap' }}>{monthLabel}</div>
-                      </Link>
-                    );
-                  })}
-                </div>
-              </div>
-            ) : <p className="govuk-body-s">No timeline data available.</p>
-          ) : (
-            <div className="govuk-table--responsive">
-              <table className="govuk-table">
-                <thead className="govuk-table__head"><tr><th className="govuk-table__header">Month</th><th className="govuk-table__header govuk-table__header--numeric">Contributions</th></tr></thead>
-                <tbody className="govuk-table__body">
-                  {timelineData.map(([month, count]) => (
-                    <tr key={month} className="govuk-table__row">
-                      <td className="govuk-table__cell">{new Date(month + '-01').toLocaleDateString('en-KE', { month: 'long', year: 'numeric' })}</td>
-                      <td className="govuk-table__cell govuk-table__cell--numeric">{count}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+        <div style={{ flex: 1, minWidth: 220 }}>
+          <h1 className="govuk-heading-l govuk-!-margin-bottom-1">
+            {leader.full_name}
+          </h1>
+          <p className="govuk-body govuk-!-margin-bottom-1">
+            {[
+              leader.current_party,
+              leader.current_constituency,
+              leader.current_county,
+            ]
+              .filter(Boolean)
+              .join(" · ")}
+          </p>
+          {(leader.title || currentRole) && (
+            <p className="govuk-body-s govuk-!-margin-bottom-0">
+              {leader.title || currentRole?.title}
+            </p>
           )}
         </div>
+      </div>
 
-        {/* Contributions List */}
-        <h2 className="govuk-heading-m">Spoken contributions ({total})</h2>
-        {total === 0 ? (
-          <div className="govuk-inset-text">No contributions found matching your filters.</div>
-        ) : (
-          <div className="space-y-4">
-            {allContributions.map((contrib, index) => {
-              const preview = extractTextFromPortableText(contrib.speech);
-              return (
-                <div key={`${contrib.sittingDate}-${index}`} className="govuk-summary-card">
-                  <div className="govuk-summary-card__title-wrapper">
-                    <h3 className="govuk-summary-card__title">
-                      <span className="govuk-tag govuk-tag--blue govuk-!-margin-right-2">{new Date(contrib.sittingDate).toLocaleDateString('en-KE', { month: 'short', day: 'numeric' }).toUpperCase()}</span>
-                      {contrib.sittingTitle}
-                    </h3>
-                  </div>
-                  <div className="govuk-summary-card__content">
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '8px' }}>
-                      {contrib.sectionHeader && <span className="govuk-tag govuk-tag--grey">{contrib.sectionHeader}</span>}
-                      {contrib.startTime && <span className="govuk-body-s">⏱ {contrib.startTime}</span>}
-                      <span className="govuk-tag" style={{ backgroundColor: '#1d70b8', color: 'white' }}>{contrib.houseType.replace('-', ' ')}</span>
-                    </div>
-                    <p className="govuk-body">{preview.length > 280 ? preview.slice(0, 280) + '...' : preview}</p>
-                    <Link href={`/legislature/hansard/${contrib.houseType}/${contrib.sittingDate}`} className="govuk-link govuk-!-font-weight-bold">View full contribution in sitting →</Link>
-                  </div>
-                </div>
-              );
-            })}
+      {/* Compact stats row */}
+      <dl
+        className="govuk-!-margin-bottom-6"
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
+          gap: 12,
+          margin: 0,
+        }}
+      >
+        {[
+          { label: "Contributions", value: String(totalAll) },
+          { label: "Sittings", value: String(uniqueSittings) },
+          {
+            label: "First recorded",
+            value: firstSpeech
+              ? new Date(firstSpeech + "T12:00:00").toLocaleDateString(
+                  "en-KE",
+                  { month: "short", year: "numeric" },
+                )
+              : "—",
+          },
+          {
+            label: "Latest",
+            value: lastSpeech
+              ? new Date(lastSpeech + "T12:00:00").toLocaleDateString(
+                  "en-KE",
+                  { month: "short", year: "numeric" },
+                )
+              : "—",
+          },
+        ].map((stat) => (
+          <div
+            key={stat.label}
+            style={{
+              border: "1px solid #b1b4b6",
+              padding: "12px 14px",
+              background: "#fff",
+            }}
+          >
+            <dt
+              className="govuk-body-s"
+              style={{ margin: 0, color: "#505a5f" }}
+            >
+              {stat.label}
+            </dt>
+            <dd
+              className="govuk-heading-m"
+              style={{ margin: "4px 0 0", fontSize: "1.35rem" }}
+            >
+              {stat.value}
+            </dd>
           </div>
-        )}
-      
-    
-  
-  </>
-);
-}
+        ))}
+      </dl>
 
-function extractTextFromPortableText(blocks: any[]): string {
-  if (!blocks || !Array.isArray(blocks)) return '';
-  return blocks.filter((b) => b._type === 'block' && b.children).flatMap((b) => b.children.map((ch: any) => ch.text || '')).join(' ').trim();
+      {/* GitHub-style contribution pulse — primary visual */}
+      {heatmapDays.length > 0 && (
+        <ContributionHeatmap
+          days={heatmapDays}
+          memberPath={memberPath}
+          memberName={leader.full_name}
+        />
+      )}
+
+      {houseBreakdown.length > 0 && (
+        <p className="govuk-body-s govuk-!-margin-bottom-6">
+          By house:{" "}
+          {houseBreakdown.map(([house, count], i) => (
+            <span key={house}>
+              {i > 0 ? " · " : ""}
+              <Link
+                href={publicHansardHousePath(house)}
+                className="govuk-link"
+              >
+                {houseLabel(house)}
+              </Link>{" "}
+              ({count})
+            </span>
+          ))}
+        </p>
+      )}
+
+      {/* Secondary details collapsed */}
+      {(hasBio || hasContact || hasHistory) && (
+        <div className="govuk-!-margin-bottom-6">
+          {hasBio && (
+            <details className="govuk-details">
+              <summary className="govuk-details__summary">
+                <span className="govuk-details__summary-text">About</span>
+              </summary>
+              <div
+                className="govuk-details__text govuk-body-s"
+                style={{ whiteSpace: "pre-line" }}
+              >
+                {leader.bio}
+              </div>
+            </details>
+          )}
+          {hasContact && (
+            <details className="govuk-details">
+              <summary className="govuk-details__summary">
+                <span className="govuk-details__summary-text">Contact</span>
+              </summary>
+              <div className="govuk-details__text">
+                <ul className="govuk-list govuk-list--bullet">
+                  {leader.contact_email && (
+                    <li>
+                      <a
+                        href={`mailto:${leader.contact_email}`}
+                        className="govuk-link"
+                      >
+                        {leader.contact_email}
+                      </a>
+                    </li>
+                  )}
+                  {leader.phone && (
+                    <li>
+                      <a href={`tel:${leader.phone}`} className="govuk-link">
+                        {leader.phone}
+                      </a>
+                    </li>
+                  )}
+                  {leader.official_website && (
+                    <li>
+                      <a
+                        href={leader.official_website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="govuk-link"
+                      >
+                        Official website
+                      </a>
+                    </li>
+                  )}
+                </ul>
+              </div>
+            </details>
+          )}
+          {hasHistory && (
+            <details className="govuk-details">
+              <summary className="govuk-details__summary">
+                <span className="govuk-details__summary-text">
+                  Parliamentary history
+                </span>
+              </summary>
+              <div className="govuk-details__text">
+                <ul className="govuk-list govuk-list--bullet">
+                  {historicalRoles!.map((role, idx) => (
+                    <li key={idx}>
+                      <strong>
+                        {new Date(role.term_start_date).getFullYear()} –{" "}
+                        {role.term_end_date
+                          ? new Date(role.term_end_date).getFullYear()
+                          : "Present"}
+                      </strong>
+                      : {role.title}
+                      {role.constituency ? ` for ${role.constituency}` : ""}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </details>
+          )}
+        </div>
+      )}
+
+      {/* Search / filter — under activity */}
+      <form
+        method="GET"
+        className="govuk-!-margin-bottom-5"
+        style={{ backgroundColor: "#f3f2f1", padding: 16 }}
+      >
+        <h2 className="govuk-heading-s govuk-!-margin-bottom-3">
+          Search speeches
+        </h2>
+        <div className="govuk-grid-row">
+          <div className="govuk-grid-column-one-half">
+            <div className="govuk-form-group govuk-!-margin-bottom-3">
+              <label className="govuk-label" htmlFor="keyword">
+                Keyword
+              </label>
+              <input
+                className="govuk-input"
+                id="keyword"
+                name="keyword"
+                type="search"
+                defaultValue={keyword || ""}
+                placeholder="Search speeches…"
+              />
+            </div>
+          </div>
+          <div className="govuk-grid-column-one-quarter">
+            <div className="govuk-form-group govuk-!-margin-bottom-3">
+              <label className="govuk-label" htmlFor="dateFrom">
+                From
+              </label>
+              <input
+                className="govuk-input"
+                id="dateFrom"
+                type="date"
+                name="dateFrom"
+                defaultValue={filters.month ? "" : dateFrom || ""}
+              />
+            </div>
+          </div>
+          <div className="govuk-grid-column-one-quarter">
+            <div className="govuk-form-group govuk-!-margin-bottom-3">
+              <label className="govuk-label" htmlFor="dateTo">
+                To
+              </label>
+              <input
+                className="govuk-input"
+                id="dateTo"
+                type="date"
+                name="dateTo"
+                defaultValue={filters.month ? "" : dateTo || ""}
+              />
+            </div>
+          </div>
+        </div>
+        <div className="govuk-form-group govuk-!-margin-bottom-3">
+          <label className="govuk-label" htmlFor="sort">
+            Sort
+          </label>
+          <select
+            className="govuk-select"
+            id="sort"
+            name="sort"
+            defaultValue={sort}
+          >
+            <option value="newest">Newest first</option>
+            <option value="oldest">Oldest first</option>
+          </select>
+        </div>
+        <div className="govuk-button-group govuk-!-margin-bottom-0">
+          <button type="submit" className="govuk-button">
+            Search
+          </button>
+          <Link
+            href={memberPath}
+            className="govuk-button govuk-button--secondary"
+          >
+            Clear
+          </Link>
+        </div>
+      </form>
+
+      {/* List */}
+      <h2 className="govuk-heading-m">
+        Spoken contributions
+        {hasActiveFilter ? ` (${total} of ${totalAll})` : ` (${total})`}
+      </h2>
+      {hasActiveFilter && (
+        <p className="govuk-body-s">
+          Filters applied.{" "}
+          <Link href={memberPath} className="govuk-link">
+            Show all
+          </Link>
+        </p>
+      )}
+
+      {total === 0 ? (
+        <div className="govuk-inset-text">
+          No contributions found matching your filters.
+        </div>
+      ) : (
+        <div style={{ maxWidth: "42rem" }}>
+          {allContributions.map((contrib, index) => {
+            const preview = portableTextToPlain(contrib.speech);
+            return (
+              <article
+                key={`${contrib.sittingDate}-${contrib._key || index}`}
+                style={{
+                  borderTop: "1px solid #b1b4b6",
+                  padding: "0.85rem 0",
+                }}
+              >
+                <h3
+                  className="govuk-heading-s"
+                  style={{ margin: "0 0 0.35rem", fontSize: "1rem" }}
+                >
+                  <Link
+                    href={publicHansardDayPath(
+                      contrib.houseType,
+                      contrib.sittingDate,
+                    )}
+                    className="govuk-link"
+                  >
+                    {new Date(
+                      contrib.sittingDate + "T12:00:00",
+                    ).toLocaleDateString("en-KE", {
+                      weekday: "short",
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    })}
+                  </Link>
+                  <span
+                    style={{
+                      fontWeight: 400,
+                      color: "#505a5f",
+                      marginLeft: 8,
+                      fontSize: "0.875rem",
+                    }}
+                  >
+                    {houseLabel(contrib.houseType)}
+                  </span>
+                </h3>
+                <p
+                  className="govuk-body-s"
+                  style={{ margin: "0 0 0.35rem", color: "#505a5f" }}
+                >
+                  {contrib.sittingTitle}
+                  {contrib.sectionHeader ? ` · ${contrib.sectionHeader}` : ""}
+                  {contrib.startTime ? ` · ${contrib.startTime}` : ""}
+                </p>
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: "0.95rem",
+                    lineHeight: 1.55,
+                    color: "#0b0c0c",
+                  }}
+                >
+                  {preview.length > 240
+                    ? preview.slice(0, 240) + "…"
+                    : preview || "—"}
+                </p>
+                <p className="govuk-body-s govuk-!-margin-top-2 govuk-!-margin-bottom-0">
+                  <Link
+                    href={publicHansardDayPath(
+                      contrib.houseType,
+                      contrib.sittingDate,
+                    )}
+                    className="govuk-link"
+                  >
+                    Open sitting
+                  </Link>
+                </p>
+              </article>
+            );
+          })}
+        </div>
+      )}
+    </>
+  );
 }

@@ -83,7 +83,7 @@ export default async function NationalAssemblyHansard() {
           </div>
           <div className="govuk-grid-column-one-half">
             <Link 
-              href="/legislature/hansard/members?house=National Assembly" 
+              href="/government/legislature/hansard/members?house=National Assembly" 
               className="govuk-button govuk-!-width-full"
             >
               Find National Assembly Members →

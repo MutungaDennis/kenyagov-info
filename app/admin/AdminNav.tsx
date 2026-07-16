@@ -35,9 +35,7 @@ const NAV_SECTIONS: NavSection[] = [
   {
     heading: "Parliament",
     items: [
-      { segment: "hansard", label: "Hansard sittings", exact: true },
-      { segment: "hansard/upload", label: "Upload Hansard PDF" },
-      { segment: "hansard/manual", label: "Manual Hansard entry" },
+      { segment: "hansard", label: "Hansard", exact: false },
     ],
   },
   {
@@ -81,19 +79,6 @@ function isActive(pathname: string, base: string, item: NavItem): boolean {
       return pathname === base || pathname === `${base}/`;
     }
     return pathname === href || pathname === `${href}/`;
-  }
-
-  if (item.segment === "hansard") {
-    const list = adminPath("hansard");
-    const upload = adminPath("hansard/upload");
-    const manual = adminPath("hansard/manual");
-    return (
-      pathname === list ||
-      pathname === `${list}/` ||
-      (pathname.startsWith(`${list}/`) &&
-        !pathname.startsWith(upload) &&
-        !pathname.startsWith(manual))
-    );
   }
 
   return pathname === href || pathname.startsWith(`${href}/`);
