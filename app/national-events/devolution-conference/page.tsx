@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import LastUpdated from "@/components/govuk/LastUpdated";
+import PrintPageButton from "@/components/govuk/PrintPageButton";
 import TableScroll from "@/components/govuk/TableScroll";
 import {
 
@@ -104,6 +105,8 @@ export default function DevolutionConferencePage() {
         Major intergovernmental conference on Kenya’s devolved system of
         government — hosts, venues and official themes since 2014.
       </p>
+
+      <PrintPageButton />
 
       {/* Highlight: ongoing → next → most recent (last held) */}
       {highlight && (

@@ -22,6 +22,7 @@ export default function DisclaimerPage() {
         ]}
         title="Disclaimer"
         lead="Important information about what CitizenGuide.KE is — and is not."
+        showPrint
       />
 
       <div className="govuk-grid-row">
@@ -127,6 +128,7 @@ export default function DisclaimerPage() {
             { text: "Editorial policy", href: "/editorial-policy" },
             { text: "Corrections", href: "/corrections" },
             { text: "Terms and conditions", href: "/terms" },
+            { text: "Copyright and content notices", href: "/copyright" },
             { text: "Contact this website", href: "/contact" },
           ]}
         />

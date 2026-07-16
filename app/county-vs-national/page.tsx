@@ -25,6 +25,7 @@ export default function CountyVsNationalPage() {
         caption="Devolution"
         title="County vs national government"
         lead="Kenya has two levels of government: the national government and 47 county governments. Knowing which level is responsible helps you contact the right office and use the right portal."
+        showPrint
       />
 
       <div className="govuk-grid-row">

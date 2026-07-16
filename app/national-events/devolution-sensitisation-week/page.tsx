@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import LastUpdated from "@/components/govuk/LastUpdated";
+import PrintPageButton from "@/components/govuk/PrintPageButton";
 import TableScroll from "@/components/govuk/TableScroll";
 import type { DswEdition } from "@/lib/data/devolution-events";
 import {
@@ -115,6 +116,8 @@ export default function DevolutionSensitisationWeekPage() {
         Public-facing weeks led with the Council of Governors to explain
         devolution, showcase county progress and gather citizen feedback.
       </p>
+
+      <PrintPageButton />
 
       {highlight && (
         <div className="app-next-holiday-panel govuk-!-margin-bottom-6">

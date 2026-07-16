@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
+import PrintPageButton from "@/components/govuk/PrintPageButton";
 import { createPublicClient } from "@/lib/supabase/public";
 import { counties } from "@/data/counties";
 import { JsonLd } from "@/components/JsonLd";
@@ -289,6 +290,7 @@ export default async function CountyProfilePage({ params }: CountyProfileProps) 
             <p className="govuk-body-l">
               Administrative and open information directory for the devolved county government of {staticCounty.name}.
             </p>
+            <PrintPageButton />
           </div>
         </div>
 

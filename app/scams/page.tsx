@@ -23,6 +23,8 @@ export default function ScamsPage() {
         ]}
         title="Scams and fake websites"
         lead="Criminals often impersonate government services to steal money, passwords or identity documents. CitizenGuide.KE will never ask for your eCitizen password, OTP or M-Pesa pin."
+      
+        showPrint
       />
 
       <div className="govuk-grid-row">

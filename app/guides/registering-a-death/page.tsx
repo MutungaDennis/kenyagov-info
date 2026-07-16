@@ -25,6 +25,8 @@ export default function RegisteringADeathGuidePage() {
         caption="Life event"
         title="Registering a death — government steps"
         lead="What families typically need to do with government after a death in Kenya. This is general information, not legal or funeral advice."
+      
+        showPrint
       />
 
       <div className="govuk-grid-row">

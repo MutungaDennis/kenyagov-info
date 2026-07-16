@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import GovUKBreadcrumbs, { type Crumb } from "@/components/govuk/Breadcrumbs";
+import PrintPageButton from "@/components/govuk/PrintPageButton";
 
 type Props = {
   /** Breadcrumb trail; last item is current page (no link needed). */
@@ -13,11 +14,13 @@ type Props = {
   children?: ReactNode;
   /** Use full width instead of two-thirds */
   fullWidth?: boolean;
+  /** GOV.UK-style “Print this page” under the intro */
+  showPrint?: boolean;
 };
 
 /**
  * Standard hub / list page intro:
- * breadcrumbs → caption → H1 → lead
+ * breadcrumbs → caption → H1 → lead → optional print
  */
 export default function PageIntro({
   breadcrumbs,
@@ -26,6 +29,7 @@ export default function PageIntro({
   lead,
   children,
   fullWidth = false,
+  showPrint = false,
 }: Props) {
   const columnClass = fullWidth
     ? "govuk-grid-column-full"
@@ -42,6 +46,7 @@ export default function PageIntro({
           {lead && (
             <p className="govuk-body-l govuk-!-margin-bottom-6">{lead}</p>
           )}
+          {showPrint && <PrintPageButton />}
           {children}
         </div>
       </div>

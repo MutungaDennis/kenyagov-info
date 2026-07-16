@@ -48,6 +48,7 @@ export default async function OpenDataPage() {
         ]}
         title="Open data"
         lead="Download government data in open formats. Use it to build tools, do research or check facts."
+        showPrint
       />
 
         <div className="govuk-grid-row">

@@ -25,6 +25,8 @@ export default function KenyaGazettePage() {
         caption="Official notices"
         title="Kenya Gazette and official notices"
         lead="The Kenya Gazette is the official public journal of the Government of Kenya. Important appointments, legal notices and certain public announcements are published there."
+      
+        showPrint
       />
 
       <div className="govuk-grid-row">

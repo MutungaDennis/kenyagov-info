@@ -66,7 +66,7 @@ export default function SiteHeader() {
 
   return (
     <>
-      <header className="app-site-header" role="banner">
+      <header className="app-site-header govuk-!-display-none-print" role="banner">
         {/* Top tier: logo + search + support */}
         <div className="app-site-header__top">
           <div className="govuk-width-container app-site-header__top-inner">

@@ -24,6 +24,7 @@ export default function AccessToInformationPage() {
         ]}
         title="Access to information"
         lead="The Constitution and the Access to Information Act give people rights to access information held by the State and some other bodies — subject to lawful limitations."
+        showPrint
       />
 
       <div className="govuk-grid-row">

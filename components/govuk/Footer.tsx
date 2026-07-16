@@ -14,7 +14,7 @@ export default function GovUKFooter() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="govuk-footer" role="contentinfo">
+    <footer className="govuk-footer govuk-!-display-none-print" role="contentinfo">
       <div className="govuk-width-container">
         <div className="govuk-footer__navigation">
           <div className="govuk-footer__section govuk-grid-column-one-half govuk-grid-column-one-quarter-from-desktop">
@@ -238,6 +238,11 @@ export default function GovUKFooter() {
               <li className="govuk-footer__inline-list-item">
                 <Link href="/disclaimer" className="govuk-footer__link">
                   Disclaimer
+                </Link>
+              </li>
+              <li className="govuk-footer__inline-list-item">
+                <Link href="/copyright" className="govuk-footer__link">
+                  Copyright
                 </Link>
               </li>
               <li className="govuk-footer__inline-list-item">

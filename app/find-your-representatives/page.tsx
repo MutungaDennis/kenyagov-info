@@ -24,6 +24,8 @@ export default function FindYourRepresentativesPage() {
         caption="Democracy and participation"
         title="Find your representatives"
         lead="Kenyan citizens are represented at national and county levels. Use the directories below to look up current office holders. Confirm critical details with IEBC or official parliamentary and county sources."
+      
+        showPrint
       />
 
       <div className="govuk-grid-row">

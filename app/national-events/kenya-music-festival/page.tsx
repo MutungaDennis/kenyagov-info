@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import LastUpdated from "@/components/govuk/LastUpdated";
+import PrintPageButton from "@/components/govuk/PrintPageButton";
 import TableScroll from "@/components/govuk/TableScroll";
 import {
 
@@ -118,6 +119,8 @@ export default function KenyaMusicFestivalPage() {
         elocution and related classes — with hosts, dates and themes from 1985
         to the current cycle.
       </p>
+
+      <PrintPageButton />
 
       {highlight && edition && (
         <div className="app-next-holiday-panel govuk-!-margin-bottom-6">

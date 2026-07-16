@@ -2,6 +2,7 @@
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import LastUpdated from "@/components/govuk/LastUpdated";
+import PrintPageButton from "@/components/govuk/PrintPageButton";
 
 export const revalidate = 86400;
 export const dynamic = "force-static";
@@ -31,6 +32,7 @@ export default function NationalSymbolsPage() {
               </Link>
               {' '}establishes the official national symbols. These represent the sovereignty, unity and shared values of the Republic.
             </p>
+            <PrintPageButton />
           </div>
         </div>
 

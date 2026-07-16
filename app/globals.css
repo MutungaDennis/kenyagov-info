@@ -81,6 +81,84 @@ body {
   text-decoration: none;
 }
 
+/* GOV.UK-style print control (button looks like a body-s link) */
+.app-print-link__button {
+  display: inline-block;
+  margin: 0;
+  padding: 0;
+  font-size: 1rem;
+  line-height: 1.25;
+}
+.app-print-link__button::before {
+  content: "";
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  margin-right: 0.35rem;
+  vertical-align: -0.15em;
+  background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='%23000' d='M4 2h8v3H4V2zm-2 4h12a1 1 0 0 1 1 1v5h-3v3H5v-3H2V7a1 1 0 0 1 1-1zm3 7h6v-2H5v2z'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='%23000' d='M4 2h8v3H4V2zm-2 4h12a1 1 0 0 1 1 1v5h-3v3H5v-3H2V7a1 1 0 0 1 1-1zm3 7h6v-2H5v2z'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+}
+
+/**
+ * Print layout (GOV.UK-style): content only.
+ * Hide site chrome — header, nav, breadcrumbs, phase banner, feedback, footer.
+ * @see https://design-system.service.gov.uk/styles/page-template/
+ */
+@media print {
+  /* Explicit chrome selectors (custom header is not .govuk-header) */
+  .govuk-skip-link,
+  .govuk-cookie-banner,
+  .govuk-phase-banner,
+  .govuk-breadcrumbs,
+  .govuk-back-link,
+  .govuk-footer,
+  .govuk-header,
+  .app-site-header,
+  .app-print-link,
+  .app-no-print,
+  .govuk-!-display-none-print {
+    display: none !important;
+  }
+
+  /* Clean page: white, readable type, no overflow */
+  html,
+  body,
+  .govuk-template,
+  .govuk-template__body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  .govuk-width-container {
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .govuk-main-wrapper {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
+
+  /* Soften coloured panels so print is ink-friendly */
+  .app-next-holiday-panel {
+    background: #fff !important;
+    color: #000 !important;
+    border: 1px solid #000 !important;
+    border-left-width: 5px !important;
+  }
+  .app-next-holiday-panel h2,
+  .app-next-holiday-panel p,
+  .app-next-holiday-panel .govuk-heading-l,
+  .app-next-holiday-panel .govuk-body-l {
+    color: #000 !important;
+  }
+}
+
 .app-report-problem-form {
   background: #f3f2f1;
   padding: 20px;

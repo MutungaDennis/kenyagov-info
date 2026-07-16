@@ -68,6 +68,15 @@ export default function CorrectionsPage() {
             </li>
           </ol>
 
+          <p className="govuk-body">
+            For copyright, logo or formal rights notices from rights holders or
+            public bodies, use our{" "}
+            <Link href="/copyright" className="govuk-link">
+              copyright and content notices
+            </Link>{" "}
+            process instead of the general contact form when possible.
+          </p>
+
           <div className="govuk-inset-text">
             <p className="govuk-body">
               We cannot change official government records. If your complaint is
@@ -97,6 +106,11 @@ export default function CorrectionsPage() {
             <li>
               <Link href="/editorial-policy" className="govuk-link">
                 Editorial policy
+              </Link>
+            </li>
+            <li>
+              <Link href="/copyright" className="govuk-link">
+                Copyright and content notices
               </Link>
             </li>
             <li>

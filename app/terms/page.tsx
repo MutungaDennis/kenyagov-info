@@ -178,6 +178,11 @@ export default function TermsPage() {
                     </Link>
                   </li>
                   <li>
+                    <Link href="/copyright" className="govuk-link">
+                      Copyright and content notices
+                    </Link>
+                  </li>
+                  <li>
                     <Link href="/cookies" className="govuk-link">
                       Cookies policy
                     </Link>

@@ -33,6 +33,7 @@ export default function NationalEventsHubPage() {
         caption="National identity and heritage"
         title="National events"
         lead="Major official celebrations, trade and agricultural shows, governance gatherings, education and arts festivals, cultural festivals and sporting events that form part of Kenya’s public calendar."
+        showPrint
       >
         <p className="govuk-body">
           This is an overview hub. Open each topic for a short guide. Dates,

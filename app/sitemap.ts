@@ -346,6 +346,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/help`, changeFrequency: 'monthly', priority: 0.5 },
     { url: `${BASE_URL}/contact`, changeFrequency: 'monthly', priority: 0.5 },
     { url: `${BASE_URL}/disclaimer`, changeFrequency: 'yearly', priority: 0.5 },
+    { url: `${BASE_URL}/copyright`, changeFrequency: 'yearly', priority: 0.4 },
     { url: `${BASE_URL}/editorial-policy`, changeFrequency: 'yearly', priority: 0.5 },
     { url: `${BASE_URL}/content-style-guide`, changeFrequency: 'yearly', priority: 0.5 },
     { url: `${BASE_URL}/corrections`, changeFrequency: 'yearly', priority: 0.5 },

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import LastUpdated from "@/components/govuk/LastUpdated";
+import PrintPageButton from "@/components/govuk/PrintPageButton";
 import TableScroll from "@/components/govuk/TableScroll";
 import { kndffNotes, type KndffEdition } from "@/lib/data/kndff";
 import {
@@ -106,6 +107,8 @@ export default function KenyaNationalDramaAndFilmFestivalPage() {
         and related performance — with hosts, themes and secondary-school play
         winners where recorded.
       </p>
+
+      <PrintPageButton />
 
       {highlight && edition && (
         <div className="app-next-holiday-panel govuk-!-margin-bottom-6">

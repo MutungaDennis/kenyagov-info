@@ -23,6 +23,7 @@ export default function ContactGovernmentPage() {
         ]}
         title="Contact government"
         lead="Use this page to find the right type of public body. CitizenGuide.KE is not a government switchboard — we cannot transfer calls or process applications for you."
+        showPrint
       />
 
       <div className="govuk-grid-row">

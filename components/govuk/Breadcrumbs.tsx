@@ -26,6 +26,7 @@ export default function GovUKBreadcrumbs({
 
   const classes = [
     "govuk-breadcrumbs",
+    "govuk-!-display-none-print",
     collapseOnMobile ? "govuk-breadcrumbs--collapse-on-mobile" : "",
   ]
     .filter(Boolean)

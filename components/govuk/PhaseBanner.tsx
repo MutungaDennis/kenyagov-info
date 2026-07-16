@@ -10,7 +10,7 @@ type Props = {
  */
 export default function GovUKPhaseBanner({ tag = "Beta" }: Props) {
   return (
-    <div className="govuk-phase-banner">
+    <div className="govuk-phase-banner govuk-!-display-none-print">
       <p className="govuk-phase-banner__content">
         <strong className="govuk-tag govuk-phase-banner__content__tag">
           {tag}

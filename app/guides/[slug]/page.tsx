@@ -3,6 +3,7 @@ import Link from 'next/link';
 export const revalidate = 3600;
 //import GovUKBackLink from '@/components/govuk/BackLink';
 import GovUKBreadcrumbs from '@/components/govuk/Breadcrumbs';
+import PrintPageButton from '@/components/govuk/PrintPageButton';
 import { getGuideBySlug, getGuides } from '@/lib/sanity/client';
 import { PortableText } from '@portabletext/react';
 import type { Metadata } from 'next';
@@ -88,6 +89,8 @@ export default async function GuidePage({ params }: GuidePageProps) {
               By {guide.author.name} • Published {new Date(guide.publishedAt).toLocaleDateString()}
             </p>
           )}
+
+          <PrintPageButton />
 
           {/* Content */}
           <div className="govuk-!-margin-bottom-8">

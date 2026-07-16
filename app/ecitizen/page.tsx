@@ -25,6 +25,8 @@ export default function ECitizenPage() {
         caption="Digital government"
         title="eCitizen explained"
         lead="eCitizen is the Government of Kenya’s main online gateway for many national public services. CitizenGuide.KE is not eCitizen and cannot log you in, take payments or speed up applications."
+      
+        showPrint
       />
 
       <div className="govuk-grid-row">

@@ -24,6 +24,8 @@ export default function HudumaCentresPage() {
         caption="Digital government"
         title="Huduma Centres"
         lead="Huduma Centres are government one-stop service centres where you can access many public services in person, often with staff assistance. They complement online services such as eCitizen."
+      
+        showPrint
       />
 
       <div className="govuk-grid-row">

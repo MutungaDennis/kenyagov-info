@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import Link from 'next/link';
 import GovUKBreadcrumbs from '@/components/govuk/Breadcrumbs';
 import LastUpdated from '@/components/govuk/LastUpdated';
+import PrintPageButton from '@/components/govuk/PrintPageButton';
 import { holidays, Holiday } from '@/lib/data/holidays';
 import {
   getHolidayHighlight,
@@ -102,6 +103,8 @@ export default function HolidaysPage() {
           <div className="govuk-grid-column-two-thirds">
             
             <h1 className="govuk-heading-xl">Public holidays in Kenya</h1>
+
+            <PrintPageButton />
 
             {/* Highlight: today → next → most recent */}
             {highlight && highlightHoliday && (

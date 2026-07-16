@@ -27,6 +27,20 @@ export function ClientLayoutWrapper({
       pathname.startsWith(`${adminBase}/`) ||
       pathname.startsWith("/admin"));
 
+  // GOV.UK: mark JS support on body (do not use raw <script> in client components)
+  useEffect(() => {
+    const body = document.body;
+    if (!body.classList.contains("js-enabled")) {
+      body.classList.add("js-enabled");
+    }
+    if (
+      "noModule" in HTMLScriptElement.prototype &&
+      !body.classList.contains("govuk-frontend-supported")
+    ) {
+      body.classList.add("govuk-frontend-supported");
+    }
+  }, []);
+
   useEffect(() => {
     const initGovuk = async () => {
       try {
@@ -61,18 +75,6 @@ export function ClientLayoutWrapper({
 
   return (
     <body className="govuk-template__body" suppressHydrationWarning={true}>
-      {/*
-        GOV.UK page template: mark JS support immediately so enhanced
-        components can initialise correctly after initAll().
-        Sitewide WebSite/Organization JSON-LD is server-rendered in app/layout.tsx.
-      */}
-      <script
-        dangerouslySetInnerHTML={{
-          __html:
-            "document.body.className += ' js-enabled' + ('noModule' in HTMLScriptElement.prototype ? ' govuk-frontend-supported' : '');",
-        }}
-      />
-
       {/* Google Consent Mode */}
       <Script id="google-consent-mode" strategy="afterInteractive">
         {`
@@ -145,7 +147,7 @@ export function ClientLayoutWrapper({
               {children}
             </main>
 
-            <div className="govuk-!-margin-top-9 govuk-!-margin-bottom-6">
+            <div className="govuk-!-margin-top-9 govuk-!-margin-bottom-6 govuk-!-display-none-print app-no-print">
               <GovUKFeedback />
               <GovUKReportProblem />
             </div>

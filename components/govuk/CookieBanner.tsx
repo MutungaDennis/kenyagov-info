@@ -58,7 +58,7 @@ export default function CookieBanner() {
 
   return (
     <div
-      className="govuk-cookie-banner"
+      className="govuk-cookie-banner govuk-!-display-none-print"
       data-nosnippet
       role="region"
       aria-label="Cookies on CitizenGuide.KE"

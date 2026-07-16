@@ -25,6 +25,8 @@ export default function StartingABusinessGuidePage() {
         caption="Life event"
         title="Starting a business — government steps"
         lead="Typical public steps when you start trading in Kenya. Requirements differ by activity and county — always confirm on official portals."
+      
+        showPrint
       />
 
       <div className="govuk-grid-row">

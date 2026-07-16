@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
+import PrintPageButton from "@/components/govuk/PrintPageButton";
 import { JsonLd } from "@/components/JsonLd";
 
 import { getConstitutionChapter } from "@/lib/sanity/client";
@@ -74,8 +75,6 @@ export default async function ConstitutionChapterPage({ params }: Props) {
       <JsonLd data={chapterSchema} />
       <JsonLd data={breadcrumbSchema} />
 
-      
-        
         <div className="govuk-!-margin-bottom-4">
           <span className="govuk-caption-m">
             The Constitution of Kenya 2010
@@ -84,6 +83,8 @@ export default async function ConstitutionChapterPage({ params }: Props) {
             Chapter {chapter}: {chapterTitle}
           </h1>
         </div>
+
+        <PrintPageButton />
 
         {/* Mobile Quick Navigation */}
         <details className="govuk-details mobile-only-navigation govuk-!-margin-bottom-4">

@@ -25,6 +25,7 @@ export default function HowGovernmentWorksPage() {
         caption="Government"
         title="How government works in Kenya"
         lead="Kenya has a national government and 47 county governments. Power is also separated between the Executive, Parliament and the Judiciary, with independent commissions watching key parts of public life."
+        showPrint
       />
 
       <div className="govuk-grid-row">

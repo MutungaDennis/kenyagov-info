@@ -1,6 +1,7 @@
 // app/privacy/page.tsx
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
+import PrintPageButton from "@/components/govuk/PrintPageButton";
 
 export const revalidate = 86400;
 export const dynamic = "force-static";
@@ -25,6 +26,8 @@ export default function PrivacyPage() {
             <p className="govuk-body-l">
               This policy explains how CitizenGuide.KE collects and uses your personal information. We follow the Kenya Data Protection Act, 2019.
             </p>
+
+            <PrintPageButton />
 
             <div className="govuk-inset-text">
               <p className="govuk-body">

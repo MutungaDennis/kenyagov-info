@@ -26,6 +26,8 @@ export default function HavingABabyGuidePage() {
         caption="Life event"
         title="Having a baby — government steps"
         lead="A plain-language overview of common public processes after a birth in Kenya. This is not medical advice and does not replace hospital or midwife guidance."
+      
+        showPrint
       />
 
       <div className="govuk-grid-row">

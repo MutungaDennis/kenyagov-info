@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
+import PrintPageButton from "@/components/govuk/PrintPageButton";
 import PortableTextContent from "@/components/sanity/PortableTextContent";
 import { JsonLd } from "@/components/JsonLd";
 
@@ -100,6 +101,8 @@ export default async function ConstitutionArticlePage({ params }: Props) {
             Article {articleData.articleNumber}. {articleData.articleTitle}
           </h1>
         </div>
+
+        <PrintPageButton />
 
         {/* Mobile Quick Navigation */}
         <details className="govuk-details mobile-only-navigation govuk-!-margin-bottom-4">

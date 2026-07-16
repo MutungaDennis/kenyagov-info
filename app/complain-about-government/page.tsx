@@ -24,6 +24,7 @@ export default function ComplainAboutGovernmentPage() {
         ]}
         title="How to complain about government"
         lead="Different problems go to different institutions. Choose the path that matches your issue. This website cannot investigate public bodies or reverse official decisions."
+        showPrint
       />
 
       <div className="govuk-grid-row">

@@ -1,13 +1,31 @@
 "use client";
 
-export default function PrintPageButton() {
+/**
+ * GOV.UK-style “Print this page” control.
+ * Hidden when printing (govuk-!-display-none-print).
+ * @see https://design-system.service.gov.uk/styles/page-template/
+ */
+export default function PrintPageButton({
+  className = "",
+  label = "Print this page",
+}: {
+  className?: string;
+  label?: string;
+}) {
   return (
-    <button
-      type="button"
-      className="govuk-link app-button-as-link"
-      onClick={() => window.print()}
+    <div
+      className={`app-print-link govuk-!-display-none-print govuk-!-margin-bottom-6 ${className}`.trim()}
     >
-      Print this page
-    </button>
+      <button
+        type="button"
+        className="govuk-link govuk-body-s app-print-link__button app-button-as-link"
+        data-module="print-link"
+        onClick={() => {
+          if (typeof window !== "undefined") window.print();
+        }}
+      >
+        {label}
+      </button>
+    </div>
   );
 }

@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from "react";
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
+import PrintPageButton from "@/components/govuk/PrintPageButton";
 import { JsonLd } from "@/components/JsonLd";
 
 interface Article {
@@ -143,6 +144,8 @@ export default function ConstitutionTableOfContents({
             The supreme law of the Republic of Kenya. Searchable, readable, and explained in plain language.
           </p>
         </div>
+
+        <PrintPageButton />
 
         {/* Search */}
         <div className="govuk-form-group govuk-!-margin-bottom-4">

@@ -15,11 +15,13 @@ type Props = {
  */
 export default function RelatedNav({
   title = "Related pages",
-  links,
+  links = [],
 }: Props) {
+  if (!links.length) return null;
+
   return (
     <div className="govuk-grid-column-one-third">
-      <aside className="govuk-!-display-none-print" role="complementary">
+      <aside className="govuk-!-display-none-print app-no-print" role="complementary">
         <h2 className="govuk-heading-m">{title}</h2>
         <nav aria-label={title}>
           <ul className="govuk-list govuk-list--spaced">

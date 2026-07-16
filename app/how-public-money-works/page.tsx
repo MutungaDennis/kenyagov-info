@@ -25,6 +25,7 @@ export default function HowPublicMoneyWorksPage() {
         caption="Public finance"
         title="How public money works"
         lead="Public services are funded mainly by taxes and other revenues. This page explains the big picture for citizens — not how to file your personal tax return."
+        showPrint
       />
 
       <div className="govuk-grid-row">

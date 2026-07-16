@@ -23,6 +23,7 @@ export default function EmergencyAndSafetyPage() {
         ]}
         title="Emergency and safety information"
         lead="If you are in danger, contact the police or local emergency services immediately. This website cannot dispatch help."
+        showPrint
       />
 
       <div className="govuk-grid-row">
