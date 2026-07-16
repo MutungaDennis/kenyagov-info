@@ -1,18 +1,23 @@
 /**
  * Clean Next/OpenNext outputs before Cloudflare build.
- * Windows-safe: EBUSY/EPERM on .open-next is common (Explorer, antivirus,
- * leftover wrangler/preview). Strategy:
- *  1) try fs.rmSync with retries
- *  2) rename out of the way (unlocks most locks)
- *  3) best-effort delete of the renamed folder
- *  4) never fail the build solely because a stale rename leftover remains
+ * Windows-safe: EBUSY/EPERM is common (Explorer, antivirus, wrangler, next dev).
+ *
+ * Critical dirs (.next, .open-next): must be cleared or renamed, else exit 1.
+ * Optional dirs (.wrangler*): warn and continue — they do not block OpenNext build.
  */
 import fs from "fs";
 import path from "path";
 import { execSync } from "child_process";
 
 const root = process.cwd();
-const dirs = [".next", ".open-next", ".wrangler", ".wrangler-dry"];
+
+/** @type {{ name: string, required: boolean }[]} */
+const dirs = [
+  { name: ".next", required: true },
+  { name: ".open-next", required: true },
+  { name: ".wrangler", required: false },
+  { name: ".wrangler-dry", required: false },
+];
 
 function sleep(ms) {
   const end = Date.now() + ms;
@@ -38,7 +43,6 @@ function tryRm(p) {
   });
 }
 
-/** Windows: empty a tree via robocopy /MIR then rmdir (often works when rm fails). */
 function windowsPurge(p) {
   if (process.platform !== "win32") return false;
   const empty = path.join(root, `.cf-clean-empty-${Date.now()}`);
@@ -48,7 +52,6 @@ function windowsPurge(p) {
       stdio: "ignore",
       windowsHide: true,
     });
-    // robocopy exit codes 0–7 are success-ish
     tryRm(empty);
     tryRm(p);
     return !exists(p);
@@ -62,7 +65,11 @@ function windowsPurge(p) {
   }
 }
 
-function removeDir(label) {
+/**
+ * @param {string} label
+ * @param {boolean} required
+ */
+function removeDir(label, required) {
   const p = path.join(root, label);
   if (!exists(p)) return;
 
@@ -84,7 +91,6 @@ function removeDir(label) {
     return;
   }
 
-  // Last resort: rename so OpenNext can write a fresh .open-next
   const stamp = Date.now();
   const trash = path.join(root, `${label}.trash-${stamp}`);
   try {
@@ -92,7 +98,6 @@ function removeDir(label) {
     console.warn(
       `renamed locked ${label} → ${path.basename(trash)} (build can continue)`,
     );
-    // Best-effort background-ish cleanup of trash
     for (let i = 1; i <= 3; i++) {
       sleep(400 * i);
       try {
@@ -110,15 +115,18 @@ function removeDir(label) {
       return;
     }
     console.warn(
-      `left ${path.basename(trash)} — delete it later when nothing is locking it`,
+      `left ${path.basename(trash)} — delete later when unlocked`,
     );
   } catch (err) {
+    if (!required) {
+      console.warn(
+        `skip locked ${label} (${err.code || err.message}) — not required for build`,
+      );
+      return;
+    }
     console.error(
       `\nFATAL: cannot remove or rename ${label} (${err.code || err.message}).\n` +
-        `Close:\n` +
-        `  - any "pnpm run preview" / wrangler / next dev terminals\n` +
-        `  - File Explorer windows inside ${label}\n` +
-        `Then run in PowerShell:\n` +
+        `Close next dev / wrangler / File Explorer, then:\n` +
         `  Get-Process node -ErrorAction SilentlyContinue | Stop-Process -Force\n` +
         `  Remove-Item -LiteralPath "${p}" -Recurse -Force\n` +
         `  pnpm run deploy\n`,
@@ -127,7 +135,6 @@ function removeDir(label) {
   }
 }
 
-// Drop old trash folders from previous failed cleans
 for (const ent of fs.readdirSync(root, { withFileTypes: true })) {
   if (
     ent.isDirectory() &&
@@ -140,11 +147,11 @@ for (const ent of fs.readdirSync(root, { withFileTypes: true })) {
       tryRm(path.join(root, ent.name));
       console.log("removed old trash", ent.name);
     } catch {
-      /* leave for next run */
+      /* leave */
     }
   }
 }
 
 for (const dir of dirs) {
-  removeDir(dir);
+  removeDir(dir.name, dir.required);
 }

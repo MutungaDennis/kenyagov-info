@@ -23,8 +23,7 @@
       "service": "kenyagov-info"
     }
   ],
-  // OpenNext ISR / data cache (create bucket once if missing):
-  //   pnpm exec wrangler r2 bucket create kenyagov-info-next-cache
+  // OpenNext ISR / data cache — bucket created in R2 dashboard
   "r2_buckets": [
     {
       "binding": "NEXT_INC_CACHE_R2_BUCKET",
