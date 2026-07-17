@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState, type ReactNode } from "react";
+import { useId, useState } from "react";
 import Link from "next/link";
 import { PortableText } from "@portabletext/react";
 import {
@@ -15,6 +15,7 @@ import {
   capacityFromTitleText,
 } from "@/lib/hansard/roles";
 import { stripHonMembersPrefixFromSpeech } from "@/lib/hansard/speech";
+import { hansardSpeechPortableTextComponents } from "@/components/hansard/speechComponents";
 
 export type EnrichedSpeaker = {
   full_name: string;
@@ -45,23 +46,6 @@ export type ContributionCardProps = {
   /** Sitting-level “Presiding officer” from admin — labels Temporary Speaker etc. */
   presidingOfficer?: PresidingOfficerRef | null;
   enrichedSpeaker?: EnrichedSpeaker;
-};
-
-const speechComponents = {
-  block: {
-    normal: ({ children }: { children?: ReactNode }) => (
-      <p
-        style={{
-          margin: "0 0 0.75em",
-          fontSize: "1.0625rem",
-          lineHeight: 1.6,
-          color: "#0b0c0c",
-        }}
-      >
-        {children}
-      </p>
-    ),
-  },
 };
 
 /**
@@ -508,7 +492,7 @@ export default function ContributionCard({
         {Array.isArray(speechForDisplay) && speechForDisplay.length > 0 ? (
           <PortableText
             value={speechForDisplay as never}
-            components={speechComponents as never}
+            components={hansardSpeechPortableTextComponents as never}
           />
         ) : (
           <p className="govuk-hint" style={{ fontSize: "1rem" }}>

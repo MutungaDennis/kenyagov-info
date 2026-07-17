@@ -174,8 +174,65 @@ export default defineType({
               name: 'speech',
               title: 'Content / Speech',
               type: 'array',
-              of: [{ type: 'block' }],
-              description: 'Full spoken words OR procedural note. Empty for pure headers. Use (Laughter), (Applause), [interjections] in square brackets.',
+              of: [
+                { type: 'block' },
+                {
+                  type: 'object',
+                  name: 'hansardTable',
+                  title: 'Schedule / estimate table',
+                  fields: [
+                    defineField({
+                      name: 'caption',
+                      title: 'Caption',
+                      type: 'string',
+                      description: 'e.g. FIRST SCHEDULE (S. 3, 4)',
+                    }),
+                    defineField({
+                      name: 'headers',
+                      title: 'Column headers',
+                      type: 'array',
+                      of: [{ type: 'string' }],
+                    }),
+                    defineField({
+                      name: 'rows',
+                      title: 'Rows',
+                      type: 'array',
+                      of: [
+                        {
+                          type: 'object',
+                          fields: [
+                            defineField({
+                              name: 'cells',
+                              title: 'Cells',
+                              type: 'array',
+                              of: [{ type: 'string' }],
+                            }),
+                          ],
+                          preview: {
+                            select: { cells: 'cells' },
+                            prepare({ cells }) {
+                              const c = Array.isArray(cells) ? cells : [];
+                              return { title: c.slice(0, 3).join(' · ') || 'Row' };
+                            },
+                          },
+                        },
+                      ],
+                    }),
+                  ],
+                  preview: {
+                    select: { caption: 'caption', headers: 'headers' },
+                    prepare({ caption, headers }) {
+                      const h = Array.isArray(headers) ? headers.join(', ') : '';
+                      return {
+                        title: caption || 'Table',
+                        subtitle: h,
+                      };
+                    },
+                  },
+                },
+              ],
+              description:
+                'Spoken words, procedural notes, and optional schedule tables. In admin, paste Markdown tables or wrap with [[TABLE]] … [[/TABLE]].',
             }),
           ],
           preview: {

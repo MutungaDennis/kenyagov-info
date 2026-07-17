@@ -18,6 +18,11 @@ import {
   publicHansardHousePath,
 } from "@/lib/hansard/speech";
 import {
+  composeSpeechWithTables,
+  extractTablesFromSpeech,
+  type SpeechTableDraft,
+} from "@/lib/hansard/tables";
+import {
   PRESIDING_ROLE_LABELS,
   type PresidingRole,
 } from "@/lib/hansard/stats";
@@ -31,6 +36,7 @@ import {
   rosterCapacityTitle,
   type RosterCapacity,
 } from "@/lib/hansard/roles";
+import SpeechTableEditor from "@/components/admin/hansard/SpeechTableEditor";
 
 function studioDocUrl(documentId: string) {
   const base = (
@@ -65,6 +71,8 @@ interface Contribution {
   /** Plain text for editing; may also hold PT from load until converted */
   speech: string | unknown[];
   speechPlain?: string;
+  /** Visual schedule tables (separate from prose for easy editing) */
+  tables?: SpeechTableDraft[];
   startTime?: string;
   sectionHeader?: string;
 }
@@ -110,25 +118,38 @@ interface RosterSpeaker {
 }
 
 function speechToPlain(c: Contribution): string {
-  if (typeof c.speechPlain === "string" && c.speechPlain) return c.speechPlain;
+  if (typeof c.speechPlain === "string") return c.speechPlain;
+  if (typeof c.speech === "string") return c.speech;
+  // Prefer text without re-serializing structured tables into the prose box
+  const { text } = extractTablesFromSpeech(c.speech);
+  if (text) return text;
   return portableTextToPlain(c.speech);
 }
 
+/** Prose + visual tables → Portable Text (incl. hansardTable blocks) for Sanity */
 function speechForSave(c: Contribution): string | unknown[] {
-  // Prefer plain editor text when present (user may have edited)
+  const plain =
+    typeof c.speech === "string"
+      ? c.speech
+      : typeof c.speechPlain === "string"
+        ? c.speechPlain
+        : speechToPlain(c);
+  const tables = c.tables || [];
+  if (tables.length > 0) {
+    return composeSpeechWithTables(plain, tables);
+  }
+  // No structured tables — allow markdown tables in plain text still
   if (typeof c.speech === "string") return c.speech;
   if (typeof c.speechPlain === "string" && c.speechPlain.length > 0) {
-    // If plain was derived from PT and user didn't re-edit as string, keep PT
-    // when plain matches portable text of speech array
     if (Array.isArray(c.speech) && c.speech.length > 0) {
-      const fromPt = portableTextToPlain(c.speech);
-      if (fromPt === c.speechPlain) return c.speech;
+      const { text } = extractTablesFromSpeech(c.speech);
+      if (text === c.speechPlain && !tables.length) return c.speech;
       return c.speechPlain;
     }
     return c.speechPlain;
   }
   if (Array.isArray(c.speech)) return c.speech;
-  return "";
+  return plain;
 }
 
 function capacityFromContribution(c: Contribution): RosterCapacity {
@@ -344,22 +365,29 @@ export default function ManualHansardEntry({
         presidingNotes: po.notes || "",
       });
       const mapped: Contribution[] = (loaded.contributions || []).map(
-        (c: Contribution & { speechPlain?: string }, i: number) => ({
-          _key: c._key || `loaded-${i}`,
-          order: c.order || i + 1,
-          type: (c.type as ContributionType) || "spoken",
-          supabaseLeaderId: c.supabaseLeaderId,
-          speakerName: c.speakerName || "",
-          speakerTitle: c.speakerTitle,
-          constituency: c.constituency,
-          party: c.party,
-          role: c.role,
-          isChairContribution: Boolean(c.isChairContribution),
-          speech: c.speech,
-          speechPlain: c.speechPlain || portableTextToPlain(c.speech),
-          startTime: c.startTime,
-          sectionHeader: c.sectionHeader,
-        }),
+        (c: Contribution & { speechPlain?: string }, i: number) => {
+          const extracted = extractTablesFromSpeech(c.speech);
+          return {
+            _key: c._key || `loaded-${i}`,
+            order: c.order || i + 1,
+            type: (c.type as ContributionType) || "spoken",
+            supabaseLeaderId: c.supabaseLeaderId,
+            speakerName: c.speakerName || "",
+            speakerTitle: c.speakerTitle,
+            constituency: c.constituency,
+            party: c.party,
+            role: c.role,
+            isChairContribution: Boolean(c.isChairContribution),
+            speech: c.speech,
+            speechPlain:
+              extracted.text ||
+              c.speechPlain ||
+              portableTextToPlain(c.speech),
+            tables: extracted.tables,
+            startTime: c.startTime,
+            sectionHeader: c.sectionHeader,
+          };
+        },
       );
       setContributions(renumberContiguous(mapped));
       setExistingDocumentId(loaded._id);
@@ -407,6 +435,7 @@ export default function ManualHansardEntry({
       speakerName: "",
       speech: "",
       speechPlain: "",
+      tables: [],
     });
     setEditingKey(null);
     setSelectedRosterKey(null);
@@ -418,11 +447,18 @@ export default function ManualHansardEntry({
   const openEditModal = (sortedIndex: number) => {
     const item = sortedContributions[sortedIndex];
     if (!item) return;
-    const plain = speechToPlain(item);
+    const extracted = extractTablesFromSpeech(item.speech);
+    const plain =
+      item.tables && item.tables.length > 0
+        ? speechToPlain(item)
+        : extracted.text || speechToPlain(item);
+    const tables =
+      item.tables && item.tables.length > 0 ? item.tables : extracted.tables;
     setCurrentContribution({
       ...item,
       speech: plain,
       speechPlain: plain,
+      tables,
     });
     setEditingKey(item._key || `idx-${sortedIndex}`);
     setInsertMode("append");
@@ -487,6 +523,10 @@ export default function ManualHansardEntry({
         type === "members" ? false : currentContribution.isChairContribution,
       speech: speechText,
       speechPlain: speechText,
+      tables:
+        type === "spoken" || type === "procedural"
+          ? currentContribution.tables || []
+          : [],
       _key:
         currentContribution._key ||
         `new-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
@@ -1501,9 +1541,15 @@ export default function ManualHansardEntry({
                       )}
                     </td>
                     <td className="govuk-table__cell" style={{ maxWidth: 360 }}>
-                      {plain.length > 120
-                        ? plain.slice(0, 120) + "…"
+                      {plain.length > 100
+                        ? plain.slice(0, 100) + "…"
                         : plain || "—"}
+                      {contrib.tables && contrib.tables.length > 0 && (
+                        <span className="govuk-body-s" style={{ display: "block", color: "#1d70b8" }}>
+                          + {contrib.tables.length} table
+                          {contrib.tables.length === 1 ? "" : "s"}
+                        </span>
+                      )}
                     </td>
                     <td className="govuk-table__cell">
                       <button
@@ -1991,11 +2037,11 @@ export default function ManualHansardEntry({
                 <label className="govuk-label">
                   {currentContribution.type === "members"
                     ? "What Hon. Members said"
-                    : "Content / speech (plain text; paragraphs separated by blank lines)"}
+                    : "Content / speech"}
                 </label>
                 <textarea
                   className="govuk-textarea"
-                  rows={currentContribution.type === "members" ? 4 : 10}
+                  rows={currentContribution.type === "members" ? 4 : 8}
                   value={
                     typeof currentContribution.speech === "string"
                       ? currentContribution.speech
@@ -2011,9 +2057,21 @@ export default function ManualHansardEntry({
                   placeholder={
                     currentContribution.type === "members"
                       ? "e.g. Put the question! / Which Standing Order? / Send him out!"
-                      : undefined
+                      : "Spoken words (prose). Use the table builder below for schedules."
                   }
                 />
+                {(currentContribution.type === "spoken" ||
+                  currentContribution.type === "procedural") && (
+                  <SpeechTableEditor
+                    tables={currentContribution.tables || []}
+                    onChange={(tables) =>
+                      setCurrentContribution({
+                        ...currentContribution,
+                        tables,
+                      })
+                    }
+                  />
+                )}
               </div>
             )}
 

@@ -6,6 +6,7 @@ import { createPublicClient } from "@/lib/supabase/public";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import PrintPageButton from "@/components/govuk/PrintPageButton";
 import ContributionCard from "@/components/hansard/ContributionCard";
+import { hansardSpeechPortableTextComponents } from "@/components/hansard/speechComponents";
 import {
   publicHansardDayPath,
   publicHansardHousePath,
@@ -442,7 +443,10 @@ export default async function DailySittingPage({ params }: PageProps) {
                     </span>
                   ) : null}
                   {contrib.speech?.length ? (
-                    <PortableText value={contrib.speech as never} />
+                    <PortableText
+                      value={contrib.speech as never}
+                      components={hansardSpeechPortableTextComponents as never}
+                    />
                   ) : (
                     <em>—</em>
                   )}

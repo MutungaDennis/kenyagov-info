@@ -1,7 +1,15 @@
 /**
  * Hansard speech helpers — safe Portable Text ↔ plain text round-trips.
  * Prevents wiping existing Sanity content when admin re-saves a sitting.
+ * Supports schedule tables (markdown / [[TABLE]] fences) via hansardTable blocks.
  */
+
+import {
+  isHansardTableBlock,
+  tableToMarkdown,
+  textToPortableTextWithTables,
+  type HansardTableBlock,
+} from "@/lib/hansard/tables";
 
 export type PortableBlock = {
   _type: string;
@@ -16,7 +24,7 @@ function randomKey(): string {
   return Math.random().toString(36).slice(2, 12);
 }
 
-/** Plain text for the admin editor and previews. */
+/** Plain text for the admin editor and previews (tables → markdown fences). */
 export function portableTextToPlain(blocks: unknown): string {
   if (!blocks) return "";
   if (typeof blocks === "string") return blocks;
@@ -24,6 +32,9 @@ export function portableTextToPlain(blocks: unknown): string {
 
   return blocks
     .map((block: PortableBlock) => {
+      if (isHansardTableBlock(block)) {
+        return tableToMarkdown(block as HansardTableBlock);
+      }
       if (block?._type === "block" && Array.isArray(block.children)) {
         return block.children.map((c) => c.text || "").join("");
       }
@@ -34,9 +45,16 @@ export function portableTextToPlain(blocks: unknown): string {
     .trim();
 }
 
-/** Convert plain text paragraphs into Portable Text blocks. */
+/** Convert plain text paragraphs (+ optional tables) into Portable Text blocks. */
 export function textToPortableText(text: string): PortableBlock[] {
   if (!text || typeof text !== "string") return [];
+  // Prefer table-aware parser when pipes or TABLE fences present
+  if (
+    text.includes("|") ||
+    /\[\[TABLE/i.test(text)
+  ) {
+    return textToPortableTextWithTables(text);
+  }
 
   const paragraphs = text
     .split(/\n\s*\n/)
@@ -44,7 +62,6 @@ export function textToPortableText(text: string): PortableBlock[] {
     .filter(Boolean);
 
   if (paragraphs.length === 0) {
-    // Preserve single-line / single-paragraph content without double newlines
     const one = text.trim();
     if (!one) return [];
     return [
@@ -83,7 +100,7 @@ export function textToPortableText(text: string): PortableBlock[] {
 
 /**
  * Normalize any speech payload for Sanity write:
- * - string → Portable Text
+ * - string → Portable Text (incl. tables)
  * - non-empty Portable Text array → keep (preserve keys where present)
  * - empty / invalid → []
  */
@@ -92,17 +109,33 @@ export function normalizeSpeechForSanity(speech: unknown): PortableBlock[] {
     return textToPortableText(speech);
   }
   if (Array.isArray(speech) && speech.length > 0) {
-    // Ensure blocks have _key for Sanity array items
-    return speech.map((block: PortableBlock, i) => ({
-      ...block,
-      _key: block._key || `block-${i}-${randomKey()}`,
-      children: Array.isArray(block.children)
-        ? block.children.map((c, j) => ({
-            ...c,
-            _key: c._key || `span-${j}-${randomKey()}`,
-          }))
-        : block.children,
-    }));
+    return speech.map((block: PortableBlock, i) => {
+      if (isHansardTableBlock(block)) {
+        const t = block as HansardTableBlock;
+        return {
+          ...t,
+          _type: "hansardTable",
+          _key: t._key || `table-${i}-${randomKey()}`,
+          headers: Array.isArray(t.headers) ? t.headers : [],
+          rows: Array.isArray(t.rows)
+            ? t.rows.map((r, ri) => ({
+                _key: r._key || `row-${ri}-${randomKey()}`,
+                cells: Array.isArray(r.cells) ? r.cells.map(String) : [],
+              }))
+            : [],
+        } as PortableBlock;
+      }
+      return {
+        ...block,
+        _key: block._key || `block-${i}-${randomKey()}`,
+        children: Array.isArray(block.children)
+          ? block.children.map((c, j) => ({
+              ...c,
+              _key: c._key || `span-${j}-${randomKey()}`,
+            }))
+          : block.children,
+      };
+    });
   }
   return [];
 }
