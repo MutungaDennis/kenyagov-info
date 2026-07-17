@@ -21,6 +21,16 @@ import {
   PRESIDING_ROLE_LABELS,
   type PresidingRole,
 } from "@/lib/hansard/stats";
+import {
+  ROSTER_CAPACITY_OPTIONS,
+  capacityFromTitleText,
+  isChairCapacity,
+  isPartyLeadershipCapacity,
+  rosterCapacitySelectLabel,
+  rosterCapacityShortLabel,
+  rosterCapacityTitle,
+  type RosterCapacity,
+} from "@/lib/hansard/roles";
 
 function studioDocUrl(documentId: string) {
   const base = (
@@ -83,6 +93,22 @@ interface LeaderSearchResult {
   role?: string;
 }
 
+interface RosterSpeaker {
+  /** Stable key — supabase id or local key */
+  key: string;
+  supabaseLeaderId?: string;
+  full_name: string;
+  title?: string;
+  constituency?: string;
+  party?: string;
+  role?: string;
+  /**
+   * Default capacity when this person is clicked:
+   * member / party leadership (floor) or speaker / deputy / temporary (chair)
+   */
+  capacity: RosterCapacity;
+}
+
 function speechToPlain(c: Contribution): string {
   if (typeof c.speechPlain === "string" && c.speechPlain) return c.speechPlain;
   return portableTextToPlain(c.speech);
@@ -103,6 +129,81 @@ function speechForSave(c: Contribution): string | unknown[] {
   }
   if (Array.isArray(c.speech)) return c.speech;
   return "";
+}
+
+function capacityFromContribution(c: Contribution): RosterCapacity {
+  return capacityFromTitleText(
+    c.speakerTitle,
+    c.role,
+    c.isChairContribution,
+  );
+}
+
+function capacityRank(c: RosterCapacity): number {
+  if (isChairCapacity(c)) return 0;
+  if (isPartyLeadershipCapacity(c)) return 1;
+  return 2;
+}
+
+/** Rebuild quick-pick list when loading a sitting */
+function buildRosterFromSitting(
+  contributions: Contribution[],
+  presiding?: {
+    role: PresidingRole;
+    displayName: string;
+    supabaseLeaderId: string;
+  },
+): RosterSpeaker[] {
+  const byKey = new Map<string, RosterSpeaker>();
+
+  for (const c of contributions) {
+    if (c.type !== "spoken") continue;
+    if (!c.speakerName?.trim() && !c.supabaseLeaderId) continue;
+    const key =
+      c.supabaseLeaderId ||
+      `name-${c.speakerName!.toLowerCase().replace(/\s+/g, "-")}`;
+    const capacity = capacityFromContribution(c);
+    const existing = byKey.get(key);
+    // Prefer chair, then party leadership, over plain member
+    const nextCapacity =
+      existing && capacityRank(existing.capacity) <= capacityRank(capacity)
+        ? existing.capacity
+        : capacity;
+    byKey.set(key, {
+      key,
+      supabaseLeaderId: c.supabaseLeaderId || existing?.supabaseLeaderId,
+      full_name: c.speakerName || existing?.full_name || "Unknown",
+      title: c.speakerTitle || existing?.title,
+      constituency: c.constituency || existing?.constituency,
+      party: c.party || existing?.party,
+      role: c.role || existing?.role,
+      capacity: nextCapacity,
+    });
+  }
+
+  if (presiding?.supabaseLeaderId || presiding?.displayName) {
+    const key =
+      presiding.supabaseLeaderId ||
+      `name-${presiding.displayName.toLowerCase().replace(/\s+/g, "-")}`;
+    const existing = byKey.get(key);
+    byKey.set(key, {
+      key,
+      supabaseLeaderId:
+        presiding.supabaseLeaderId || existing?.supabaseLeaderId,
+      full_name: presiding.displayName || existing?.full_name || "Presiding",
+      title: existing?.title,
+      constituency: existing?.constituency,
+      party: existing?.party,
+      role: existing?.role,
+      capacity: presiding.role || existing?.capacity || "temporary-speaker",
+    });
+  }
+
+  return Array.from(byKey.values()).sort((a, b) => {
+    const r = capacityRank(a.capacity) - capacityRank(b.capacity);
+    if (r !== 0) return r;
+    return a.full_name.localeCompare(b.full_name);
+  });
 }
 
 export type ManualEntryProps = {
@@ -153,11 +254,21 @@ export default function ManualHansardEntry({
   const [isSearchingLeaders, setIsSearchingLeaders] = useState(false);
   const [showLeaderDropdown, setShowLeaderDropdown] = useState(false);
 
-  const [presidingSearchResults, setPresidingSearchResults] = useState<
+  /** Speakers for this sitting — pick with one click when entering speeches */
+  const [speakerRoster, setSpeakerRoster] = useState<RosterSpeaker[]>([]);
+  const [rosterSearchResults, setRosterSearchResults] = useState<
     LeaderSearchResult[]
   >([]);
-  const [isSearchingPresiding, setIsSearchingPresiding] = useState(false);
-  const [showPresidingDropdown, setShowPresidingDropdown] = useState(false);
+  const [isSearchingRoster, setIsSearchingRoster] = useState(false);
+  const [showRosterDropdown, setShowRosterDropdown] = useState(false);
+  const [rosterSearchQuery, setRosterSearchQuery] = useState("");
+  /** Capacity applied when adding someone via the compact roster search */
+  const [rosterAddCapacity, setRosterAddCapacity] =
+    useState<RosterCapacity>("member");
+  /** Which roster speaker is selected in the contribution modal */
+  const [selectedRosterKey, setSelectedRosterKey] = useState<string | null>(
+    null,
+  );
 
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -255,6 +366,14 @@ export default function ManualHansardEntry({
       setIsActive(loaded.isActive !== false);
       if (loaded.sittingDate) setLoadDate(loaded.sittingDate);
       if (loaded.houseType) setLoadHouse(loaded.houseType);
+      // Rebuild quick-pick roster from sitting speakers + presiding officer
+      setSpeakerRoster(
+        buildRosterFromSitting(mapped, {
+          role: presidingRole,
+          displayName: po.displayName || "",
+          supabaseLeaderId: po.supabaseLeaderId || "",
+        }),
+      );
       if (!quiet) {
         alert(
           `Loaded ${mapped.length} contributions. Add more, insert at any order, then Save draft or Publish.`,
@@ -290,6 +409,7 @@ export default function ManualHansardEntry({
       speechPlain: "",
     });
     setEditingKey(null);
+    setSelectedRosterKey(null);
     setLeaderSearchResults([]);
     setShowLeaderDropdown(false);
     setModalOpen(true);
@@ -306,6 +426,14 @@ export default function ManualHansardEntry({
     });
     setEditingKey(item._key || `idx-${sortedIndex}`);
     setInsertMode("append");
+    // Highlight matching roster speaker if any
+    const match = speakerRoster.find(
+      (s) =>
+        (item.supabaseLeaderId && s.supabaseLeaderId === item.supabaseLeaderId) ||
+        (item.speakerName &&
+          s.full_name.toLowerCase() === item.speakerName.toLowerCase()),
+    );
+    setSelectedRosterKey(match?.key || null);
     setLeaderSearchResults([]);
     setShowLeaderDropdown(false);
     setModalOpen(true);
@@ -542,53 +670,163 @@ export default function ManualHansardEntry({
     }
   };
 
-  const selectLeader = (leader: LeaderSearchResult) => {
-    setCurrentContribution({
-      ...currentContribution,
-      supabaseLeaderId: leader.id,
-      speakerName: leader.full_name || "",
-      speakerTitle:
-        currentContribution.isChairContribution
-          ? PRESIDING_ROLE_LABELS[sitting.presidingRole]
-          : leader.title || currentContribution.speakerTitle || "",
-      constituency: leader.constituency || "",
-      party: leader.party || "",
-      role: leader.role || "",
+  const upsertRosterSpeaker = (
+    speaker: Omit<RosterSpeaker, "key"> & { key?: string },
+  ) => {
+    const key =
+      speaker.key ||
+      speaker.supabaseLeaderId ||
+      `local-${speaker.full_name.toLowerCase().replace(/\s+/g, "-")}`;
+    setSpeakerRoster((prev) => {
+      const idx = prev.findIndex(
+        (s) =>
+          s.key === key ||
+          (speaker.supabaseLeaderId &&
+            s.supabaseLeaderId === speaker.supabaseLeaderId),
+      );
+      const next: RosterSpeaker = {
+        key,
+        supabaseLeaderId: speaker.supabaseLeaderId,
+        full_name: speaker.full_name,
+        title: speaker.title,
+        constituency: speaker.constituency,
+        party: speaker.party,
+        role: speaker.role,
+        capacity: speaker.capacity,
+      };
+      if (idx >= 0) {
+        const copy = [...prev];
+        copy[idx] = { ...copy[idx], ...next, capacity: speaker.capacity };
+        return copy;
+      }
+      return [...prev, next];
     });
-    setShowLeaderDropdown(false);
+    return key;
   };
 
-  const searchPresidingLeaders = async (query: string) => {
+  const applyRosterSpeaker = (speaker: RosterSpeaker) => {
+    const isChair = isChairCapacity(speaker.capacity);
+    const title = rosterCapacityTitle(speaker.capacity, speaker.title);
+    setSelectedRosterKey(speaker.key);
+    setCurrentContribution((c) => ({
+      ...c,
+      type: "spoken",
+      supabaseLeaderId: speaker.supabaseLeaderId,
+      speakerName: speaker.full_name || "",
+      speakerTitle: title,
+      // Store leadership / role label for stats & reload
+      role:
+        isPartyLeadershipCapacity(speaker.capacity) || isChair
+          ? title
+          : speaker.role || "",
+      constituency: speaker.constituency || "",
+      party: speaker.party || "",
+      isChairContribution: isChair,
+    }));
+    setShowLeaderDropdown(false);
+    setLeaderSearchResults([]);
+  };
+
+  const selectLeader = (leader: LeaderSearchResult) => {
+    const key = upsertRosterSpeaker({
+      supabaseLeaderId: leader.id,
+      full_name: leader.full_name || "",
+      title: leader.title,
+      constituency: leader.constituency,
+      party: leader.party,
+      role: leader.role,
+      capacity: "member",
+    });
+    applyRosterSpeaker({
+      key,
+      supabaseLeaderId: leader.id,
+      full_name: leader.full_name || "",
+      title: leader.title,
+      constituency: leader.constituency,
+      party: leader.party,
+      role: leader.role,
+      capacity: "member",
+    });
+  };
+
+  const searchRosterLeaders = async (query: string) => {
+    setRosterSearchQuery(query);
     if (query.length < 2) {
-      setPresidingSearchResults([]);
-      setShowPresidingDropdown(false);
+      setRosterSearchResults([]);
+      setShowRosterDropdown(false);
       return;
     }
-    setIsSearchingPresiding(true);
+    setIsSearchingRoster(true);
     try {
       const res = await fetch(
         `/api/leaders/search?q=${encodeURIComponent(query)}`,
       );
       if (res.ok) {
         const data = await res.json();
-        setPresidingSearchResults(data.leaders || []);
-        setShowPresidingDropdown(true);
+        setRosterSearchResults(data.leaders || []);
+        setShowRosterDropdown(true);
       }
     } catch (err) {
-      console.error("Presiding leader search failed", err);
+      console.error("Roster leader search failed", err);
     } finally {
-      setIsSearchingPresiding(false);
+      setIsSearchingRoster(false);
     }
   };
 
-  const selectPresidingLeader = (leader: LeaderSearchResult) => {
-    setSitting((s) => ({
-      ...s,
-      presidingName: leader.full_name || "",
-      presidingLeaderId: leader.id,
-    }));
-    setShowPresidingDropdown(false);
-    setPresidingSearchResults([]);
+  const addLeaderToRoster = (
+    leader: LeaderSearchResult,
+    capacity: RosterCapacity = "member",
+  ) => {
+    upsertRosterSpeaker({
+      supabaseLeaderId: leader.id,
+      full_name: leader.full_name || "",
+      title: leader.title,
+      constituency: leader.constituency,
+      party: leader.party,
+      role: leader.role,
+      capacity,
+    });
+    // Keep sitting-level presiding officer in sync when designating chair only
+    if (isChairCapacity(capacity)) {
+      setSitting((s) => ({
+        ...s,
+        presidingRole: capacity as PresidingRole,
+        presidingName: leader.full_name || s.presidingName,
+        presidingLeaderId: leader.id,
+      }));
+    }
+    setRosterSearchQuery("");
+    setRosterSearchResults([]);
+    setShowRosterDropdown(false);
+  };
+
+  const setRosterCapacity = (key: string, capacity: RosterCapacity) => {
+    setSpeakerRoster((prev) => {
+      const next = prev.map((s) =>
+        s.key === key ? { ...s, capacity } : s,
+      );
+      const sp = next.find((s) => s.key === key);
+      // Sync sitting chair only for Speaker / Deputy / Temporary
+      if (sp && isChairCapacity(capacity)) {
+        queueMicrotask(() => {
+          setSitting((s) => ({
+            ...s,
+            presidingRole: capacity as PresidingRole,
+            presidingName: sp.full_name || s.presidingName,
+            presidingLeaderId: sp.supabaseLeaderId || s.presidingLeaderId,
+          }));
+        });
+      }
+      if (selectedRosterKey === key && sp) {
+        queueMicrotask(() => applyRosterSpeaker(sp));
+      }
+      return next;
+    });
+  };
+
+  const removeFromRoster = (key: string) => {
+    setSpeakerRoster((prev) => prev.filter((s) => s.key !== key));
+    if (selectedRosterKey === key) setSelectedRosterKey(null);
   };
 
   const applyChairRoleToContribution = (role: PresidingRole) => {
@@ -597,6 +835,16 @@ export default function ManualHansardEntry({
       isChairContribution: true,
       speakerTitle: PRESIDING_ROLE_LABELS[role],
     }));
+    // Sync roster capacity if this person is on the roster
+    if (currentContribution.supabaseLeaderId) {
+      setSpeakerRoster((prev) =>
+        prev.map((s) =>
+          s.supabaseLeaderId === currentContribution.supabaseLeaderId
+            ? { ...s, capacity: role }
+            : s,
+        ),
+      );
+    }
   };
 
   return (
@@ -816,176 +1064,323 @@ export default function ManualHansardEntry({
         />
       </div>
 
-      {/* Presiding officer */}
-      <h2 className="govuk-heading-m">Presiding officer (this sitting)</h2>
-      <p className="govuk-hint">
-        When the Speaker is absent, the Deputy Speaker presides. If both are
-        absent, the House elects a Member as Temporary Speaker. Link Temporary /
-        Deputy Speakers to Supabase so their chair interventions can be excluded
-        from personal contribution stats.
-      </p>
-      <div className="govuk-grid-row">
-        <div className="govuk-grid-column-one-third">
+      {/* Optional extras collapsed so contributions stay near the top */}
+      <details className="govuk-details govuk-!-margin-bottom-4">
+        <summary className="govuk-details__summary">
+          <span className="govuk-details__summary-text">
+            Optional: PDF / video / summary / chair notes
+            {sitting.presidingName
+              ? ` · Chair: ${sitting.presidingName}`
+              : ""}
+          </span>
+        </summary>
+        <div className="govuk-details__text">
+          <p className="govuk-body-s">
+            Prefer designating the Temporary / Deputy Speaker under{" "}
+            <strong>Session speakers</strong> above. These fields are optional
+            extras.
+          </p>
           <div className="govuk-form-group">
-            <label className="govuk-label" htmlFor="presidingRole">
-              Chair role
-            </label>
-            <select
-              id="presidingRole"
-              className="govuk-select"
-              value={sitting.presidingRole}
-              onChange={(e) =>
-                setSitting({
-                  ...sitting,
-                  presidingRole: e.target.value as PresidingRole,
-                })
-              }
-            >
-              <option value="speaker">The Speaker</option>
-              <option value="deputy-speaker">The Deputy Speaker</option>
-              <option value="temporary-speaker">
-                The Temporary Speaker (elected Member)
-              </option>
-            </select>
-          </div>
-        </div>
-        <div className="govuk-grid-column-two-thirds">
-          <div className="govuk-form-group">
-            <label className="govuk-label" htmlFor="presidingSearch">
-              Search Member / leader (optional link)
+            <label className="govuk-label" htmlFor="presidingNotes">
+              Chair notes
             </label>
             <input
-              id="presidingSearch"
+              id="presidingNotes"
               className="govuk-input"
-              onChange={(e) => searchPresidingLeaders(e.target.value)}
-              placeholder="Type name to link Supabase leader…"
+              value={sitting.presidingNotes}
+              onChange={(e) =>
+                setSitting({ ...sitting, presidingNotes: e.target.value })
+              }
+              placeholder="e.g. Speaker absent; Temporary Speaker elected at 14:45"
             />
-            {isSearchingPresiding && (
-              <p className="govuk-hint">Searching…</p>
-            )}
-            {showPresidingDropdown && presidingSearchResults.length > 0 && (
-              <ul
-                className="govuk-list"
-                style={{
-                  border: "1px solid #b1b4b6",
-                  maxHeight: 180,
-                  overflow: "auto",
-                }}
-              >
-                {presidingSearchResults.map((l) => (
-                  <li key={l.id}>
-                    <button
-                      type="button"
-                      className="govuk-link"
-                      style={{
-                        background: "none",
-                        border: "none",
-                        cursor: "pointer",
-                        textAlign: "left",
-                        padding: 8,
-                        width: "100%",
-                      }}
-                      onClick={() => selectPresidingLeader(l)}
-                    >
-                      {l.full_name}
-                      {l.constituency ? ` — ${l.constituency}` : ""}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
+          </div>
+          {sitting.presidingLeaderId && (
+            <p className="govuk-body-s">
+              Chair linked: {sitting.presidingName || "—"} (
+              <code>{sitting.presidingLeaderId.slice(0, 8)}…</code>)
+            </p>
+          )}
+          <div className="govuk-form-group">
+            <label className="govuk-label" htmlFor="pdf">
+              Official Hansard PDF URL
+            </label>
+            <input
+              id="pdf"
+              className="govuk-input"
+              value={sitting.officialHansardUrl || ""}
+              onChange={(e) =>
+                setSitting({ ...sitting, officialHansardUrl: e.target.value })
+              }
+              placeholder="https://..."
+            />
+          </div>
+          <div className="govuk-form-group">
+            <label className="govuk-label" htmlFor="yt">
+              YouTube URL (optional)
+            </label>
+            <input
+              id="yt"
+              className="govuk-input"
+              value={sitting.youtubeUrl || ""}
+              onChange={(e) =>
+                setSitting({ ...sitting, youtubeUrl: e.target.value })
+              }
+            />
+          </div>
+          <div className="govuk-form-group">
+            <label className="govuk-label" htmlFor="summary">
+              Editorial summary
+            </label>
+            <textarea
+              id="summary"
+              className="govuk-textarea"
+              rows={2}
+              value={sitting.editorialSummary || ""}
+              onChange={(e) =>
+                setSitting({ ...sitting, editorialSummary: e.target.value })
+              }
+            />
           </div>
         </div>
-      </div>
-      <div className="govuk-form-group">
-        <label className="govuk-label" htmlFor="presidingName">
-          Name in Hansard
-        </label>
-        <input
-          id="presidingName"
-          className="govuk-input"
-          value={sitting.presidingName}
-          onChange={(e) =>
-            setSitting({ ...sitting, presidingName: e.target.value })
-          }
-          placeholder="e.g. Hon. Moses Wetang'ula"
-        />
-      </div>
-      {sitting.presidingLeaderId && (
-        <p className="govuk-body-s">
-          Linked leader ID: <code>{sitting.presidingLeaderId}</code>{" "}
-          <button
-            type="button"
-            className="govuk-link"
-            style={{
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              color: "#d4351c",
-            }}
-            onClick={() =>
-              setSitting({ ...sitting, presidingLeaderId: "" })
-            }
-          >
-            Unlink
-          </button>
-        </p>
-      )}
-      <div className="govuk-form-group">
-        <label className="govuk-label" htmlFor="presidingNotes">
-          Notes (optional)
-        </label>
-        <input
-          id="presidingNotes"
-          className="govuk-input"
-          value={sitting.presidingNotes}
-          onChange={(e) =>
-            setSitting({ ...sitting, presidingNotes: e.target.value })
-          }
-          placeholder="e.g. Speaker absent; Temporary Speaker elected at 14:45"
-        />
-      </div>
+      </details>
 
-      <div className="govuk-form-group">
-        <label className="govuk-label" htmlFor="pdf">
-          Official Hansard PDF URL (source of truth)
-        </label>
-        <input
-          id="pdf"
-          className="govuk-input"
-          value={sitting.officialHansardUrl || ""}
-          onChange={(e) =>
-            setSitting({ ...sitting, officialHansardUrl: e.target.value })
-          }
-          placeholder="https://..."
-        />
-      </div>
-      <div className="govuk-form-group">
-        <label className="govuk-label" htmlFor="yt">
-          YouTube URL (optional)
-        </label>
-        <input
-          id="yt"
-          className="govuk-input"
-          value={sitting.youtubeUrl || ""}
-          onChange={(e) =>
-            setSitting({ ...sitting, youtubeUrl: e.target.value })
-          }
-        />
-      </div>
-      <div className="govuk-form-group">
-        <label className="govuk-label" htmlFor="summary">
-          Editorial summary (plain text)
-        </label>
-        <textarea
-          id="summary"
-          className="govuk-textarea"
-          rows={3}
-          value={sitting.editorialSummary || ""}
-          onChange={(e) =>
-            setSitting({ ...sitting, editorialSummary: e.target.value })
-          }
-        />
+      {/* Compact session speakers — designate role, then pick when adding speech */}
+      <div
+        style={{
+          border: "1px solid #b1b4b6",
+          background: "#f3f2f1",
+          padding: "12px 14px",
+          marginBottom: 20,
+        }}
+      >
+        <h2 className="govuk-heading-s govuk-!-margin-bottom-1">
+          Session speakers
+        </h2>
+        <p
+          className="govuk-body-s govuk-!-margin-bottom-2"
+          style={{ color: "#505a5f" }}
+        >
+          Add as Member, party leader/whip, or Chair. Click their chip when
+          entering a contribution — title is applied automatically.
+        </p>
+
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 8,
+            alignItems: "flex-end",
+          }}
+        >
+          <div className="govuk-form-group govuk-!-margin-bottom-0">
+            <label className="govuk-label" htmlFor="rosterAddCapacity">
+              Add as
+            </label>
+            <select
+              id="rosterAddCapacity"
+              className="govuk-select"
+              value={rosterAddCapacity}
+              onChange={(e) =>
+                setRosterAddCapacity(e.target.value as RosterCapacity)
+              }
+              style={{ minWidth: 200 }}
+            >
+              <optgroup label="Floor">
+                <option value="member">Member</option>
+              </optgroup>
+              <optgroup label="Party leadership">
+                {ROSTER_CAPACITY_OPTIONS.filter((o) => o.group === "party").map(
+                  (o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ),
+                )}
+              </optgroup>
+              <optgroup label="In the Chair">
+                {ROSTER_CAPACITY_OPTIONS.filter((o) => o.group === "chair").map(
+                  (o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ),
+                )}
+              </optgroup>
+            </select>
+          </div>
+          <div
+            className="govuk-form-group govuk-!-margin-bottom-0"
+            style={{ flex: "1 1 200px", minWidth: 180 }}
+          >
+            <label className="govuk-label" htmlFor="rosterSearch">
+              Search name
+            </label>
+            <input
+              id="rosterSearch"
+              className="govuk-input"
+              value={rosterSearchQuery}
+              onChange={(e) => searchRosterLeaders(e.target.value)}
+              placeholder="Type name…"
+              autoComplete="off"
+            />
+          </div>
+        </div>
+        {isSearchingRoster && (
+          <p className="govuk-hint govuk-!-margin-bottom-0 govuk-!-margin-top-1">
+            Searching…
+          </p>
+        )}
+        {showRosterDropdown && rosterSearchResults.length > 0 && (
+          <ul
+            className="govuk-list govuk-!-margin-bottom-0 govuk-!-margin-top-1"
+            style={{
+              border: "1px solid #b1b4b6",
+              maxHeight: 140,
+              overflow: "auto",
+              background: "#fff",
+            }}
+          >
+            {rosterSearchResults.map((l) => (
+              <li key={l.id} style={{ margin: 0 }}>
+                <button
+                  type="button"
+                  style={{
+                    background: "none",
+                    border: "none",
+                    borderBottom: "1px solid #f3f2f1",
+                    cursor: "pointer",
+                    textAlign: "left",
+                    padding: "6px 10px",
+                    width: "100%",
+                    fontSize: 15,
+                  }}
+                  onClick={() => addLeaderToRoster(l, rosterAddCapacity)}
+                >
+                  <strong>{l.full_name}</strong>
+                  {(l.constituency || l.party) && (
+                    <span style={{ color: "#505a5f" }}>
+                      {" "}
+                      — {[l.constituency, l.party].filter(Boolean).join(" · ")}
+                    </span>
+                  )}
+                  <span style={{ color: "#1d70b8", marginLeft: 6 }}>
+                    + {rosterCapacitySelectLabel(rosterAddCapacity)}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {speakerRoster.length > 0 && (
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              alignItems: "center",
+              gap: 6,
+              marginTop: 10,
+              maxHeight: 120,
+              overflowY: "auto",
+            }}
+          >
+            {[...speakerRoster]
+              .sort(
+                (a, b) =>
+                  capacityRank(a.capacity) - capacityRank(b.capacity) ||
+                  a.full_name.localeCompare(b.full_name),
+              )
+              .map((sp) => (
+              <span
+                key={sp.key}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 4,
+                  padding: "3px 8px",
+                  background: "#fff",
+                  border: isChairCapacity(sp.capacity)
+                    ? "1px solid #f47738"
+                    : isPartyLeadershipCapacity(sp.capacity)
+                      ? "1px solid #1d70b8"
+                      : "1px solid #b1b4b6",
+                  fontSize: 14,
+                  borderRadius: 2,
+                }}
+              >
+                {sp.capacity !== "member" && (
+                  <span
+                    style={{
+                      fontSize: 11,
+                      color: isChairCapacity(sp.capacity)
+                        ? "#b58840"
+                        : "#1d70b8",
+                      fontWeight: 600,
+                    }}
+                  >
+                    {rosterCapacityShortLabel(sp.capacity)}:
+                  </span>
+                )}
+                <span>{sp.full_name}</span>
+                <select
+                  aria-label={`Role for ${sp.full_name}`}
+                  value={sp.capacity}
+                  onChange={(e) =>
+                    setRosterCapacity(
+                      sp.key,
+                      e.target.value as RosterCapacity,
+                    )
+                  }
+                  style={{
+                    fontSize: 12,
+                    border: "none",
+                    background: "transparent",
+                    maxWidth: 140,
+                    color: "#505a5f",
+                  }}
+                >
+                  <optgroup label="Floor">
+                    <option value="member">Member</option>
+                  </optgroup>
+                  <optgroup label="Party leadership">
+                    {ROSTER_CAPACITY_OPTIONS.filter(
+                      (o) => o.group === "party",
+                    ).map((o) => (
+                      <option key={o.value} value={o.value}>
+                        {rosterCapacityShortLabel(o.value)}
+                      </option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="Chair">
+                    {ROSTER_CAPACITY_OPTIONS.filter(
+                      (o) => o.group === "chair",
+                    ).map((o) => (
+                      <option key={o.value} value={o.value}>
+                        {rosterCapacityShortLabel(o.value)}
+                      </option>
+                    ))}
+                  </optgroup>
+                </select>
+                <button
+                  type="button"
+                  aria-label={`Remove ${sp.full_name}`}
+                  onClick={() => removeFromRoster(sp.key)}
+                  style={{
+                    border: "none",
+                    background: "none",
+                    cursor: "pointer",
+                    color: "#d4351c",
+                    fontSize: 16,
+                    lineHeight: 1,
+                    padding: "0 2px",
+                  }}
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Contributions */}
@@ -996,7 +1391,7 @@ export default function ManualHansardEntry({
           alignItems: "center",
           flexWrap: "wrap",
           gap: 12,
-          marginTop: 32,
+          marginTop: 8,
         }}
       >
         <h2 className="govuk-heading-m govuk-!-margin-bottom-0">
@@ -1364,128 +1759,229 @@ export default function ManualHansardEntry({
 
             {currentContribution.type === "spoken" && (
               <>
+                {/* One-click speaker pick from sitting roster */}
                 <div className="govuk-form-group">
-                  <label className="govuk-label">Search leader (Supabase)</label>
-                  <input
-                    className="govuk-input"
-                    onChange={(e) => searchLeaders(e.target.value)}
-                    placeholder="Type name…"
-                  />
-                  {isSearchingLeaders && (
-                    <p className="govuk-hint">Searching…</p>
-                  )}
-                  {showLeaderDropdown && leaderSearchResults.length > 0 && (
-                    <ul className="govuk-list" style={{ border: "1px solid #b1b4b6", maxHeight: 200, overflow: "auto" }}>
-                      {leaderSearchResults.map((l) => (
-                        <li key={l.id}>
-                          <button
-                            type="button"
-                            className="govuk-link"
-                            style={{
-                              background: "none",
-                              border: "none",
-                              cursor: "pointer",
-                              textAlign: "left",
-                              padding: 8,
-                              width: "100%",
-                            }}
-                            onClick={() => selectLeader(l)}
-                          >
-                            {l.full_name}
-                            {l.constituency ? ` — ${l.constituency}` : ""}
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-                <div className="govuk-form-group">
-                  <label className="govuk-label">Speaker name</label>
-                  <input
-                    className="govuk-input"
-                    value={currentContribution.speakerName}
-                    onChange={(e) =>
-                      setCurrentContribution({
-                        ...currentContribution,
-                        speakerName: e.target.value,
-                      })
-                    }
-                  />
-                </div>
-                <div className="govuk-form-group">
-                  <label className="govuk-label">Title / how addressed</label>
-                  <input
-                    className="govuk-input"
-                    value={currentContribution.speakerTitle || ""}
-                    onChange={(e) =>
-                      setCurrentContribution({
-                        ...currentContribution,
-                        speakerTitle: e.target.value,
-                      })
-                    }
-                    placeholder="Hon., The Temporary Speaker, …"
-                  />
-                </div>
-                <div className="govuk-checkboxes">
-                  <div className="govuk-checkboxes__item">
-                    <input
-                      className="govuk-checkboxes__input"
-                      id="isChairContribution"
-                      type="checkbox"
-                      checked={Boolean(currentContribution.isChairContribution)}
-                      onChange={(e) => {
-                        const checked = e.target.checked;
-                        setCurrentContribution({
-                          ...currentContribution,
-                          isChairContribution: checked,
-                          speakerTitle: checked
-                            ? currentContribution.speakerTitle ||
-                              PRESIDING_ROLE_LABELS[sitting.presidingRole]
-                            : currentContribution.speakerTitle,
-                        });
+                  <label className="govuk-label">Who is speaking?</label>
+                  <p className="govuk-hint">
+                    Click a name. Role on the roster (Member vs Temporary
+                    Speaker) is applied automatically.
+                  </p>
+                  {speakerRoster.length === 0 ? (
+                    <p className="govuk-body-s">
+                      No speakers on the roster yet. Add them under{" "}
+                      <strong>Speakers for this sitting</strong>, or search
+                      below.
+                    </p>
+                  ) : (
+                    <div
+                      style={{
+                        display: "flex",
+                        flexWrap: "wrap",
+                        gap: 8,
                       }}
-                    />
-                    <label
-                      className="govuk-label govuk-checkboxes__label"
-                      htmlFor="isChairContribution"
                     >
-                      Speaking as Chair (exclude from this Member&apos;s
-                      contribution stats)
-                    </label>
+                      {speakerRoster.map((sp) => {
+                        const selected = selectedRosterKey === sp.key;
+                        const isChair = isChairCapacity(sp.capacity);
+                        const isParty = isPartyLeadershipCapacity(sp.capacity);
+                        return (
+                          <button
+                            key={sp.key}
+                            type="button"
+                            onClick={() => applyRosterSpeaker(sp)}
+                            style={{
+                              cursor: "pointer",
+                              padding: "8px 12px",
+                              border: selected
+                                ? "2px solid #1d70b8"
+                                : isChair
+                                  ? "1px solid #f47738"
+                                  : isParty
+                                    ? "1px solid #1d70b8"
+                                    : "1px solid #b1b4b6",
+                              background: selected ? "#e8f1f8" : "#fff",
+                              fontWeight: selected ? 700 : 400,
+                              textAlign: "left",
+                              maxWidth: 280,
+                            }}
+                          >
+                            <span style={{ display: "block" }}>
+                              {sp.full_name}
+                            </span>
+                            <span
+                              style={{
+                                display: "block",
+                                fontSize: 12,
+                                color: isChair
+                                  ? "#b58840"
+                                  : isParty
+                                    ? "#1d70b8"
+                                    : "#505a5f",
+                                marginTop: 2,
+                              }}
+                            >
+                              {rosterCapacitySelectLabel(sp.capacity)}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                <details className="govuk-details">
+                  <summary className="govuk-details__summary">
+                    <span className="govuk-details__summary-text">
+                      Not on the list? Search / edit speaker details
+                    </span>
+                  </summary>
+                  <div className="govuk-details__text">
+                    <div className="govuk-form-group">
+                      <label className="govuk-label">
+                        Search leader (Supabase) — also adds to roster
+                      </label>
+                      <input
+                        className="govuk-input"
+                        onChange={(e) => searchLeaders(e.target.value)}
+                        placeholder="Type name…"
+                      />
+                      {isSearchingLeaders && (
+                        <p className="govuk-hint">Searching…</p>
+                      )}
+                      {showLeaderDropdown && leaderSearchResults.length > 0 && (
+                        <ul
+                          className="govuk-list"
+                          style={{
+                            border: "1px solid #b1b4b6",
+                            maxHeight: 200,
+                            overflow: "auto",
+                          }}
+                        >
+                          {leaderSearchResults.map((l) => (
+                            <li key={l.id}>
+                              <button
+                                type="button"
+                                className="govuk-link"
+                                style={{
+                                  background: "none",
+                                  border: "none",
+                                  cursor: "pointer",
+                                  textAlign: "left",
+                                  padding: 8,
+                                  width: "100%",
+                                }}
+                                onClick={() => selectLeader(l)}
+                              >
+                                {l.full_name}
+                                {l.constituency ? ` — ${l.constituency}` : ""}
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                    <div className="govuk-form-group">
+                      <label className="govuk-label">Speaker name</label>
+                      <input
+                        className="govuk-input"
+                        value={currentContribution.speakerName}
+                        onChange={(e) =>
+                          setCurrentContribution({
+                            ...currentContribution,
+                            speakerName: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                    <div className="govuk-form-group">
+                      <label className="govuk-label">
+                        Title / how addressed
+                      </label>
+                      <input
+                        className="govuk-input"
+                        value={currentContribution.speakerTitle || ""}
+                        onChange={(e) =>
+                          setCurrentContribution({
+                            ...currentContribution,
+                            speakerTitle: e.target.value,
+                          })
+                        }
+                        placeholder="Hon., The Temporary Speaker, …"
+                      />
+                    </div>
+                    <div className="govuk-checkboxes">
+                      <div className="govuk-checkboxes__item">
+                        <input
+                          className="govuk-checkboxes__input"
+                          id="isChairContribution"
+                          type="checkbox"
+                          checked={Boolean(
+                            currentContribution.isChairContribution,
+                          )}
+                          onChange={(e) => {
+                            const checked = e.target.checked;
+                            setCurrentContribution({
+                              ...currentContribution,
+                              isChairContribution: checked,
+                              speakerTitle: checked
+                                ? currentContribution.speakerTitle ||
+                                  PRESIDING_ROLE_LABELS[sitting.presidingRole]
+                                : currentContribution.speakerTitle,
+                            });
+                          }}
+                        />
+                        <label
+                          className="govuk-label govuk-checkboxes__label"
+                          htmlFor="isChairContribution"
+                        >
+                          Speaking as Chair (exclude from member stats)
+                        </label>
+                      </div>
+                    </div>
+                    <div className="govuk-button-group">
+                      <button
+                        type="button"
+                        className="govuk-button govuk-button--secondary"
+                        onClick={() => applyChairRoleToContribution("speaker")}
+                      >
+                        Mark as The Speaker
+                      </button>
+                      <button
+                        type="button"
+                        className="govuk-button govuk-button--secondary"
+                        onClick={() =>
+                          applyChairRoleToContribution("deputy-speaker")
+                        }
+                      >
+                        Mark as Deputy Speaker
+                      </button>
+                      <button
+                        type="button"
+                        className="govuk-button govuk-button--secondary"
+                        onClick={() =>
+                          applyChairRoleToContribution("temporary-speaker")
+                        }
+                      >
+                        Mark as Temporary Speaker
+                      </button>
+                    </div>
                   </div>
-                </div>
-                <p className="govuk-hint">
-                  Use for Speaker, Deputy Speaker, or Temporary Speaker
-                  interventions while in the chair. Floor speeches by the same
-                  person (as MP) should leave this unticked.
-                </p>
-                <div className="govuk-button-group">
-                  <button
-                    type="button"
-                    className="govuk-button govuk-button--secondary"
-                    onClick={() => applyChairRoleToContribution("speaker")}
-                  >
-                    Mark as The Speaker
-                  </button>
-                  <button
-                    type="button"
-                    className="govuk-button govuk-button--secondary"
-                    onClick={() =>
-                      applyChairRoleToContribution("deputy-speaker")
-                    }
-                  >
-                    Mark as Deputy Speaker
-                  </button>
-                  <button
-                    type="button"
-                    className="govuk-button govuk-button--secondary"
-                    onClick={() =>
-                      applyChairRoleToContribution("temporary-speaker")
-                    }
-                  >
-                    Mark as Temporary Speaker
-                  </button>
-                </div>
+                </details>
+
+                {currentContribution.speakerName && (
+                  <p className="govuk-body-s">
+                    Selected:{" "}
+                    <strong>
+                      {currentContribution.isChairContribution
+                        ? `${currentContribution.speakerTitle || "Chair"} — `
+                        : ""}
+                      {currentContribution.speakerName}
+                    </strong>
+                    {currentContribution.supabaseLeaderId
+                      ? " (linked)"
+                      : " (not linked)"}
+                  </p>
+                )}
               </>
             )}
 

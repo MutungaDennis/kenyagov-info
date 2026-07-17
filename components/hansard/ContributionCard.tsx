@@ -9,6 +9,12 @@ import {
   type PresidingOfficerRef,
   type PresidingRole,
 } from "@/lib/hansard/stats";
+import {
+  isPartyLeadershipCapacity,
+  resolveHansardRoleLabel,
+  capacityFromTitleText,
+} from "@/lib/hansard/roles";
+import { stripHonMembersPrefixFromSpeech } from "@/lib/hansard/speech";
 
 export type EnrichedSpeaker = {
   full_name: string;
@@ -60,9 +66,10 @@ const speechComponents = {
 
 /**
  * Public Hansard contribution row.
- * - Individual MPs: clickable name + Expand
- * - Chair: The Temporary Speaker (Name)
- * - Hon. Members: group label (not clickable) + Expand explains collective
+ * - Chair: The Temporary Speaker (Name) — bold role, name linked
+ * - Party leadership: Leader of the Minority Party (Name) — same pattern
+ * - Ordinary MP: Name (party · constituency)
+ * - Hon. Members: group label (not clickable)
  */
 export default function ContributionCard({
   order,
@@ -96,24 +103,63 @@ export default function ContributionCard({
   const isChair = chairRole !== null;
   const chairLabel = chairRoleDisplayLabel(chairRole);
 
+  // Party leadership (and other Hansard house roles) from admin-saved title
+  const floorRoleCapacity = isMembersGroup
+    ? "member"
+    : capacityFromTitleText(speakerTitle, role, false);
+  const isPartyLeadership =
+    !isChair &&
+    !isMembersGroup &&
+    isPartyLeadershipCapacity(floorRoleCapacity);
+
+  const hansardRoleLabel = isMembersGroup
+    ? null
+    : isChair && chairLabel
+      ? chairLabel
+      : resolveHansardRoleLabel({
+          speakerTitle,
+          role,
+          isChairContribution: false,
+        });
+
+  // Prefer full party leadership / chair label (same style as Temporary Speaker)
+  const primaryRoleLabel =
+    (isChair && chairLabel) ||
+    (isPartyLeadership ? hansardRoleLabel : null) ||
+    null;
+
   const membersLabel = (speakerName?.trim() || "Hon. Members").replace(
     /:\s*$/,
     "",
   );
 
+  const speechForDisplay = isMembersGroup
+    ? stripHonMembersPrefixFromSpeech(speech)
+    : speech;
+
   const displayName =
     enrichedSpeaker?.full_name || speakerName || "Speaker not linked";
-  const displayTitle = isChair
-    ? chairLabel
-    : isMembersGroup
-      ? null
-      : speakerTitle || enrichedSpeaker?.title;
-  const displayParty = isChair || isMembersGroup
-    ? undefined
-    : enrichedSpeaker?.current_party || party;
-  const displayConst = isChair || isMembersGroup
-    ? undefined
-    : enrichedSpeaker?.current_constituency || constituency;
+
+  // Ordinary members: short honorific only (Hon.) — not house leadership
+  const ordinaryHonorific =
+    !isChair && !isPartyLeadership && !isMembersGroup
+      ? (() => {
+          const t = (speakerTitle || enrichedSpeaker?.title || "").trim();
+          if (!t) return null;
+          // Don't treat leadership titles as mere honorifics
+          if (resolveHansardRoleLabel({ speakerTitle: t, role })) return null;
+          return t;
+        })()
+      : null;
+
+  const displayParty =
+    isChair || isMembersGroup
+      ? undefined
+      : enrichedSpeaker?.current_party || party;
+  const displayConst =
+    isChair || isMembersGroup
+      ? undefined
+      : enrichedSpeaker?.current_constituency || constituency;
   const displayCounty = enrichedSpeaker?.current_county;
   const slug = isMembersGroup ? undefined : enrichedSpeaker?.slug;
   const imageUrl = isMembersGroup ? undefined : enrichedSpeaker?.image_url;
@@ -127,7 +173,8 @@ export default function ContributionCard({
           displayConst ||
           displayCounty ||
           isChair ||
-          displayTitle,
+          primaryRoleLabel ||
+          ordinaryHonorific,
       );
 
   const initials = displayName
@@ -154,6 +201,14 @@ export default function ContributionCard({
     ) : (
       <strong>{isMembersGroup ? membersLabel : displayName}</strong>
     );
+
+  const expandAccent = isMembersGroup
+    ? { bg: "#f5f3f7", border: "#4c2c92", avatar: "#4c2c92" }
+    : isChair
+      ? { bg: "#fff7e6", border: "#f47738", avatar: "#f47738" }
+      : isPartyLeadership
+        ? { bg: "#e8f1f8", border: "#1d70b8", avatar: "#1d70b8" }
+        : { bg: "#f3f2f1", border: "#1d70b8", avatar: "#1d70b8" };
 
   return (
     <article
@@ -187,8 +242,9 @@ export default function ContributionCard({
               {nameEl}
               <span style={{ fontWeight: 700 }}>:</span>
             </>
-          ) : isChair && chairLabel ? (
+          ) : primaryRoleLabel && (isChair || isPartyLeadership) ? (
             <>
+              {/* Same pattern as Temporary Speaker for party leadership */}
               <span
                 style={{
                   fontWeight: 700,
@@ -196,7 +252,7 @@ export default function ContributionCard({
                   marginRight: "0.35rem",
                 }}
               >
-                {chairLabel}
+                {primaryRoleLabel}
               </span>
               <span style={{ fontWeight: 400, color: "#505a5f" }}>(</span>
               {nameEl}
@@ -204,9 +260,9 @@ export default function ContributionCard({
             </>
           ) : (
             <>
-              {displayTitle ? (
+              {ordinaryHonorific ? (
                 <span style={{ fontWeight: 400, color: "#505a5f" }}>
-                  {displayTitle}{" "}
+                  {ordinaryHonorific}{" "}
                 </span>
               ) : null}
               {nameEl}
@@ -296,16 +352,8 @@ export default function ContributionCard({
             flexWrap: "wrap",
             marginBottom: "0.85rem",
             padding: "0.7rem 0.9rem",
-            background: isMembersGroup
-              ? "#f5f3f7"
-              : isChair
-                ? "#fff7e6"
-                : "#f3f2f1",
-            borderLeft: isMembersGroup
-              ? "4px solid #4c2c92"
-              : isChair
-                ? "4px solid #f47738"
-                : "4px solid #1d70b8",
+            background: expandAccent.bg,
+            borderLeft: `4px solid ${expandAccent.border}`,
           }}
         >
           {!isMembersGroup &&
@@ -331,7 +379,7 @@ export default function ContributionCard({
                   width: 44,
                   height: 44,
                   borderRadius: "50%",
-                  background: isChair ? "#f47738" : "#1d70b8",
+                  background: expandAccent.avatar,
                   color: "#fff",
                   display: "flex",
                   alignItems: "center",
@@ -381,9 +429,9 @@ export default function ContributionCard({
                     lineHeight: 1.3,
                   }}
                 >
-                  {isChair && chairLabel ? (
+                  {primaryRoleLabel && (isChair || isPartyLeadership) ? (
                     <>
-                      {chairLabel}
+                      {primaryRoleLabel}
                       {" — "}
                       {memberHref ? (
                         <Link href={memberHref} className="govuk-link">
@@ -425,6 +473,12 @@ export default function ContributionCard({
                     </>
                   ) : (
                     <>
+                      {isPartyLeadership && primaryRoleLabel ? (
+                        <>
+                          House role: <strong>{primaryRoleLabel}</strong>
+                          {" · "}
+                        </>
+                      ) : null}
                       {[
                         enrichedSpeaker?.current_party || party,
                         enrichedSpeaker?.current_constituency || constituency,
@@ -451,9 +505,9 @@ export default function ContributionCard({
       )}
 
       <div className="hansard-speech">
-        {speech?.length ? (
+        {Array.isArray(speechForDisplay) && speechForDisplay.length > 0 ? (
           <PortableText
-            value={speech as never}
+            value={speechForDisplay as never}
             components={speechComponents as never}
           />
         ) : (

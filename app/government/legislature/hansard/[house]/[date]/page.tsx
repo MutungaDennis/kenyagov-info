@@ -17,6 +17,7 @@ import {
   resolveChairRole,
   presidingRoleLabel,
 } from "@/lib/hansard/stats";
+import { resolveHansardRoleLabel } from "@/lib/hansard/roles";
 
 export const revalidate = 3600;
 
@@ -181,12 +182,19 @@ export default async function DailySittingPage({ params }: PageProps) {
         supabaseLeaderId: c.supabaseLeaderId,
         presidingOfficer: sitting.presidingOfficer,
       });
+      const roleLabel =
+        chairRoleDisplayLabel(chair) ||
+        resolveHansardRoleLabel({
+          speakerTitle: c.speakerTitle,
+          role: c.role,
+          isChairContribution: c.isChairContribution,
+        });
       acc.push({
         name,
         slug: c.enrichedSpeaker?.slug,
         order: c.order,
         key: c._key,
-        chairLabel: chairRoleDisplayLabel(chair),
+        chairLabel: roleLabel,
       });
       return acc;
     }, []);
