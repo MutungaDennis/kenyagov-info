@@ -7,6 +7,7 @@ const sanity = createSanityWriteClient();
 
 type ContributionType =
   | "spoken"
+  | "members"
   | "procedural"
   | "header"
   | "mini-header";

@@ -24,6 +24,7 @@ const sanityClient = createSanityClient({ useCdn: true, token: null });
 
 type ContributionType =
   | "spoken"
+  | "members"
   | "procedural"
   | "header"
   | "mini-header";
@@ -336,10 +337,12 @@ export default async function DailySittingPage({ params }: PageProps) {
         {ordered.length === 1 ? "entry" : "entries"})
       </h2>
       <p className="govuk-hint govuk-!-margin-bottom-4">
-        Select a member&apos;s name for their speaking record. The Speaker,
-        Deputy Speaker, or Temporary Speaker are labelled as such when they are
-        in the Chair. Use <strong>[Expand]</strong> for brief member details;
-        floor contribution counts exclude moderating turns.
+        Select a member&apos;s name for their speaking record.{" "}
+        <strong>Hon. Members:</strong> marks the chamber speaking together
+        (not linked to one person). The Speaker, Deputy Speaker, or Temporary
+        Speaker are labelled when in the Chair. Use{" "}
+        <strong>[Expand]</strong> for brief details; floor counts exclude
+        moderating turns.
       </p>
 
       {ordered.length === 0 ? (
@@ -393,6 +396,20 @@ export default async function DailySittingPage({ params }: PageProps) {
                     {contrib.sectionHeader || "Topic"}
                   </h4>
                 </div>
+              );
+            }
+
+            if (contrib.type === "members") {
+              return (
+                <ContributionCard
+                  key={contrib._key}
+                  order={contrib.order}
+                  startTime={contrib.startTime}
+                  sectionHeader={contrib.sectionHeader}
+                  speech={contrib.speech || []}
+                  speakerName={contrib.speakerName || "Hon. Members"}
+                  isMembersGroup
+                />
               );
             }
 

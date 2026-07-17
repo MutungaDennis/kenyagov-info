@@ -33,7 +33,12 @@ function studioDocUrl(documentId: string) {
   return base;
 }
 
-type ContributionType = "spoken" | "procedural" | "header" | "mini-header";
+type ContributionType =
+  | "spoken"
+  | "members"
+  | "procedural"
+  | "header"
+  | "mini-header";
 
 interface Contribution {
   _key?: string;
@@ -327,6 +332,13 @@ export default function ManualHansardEntry({
         alert("Content is required for Procedural Notes.");
         return;
       }
+    } else if (type === "members") {
+      if (!speechText.trim()) {
+        alert(
+          'Content is required for Hon. Members entries (e.g. "Put the question").',
+        );
+        return;
+      }
     } else if (type === "spoken") {
       if (!currentContribution.speakerName.trim() || !speechText.trim()) {
         alert("Speaker Name and Content are required for Spoken contributions.");
@@ -336,6 +348,15 @@ export default function ManualHansardEntry({
 
     const row: Contribution = {
       ...currentContribution,
+      // Group chamber responses always attributed to Hon. Members
+      speakerName:
+        type === "members"
+          ? currentContribution.speakerName?.trim() || "Hon. Members"
+          : currentContribution.speakerName,
+      supabaseLeaderId:
+        type === "members" ? undefined : currentContribution.supabaseLeaderId,
+      isChairContribution:
+        type === "members" ? false : currentContribution.isChairContribution,
       speech: speechText,
       speechPlain: speechText,
       _key:
@@ -1049,6 +1070,11 @@ export default function ManualHansardEntry({
                       {contrib.type === "spoken" && (
                         <span className="govuk-tag govuk-tag--blue">Spoken</span>
                       )}
+                      {contrib.type === "members" && (
+                        <span className="govuk-tag govuk-tag--purple">
+                          Hon. Members
+                        </span>
+                      )}
                       {contrib.type === "procedural" && (
                         <span className="govuk-tag govuk-tag--yellow">
                           Procedural
@@ -1258,18 +1284,31 @@ export default function ManualHansardEntry({
               <select
                 className="govuk-select"
                 value={currentContribution.type}
-                onChange={(e) =>
+                onChange={(e) => {
+                  const next = e.target.value as ContributionType;
                   setCurrentContribution({
                     ...currentContribution,
-                    type: e.target.value as ContributionType,
+                    type: next,
                     isChairContribution:
-                      e.target.value === "spoken"
+                      next === "spoken"
                         ? currentContribution.isChairContribution
                         : false,
-                  })
-                }
+                    speakerName:
+                      next === "members"
+                        ? currentContribution.speakerName?.trim() ||
+                          "Hon. Members"
+                        : currentContribution.speakerName,
+                    supabaseLeaderId:
+                      next === "members"
+                        ? undefined
+                        : currentContribution.supabaseLeaderId,
+                  });
+                }}
               >
-                <option value="spoken">Spoken contribution</option>
+                <option value="spoken">Spoken contribution (one MP)</option>
+                <option value="members">
+                  Hon. Members (group / chamber)
+                </option>
                 <option value="procedural">Procedural note</option>
                 <option value="header">Section header (main)</option>
                 <option value="mini-header">
@@ -1277,8 +1316,10 @@ export default function ManualHansardEntry({
                 </option>
               </select>
               <p className="govuk-hint">
-                Main example: REQUESTS FOR STATEMENTS. Mini under it:
-                IMPORTATION OF REFINED SUGAR INTO THE COUNTRY.
+                Use <strong>Hon. Members</strong> for collective responses
+                (&quot;Put the question&quot;, &quot;Which Standing
+                Order?&quot;, &quot;Send him out&quot;). Headers: REQUESTS FOR
+                STATEMENTS; mini: IMPORTATION OF REFINED SUGAR…
               </p>
             </div>
 
@@ -1308,6 +1349,16 @@ export default function ManualHansardEntry({
                       : 'e.g. "REQUESTS FOR STATEMENTS"'
                   }
                 />
+              </div>
+            )}
+
+            {currentContribution.type === "members" && (
+              <div className="govuk-inset-text">
+                <p className="govuk-body-s govuk-!-margin-bottom-0">
+                  Chamber speaking as a group. Displayed publicly as{" "}
+                  <strong>Hon. Members</strong> with the words below. Not linked
+                  to an individual MP and not counted in member stats.
+                </p>
               </div>
             )}
 
@@ -1442,12 +1493,13 @@ export default function ManualHansardEntry({
               currentContribution.type !== "mini-header" && (
               <div className="govuk-form-group">
                 <label className="govuk-label">
-                  Content / speech (plain text; paragraphs separated by blank
-                  lines)
+                  {currentContribution.type === "members"
+                    ? "What Hon. Members said"
+                    : "Content / speech (plain text; paragraphs separated by blank lines)"}
                 </label>
                 <textarea
                   className="govuk-textarea"
-                  rows={10}
+                  rows={currentContribution.type === "members" ? 4 : 10}
                   value={
                     typeof currentContribution.speech === "string"
                       ? currentContribution.speech
@@ -1459,6 +1511,11 @@ export default function ManualHansardEntry({
                       speech: e.target.value,
                       speechPlain: e.target.value,
                     })
+                  }
+                  placeholder={
+                    currentContribution.type === "members"
+                      ? "e.g. Put the question! / Which Standing Order? / Send him out!"
+                      : undefined
                   }
                 />
               </div>

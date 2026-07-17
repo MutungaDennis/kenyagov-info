@@ -101,6 +101,7 @@ export default defineType({
               options: {
                 list: [
                   { title: 'Spoken Contribution (MP speech)', value: 'spoken' },
+                  { title: 'Hon. Members (group / chamber response)', value: 'members' },
                   { title: 'Procedural Note (Laughter, consultations, Chair changes, etc.)', value: 'procedural' },
                   { title: 'Section Header (main order of business)', value: 'header' },
                   { title: 'Mini Header (under a section header)', value: 'mini-header' },
@@ -189,9 +190,13 @@ export default defineType({
             prepare({ order, type, section, speaker, leaderId, chair }) {
               const typeLabel =
                 type === 'spoken' ? '🗣️' :
+                type === 'members' ? '👥' :
                 type === 'procedural' ? '📝' :
                 type === 'mini-header' ? '▸' : '📌';
-              const who = speaker || (leaderId ? `leader:${String(leaderId).slice(0, 8)}` : '');
+              const who =
+                type === 'members'
+                  ? (speaker || 'Hon. Members')
+                  : speaker || (leaderId ? `leader:${String(leaderId).slice(0, 8)}` : '');
               const chairMark = chair ? ' [Chair]' : '';
               return {
                 title: `${order}. ${typeLabel} ${who || section || ''}`.trim() + chairMark,

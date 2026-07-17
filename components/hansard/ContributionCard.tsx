@@ -34,6 +34,8 @@ export type ContributionCardProps = {
   role?: string;
   isChairContribution?: boolean;
   supabaseLeaderId?: string;
+  /** Collective chamber response — “Hon. Members: …” (not a linked individual) */
+  isMembersGroup?: boolean;
   /** Sitting-level “Presiding officer” from admin — labels Temporary Speaker etc. */
   presidingOfficer?: PresidingOfficerRef | null;
   enrichedSpeaker?: EnrichedSpeaker;
@@ -57,8 +59,10 @@ const speechComponents = {
 };
 
 /**
- * Public Hansard spoken contribution.
- * Chair interventions are labelled The Speaker / Temporary Speaker / etc.
+ * Public Hansard contribution row.
+ * - Individual MPs: clickable name + Expand
+ * - Chair: The Temporary Speaker (Name)
+ * - Hon. Members: group label (not clickable) + Expand explains collective
  */
 export default function ContributionCard({
   order,
@@ -72,48 +76,59 @@ export default function ContributionCard({
   role,
   isChairContribution: isChairFlag,
   supabaseLeaderId,
+  isMembersGroup = false,
   presidingOfficer,
   enrichedSpeaker,
 }: ContributionCardProps) {
   const [expanded, setExpanded] = useState(false);
   const panelId = useId();
 
-  const chairRole: PresidingRole | null = resolveChairRole({
-    isChairContribution: isChairFlag,
-    speakerTitle,
-    role,
-    speakerName,
-    supabaseLeaderId,
-    presidingOfficer,
-  });
+  const chairRole: PresidingRole | null = isMembersGroup
+    ? null
+    : resolveChairRole({
+        isChairContribution: isChairFlag,
+        speakerTitle,
+        role,
+        speakerName,
+        supabaseLeaderId,
+        presidingOfficer,
+      });
   const isChair = chairRole !== null;
   const chairLabel = chairRoleDisplayLabel(chairRole);
 
+  const membersLabel = (speakerName?.trim() || "Hon. Members").replace(
+    /:\s*$/,
+    "",
+  );
+
   const displayName =
     enrichedSpeaker?.full_name || speakerName || "Speaker not linked";
-  // Floor members: Hansard honorific first, else Supabase title.
-  // Chair: always use chair role label (not personal job title from Supabase).
   const displayTitle = isChair
     ? chairLabel
-    : speakerTitle || enrichedSpeaker?.title;
-  const displayParty = isChair
+    : isMembersGroup
+      ? null
+      : speakerTitle || enrichedSpeaker?.title;
+  const displayParty = isChair || isMembersGroup
     ? undefined
     : enrichedSpeaker?.current_party || party;
-  const displayConst = isChair
+  const displayConst = isChair || isMembersGroup
     ? undefined
     : enrichedSpeaker?.current_constituency || constituency;
   const displayCounty = enrichedSpeaker?.current_county;
-  const slug = enrichedSpeaker?.slug;
-  const imageUrl = enrichedSpeaker?.image_url;
+  const slug = isMembersGroup ? undefined : enrichedSpeaker?.slug;
+  const imageUrl = isMembersGroup ? undefined : enrichedSpeaker?.image_url;
   const contributionCount = enrichedSpeaker?.contributionCount;
-  const canExpand = Boolean(
-    enrichedSpeaker ||
-      displayParty ||
-      displayConst ||
-      displayCounty ||
-      isChair ||
-      displayTitle,
-  );
+
+  const canExpand = isMembersGroup
+    ? true
+    : Boolean(
+        enrichedSpeaker ||
+          displayParty ||
+          displayConst ||
+          displayCounty ||
+          isChair ||
+          displayTitle,
+      );
 
   const initials = displayName
     .split(" ")
@@ -127,17 +142,18 @@ export default function ContributionCard({
     ? `/government/legislature/hansard/member/${slug}`
     : null;
 
-  const nameEl = memberHref ? (
-    <Link
-      href={memberHref}
-      className="govuk-link"
-      style={{ fontWeight: 700, textDecorationThickness: "1px" }}
-    >
-      {displayName}
-    </Link>
-  ) : (
-    <strong>{displayName}</strong>
-  );
+  const nameEl =
+    !isMembersGroup && memberHref ? (
+      <Link
+        href={memberHref}
+        className="govuk-link"
+        style={{ fontWeight: 700, textDecorationThickness: "1px" }}
+      >
+        {displayName}
+      </Link>
+    ) : (
+      <strong>{isMembersGroup ? membersLabel : displayName}</strong>
+    );
 
   return (
     <article
@@ -166,7 +182,12 @@ export default function ContributionCard({
             lineHeight: 1.4,
           }}
         >
-          {isChair && chairLabel ? (
+          {isMembersGroup ? (
+            <>
+              {nameEl}
+              <span style={{ fontWeight: 700 }}>:</span>
+            </>
+          ) : isChair && chairLabel ? (
             <>
               <span
                 style={{
@@ -253,7 +274,7 @@ export default function ContributionCard({
         </div>
       </div>
 
-      {sectionHeader && (
+      {sectionHeader && !isMembersGroup && (
         <p
           style={{
             margin: "0 0 0.55rem",
@@ -271,121 +292,160 @@ export default function ContributionCard({
           style={{
             display: "flex",
             gap: 12,
-            alignItems: "center",
+            alignItems: "flex-start",
             flexWrap: "wrap",
             marginBottom: "0.85rem",
             padding: "0.7rem 0.9rem",
-            background: isChair ? "#fff7e6" : "#f3f2f1",
-            borderLeft: isChair ? "4px solid #f47738" : "4px solid #1d70b8",
+            background: isMembersGroup
+              ? "#f5f3f7"
+              : isChair
+                ? "#fff7e6"
+                : "#f3f2f1",
+            borderLeft: isMembersGroup
+              ? "4px solid #4c2c92"
+              : isChair
+                ? "4px solid #f47738"
+                : "4px solid #1d70b8",
           }}
         >
-          {imageUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={imageUrl}
-              alt=""
-              width={44}
-              height={44}
-              style={{
-                width: 44,
-                height: 44,
-                borderRadius: "50%",
-                objectFit: "cover",
-                border: "1px solid #b1b4b6",
-              }}
-            />
-          ) : (
-            <div
-              aria-hidden
-              style={{
-                width: 44,
-                height: 44,
-                borderRadius: "50%",
-                background: isChair ? "#f47738" : "#1d70b8",
-                color: "#fff",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontWeight: 700,
-                fontSize: 14,
-                flexShrink: 0,
-              }}
-            >
-              {initials}
-            </div>
-          )}
+          {!isMembersGroup &&
+            (imageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={imageUrl}
+                alt=""
+                width={44}
+                height={44}
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: "50%",
+                  objectFit: "cover",
+                  border: "1px solid #b1b4b6",
+                }}
+              />
+            ) : (
+              <div
+                aria-hidden
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: "50%",
+                  background: isChair ? "#f47738" : "#1d70b8",
+                  color: "#fff",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontWeight: 700,
+                  fontSize: 14,
+                  flexShrink: 0,
+                }}
+              >
+                {initials}
+              </div>
+            ))}
           <div style={{ flex: 1, minWidth: 160 }}>
-            <p
-              style={{
-                margin: 0,
-                fontSize: "1rem",
-                fontWeight: 700,
-                lineHeight: 1.3,
-              }}
-            >
-              {isChair && chairLabel ? (
-                <>
-                  {chairLabel}
-                  {" — "}
-                  {memberHref ? (
+            {isMembersGroup ? (
+              <>
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: "1rem",
+                    fontWeight: 700,
+                    lineHeight: 1.3,
+                  }}
+                >
+                  Hon. Members (collective)
+                </p>
+                <p
+                  style={{
+                    margin: "0.25rem 0 0",
+                    fontSize: "0.9rem",
+                    color: "#505a5f",
+                    lineHeight: 1.45,
+                  }}
+                >
+                  Several members of the House speaking together, as recorded in
+                  the Hansard (for example interjections or a shared call across
+                  the chamber). This is not attributed to any single member and
+                  cannot be linked to an individual profile.
+                </p>
+              </>
+            ) : (
+              <>
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: "1rem",
+                    fontWeight: 700,
+                    lineHeight: 1.3,
+                  }}
+                >
+                  {isChair && chairLabel ? (
+                    <>
+                      {chairLabel}
+                      {" — "}
+                      {memberHref ? (
+                        <Link href={memberHref} className="govuk-link">
+                          {displayName}
+                        </Link>
+                      ) : (
+                        displayName
+                      )}
+                    </>
+                  ) : memberHref ? (
                     <Link href={memberHref} className="govuk-link">
                       {displayName}
                     </Link>
                   ) : (
                     displayName
                   )}
-                </>
-              ) : memberHref ? (
-                <Link href={memberHref} className="govuk-link">
-                  {displayName}
-                </Link>
-              ) : (
-                displayName
-              )}
-            </p>
-            <p
-              style={{
-                margin: "0.15rem 0 0",
-                fontSize: "0.9rem",
-                color: "#505a5f",
-                lineHeight: 1.35,
-              }}
-            >
-              {isChair ? (
-                <>
-                  Moderating this sitting (not a floor debate contribution).
-                  {typeof contributionCount === "number" && (
+                </p>
+                <p
+                  style={{
+                    margin: "0.15rem 0 0",
+                    fontSize: "0.9rem",
+                    color: "#505a5f",
+                    lineHeight: 1.35,
+                  }}
+                >
+                  {isChair ? (
                     <>
-                      {" "}
-                      Member floor total:{" "}
-                      <strong style={{ color: "#0b0c0c" }}>
-                        {contributionCount}
-                      </strong>
-                      .
+                      Moderating this sitting (not a floor debate contribution).
+                      {typeof contributionCount === "number" && (
+                        <>
+                          {" "}
+                          Member floor total:{" "}
+                          <strong style={{ color: "#0b0c0c" }}>
+                            {contributionCount}
+                          </strong>
+                          .
+                        </>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      {[
+                        enrichedSpeaker?.current_party || party,
+                        enrichedSpeaker?.current_constituency || constituency,
+                        displayCounty,
+                      ]
+                        .filter(Boolean)
+                        .join(" · ") || "Member"}
+                      {typeof contributionCount === "number" && (
+                        <>
+                          {" · "}
+                          <strong style={{ color: "#0b0c0c" }}>
+                            {contributionCount} floor contribution
+                            {contributionCount === 1 ? "" : "s"}
+                          </strong>
+                        </>
+                      )}
                     </>
                   )}
-                </>
-              ) : (
-                <>
-                  {[
-                    enrichedSpeaker?.current_party || party,
-                    enrichedSpeaker?.current_constituency || constituency,
-                    displayCounty,
-                  ]
-                    .filter(Boolean)
-                    .join(" · ") || "Member"}
-                  {typeof contributionCount === "number" && (
-                    <>
-                      {" · "}
-                      <strong style={{ color: "#0b0c0c" }}>
-                        {contributionCount} floor contribution
-                        {contributionCount === 1 ? "" : "s"}
-                      </strong>
-                    </>
-                  )}
-                </>
-              )}
-            </p>
+                </p>
+              </>
+            )}
           </div>
         </div>
       )}

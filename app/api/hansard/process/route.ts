@@ -15,7 +15,7 @@ type HouseType = "national-assembly" | "senate" | "county-assembly";
 
 type Contribution = {
   order: number;
-  type?: "spoken" | "procedural" | "header";
+  type?: "spoken" | "members" | "procedural" | "header" | "mini-header";
   speakerName: string;
   speakerTitle?: string;
   constituency?: string;
@@ -41,7 +41,7 @@ CRITICAL RULES:
 3. Capture the FULL spoken text. Preserve paragraphs. Include procedural notes like (Laughter), (Applause), or interjections in [square brackets].
 4. If the same person speaks multiple times, create separate entries in chronological order.
 5. Number contributions sequentially starting from 1.
-6. type: "spoken" for speeches, "procedural" for clerk/chair notes without a named MP speech, "header" for order-of-business section titles with little/no speech body.
+6. type: "spoken" for individual MP speeches; "members" for collective chamber responses ("Hon. Members: Put the question", "Which Standing Order?", "Send him out"); "procedural" for clerk/stage notes without speech; "header" / "mini-header" for order-of-business titles.
 7. Extract speakerName, speakerTitle, constituency, party, role, startTime, sectionHeader when present.
 
 Return ONLY valid JSON of the form:
@@ -206,18 +206,31 @@ async function structureWithGrok(
     throw new Error("Grok returned no contributions");
   }
 
-  const contributions = parsed.contributions.map((c, i) => ({
-    order: typeof c.order === "number" ? c.order : i + 1,
-    type: (c.type as Contribution["type"]) || "spoken",
-    speakerName: String(c.speakerName || "").trim() || "Unknown speaker",
-    speakerTitle: c.speakerTitle ? String(c.speakerTitle) : undefined,
-    constituency: c.constituency ? String(c.constituency) : undefined,
-    party: c.party ? String(c.party) : undefined,
-    role: c.role ? String(c.role) : undefined,
-    speech: String(c.speech || "").trim(),
-    startTime: c.startTime ? String(c.startTime) : undefined,
-    sectionHeader: c.sectionHeader ? String(c.sectionHeader) : undefined,
-  }));
+  const contributions = parsed.contributions.map((c, i) => {
+    let type = (c.type as Contribution["type"]) || "spoken";
+    let speakerName = String(c.speakerName || "").trim();
+    // Normalise group chamber responses
+    if (
+      type === "members" ||
+      /^hon\.?\s*members$/i.test(speakerName) ||
+      /^members$/i.test(speakerName)
+    ) {
+      type = "members";
+      speakerName = speakerName || "Hon. Members";
+    }
+    return {
+      order: typeof c.order === "number" ? c.order : i + 1,
+      type,
+      speakerName: speakerName || "Unknown speaker",
+      speakerTitle: c.speakerTitle ? String(c.speakerTitle) : undefined,
+      constituency: c.constituency ? String(c.constituency) : undefined,
+      party: c.party ? String(c.party) : undefined,
+      role: c.role ? String(c.role) : undefined,
+      speech: String(c.speech || "").trim(),
+      startTime: c.startTime ? String(c.startTime) : undefined,
+      sectionHeader: c.sectionHeader ? String(c.sectionHeader) : undefined,
+    };
+  });
 
   return {
     contributions,
