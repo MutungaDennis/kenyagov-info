@@ -510,6 +510,23 @@ export default function ManualHansardEntry({
       }
     }
 
+    // Snapshot chair role onto this contribution so Temporary Speaker survives rotation
+    let isChair =
+      type === "spoken" && Boolean(currentContribution.isChairContribution);
+    let speakerTitle = currentContribution.speakerTitle?.trim() || "";
+    let roleField = currentContribution.role?.trim() || "";
+    if (type === "spoken" && isChair) {
+      const fromTitle = capacityFromTitleText(speakerTitle, roleField, true);
+      if (!isChairCapacity(fromTitle)) {
+        speakerTitle = PRESIDING_ROLE_LABELS["temporary-speaker"];
+        roleField = speakerTitle;
+      } else {
+        speakerTitle =
+          PRESIDING_ROLE_LABELS[fromTitle as PresidingRole] || speakerTitle;
+        roleField = speakerTitle;
+      }
+    }
+
     const row: Contribution = {
       ...currentContribution,
       // Group chamber responses always attributed to Hon. Members
@@ -519,8 +536,9 @@ export default function ManualHansardEntry({
           : currentContribution.speakerName,
       supabaseLeaderId:
         type === "members" ? undefined : currentContribution.supabaseLeaderId,
-      isChairContribution:
-        type === "members" ? false : currentContribution.isChairContribution,
+      isChairContribution: type === "members" ? false : isChair,
+      speakerTitle: type === "members" ? "" : speakerTitle,
+      role: type === "members" ? "" : roleField,
       speech: speechText,
       speechPlain: speechText,
       tables:
@@ -748,13 +766,18 @@ export default function ManualHansardEntry({
     const isChair = isChairCapacity(speaker.capacity);
     const title = rosterCapacityTitle(speaker.capacity, speaker.title);
     setSelectedRosterKey(speaker.key);
+    // Snapshotted on THIS contribution only — later Temporary Speaker rotation
+    // does not rewrite earlier speeches (public uses isChairContribution + title).
     setCurrentContribution((c) => ({
       ...c,
       type: "spoken",
       supabaseLeaderId: speaker.supabaseLeaderId,
       speakerName: speaker.full_name || "",
-      speakerTitle: title,
-      // Store leadership / role label for stats & reload
+      speakerTitle: isChair
+        ? title
+        : isPartyLeadershipCapacity(speaker.capacity)
+          ? title
+          : speaker.title || "",
       role:
         isPartyLeadershipCapacity(speaker.capacity) || isChair
           ? title
@@ -826,7 +849,7 @@ export default function ManualHansardEntry({
       role: leader.role,
       capacity,
     });
-    // Keep sitting-level presiding officer in sync when designating chair only
+    // Sitting-level chair is metadata only (session note). Does not rewrite past speeches.
     if (isChairCapacity(capacity)) {
       setSitting((s) => ({
         ...s,
@@ -869,22 +892,113 @@ export default function ManualHansardEntry({
     if (selectedRosterKey === key) setSelectedRosterKey(null);
   };
 
-  const applyChairRoleToContribution = (role: PresidingRole) => {
-    setCurrentContribution((c) => ({
-      ...c,
-      isChairContribution: true,
-      speakerTitle: PRESIDING_ROLE_LABELS[role],
-    }));
-    // Sync roster capacity if this person is on the roster
-    if (currentContribution.supabaseLeaderId) {
-      setSpeakerRoster((prev) =>
-        prev.map((s) =>
-          s.supabaseLeaderId === currentContribution.supabaseLeaderId
-            ? { ...s, capacity: role }
-            : s,
-        ),
-      );
+  /** Stamp THIS contribution only as Chair / floor (rotation-safe snapshot) */
+  const applySpeechCapacity = (capacity: RosterCapacity) => {
+    const isChair = isChairCapacity(capacity);
+    const title = rosterCapacityTitle(capacity, "");
+    setCurrentContribution((c) => {
+      let speakerTitle = c.speakerTitle || "";
+      let role = c.role || "";
+      if (isChair) {
+        speakerTitle = PRESIDING_ROLE_LABELS[capacity as PresidingRole];
+        role = speakerTitle;
+      } else if (isPartyLeadershipCapacity(capacity)) {
+        speakerTitle = title;
+        role = title;
+      } else {
+        // Floor member — clear chair titles so public does not keep Temporary Speaker
+        const wasChairTitle = isChairCapacity(
+          capacityFromTitleText(c.speakerTitle, c.role, true),
+        );
+        if (wasChairTitle || c.isChairContribution) {
+          speakerTitle = "";
+          role = "";
+        }
+      }
+      return {
+        ...c,
+        type: "spoken",
+        isChairContribution: isChair,
+        speakerTitle,
+        role,
+      };
+    });
+    // Keep this person on roster with matching default for next clicks
+    if (
+      currentContribution.supabaseLeaderId ||
+      currentContribution.speakerName
+    ) {
+      upsertRosterSpeaker({
+        key: currentContribution.supabaseLeaderId,
+        supabaseLeaderId: currentContribution.supabaseLeaderId,
+        full_name: currentContribution.speakerName || "Speaker",
+        title: currentContribution.speakerTitle,
+        constituency: currentContribution.constituency,
+        party: currentContribution.party,
+        role: currentContribution.role,
+        capacity,
+      });
     }
+  };
+
+  const applyChairRoleToContribution = (role: PresidingRole) => {
+    applySpeechCapacity(role);
+  };
+
+  /**
+   * Restore Temporary Speaker on all spoken turns by this person in the sitting.
+   * Use after labels were lost (e.g. older sitting-level-only data).
+   */
+  const markAllByPersonAsTemporarySpeaker = (sp: RosterSpeaker) => {
+    const name = sp.full_name;
+    const id = sp.supabaseLeaderId;
+    const match = (c: Contribution) => {
+      if (c.type !== "spoken") return false;
+      if (id && c.supabaseLeaderId === id) return true;
+      if (
+        name &&
+        c.speakerName &&
+        c.speakerName.toLowerCase().trim() === name.toLowerCase().trim()
+      ) {
+        return true;
+      }
+      return false;
+    };
+    const targets = contributions.filter(match);
+    if (targets.length === 0) {
+      alert(
+        `No spoken contributions found for ${name}. Add speeches first, then restore.`,
+      );
+      return;
+    }
+    if (
+      !confirm(
+        `Mark all ${targets.length} spoken contribution(s) by ${name} as The Temporary Speaker?\n\n` +
+          `This restores the Temporary Speaker label on those turns only. ` +
+          `Speeches by others are unchanged. You can still set individual turns back to Member later.`,
+      )
+    ) {
+      return;
+    }
+    const title = PRESIDING_ROLE_LABELS["temporary-speaker"];
+    setContributions((prev) =>
+      renumberContiguous(
+        prev.map((c) =>
+          match(c)
+            ? {
+                ...c,
+                isChairContribution: true,
+                speakerTitle: title,
+                role: title,
+              }
+            : c,
+        ),
+      ),
+    );
+    upsertRosterSpeaker({ ...sp, capacity: "temporary-speaker" });
+    alert(
+      `Updated ${targets.length} contribution(s). Save & publish the sitting to update the public page.`,
+    );
   };
 
   return (
@@ -1200,8 +1314,10 @@ export default function ManualHansardEntry({
           className="govuk-body-s govuk-!-margin-bottom-2"
           style={{ color: "#505a5f" }}
         >
-          Add as Member, party leader/whip, or Chair. Click their chip when
-          entering a contribution — title is applied automatically.
+          Add as Member, party leader/whip, or Chair. Click their chip for{" "}
+          <strong>each speech</strong> — Temporary Speaker is stored on that
+          contribution only, so when the Chair rotates, earlier turns stay
+          labelled correctly.
         </p>
 
         <div
@@ -1403,6 +1519,22 @@ export default function ManualHansardEntry({
                 </select>
                 <button
                   type="button"
+                  title="Restore Temporary Speaker on all their speeches in this sitting"
+                  onClick={() => markAllByPersonAsTemporarySpeaker(sp)}
+                  style={{
+                    border: "none",
+                    background: "none",
+                    cursor: "pointer",
+                    color: "#1d70b8",
+                    fontSize: 11,
+                    padding: "0 2px",
+                    textDecoration: "underline",
+                  }}
+                >
+                  Fix TS
+                </button>
+                <button
+                  type="button"
                   aria-label={`Remove ${sp.full_name}`}
                   onClick={() => removeFromRoster(sp.key)}
                   style={{
@@ -1420,6 +1552,16 @@ export default function ManualHansardEntry({
               </span>
             ))}
           </div>
+        )}
+        {speakerRoster.length > 0 && (
+          <p
+            className="govuk-body-s govuk-!-margin-bottom-0 govuk-!-margin-top-2"
+            style={{ color: "#505a5f" }}
+          >
+            Lost Temporary Speaker labels? Click <strong>Fix TS</strong> on a
+            person to mark all their speeches in this sitting as Temporary
+            Speaker, then Save &amp; publish.
+          </p>
         )}
       </div>
 
@@ -1530,15 +1672,25 @@ export default function ManualHansardEntry({
                           {contrib.sectionHeader}
                         </div>
                       )}
+                      {contrib.sectionHeader && contrib.type === "spoken" ? null : null}
                       <strong>{contrib.speakerName || "—"}</strong>
                       {contrib.supabaseLeaderId && (
                         <span className="govuk-body-s"> · linked</span>
                       )}
-                      {contrib.isChairContribution && (
+                      {(contrib.isChairContribution ||
+                        (contrib.speakerTitle &&
+                          /speaker/i.test(contrib.speakerTitle))) && (
                         <span className="govuk-tag govuk-tag--yellow govuk-!-margin-left-1">
-                          Chair
+                          {contrib.speakerTitle || "Chair"}
                         </span>
                       )}
+                      {!contrib.isChairContribution &&
+                        contrib.speakerTitle &&
+                        !/speaker/i.test(contrib.speakerTitle) && (
+                          <span className="govuk-tag govuk-tag--blue govuk-!-margin-left-1">
+                            {contrib.speakerTitle}
+                          </span>
+                        )}
                     </td>
                     <td className="govuk-table__cell" style={{ maxWidth: 360 }}>
                       {plain.length > 100
@@ -1805,18 +1957,16 @@ export default function ManualHansardEntry({
 
             {currentContribution.type === "spoken" && (
               <>
-                {/* One-click speaker pick from sitting roster */}
                 <div className="govuk-form-group">
-                  <label className="govuk-label">Who is speaking?</label>
+                  <label className="govuk-label">1. Who is speaking?</label>
                   <p className="govuk-hint">
-                    Click a name. Role on the roster (Member vs Temporary
-                    Speaker) is applied automatically.
+                    Pick the person. Then set their role for{" "}
+                    <strong>this speech only</strong> (step 2).
                   </p>
                   {speakerRoster.length === 0 ? (
                     <p className="govuk-body-s">
                       No speakers on the roster yet. Add them under{" "}
-                      <strong>Speakers for this sitting</strong>, or search
-                      below.
+                      <strong>Session speakers</strong>, or search below.
                     </p>
                   ) : (
                     <div
@@ -1828,8 +1978,6 @@ export default function ManualHansardEntry({
                     >
                       {speakerRoster.map((sp) => {
                         const selected = selectedRosterKey === sp.key;
-                        const isChair = isChairCapacity(sp.capacity);
-                        const isParty = isPartyLeadershipCapacity(sp.capacity);
                         return (
                           <button
                             key={sp.key}
@@ -1840,34 +1988,14 @@ export default function ManualHansardEntry({
                               padding: "8px 12px",
                               border: selected
                                 ? "2px solid #1d70b8"
-                                : isChair
-                                  ? "1px solid #f47738"
-                                  : isParty
-                                    ? "1px solid #1d70b8"
-                                    : "1px solid #b1b4b6",
+                                : "1px solid #b1b4b6",
                               background: selected ? "#e8f1f8" : "#fff",
                               fontWeight: selected ? 700 : 400,
                               textAlign: "left",
-                              maxWidth: 280,
+                              maxWidth: 260,
                             }}
                           >
-                            <span style={{ display: "block" }}>
-                              {sp.full_name}
-                            </span>
-                            <span
-                              style={{
-                                display: "block",
-                                fontSize: 12,
-                                color: isChair
-                                  ? "#b58840"
-                                  : isParty
-                                    ? "#1d70b8"
-                                    : "#505a5f",
-                                marginTop: 2,
-                              }}
-                            >
-                              {rosterCapacitySelectLabel(sp.capacity)}
-                            </span>
+                            {sp.full_name}
                           </button>
                         );
                       })}
@@ -1875,16 +2003,148 @@ export default function ManualHansardEntry({
                   )}
                 </div>
 
+                {/* Role for THIS contribution — always visible */}
+                <div
+                  className="govuk-form-group"
+                  style={{
+                    padding: 12,
+                    background: currentContribution.isChairContribution
+                      ? "#fff7e6"
+                      : "#f3f2f1",
+                    border: currentContribution.isChairContribution
+                      ? "2px solid #f47738"
+                      : "1px solid #b1b4b6",
+                  }}
+                >
+                  <label className="govuk-label">
+                    2. Role for this speech
+                  </label>
+                  <p className="govuk-hint">
+                    Temporary Speaker is saved on this contribution. When the
+                    Chair moves to someone else, earlier Temporary Speaker turns
+                    stay labelled.
+                  </p>
+                  <div
+                    style={{
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: 8,
+                    }}
+                  >
+                    {(
+                      [
+                        { cap: "member" as RosterCapacity, label: "Member (floor)" },
+                        {
+                          cap: "temporary-speaker" as RosterCapacity,
+                          label: "Temporary Speaker",
+                        },
+                        {
+                          cap: "deputy-speaker" as RosterCapacity,
+                          label: "Deputy Speaker",
+                        },
+                        { cap: "speaker" as RosterCapacity, label: "The Speaker" },
+                        {
+                          cap: "majority-leader" as RosterCapacity,
+                          label: "Maj. Leader",
+                        },
+                        {
+                          cap: "minority-leader" as RosterCapacity,
+                          label: "Min. Leader",
+                        },
+                        {
+                          cap: "majority-whip" as RosterCapacity,
+                          label: "Maj. Whip",
+                        },
+                        {
+                          cap: "minority-whip" as RosterCapacity,
+                          label: "Min. Whip",
+                        },
+                      ] as const
+                    ).map(({ cap, label }) => {
+                      const active = (() => {
+                        if (cap === "member") {
+                          return (
+                            !currentContribution.isChairContribution &&
+                            !isPartyLeadershipCapacity(
+                              capacityFromTitleText(
+                                currentContribution.speakerTitle,
+                                currentContribution.role,
+                                false,
+                              ),
+                            )
+                          );
+                        }
+                        if (isChairCapacity(cap)) {
+                          return (
+                            currentContribution.isChairContribution &&
+                            capacityFromTitleText(
+                              currentContribution.speakerTitle,
+                              currentContribution.role,
+                              true,
+                            ) === cap
+                          );
+                        }
+                        return (
+                          capacityFromTitleText(
+                            currentContribution.speakerTitle,
+                            currentContribution.role,
+                            false,
+                          ) === cap
+                        );
+                      })();
+                      const isTemp = cap === "temporary-speaker";
+                      return (
+                        <button
+                          key={cap}
+                          type="button"
+                          onClick={() => applySpeechCapacity(cap)}
+                          className={
+                            active
+                              ? "govuk-button"
+                              : "govuk-button govuk-button--secondary"
+                          }
+                          style={{
+                            marginBottom: 0,
+                            ...(isTemp && !active
+                              ? { borderColor: "#f47738", color: "#0b0c0c" }
+                              : {}),
+                            ...(isTemp && active
+                              ? { background: "#f47738" }
+                              : {}),
+                          }}
+                        >
+                          {label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {currentContribution.speakerName && (
+                    <p className="govuk-body-s govuk-!-margin-top-3 govuk-!-margin-bottom-0">
+                      This speech will show as:{" "}
+                      <strong>
+                        {currentContribution.isChairContribution
+                          ? `${currentContribution.speakerTitle || "The Temporary Speaker"} (${currentContribution.speakerName})`
+                          : currentContribution.speakerTitle
+                            ? `${currentContribution.speakerTitle} (${currentContribution.speakerName})`
+                            : currentContribution.speakerName}
+                      </strong>
+                      {currentContribution.supabaseLeaderId
+                        ? " · linked"
+                        : " · not linked"}
+                    </p>
+                  )}
+                </div>
+
                 <details className="govuk-details">
                   <summary className="govuk-details__summary">
                     <span className="govuk-details__summary-text">
-                      Not on the list? Search / edit speaker details
+                      Search another person / edit name
                     </span>
                   </summary>
                   <div className="govuk-details__text">
                     <div className="govuk-form-group">
                       <label className="govuk-label">
-                        Search leader (Supabase) — also adds to roster
+                        Search leader (Supabase)
                       </label>
                       <input
                         className="govuk-input"
@@ -1939,95 +2199,8 @@ export default function ManualHansardEntry({
                         }
                       />
                     </div>
-                    <div className="govuk-form-group">
-                      <label className="govuk-label">
-                        Title / how addressed
-                      </label>
-                      <input
-                        className="govuk-input"
-                        value={currentContribution.speakerTitle || ""}
-                        onChange={(e) =>
-                          setCurrentContribution({
-                            ...currentContribution,
-                            speakerTitle: e.target.value,
-                          })
-                        }
-                        placeholder="Hon., The Temporary Speaker, …"
-                      />
-                    </div>
-                    <div className="govuk-checkboxes">
-                      <div className="govuk-checkboxes__item">
-                        <input
-                          className="govuk-checkboxes__input"
-                          id="isChairContribution"
-                          type="checkbox"
-                          checked={Boolean(
-                            currentContribution.isChairContribution,
-                          )}
-                          onChange={(e) => {
-                            const checked = e.target.checked;
-                            setCurrentContribution({
-                              ...currentContribution,
-                              isChairContribution: checked,
-                              speakerTitle: checked
-                                ? currentContribution.speakerTitle ||
-                                  PRESIDING_ROLE_LABELS[sitting.presidingRole]
-                                : currentContribution.speakerTitle,
-                            });
-                          }}
-                        />
-                        <label
-                          className="govuk-label govuk-checkboxes__label"
-                          htmlFor="isChairContribution"
-                        >
-                          Speaking as Chair (exclude from member stats)
-                        </label>
-                      </div>
-                    </div>
-                    <div className="govuk-button-group">
-                      <button
-                        type="button"
-                        className="govuk-button govuk-button--secondary"
-                        onClick={() => applyChairRoleToContribution("speaker")}
-                      >
-                        Mark as The Speaker
-                      </button>
-                      <button
-                        type="button"
-                        className="govuk-button govuk-button--secondary"
-                        onClick={() =>
-                          applyChairRoleToContribution("deputy-speaker")
-                        }
-                      >
-                        Mark as Deputy Speaker
-                      </button>
-                      <button
-                        type="button"
-                        className="govuk-button govuk-button--secondary"
-                        onClick={() =>
-                          applyChairRoleToContribution("temporary-speaker")
-                        }
-                      >
-                        Mark as Temporary Speaker
-                      </button>
-                    </div>
                   </div>
                 </details>
-
-                {currentContribution.speakerName && (
-                  <p className="govuk-body-s">
-                    Selected:{" "}
-                    <strong>
-                      {currentContribution.isChairContribution
-                        ? `${currentContribution.speakerTitle || "Chair"} — `
-                        : ""}
-                      {currentContribution.speakerName}
-                    </strong>
-                    {currentContribution.supabaseLeaderId
-                      ? " (linked)"
-                      : " (not linked)"}
-                  </p>
-                )}
               </>
             )}
 

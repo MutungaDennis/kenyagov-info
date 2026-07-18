@@ -36,7 +36,7 @@ function houseLabel(houseType: string) {
 const TABS: { id: HansardTab; label: string }[] = [
   { id: "sittings", label: "All sittings" },
   { id: "manual", label: "Manual entry" },
-  { id: "upload", label: "Upload PDF" },
+  { id: "upload", label: "Paste Hansard" },
 ];
 
 export default function HansardHub({
@@ -133,7 +133,8 @@ export default function HansardHub({
           </h1>
           <p className="govuk-body-l" style={{ color: "#505a5f", maxWidth: 640 }}>
             One place to browse sittings, enter contributions manually (linked to
-            Supabase leaders), or upload a PDF for Grok extraction.
+            Supabase leaders), or paste Hansard text for Grok extraction and
+            member matching.
           </p>
         </div>
       </div>
@@ -256,7 +257,7 @@ export default function HansardHub({
               className="govuk-button govuk-button--secondary"
               onClick={() => switchTab("upload")}
             >
-              Upload PDF
+              Paste Hansard
             </button>
             <a
               href={`${studioBase}/structure/hansardSitting`}
@@ -381,10 +382,12 @@ export default function HansardHub({
           )}
 
           <div className="govuk-inset-text govuk-!-margin-top-6">
-            <strong>Tip:</strong> Prefer Manual entry for accuracy. Use Upload PDF
-            when you have an official Hansard PDF and <code>XAI_API_KEY</code> /
-            optional <code>LLAMA_CLOUD_API_KEY</code> configured. Speakers must be
-            linked to Supabase so Sanity stores their leader UUID.
+            <strong>Tip:</strong> Prefer Manual entry for full control. Use{" "}
+            <strong>Paste Hansard</strong> when you can copy the sitting text —
+            Grok extracts speeches (skipping disclaimers), matches members by name
+            and constituency, and asks you to resolve unclear links. Requires{" "}
+            <code>XAI_API_KEY</code>. Speakers should be linked to Supabase so
+            Sanity stores their leader UUID.
           </div>
         </section>
       )}

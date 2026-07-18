@@ -347,11 +347,10 @@ export default async function DailySittingPage({ params }: PageProps) {
       </h2>
       <p className="govuk-hint govuk-!-margin-bottom-4">
         Select a member&apos;s name for their speaking record.{" "}
-        <strong>Hon. Members:</strong> marks the chamber speaking together
-        (not linked to one person). The Speaker, Deputy Speaker, or Temporary
-        Speaker are labelled when in the Chair. Use{" "}
-        <strong>[Expand]</strong> for brief details; floor counts exclude
-        moderating turns.
+        <strong>Hon. Members:</strong> marks the chamber speaking together.
+        Speaker / Temporary Speaker labels are fixed on each contribution (Chair
+        can rotate mid-sitting). Use <strong>[Expand]</strong> for brief
+        details; floor counts exclude moderating turns.
       </p>
 
       {ordered.length === 0 ? (
@@ -568,7 +567,7 @@ async function enrichContributions(
             role: row.role,
             speakerName: row.speakerName,
             supabaseLeaderId: row.id,
-            presidingOfficer: po,
+            // Do not pass sitting-level Temporary Speaker — rotation-safe
           })
         ) {
           continue;

@@ -164,7 +164,7 @@ export default async function MemberContributionsPage({
     role: c.role,
     speakerName: c.speakerName || c.speakerTitle,
     supabaseLeaderId: c.supabaseLeaderId || leader.id,
-    presidingOfficer: c._presidingOfficer,
+    // Sitting-level Temporary Speaker must not rewrite historical turns
   });
 
   // Floor debates only — exclude when this member was the sitting's Temporary/Deputy/Speaker
