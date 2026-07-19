@@ -3,14 +3,20 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+type HomeSearchProps = {
+  /** inverse = white text on brand-green masthead (homepage) */
+  variant?: "default" | "inverse";
+};
+
 /**
  * Homepage search island — client only for form state.
  * On small screens: full-width field + icon-only submit (GOV.UK style).
  * On larger screens: field + labelled "Search" button.
  */
-export default function HomeSearch() {
+export default function HomeSearch({ variant = "default" }: HomeSearchProps) {
   const router = useRouter();
   const [query, setQuery] = useState("");
+  const inverse = variant === "inverse";
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,13 +28,34 @@ export default function HomeSearch() {
   return (
     <form
       onSubmit={handleSearchSubmit}
-      className="govuk-form-group app-home-search"
+      className={[
+        "govuk-form-group",
+        "app-home-search",
+        "govuk-!-margin-bottom-0",
+        inverse ? "app-home-search--inverse" : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
       role="search"
     >
-      <label className="govuk-label govuk-label--m" htmlFor="main-search">
+      <label
+        className={[
+          "govuk-label",
+          "govuk-label--m",
+          inverse ? "app-home-search__label" : "",
+        ]
+          .filter(Boolean)
+          .join(" ")}
+        htmlFor="main-search"
+      >
         Search government entities, services or laws
       </label>
-      <div className="govuk-hint" id="search-hint-text">
+      <div
+        className={["govuk-hint", inverse ? "app-home-search__hint" : ""]
+          .filter(Boolean)
+          .join(" ")}
+        id="search-hint-text"
+      >
         For example: KRA, Constitution Article 47, passport or Nairobi County
       </div>
 
@@ -50,7 +77,6 @@ export default function HomeSearch() {
           data-module="govuk-button"
           aria-label="Search"
         >
-          {/* Visible label on tablet/desktop; icon-only on small screens */}
           <span className="app-home-search__button-text" aria-hidden="true">
             Search
           </span>

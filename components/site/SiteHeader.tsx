@@ -1,64 +1,95 @@
 'use client';
 
 /**
- * CitizenGuide.KE product header — custom site chrome.
- *
- * This is intentionally NOT the GOV.UK Header component.
- * Kenya brand (emerald ribbon + flag red bar) and mega-nav are product UI.
- * Page content still uses GOV.UK Design System components below the header.
+ * Strip header for non-home pages — GOV.UK-like compact chrome:
+ * logo + product name | search icon | Menu (mega panel).
+ * Homepage uses HomeMasthead instead (see ClientLayoutWrapper).
  */
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
 import SearchAutocomplete from "@/components/govuk/SearchAutocomplete";
 import "./site-header.css";
 
+const MENU_SECTIONS: {
+  heading: string;
+  links: { href: string; label: string; bold?: boolean }[];
+}[] = [
+  {
+    heading: "Services & topics",
+    links: [
+      { href: "/services", label: "Services", bold: true },
+      { href: "/topics", label: "Topics", bold: true },
+      { href: "/services/popular", label: "Popular services" },
+      { href: "/services/a-z", label: "Services A–Z" },
+      { href: "/guides", label: "Life-event guides" },
+      { href: "/ecitizen", label: "eCitizen explained" },
+      { href: "/huduma-centres", label: "Huduma Centres" },
+    ],
+  },
+  {
+    heading: "Government",
+    links: [
+      { href: "/government", label: "Government hub", bold: true },
+      { href: "/how-government-works", label: "How government works" },
+      { href: "/find-your-representatives", label: "Find your representatives" },
+      { href: "/government/cabinet", label: "The Cabinet" },
+      { href: "/government/legislature", label: "Parliament" },
+      { href: "/government/judiciary", label: "The Judiciary" },
+      { href: "/government/counties", label: "County governments" },
+    ],
+  },
+  {
+    heading: "Laws & records",
+    links: [
+      { href: "/constitution", label: "Constitution of Kenya", bold: true },
+      { href: "/acts/parliament", label: "Acts of Parliament" },
+      { href: "/documents", label: "Official documents" },
+      {
+        href: "/government/legislature/hansard/national-assembly",
+        label: "Hansard",
+      },
+      { href: "/government/people", label: "Government officials" },
+      { href: "/government/institutions", label: "Public institutions" },
+    ],
+  },
+  {
+    heading: "Elections, data & help",
+    links: [
+      { href: "/elections", label: "Elections and voting", bold: true },
+      { href: "/society-and-culture", label: "Society and culture" },
+      { href: "/contact-government", label: "Contact government" },
+      { href: "/scams", label: "Scams and fake websites" },
+      { href: "/open-data", label: "Open data" },
+      { href: "/help", label: "Help" },
+      { href: "/about", label: "About this site" },
+    ],
+  },
+];
+
 export default function SiteHeader() {
-  const pathname = usePathname();
-  const isHome = pathname === "/";
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
-  const [moreOpen, setMoreOpen] = useState(false);
-  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
-  const [desktopSearchOpen, setDesktopSearchOpen] = useState(false);
-
-  const closeMenus = () => {
-    setMoreOpen(false);
-    setMobileSearchOpen(false);
-    setDesktopSearchOpen(false);
+  const closeAll = () => {
+    setMenuOpen(false);
+    setSearchOpen(false);
   };
 
-  const toggleMore = () => {
-    setMoreOpen((open) => !open);
-    if (mobileSearchOpen) setMobileSearchOpen(false);
-    if (desktopSearchOpen) setDesktopSearchOpen(false);
+  const toggleMenu = () => {
+    setMenuOpen((open) => !open);
+    setSearchOpen(false);
   };
 
-  const toggleMobileSearch = () => {
-    setMobileSearchOpen((open) => !open);
-    if (moreOpen) setMoreOpen(false);
-    if (desktopSearchOpen) setDesktopSearchOpen(false);
+  const toggleSearch = () => {
+    setSearchOpen((open) => !open);
+    setMenuOpen(false);
   };
-
-  const toggleDesktopSearch = () => {
-    const next = !desktopSearchOpen;
-    setDesktopSearchOpen(next);
-    if (next) {
-      setMoreOpen(false);
-      setMobileSearchOpen(false);
-    }
-  };
-
-  const closeDesktopSearch = () => setDesktopSearchOpen(false);
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setDesktopSearchOpen(false);
-        setMoreOpen(false);
-        setMobileSearchOpen(false);
-      }
+      if (e.key === "Escape") closeAll();
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
@@ -67,13 +98,12 @@ export default function SiteHeader() {
   return (
     <>
       <header className="app-site-header govuk-!-display-none-print" role="banner">
-        {/* Top tier: logo + search + support */}
-        <div className="app-site-header__top">
-          <div className="govuk-width-container app-site-header__top-inner">
+        <div className="app-site-header__strip">
+          <div className="govuk-width-container app-site-header__strip-inner">
             <Link
               href="/"
               className="app-site-header__logo"
-              onClick={closeMenus}
+              onClick={closeAll}
             >
               <Image
                 src="/logo.webp"
@@ -87,519 +117,155 @@ export default function SiteHeader() {
             </Link>
 
             <div className="app-site-header__actions">
-              {!isHome && (
-                <button
-                  type="button"
-                  onClick={toggleDesktopSearch}
-                  className={[
-                    "app-site-header__icon-btn",
-                    "app-site-header__search-desktop",
-                    desktopSearchOpen ? "app-site-header__icon-btn--active" : "",
-                  ]
-                    .filter(Boolean)
-                    .join(" ")}
-                  aria-label={desktopSearchOpen ? "Close search" : "Open search"}
-                  aria-expanded={desktopSearchOpen}
-                  aria-controls="desktop-header-search-panel"
-                >
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 27 27"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    aria-hidden="true"
-                    focusable="false"
-                  >
-                    <circle
-                      cx="12"
-                      cy="12"
-                      r="8.5"
-                      stroke="currentColor"
-                      strokeWidth="3"
-                    />
-                    <line
-                      x1="18"
-                      y1="18"
-                      x2="24.5"
-                      y2="24.5"
-                      stroke="currentColor"
-                      strokeWidth="3"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                </button>
-              )}
-
-              {!isHome && (
-                <button
-                  type="button"
-                  onClick={toggleMobileSearch}
-                  className={[
-                    "app-site-header__icon-btn",
-                    "app-site-header__search-mobile",
-                    mobileSearchOpen ? "app-site-header__icon-btn--active" : "",
-                  ]
-                    .filter(Boolean)
-                    .join(" ")}
-                  aria-controls="mobile-dropdown-search-drawer"
-                  aria-label={
-                    mobileSearchOpen ? "Close search tool" : "Open search tool"
-                  }
-                  aria-expanded={mobileSearchOpen}
-                >
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden="true"
-                    focusable="false"
-                  >
-                    <circle cx="11" cy="11" r="8" />
-                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                  </svg>
-                </button>
-              )}
-
-              <Link
-                href="/support"
-                className="app-site-header__support"
-                onClick={closeMenus}
-              >
-                Support
-              </Link>
-            </div>
-          </div>
-
-          {!isHome && mobileSearchOpen && (
-            <div
-              id="mobile-dropdown-search-drawer"
-              className="app-site-header__mobile-search"
-              role="search"
-            >
-              <div className="govuk-width-container">
-                <SearchAutocomplete
-                  placeholder="Search public services & laws..."
-                  compact={true}
-                />
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Emerald navigation ribbon */}
-        <div className="app-site-header__nav-tier">
-          <div className="govuk-width-container app-site-header__nav-inner">
-            <nav
-              aria-label="Primary site sections"
-              className="app-site-header__nav"
-            >
-              {/*
-                Mobile: Services + Topics only (+ More) — keeps the ribbon one line.
-                Desktop: Services, Topics, Government, Elections (+ More).
-              */}
-              <Link
-                href="/services"
-                className="app-site-header__nav-link"
-                onClick={closeMenus}
-              >
-                Services
-              </Link>
-
-              <Link
-                href="/topics"
-                className="app-site-header__nav-link"
-                onClick={closeMenus}
-              >
-                Topics
-              </Link>
-
-              <Link
-                href="/government"
-                className="app-site-header__nav-link app-site-header__nav-link--desktop-only"
-                onClick={closeMenus}
-              >
-                Government
-              </Link>
-
-              <Link
-                href="/elections"
-                className="app-site-header__nav-link app-site-header__nav-link--desktop-only"
-                onClick={closeMenus}
-              >
-                Elections
-              </Link>
-            </nav>
-
-            <div>
               <button
                 type="button"
-                onClick={toggleMore}
+                onClick={toggleSearch}
                 className={[
-                  "app-site-header__more",
-                  moreOpen ? "app-site-header__more--open" : "",
+                  "app-site-header__icon-btn",
+                  searchOpen ? "app-site-header__icon-btn--active" : "",
                 ]
                   .filter(Boolean)
                   .join(" ")}
-                aria-controls="expanded-more-mega-menu"
-                aria-label={
-                  moreOpen
-                    ? "Hide additional sections menu"
-                    : "Show additional sections menu"
-                }
-                aria-expanded={moreOpen}
+                aria-label={searchOpen ? "Close search" : "Open search"}
+                aria-expanded={searchOpen}
+                aria-controls="header-search-panel"
               >
-                <span>More</span>
                 <svg
-                  width="12"
-                  height="12"
-                  viewBox="0 0 24 24"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 27 27"
                   fill="none"
-                  stroke="currentColor"
-                  strokeWidth="3"
-                  className={[
-                    "app-site-header__more-icon",
-                    moreOpen ? "app-site-header__more-icon--open" : "",
-                  ]
-                    .filter(Boolean)
-                    .join(" ")}
+                  xmlns="http://www.w3.org/2000/svg"
                   aria-hidden="true"
                   focusable="false"
                 >
-                  <polyline points="6 9 12 15 18 9" />
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="8.5"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                  />
+                  <line
+                    x1="18"
+                    y1="18"
+                    x2="24.5"
+                    y2="24.5"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                  />
                 </svg>
               </button>
-            </div>
-          </div>
 
-          {moreOpen && (
-            <div
-              id="expanded-more-mega-menu"
-              className="app-site-header__mega"
-            >
-              <div className="govuk-width-container app-site-header__mega-inner">
-                <div className="app-site-header__mega-grid">
-                  <div className="app-site-header__mega-column">
-                    <h2 className="app-site-header__mega-heading">
-                      Services &amp; topics
-                    </h2>
-                    <ul className="govuk-list govuk-list--spaced">
-                      <li className="govuk-!-margin-bottom-2">
-                        <Link
-                          href="/topics"
-                          className="govuk-link app-site-header__mega-link govuk-!-font-weight-bold"
-                          onClick={closeMenus}
-                        >
-                          Browse all topics
-                        </Link>
-                      </li>
-                      <li className="govuk-!-margin-bottom-2">
-                        <Link
-                          href="/services/popular"
-                          className="govuk-link app-site-header__mega-link govuk-!-font-weight-bold"
-                          onClick={closeMenus}
-                        >
-                          Popular services
-                        </Link>
-                      </li>
-                      <li className="govuk-!-margin-bottom-2">
-                        <Link
-                          href="/services/a-z"
-                          className="govuk-link app-site-header__mega-link"
-                          onClick={closeMenus}
-                        >
-                          Services A–Z
-                        </Link>
-                      </li>
-                      <li className="govuk-!-margin-bottom-2">
-                        <Link
-                          href="/guides"
-                          className="govuk-link app-site-header__mega-link"
-                          onClick={closeMenus}
-                        >
-                          Life-event guides
-                        </Link>
-                      </li>
-                      <li className="govuk-!-margin-bottom-2">
-                        <Link
-                          href="/ecitizen"
-                          className="govuk-link app-site-header__mega-link"
-                          onClick={closeMenus}
-                        >
-                          eCitizen explained
-                        </Link>
-                      </li>
-                      <li className="govuk-!-margin-bottom-2">
-                        <Link
-                          href="/huduma-centres"
-                          className="govuk-link app-site-header__mega-link"
-                          onClick={closeMenus}
-                        >
-                          Huduma Centres
-                        </Link>
-                      </li>
-                      <li className="govuk-!-margin-bottom-2">
-                        <Link
-                          href="/services/categories/civil-registration"
-                          className="govuk-link app-site-header__mega-link"
-                          onClick={closeMenus}
-                        >
-                          Births, deaths, marriages and care
-                        </Link>
-                      </li>
-                      <li className="govuk-!-margin-bottom-2">
-                        <Link
-                          href="/services/categories/money-tax"
-                          className="govuk-link app-site-header__mega-link"
-                          onClick={closeMenus}
-                        >
-                          Money and tax
-                        </Link>
-                      </li>
-                      <li>
-                        <Link
-                          href="/services/categories/driving-transport"
-                          className="govuk-link app-site-header__mega-link"
-                          onClick={closeMenus}
-                        >
-                          Driving and transport
-                        </Link>
-                      </li>
-                    </ul>
-                  </div>
-
-                  <div className="app-site-header__mega-column">
-                    <h2 className="app-site-header__mega-heading">
-                      Government
-                    </h2>
-                    <ul className="govuk-list govuk-list--spaced">
-                      <li className="govuk-!-margin-bottom-2">
-                        <Link
-                          href="/government"
-                          className="govuk-link app-site-header__mega-link govuk-!-font-weight-bold"
-                          onClick={closeMenus}
-                        >
-                          Government hub
-                        </Link>
-                      </li>
-                      <li className="govuk-!-margin-bottom-2">
-                        <Link
-                          href="/how-government-works"
-                          className="govuk-link app-site-header__mega-link"
-                          onClick={closeMenus}
-                        >
-                          How government works
-                        </Link>
-                      </li>
-                      <li className="govuk-!-margin-bottom-2">
-                        <Link
-                          href="/find-your-representatives"
-                          className="govuk-link app-site-header__mega-link"
-                          onClick={closeMenus}
-                        >
-                          Find your representatives
-                        </Link>
-                      </li>
-                      <li className="govuk-!-margin-bottom-2">
-                        <Link
-                          href="/government/cabinet"
-                          className="govuk-link app-site-header__mega-link"
-                          onClick={closeMenus}
-                        >
-                          The Cabinet
-                        </Link>
-                      </li>
-                      <li className="govuk-!-margin-bottom-2">
-                        <Link
-                          href="/government/legislature"
-                          className="govuk-link app-site-header__mega-link"
-                          onClick={closeMenus}
-                        >
-                          Parliament
-                        </Link>
-                      </li>
-                      <li className="govuk-!-margin-bottom-2">
-                        <Link
-                          href="/government/judiciary"
-                          className="govuk-link app-site-header__mega-link"
-                          onClick={closeMenus}
-                        >
-                          The Judiciary
-                        </Link>
-                      </li>
-                      <li className="govuk-!-margin-bottom-2">
-                        <Link
-                          href="/government/counties"
-                          className="govuk-link app-site-header__mega-link"
-                          onClick={closeMenus}
-                        >
-                          County governments
-                        </Link>
-                      </li>
-                      <li>
-                        <Link
-                          href="/county-vs-national"
-                          className="govuk-link app-site-header__mega-link"
-                          onClick={closeMenus}
-                        >
-                          County vs national
-                        </Link>
-                      </li>
-                    </ul>
-                  </div>
-
-                  <div className="app-site-header__mega-column">
-                    <h2 className="app-site-header__mega-heading">
-                      Laws &amp; Records
-                    </h2>
-                    <ul className="govuk-list govuk-list--spaced">
-                      <li className="govuk-!-margin-bottom-2">
-                        <Link
-                          href="/constitution"
-                          className="govuk-link app-site-header__mega-link govuk-!-font-weight-bold"
-                          onClick={closeMenus}
-                        >
-                          Constitution of Kenya
-                        </Link>
-                      </li>
-                      <li className="govuk-!-margin-bottom-2">
-                        <Link
-                          href="/acts/parliament"
-                          className="govuk-link app-site-header__mega-link"
-                          onClick={closeMenus}
-                        >
-                          Acts of Parliament
-                        </Link>
-                      </li>
-                      <li className="govuk-!-margin-bottom-2">
-                        <Link
-                          href="/documents"
-                          className="govuk-link app-site-header__mega-link"
-                          onClick={closeMenus}
-                        >
-                          Official documents
-                        </Link>
-                      </li>
-                      <li className="govuk-!-margin-bottom-2">
-                        <Link
-                          href="/government/people"
-                          className="govuk-link app-site-header__mega-link"
-                          onClick={closeMenus}
-                        >
-                          Government officials
-                        </Link>
-                      </li>
-                      <li>
-                        <Link
-                          href="/government/institutions"
-                          className="govuk-link app-site-header__mega-link"
-                          onClick={closeMenus}
-                        >
-                          Public institutions
-                        </Link>
-                      </li>
-                    </ul>
-                  </div>
-
-                  <div className="app-site-header__mega-column">
-                    <h2 className="app-site-header__mega-heading">
-                      Elections, Data &amp; Help
-                    </h2>
-                    <ul className="govuk-list govuk-list--spaced">
-                      <li className="govuk-!-margin-bottom-2">
-                        <Link
-                          href="/elections"
-                          className="govuk-link app-site-header__mega-link govuk-!-font-weight-bold"
-                          onClick={closeMenus}
-                        >
-                          Elections and voting
-                        </Link>
-                      </li>
-                      <li className="govuk-!-margin-bottom-2">
-                        <Link
-                          href="/society-and-culture"
-                          className="govuk-link app-site-header__mega-link"
-                          onClick={closeMenus}
-                        >
-                          Society and culture
-                        </Link>
-                      </li>
-                      <li className="govuk-!-margin-bottom-2">
-                        <Link
-                          href="/contact-government"
-                          className="govuk-link app-site-header__mega-link"
-                          onClick={closeMenus}
-                        >
-                          Contact government
-                        </Link>
-                      </li>
-                      <li className="govuk-!-margin-bottom-2">
-                        <Link
-                          href="/scams"
-                          className="govuk-link app-site-header__mega-link"
-                          onClick={closeMenus}
-                        >
-                          Scams and fake websites
-                        </Link>
-                      </li>
-                      <li className="govuk-!-margin-bottom-2">
-                        <Link
-                          href="/open-data"
-                          className="govuk-link app-site-header__mega-link"
-                          onClick={closeMenus}
-                        >
-                          Open data
-                        </Link>
-                      </li>
-                      <li>
-                        <Link
-                          href="/help"
-                          className="govuk-link app-site-header__mega-link"
-                          onClick={closeMenus}
-                        >
-                          Help and support
-                        </Link>
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </header>
-
-      {/* Desktop search panel below header */}
-      {!isHome && desktopSearchOpen && (
-        <div
-          id="desktop-header-search-panel"
-          className="app-site-header__search-panel"
-          role="search"
-        >
-          <div className="govuk-width-container">
-            <div className="app-site-header__search-panel-inner">
-              <SearchAutocomplete
-                placeholder="Search government institutions, services, documents, leaders..."
-                compact={false}
-                autoFocus={true}
-              />
               <button
                 type="button"
-                onClick={closeDesktopSearch}
-                className="app-site-header__search-close"
-                aria-label="Close search"
+                onClick={toggleMenu}
+                className={[
+                  "app-site-header__menu-btn",
+                  menuOpen ? "app-site-header__menu-btn--open" : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+                aria-controls="site-header-menu"
+                aria-expanded={menuOpen}
+                aria-label={menuOpen ? "Close menu" : "Open menu"}
               >
-                ✕
+                <span className="app-site-header__menu-btn-text">
+                  {menuOpen ? "Close" : "Menu"}
+                </span>
+                <span className="app-site-header__menu-btn-icon" aria-hidden="true">
+                  {menuOpen ? (
+                    <svg width="14" height="14" viewBox="0 0 14 14" focusable="false">
+                      <path
+                        d="M1 1l12 12M13 1L1 13"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        fill="none"
+                      />
+                    </svg>
+                  ) : (
+                    <svg width="16" height="12" viewBox="0 0 16 12" focusable="false">
+                      <path
+                        d="M0 1h16M0 6h16M0 11h16"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        fill="none"
+                      />
+                    </svg>
+                  )}
+                </span>
               </button>
             </div>
           </div>
         </div>
-      )}
+
+        {searchOpen && (
+          <div
+            id="header-search-panel"
+            className="app-site-header__search-panel"
+            role="search"
+          >
+            <div className="govuk-width-container">
+              <div className="app-site-header__search-panel-inner">
+                <SearchAutocomplete
+                  placeholder="Search government institutions, services, documents, leaders..."
+                  compact={false}
+                  autoFocus={true}
+                />
+                <button
+                  type="button"
+                  onClick={() => setSearchOpen(false)}
+                  className="app-site-header__search-close"
+                  aria-label="Close search"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {menuOpen && (
+          <div
+            id="site-header-menu"
+            className="app-site-header__mega"
+            role="navigation"
+            aria-label="Site sections"
+          >
+            <div className="govuk-width-container app-site-header__mega-inner">
+              <div className="app-site-header__mega-grid">
+                {MENU_SECTIONS.map((section) => (
+                  <div key={section.heading} className="app-site-header__mega-column">
+                    <h2 className="app-site-header__mega-heading">
+                      {section.heading}
+                    </h2>
+                    <ul className="govuk-list govuk-list--spaced">
+                      {section.links.map((link) => (
+                        <li key={link.href} className="govuk-!-margin-bottom-2">
+                          <Link
+                            href={link.href}
+                            className={[
+                              "govuk-link",
+                              "app-site-header__mega-link",
+                              link.bold ? "govuk-!-font-weight-bold" : "",
+                            ]
+                              .filter(Boolean)
+                              .join(" ")}
+                            onClick={closeAll}
+                          >
+                            {link.label}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </header>
     </>
   );
 }

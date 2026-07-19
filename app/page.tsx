@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import HomeSearch from "@/components/site/HomeSearch";
+import HomeMasthead from "@/components/site/HomeMasthead";
 import ChevronLinkList from "@/components/site/ChevronLinkList";
 
 export const revalidate = 86400;
@@ -42,50 +42,16 @@ export const metadata: Metadata = {
 };
 
 /**
- * Homepage — server-rendered content with a small client search island.
+ * Homepage — GOV.UK-style: large green masthead (logo, title, search, Menu).
+ * No strip header on home; other pages use SiteHeader.
  */
 export default function Home() {
   return (
     <>
-      <div className="govuk-!-padding-top-2 govuk-!-padding-bottom-6 govuk-!-margin-bottom-8">
-        <div className="govuk-grid-row">
-          <div className="govuk-grid-column-two-thirds-from-desktop govuk-grid-column-full">
-            <h1 className="govuk-heading-xl govuk-!-margin-bottom-4">
-              CitizenGuide.KE
-            </h1>
+      <HomeMasthead />
 
-            <p className="govuk-body-l">
-              Find clear, factual information about the Government of Kenya —
-              institutions, leaders, counties, public services and the
-              constitution.
-            </p>
-
-            <div className="govuk-inset-text govuk-!-margin-top-2">
-              <p className="govuk-body govuk-!-margin-bottom-0">
-                <strong>Independent civic guide</strong> — not a government
-                website. We do not process applications or take payments. For
-                official transactions use{" "}
-                <Link href="/ecitizen" className="govuk-link">
-                  eCitizen
-                </Link>
-                , agency portals or{" "}
-                <Link href="/huduma-centres" className="govuk-link">
-                  Huduma Centres
-                </Link>
-                .{" "}
-                <Link href="/disclaimer" className="govuk-link">
-                  Read the disclaimer
-                </Link>
-                .
-              </p>
-            </div>
-
-            <HomeSearch />
-          </div>
-        </div>
-      </div>
-
-      <hr className="govuk-section-break govuk-section-break--visible govuk-section-break--l govuk-!-margin-top-6 govuk-!-margin-bottom-6 app-home-section-break" />
+      <div className="govuk-width-container app-home-body">
+      <hr className="govuk-section-break govuk-section-break--visible govuk-section-break--l govuk-!-margin-top-2 govuk-!-margin-bottom-6 app-home-section-break" />
 
       <div className="govuk-grid-row">
         <div className="govuk-grid-column-two-thirds-from-desktop govuk-grid-column-full">
@@ -496,6 +462,7 @@ export default function Home() {
             </li>
           </ul>
         </div>
+      </div>
       </div>
     </>
   );

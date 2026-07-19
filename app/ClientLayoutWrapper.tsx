@@ -26,6 +26,7 @@ export function ClientLayoutWrapper({
     (pathname === adminBase ||
       pathname.startsWith(`${adminBase}/`) ||
       pathname.startsWith("/admin"));
+  const isHome = pathname === "/";
 
   // GOV.UK: mark JS support on body (do not use raw <script> in client components)
   useEffect(() => {
@@ -103,16 +104,6 @@ export function ClientLayoutWrapper({
         `}
       </Script>
 
-      <style dangerouslySetInnerHTML={{__html: `
-        html, body, html.govuk-template, body.govuk-template__body {
-          margin-top: 0 !important;
-          padding-top: 0 !important;
-        }
-        .govuk-template__body {
-          top: 0 !important;
-        }
-      `}} />
-
       <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer />
 
       {!isAdminRoute && <CookieBanner />}
@@ -130,28 +121,55 @@ export function ClientLayoutWrapper({
 
       {!isAdminRoute && (
         <>
-          <SiteHeader />
-
           {/*
-            Single page template shell:
-            - one width container
-            - phase banner (site-wide)
-            - one main landmark
-            Pages must NOT re-wrap in govuk-width-container or <main>.
+            Home: no strip header — large green masthead (with Menu) is enough.
+            Other pages: small SiteHeader strip + width-contained main.
           */}
-          <div className="govuk-width-container">
-            <GovUKPhaseBanner />
-            <SiteNotifications />
+          {isHome ? (
+            <>
+              <div className="govuk-width-container">
+                <GovUKPhaseBanner />
+                <SiteNotifications />
+              </div>
 
-            <main className="govuk-main-wrapper" id="main-content" role="main">
-              {children}
-            </main>
+              <main
+                className="govuk-main-wrapper app-main--home"
+                id="main-content"
+                role="main"
+              >
+                {children}
+              </main>
 
-            <div className="govuk-!-margin-top-9 govuk-!-margin-bottom-6 govuk-!-display-none-print app-no-print">
-              <GovUKFeedback />
-              <GovUKReportProblem />
-            </div>
-          </div>
+              <div className="govuk-width-container">
+                <div className="govuk-!-margin-top-9 govuk-!-margin-bottom-6 govuk-!-display-none-print app-no-print">
+                  <GovUKFeedback />
+                  <GovUKReportProblem />
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <SiteHeader />
+
+              <div className="govuk-width-container">
+                <GovUKPhaseBanner />
+                <SiteNotifications />
+
+                <main
+                  className="govuk-main-wrapper"
+                  id="main-content"
+                  role="main"
+                >
+                  {children}
+                </main>
+
+                <div className="govuk-!-margin-top-9 govuk-!-margin-bottom-6 govuk-!-display-none-print app-no-print">
+                  <GovUKFeedback />
+                  <GovUKReportProblem />
+                </div>
+              </div>
+            </>
+          )}
 
           <GovUKFooter />
         </>
