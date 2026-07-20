@@ -42,9 +42,13 @@ export const metadata: Metadata = {
 };
 
 /**
- * Homepage — GDS-inspired product chrome: large green masthead
- * (logo, CitizenGuide.KE title, search, Menu). Not a GOV.UK brand surface.
- * No strip header on home; other pages use SiteHeader.
+ * Homepage — GDS-inspired, Kenya-first priority:
+ * 1) Masthead (search / menu)
+ * 2) Start here — civic orientation hubs
+ * 3) Popular service guides (same approach as before; not transactions)
+ * 4) Featured + deeper browse columns
+ *
+ * Revert: restore previous popular-services-first layout from git if needed.
  */
 export default function Home() {
   return (
@@ -52,418 +56,487 @@ export default function Home() {
       <HomeMasthead />
 
       <div className="govuk-width-container app-home-body">
-      <hr className="govuk-section-break govuk-section-break--visible govuk-section-break--l govuk-!-margin-top-2 govuk-!-margin-bottom-6 app-home-section-break" />
+        <hr className="govuk-section-break govuk-section-break--visible govuk-section-break--l govuk-!-margin-top-2 govuk-!-margin-bottom-6 app-home-section-break" />
 
-      <div className="govuk-grid-row">
-        <div className="govuk-grid-column-two-thirds-from-desktop govuk-grid-column-full">
-          <h2 className="govuk-heading-m govuk-!-margin-bottom-2">
-            Popular services
-          </h2>
-          <p className="govuk-body govuk-!-margin-bottom-4">
-            Common public services accessed by citizens.{" "}
-            <Link href="/services/popular" className="govuk-link">
-              See the curated popular list
-            </Link>
-            .
-          </p>
+        {/* Band 1: Kenya orientation — GDS “user need” for a civic guide */}
+        <div className="govuk-grid-row">
+          <div className="govuk-grid-column-full">
+            <h2 className="govuk-heading-m govuk-!-margin-bottom-2">
+              Start here
+            </h2>
+            <p className="govuk-body govuk-!-margin-bottom-4">
+              Understand how government works in Kenya, find who represents you,
+              and explore elections, law and open data.
+            </p>
 
-          <ChevronLinkList
-            ariaLabel="Popular services"
-            items={[
-              {
-                href: "/services/categories/business-self-employed",
-                title: "Businesses and self-employed",
-                description:
-                  "Set up a business name or limited company, and file company annual returns.",
-              },
-              {
-                href: "/services/categories/civil-registration",
-                title: "Births, deaths, marriages and care",
-                description:
-                  "Register a birth or death, apply for a marriage certificate, or check police clearance.",
-              },
-              {
-                href: "/services/categories/driving-transport",
-                title: "Driving and transport",
-                description:
-                  "Apply for a provisional licence (PDL), renew your driving licence, or transfer vehicle ownership.",
-              },
-              {
-                href: "/services/categories/passports-travel",
-                title: "Passports, travel and living abroad",
-                description:
-                  "Apply for or renew a Kenyan passport, check visa rules, and manage immigration profiles.",
-              },
-              {
-                href: "/services/categories/money-tax",
-                title: "Money and tax",
-                description:
-                  "File self-assessment tax returns, request KRA PIN variations, or check compliance.",
-              },
-              {
-                href: "/services/categories/land-property",
-                title: "Land and property",
-                description:
-                  "Search land and property records, settle land rates, or verify title details.",
-              },
-              {
-                href: "/services/a-z",
-                title: "Explore all services A to Z",
-                description:
-                  "Alphabetical index of service guides on this website.",
-              },
-              {
-                href: "/services",
-                title: "Search and filter services",
-                description: "Filter by topic or organisation.",
-              },
-            ]}
-          />
+            <ChevronLinkList
+              ariaLabel="Start here — main civic destinations"
+              items={[
+                {
+                  href: "/find-your-representatives",
+                  title: "Find your representatives",
+                  description:
+                    "MP, senator, governor, woman representative, MCA and more.",
+                },
+                {
+                  href: "/how-government-works",
+                  title: "How government works",
+                  description:
+                    "National and county government in plain language.",
+                },
+                {
+                  href: "/government/counties",
+                  title: "Counties and devolution",
+                  description:
+                    "47 county governments, leadership, wards and local services.",
+                },
+                {
+                  href: "/elections",
+                  title: "Elections and voting",
+                  description:
+                    "IEBC, parties, voter registration, polling stations and timelines.",
+                },
+                {
+                  href: "/constitution",
+                  title: "Constitution of Kenya 2010",
+                  description:
+                    "The supreme law — searchable text with plain-language help.",
+                },
+                {
+                  href: "/open-data",
+                  title: "Open data",
+                  description:
+                    "Curated public datasets, collections and official portal links.",
+                },
+              ]}
+            />
+          </div>
         </div>
 
-        <div className="govuk-grid-column-one-third-from-desktop govuk-grid-column-full govuk-!-margin-top-4">
-          <div className="govuk-inset-text">
-            <h2 className="govuk-heading-s govuk-!-margin-top-0">Featured</h2>
+        <hr className="govuk-section-break govuk-section-break--visible govuk-section-break--l govuk-!-margin-top-6 govuk-!-margin-bottom-6 app-home-section-break" />
 
-            <div className="govuk-!-margin-bottom-3">
-              <h3 className="govuk-heading-s govuk-!-margin-bottom-1">
-                <Link href="/elections" className="govuk-link">
-                  2027 General Election timeline
-                </Link>
-              </h3>
-              <p className="govuk-body govuk-!-margin-0">
-                IEBC voter registration, updates and nomination information.
-              </p>
-            </div>
+        {/* Band 2: Your original services approach — second, still prominent */}
+        <div className="govuk-grid-row">
+          <div className="govuk-grid-column-two-thirds-from-desktop govuk-grid-column-full">
+            <h2 className="govuk-heading-m govuk-!-margin-bottom-2">
+              Popular service guides
+            </h2>
+            <p className="govuk-body govuk-!-margin-bottom-4">
+              Guides to common public services. We explain the process — we do
+              not process applications or take payments. For official
+              transactions use{" "}
+              <Link href="/ecitizen" className="govuk-link">
+                eCitizen
+              </Link>{" "}
+              or the relevant agency.{" "}
+              <Link href="/services/popular" className="govuk-link">
+                See the full popular list
+              </Link>
+              .
+            </p>
 
-            <div className="govuk-!-margin-bottom-3">
-              <h3 className="govuk-heading-s govuk-!-margin-bottom-1">
-                <Link
-                  href="/government/counties/devolution"
-                  className="govuk-link"
-                >
-                  County budget and devolution
-                </Link>
-              </h3>
-              <p className="govuk-body govuk-!-margin-0">
-                Intergovernmental grants, budgets and county performance.
-              </p>
-            </div>
+            <ChevronLinkList
+              ariaLabel="Popular service guides"
+              items={[
+                {
+                  href: "/services/categories/business-self-employed",
+                  title: "Businesses and self-employed",
+                  description:
+                    "Set up a business name or limited company, and file company annual returns.",
+                },
+                {
+                  href: "/services/categories/civil-registration",
+                  title: "Births, deaths, marriages and care",
+                  description:
+                    "Register a birth or death, apply for a marriage certificate, or check police clearance.",
+                },
+                {
+                  href: "/services/categories/driving-transport",
+                  title: "Driving and transport",
+                  description:
+                    "Apply for a provisional licence (PDL), renew your driving licence, or transfer vehicle ownership.",
+                },
+                {
+                  href: "/services/categories/passports-travel",
+                  title: "Passports, travel and living abroad",
+                  description:
+                    "Apply for or renew a Kenyan passport, check visa rules, and manage immigration profiles.",
+                },
+                {
+                  href: "/services/categories/money-tax",
+                  title: "Money and tax",
+                  description:
+                    "File self-assessment tax returns, request KRA PIN variations, or check compliance.",
+                },
+                {
+                  href: "/services/categories/land-property",
+                  title: "Land and property",
+                  description:
+                    "Search land and property records, settle land rates, or verify title details.",
+                },
+                {
+                  href: "/services/a-z",
+                  title: "Explore all services A to Z",
+                  description:
+                    "Alphabetical index of service guides on this website.",
+                },
+                {
+                  href: "/services",
+                  title: "Search and filter services",
+                  description: "Filter by topic or organisation.",
+                },
+              ]}
+            />
+          </div>
 
-            <div className="govuk-!-margin-bottom-3">
-              <h3 className="govuk-heading-s govuk-!-margin-bottom-1">
-                <Link href="/find-your-representatives" className="govuk-link">
-                  Find your representatives
-                </Link>
-              </h3>
-              <p className="govuk-body govuk-!-margin-0">
-                MP, senator, governor, MCA and more.
-              </p>
-            </div>
+          <div className="govuk-grid-column-one-third-from-desktop govuk-grid-column-full govuk-!-margin-top-4">
+            <div className="govuk-inset-text">
+              <h2 className="govuk-heading-s govuk-!-margin-top-0">Featured</h2>
 
-            <div>
-              <h3 className="govuk-heading-s govuk-!-margin-bottom-1">
-                <Link href="/how-government-works" className="govuk-link">
-                  How government works
-                </Link>
-              </h3>
-              <p className="govuk-body govuk-!-margin-0">
-                National and county government in plain language.
-              </p>
+              <div className="govuk-!-margin-bottom-3">
+                <h3 className="govuk-heading-s govuk-!-margin-bottom-1">
+                  <Link href="/elections" className="govuk-link">
+                    2027 General Election timeline
+                  </Link>
+                </h3>
+                <p className="govuk-body govuk-!-margin-0">
+                  IEBC voter registration, updates and nomination information.
+                </p>
+              </div>
+
+              <div className="govuk-!-margin-bottom-3">
+                <h3 className="govuk-heading-s govuk-!-margin-bottom-1">
+                  <Link
+                    href="/government/counties/devolution"
+                    className="govuk-link"
+                  >
+                    County budget and devolution
+                  </Link>
+                </h3>
+                <p className="govuk-body govuk-!-margin-0">
+                  Intergovernmental grants, budgets and county performance.
+                </p>
+              </div>
+
+              <div className="govuk-!-margin-bottom-3">
+                <h3 className="govuk-heading-s govuk-!-margin-bottom-1">
+                  <Link
+                    href="/government/legislature/hansard/national-assembly"
+                    className="govuk-link"
+                  >
+                    National Assembly Hansard
+                  </Link>
+                </h3>
+                <p className="govuk-body govuk-!-margin-0">
+                  Structured sitting records you can read and search.
+                </p>
+              </div>
+
+              <div>
+                <h3 className="govuk-heading-s govuk-!-margin-bottom-1">
+                  <Link href="/scams" className="govuk-link">
+                    Scams and fake websites
+                  </Link>
+                </h3>
+                <p className="govuk-body govuk-!-margin-0">
+                  How to spot unofficial sites that mimic government services.
+                </p>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <hr className="govuk-section-break govuk-section-break--visible govuk-section-break--xl govuk-!-margin-top-8 govuk-!-margin-bottom-8 app-home-section-break app-home-section-break--strong" />
+        <hr className="govuk-section-break govuk-section-break--visible govuk-section-break--xl govuk-!-margin-top-8 govuk-!-margin-bottom-8 app-home-section-break app-home-section-break--strong" />
 
-      <div className="govuk-grid-row">
-        <div className="govuk-grid-column-one-third-from-desktop">
-          <h2 className="govuk-heading-m">National government</h2>
-          <ul className="govuk-list">
-            <li>
-              <Link
-                href="/government/cabinet"
-                className="govuk-link govuk-!-font-weight-bold"
-              >
-                The Executive
-              </Link>
-              <p className="govuk-body govuk-!-margin-top-1">
-                Presidency, ministries, cabinet secretaries and state
-                departments.
-              </p>
-            </li>
-            <li>
-              <Link
-                href="/government/legislature"
-                className="govuk-link govuk-!-font-weight-bold"
-              >
-                The Legislature
-              </Link>
-              <p className="govuk-body govuk-!-margin-top-1">
-                National Assembly and Senate.
-              </p>
-            </li>
-            <li>
-              <Link
-                href="/government/judiciary"
-                className="govuk-link govuk-!-font-weight-bold"
-              >
-                The Judiciary
-              </Link>
-              <p className="govuk-body govuk-!-margin-top-1">
-                Supreme Court, superior courts and judicial administration.
-              </p>
-            </li>
-            <li>
-              <Link
-                href="/government/commissions"
-                className="govuk-link govuk-!-font-weight-bold"
-              >
-                Independent Commissions
-              </Link>
-              <p className="govuk-body govuk-!-margin-top-1">
-                Constitutional offices and oversight bodies (IEBC, SRC, EACC,
-                etc.).
-              </p>
-            </li>
-          </ul>
+        {/* Band 3: Your existing deep browse — unchanged structure */}
+        <div className="govuk-grid-row">
+          <div className="govuk-grid-column-one-third-from-desktop">
+            <h2 className="govuk-heading-m">National government</h2>
+            <ul className="govuk-list">
+              <li>
+                <Link
+                  href="/government/cabinet"
+                  className="govuk-link govuk-!-font-weight-bold"
+                >
+                  The Executive
+                </Link>
+                <p className="govuk-body govuk-!-margin-top-1">
+                  Presidency, ministries, cabinet secretaries and state
+                  departments.
+                </p>
+              </li>
+              <li>
+                <Link
+                  href="/government/legislature"
+                  className="govuk-link govuk-!-font-weight-bold"
+                >
+                  The Legislature
+                </Link>
+                <p className="govuk-body govuk-!-margin-top-1">
+                  National Assembly and Senate.
+                </p>
+              </li>
+              <li>
+                <Link
+                  href="/government/judiciary"
+                  className="govuk-link govuk-!-font-weight-bold"
+                >
+                  The Judiciary
+                </Link>
+                <p className="govuk-body govuk-!-margin-top-1">
+                  Supreme Court, superior courts and judicial administration.
+                </p>
+              </li>
+              <li>
+                <Link
+                  href="/government/commissions"
+                  className="govuk-link govuk-!-font-weight-bold"
+                >
+                  Independent Commissions
+                </Link>
+                <p className="govuk-body govuk-!-margin-top-1">
+                  Constitutional offices and oversight bodies (IEBC, SRC, EACC,
+                  etc.).
+                </p>
+              </li>
+            </ul>
+          </div>
+
+          <div className="govuk-grid-column-one-third-from-desktop">
+            <h2 className="govuk-heading-m">County governance</h2>
+            <ul className="govuk-list">
+              <li>
+                <Link
+                  href="/government/counties/governors"
+                  className="govuk-link govuk-!-font-weight-bold"
+                >
+                  County Executives
+                </Link>
+                <p className="govuk-body govuk-!-margin-top-1">
+                  Governors, deputy governors and county executive committees.
+                </p>
+              </li>
+              <li>
+                <Link
+                  href="/government/counties"
+                  className="govuk-link govuk-!-font-weight-bold"
+                >
+                  County Assemblies &amp; Wards
+                </Link>
+                <p className="govuk-body govuk-!-margin-top-1">
+                  MCAs, ward-level representation, and local legislation.
+                </p>
+              </li>
+              <li>
+                <Link
+                  href="/government/counties/devolution"
+                  className="govuk-link govuk-!-font-weight-bold"
+                >
+                  Devolution
+                </Link>
+                <p className="govuk-body govuk-!-margin-top-1">
+                  Intergovernmental relations, budgets, and county performance.
+                </p>
+              </li>
+            </ul>
+          </div>
+
+          <div className="govuk-grid-column-one-third-from-desktop">
+            <h2 className="govuk-heading-m">Institutions and politics</h2>
+            <ul className="govuk-list">
+              <li>
+                <Link
+                  href="/government/institutions"
+                  className="govuk-link govuk-!-font-weight-bold"
+                >
+                  Public Institutions
+                </Link>
+                <p className="govuk-body govuk-!-margin-top-1">
+                  Parastatals, regulators, and government agencies.
+                </p>
+              </li>
+              <li>
+                <Link
+                  href="/elections"
+                  className="govuk-link govuk-!-font-weight-bold"
+                >
+                  Elections
+                </Link>
+                <p className="govuk-body govuk-!-margin-top-1">
+                  Political parties, elections, and voter information.
+                </p>
+              </li>
+              <li>
+                <Link
+                  href="/elections/coalitions"
+                  className="govuk-link govuk-!-font-weight-bold"
+                >
+                  Political Coalitions
+                </Link>
+                <p className="govuk-body govuk-!-margin-top-1">
+                  Registered party alliances and coalition frameworks.
+                </p>
+              </li>
+              <li>
+                <Link
+                  href="/open-data"
+                  className="govuk-link govuk-!-font-weight-bold"
+                >
+                  Open data
+                </Link>
+                <p className="govuk-body govuk-!-margin-top-1">
+                  Kenya-first open datasets, collections and official portal
+                  links.
+                </p>
+              </li>
+            </ul>
+          </div>
         </div>
 
-        <div className="govuk-grid-column-one-third-from-desktop">
-          <h2 className="govuk-heading-m">County governance</h2>
-          <ul className="govuk-list">
-            <li>
-              <Link
-                href="/government/counties/governors"
-                className="govuk-link govuk-!-font-weight-bold"
-              >
-                County Executives
-              </Link>
-              <p className="govuk-body govuk-!-margin-top-1">
-                Governors, deputy governors and county executive committees.
-              </p>
-            </li>
-            <li>
-              <Link
-                href="/government/counties"
-                className="govuk-link govuk-!-font-weight-bold"
-              >
-                County Assemblies &amp; Wards
-              </Link>
-              <p className="govuk-body govuk-!-margin-top-1">
-                MCAs, ward-level representation, and local legislation.
-              </p>
-            </li>
-            <li>
-              <Link
-                href="/government/counties/devolution"
-                className="govuk-link govuk-!-font-weight-bold"
-              >
-                Devolution
-              </Link>
-              <p className="govuk-body govuk-!-margin-top-1">
-                Intergovernmental relations, budgets, and county performance.
-              </p>
-            </li>
-          </ul>
-        </div>
+        <hr className="govuk-section-break govuk-section-break--visible govuk-section-break--xl govuk-!-margin-top-8 govuk-!-margin-bottom-8 app-home-section-break app-home-section-break--strong" />
 
-        <div className="govuk-grid-column-one-third-from-desktop">
-          <h2 className="govuk-heading-m">Institutions and politics</h2>
-          <ul className="govuk-list">
-            <li>
-              <Link
-                href="/government/institutions"
-                className="govuk-link govuk-!-font-weight-bold"
-              >
-                Public Institutions
-              </Link>
-              <p className="govuk-body govuk-!-margin-top-1">
-                Parastatals, regulators, and government agencies.
-              </p>
-            </li>
-            <li>
-              <Link
-                href="/elections"
-                className="govuk-link govuk-!-font-weight-bold"
-              >
-                Elections
-              </Link>
-              <p className="govuk-body govuk-!-margin-top-1">
-                Political parties, elections, and voter information.
-              </p>
-            </li>
-            <li>
-              <Link
-                href="/elections/coalitions"
-                className="govuk-link govuk-!-font-weight-bold"
-              >
-                Political Coalitions
-              </Link>
-              <p className="govuk-body govuk-!-margin-top-1">
-                Registered party alliances and coalition frameworks.
-              </p>
-            </li>
-            <li>
-              <Link
-                href="/open-data"
-                className="govuk-link govuk-!-font-weight-bold"
-              >
-                Open data
-              </Link>
-              <p className="govuk-body govuk-!-margin-top-1">
-                Kenya-first open datasets, collections and official portal links.
-              </p>
-            </li>
-          </ul>
-        </div>
-      </div>
+        <div className="govuk-grid-row">
+          <div className="govuk-grid-column-one-third-from-desktop">
+            <h2 className="govuk-heading-m">Society and culture</h2>
+            <ul className="govuk-list">
+              <li>
+                <Link
+                  href="/society-and-culture"
+                  className="govuk-link govuk-!-font-weight-bold"
+                >
+                  Culture and heritage
+                </Link>
+                <p className="govuk-body govuk-!-margin-top-1">
+                  National symbols, heritage sites, holidays and cultural
+                  calendars.
+                </p>
+              </li>
+              <li>
+                <Link
+                  href="/guides"
+                  className="govuk-link govuk-!-font-weight-bold"
+                >
+                  Citizen guides
+                </Link>
+                <p className="govuk-body govuk-!-margin-top-1">
+                  Plain-language guides to public processes and rights.
+                </p>
+              </li>
+              <li>
+                <Link
+                  href="/about"
+                  className="govuk-link govuk-!-font-weight-bold"
+                >
+                  About this site
+                </Link>
+                <p className="govuk-body govuk-!-margin-top-1">
+                  How this guide works and accessibility information.
+                </p>
+              </li>
+              <li>
+                <Link
+                  href="/contact-government"
+                  className="govuk-link govuk-!-font-weight-bold"
+                >
+                  Contact government
+                </Link>
+                <p className="govuk-body govuk-!-margin-top-1">
+                  Official channels for ministries, counties and services.
+                </p>
+              </li>
+            </ul>
+          </div>
 
-      <hr className="govuk-section-break govuk-section-break--visible govuk-section-break--xl govuk-!-margin-top-8 govuk-!-margin-bottom-8 app-home-section-break app-home-section-break--strong" />
+          <div className="govuk-grid-column-one-third-from-desktop">
+            <h2 className="govuk-heading-m">Current leaders</h2>
+            <ul className="govuk-list">
+              <li>
+                <Link
+                  href="/government/people"
+                  className="govuk-link govuk-!-font-weight-bold"
+                >
+                  All government officials
+                </Link>
+                <p className="govuk-body govuk-!-margin-top-1">
+                  President, Deputy President, Cabinet Secretaries and senior
+                  officials.
+                </p>
+              </li>
+              <li>
+                <Link
+                  href="/government/legislature/national-assembly/members"
+                  className="govuk-link govuk-!-font-weight-bold"
+                >
+                  Members of Parliament
+                </Link>
+                <p className="govuk-body govuk-!-margin-top-1">
+                  National Assembly and Senate members.
+                </p>
+              </li>
+              <li>
+                <Link
+                  href="/government/counties/governors"
+                  className="govuk-link govuk-!-font-weight-bold"
+                >
+                  County leadership
+                </Link>
+                <p className="govuk-body govuk-!-margin-top-1">
+                  Governors, MCAs and county executives.
+                </p>
+              </li>
+              <li>
+                <Link
+                  href="/government/commissions"
+                  className="govuk-link govuk-!-font-weight-bold"
+                >
+                  Independent bodies
+                </Link>
+                <p className="govuk-body govuk-!-margin-top-1">
+                  Commissions and oversight officials.
+                </p>
+              </li>
+            </ul>
+          </div>
 
-      <div className="govuk-grid-row">
-        <div className="govuk-grid-column-one-third-from-desktop">
-          <h2 className="govuk-heading-m">Society and culture</h2>
-          <ul className="govuk-list">
-            <li>
-              <Link
-                href="/society-and-culture"
-                className="govuk-link govuk-!-font-weight-bold"
-              >
-                Culture and heritage
-              </Link>
-              <p className="govuk-body govuk-!-margin-top-1">
-                National symbols, heritage sites, holidays and cultural
-                calendars.
-              </p>
-            </li>
-            <li>
-              <Link
-                href="/guides"
-                className="govuk-link govuk-!-font-weight-bold"
-              >
-                Citizen guides
-              </Link>
-              <p className="govuk-body govuk-!-margin-top-1">
-                Plain-language guides to public processes and rights.
-              </p>
-            </li>
-            <li>
-              <Link
-                href="/about"
-                className="govuk-link govuk-!-font-weight-bold"
-              >
-                About this site
-              </Link>
-              <p className="govuk-body govuk-!-margin-top-1">
-                How this guide works and accessibility information.
-              </p>
-            </li>
-            <li>
-              <Link
-                href="/contact-government"
-                className="govuk-link govuk-!-font-weight-bold"
-              >
-                Contact government
-              </Link>
-              <p className="govuk-body govuk-!-margin-top-1">
-                Official channels for ministries, counties and services.
-              </p>
-            </li>
-          </ul>
+          <div className="govuk-grid-column-one-third-from-desktop">
+            <h2 className="govuk-heading-m">More information</h2>
+            <ul className="govuk-list">
+              <li>
+                <Link
+                  href="/documents"
+                  className="govuk-link govuk-!-font-weight-bold"
+                >
+                  Official documents
+                </Link>
+                <p className="govuk-body govuk-!-margin-top-1">
+                  Vision 2030, sessional papers and key publications.
+                </p>
+              </li>
+              <li>
+                <Link
+                  href="/acts/parliament"
+                  className="govuk-link govuk-!-font-weight-bold"
+                >
+                  Acts of Parliament
+                </Link>
+                <p className="govuk-body govuk-!-margin-top-1">
+                  Current and historical legislation.
+                </p>
+              </li>
+              <li>
+                <Link
+                  href="/constitution"
+                  className="govuk-link govuk-!-font-weight-bold"
+                >
+                  The Constitution of Kenya 2010
+                </Link>
+                <p className="govuk-body govuk-!-margin-top-1">
+                  The supreme law, fully searchable with explanations.
+                </p>
+              </li>
+            </ul>
+          </div>
         </div>
-
-        <div className="govuk-grid-column-one-third-from-desktop">
-          <h2 className="govuk-heading-m">Current leaders</h2>
-          <ul className="govuk-list">
-            <li>
-              <Link
-                href="/government/people"
-                className="govuk-link govuk-!-font-weight-bold"
-              >
-                All government officials
-              </Link>
-              <p className="govuk-body govuk-!-margin-top-1">
-                President, Deputy President, Cabinet Secretaries and senior
-                officials.
-              </p>
-            </li>
-            <li>
-              <Link
-                href="/government/legislature/national-assembly/members"
-                className="govuk-link govuk-!-font-weight-bold"
-              >
-                Members of Parliament
-              </Link>
-              <p className="govuk-body govuk-!-margin-top-1">
-                National Assembly and Senate members.
-              </p>
-            </li>
-            <li>
-              <Link
-                href="/government/counties/governors"
-                className="govuk-link govuk-!-font-weight-bold"
-              >
-                County leadership
-              </Link>
-              <p className="govuk-body govuk-!-margin-top-1">
-                Governors, MCAs and county executives.
-              </p>
-            </li>
-            <li>
-              <Link
-                href="/government/commissions"
-                className="govuk-link govuk-!-font-weight-bold"
-              >
-                Independent bodies
-              </Link>
-              <p className="govuk-body govuk-!-margin-top-1">
-                Commissions and oversight officials.
-              </p>
-            </li>
-          </ul>
-        </div>
-
-        <div className="govuk-grid-column-one-third-from-desktop">
-          <h2 className="govuk-heading-m">More information</h2>
-          <ul className="govuk-list">
-            <li>
-              <Link
-                href="/documents"
-                className="govuk-link govuk-!-font-weight-bold"
-              >
-                Official documents
-              </Link>
-              <p className="govuk-body govuk-!-margin-top-1">
-                Vision 2030, sessional papers and key publications.
-              </p>
-            </li>
-            <li>
-              <Link
-                href="/acts/parliament"
-                className="govuk-link govuk-!-font-weight-bold"
-              >
-                Acts of Parliament
-              </Link>
-              <p className="govuk-body govuk-!-margin-top-1">
-                Current and historical legislation.
-              </p>
-            </li>
-            <li>
-              <Link
-                href="/constitution"
-                className="govuk-link govuk-!-font-weight-bold"
-              >
-                The Constitution of Kenya 2010
-              </Link>
-              <p className="govuk-body govuk-!-margin-top-1">
-                The supreme law, fully searchable with explanations.
-              </p>
-            </li>
-          </ul>
-        </div>
-      </div>
       </div>
     </>
   );
