@@ -1,12 +1,28 @@
 'use client';
 
 import Link from "next/link";
-import { useState, useRef, useEffect, useTransition } from "react";
+import { useState, useRef, useEffect, useTransition, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import GovUKCharacterCount from "@/components/govuk/CharacterCount";
 import { handleContactMessage } from "./actions";
 
 export default function ContactPage() {
+  return (
+    <Suspense
+      fallback={
+        <p className="govuk-body govuk-!-margin-top-6">Loading contact form…</p>
+      }
+    >
+      <ContactPageContent />
+    </Suspense>
+  );
+}
+
+function ContactPageContent() {
+  const searchParams = useSearchParams();
+  const prefillSubject = searchParams.get("subject") || "";
+
   const firstInputRef = useRef<HTMLInputElement>(null);
   const errorSummaryRef = useRef<HTMLDivElement>(null);
   const successPanelRef = useRef<HTMLDivElement>(null);
@@ -243,6 +259,7 @@ export default function ContactPage() {
                   name="subject"
                   type="text"
                   required
+                  defaultValue={prefillSubject}
                 />
               </div>
 

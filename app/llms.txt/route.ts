@@ -11,14 +11,14 @@ export async function GET() {
 title: CitizenGuide.KE
 description: Independent civic information platform for Kenyan government institutions, the Constitution of Kenya 2010, 47 county governments, political leadership, public services, elections, and key legislation.
 version: 1.3
-last_updated: 2026-07-12
+last_updated: 2026-07-20
 sitemap: https://www.citizenguide.ke/sitemap.xml
 canonical: https://www.citizenguide.ke
 ---
 
 # Overview
 
-CitizenGuide.KE (https://www.citizenguide.ke) is an independent, non-governmental civic technology platform. It makes Kenyan government information accessible and well-organized. The site is inspired by GOV.UK information architecture but is NOT an official Government of Kenya website.
+CitizenGuide.KE (https://www.citizenguide.ke) is an independent, non-governmental civic technology platform. It makes Kenyan government information accessible and well-organized. The product is GDS-inspired (UK Government Digital Service design-system patterns for clarity and accessibility) with its own brand and Kenyan content. It is NOT GOV.UK, NOT affiliated with the UK government, and NOT an official Government of Kenya website.
 
 The platform provides structured reference material for:
 - The Constitution of Kenya 2010 (full text and plain-English explanations)

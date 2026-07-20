@@ -80,7 +80,7 @@ export const metadata: Metadata = {
     },
   },
 
-  // Open Graph — GOV.UK-style centralized template defaults
+  // Open Graph — site-wide defaults
   openGraph: {
     type: 'website',
     locale: 'en_KE',

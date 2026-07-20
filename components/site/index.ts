@@ -1,6 +1,7 @@
 /**
  * Product / site chrome (CitizenGuide.KE branding).
- * Distinct from components/govuk/* which wraps GOV.UK Design System patterns.
+ * Distinct from components/govuk/* which adapts GDS Design System patterns
+ * for accessibility — not UK government brand assets.
  */
 export { default as SiteHeader } from "./SiteHeader";
 export { default as SiteNotifications } from "./SiteNotifications";

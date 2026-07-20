@@ -1,14 +1,13 @@
 import Link from "next/link";
 
 /**
- * Site footer using GOV.UK footer structure.
+ * Site footer using a GDS-inspired footer structure (open design pattern).
+ * CitizenGuide product content and independence statement — not UK gov brand.
  *
- * Pattern (design-system.service.gov.uk/components/footer):
+ * Pattern reference (design-system.service.gov.uk/components/footer):
  * - navigation: key primary destinations only (not every page)
  * - meta: secondary legal/about links
  * - custom meta text: independence + one official transaction pointer
- *
- * @see https://design-system.service.gov.uk/components/footer/
  */
 export default function GovUKFooter() {
   const year = new Date().getFullYear();

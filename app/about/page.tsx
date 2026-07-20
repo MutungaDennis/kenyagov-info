@@ -88,38 +88,53 @@ export default function AboutPage() {
             {/* Section 5: How this website is designed */}
             <h2 className="govuk-heading-l">How this website is designed</h2>
             <p className="govuk-body">
-              We designed this website based on the{' '}
-              <a 
-                href="https://design-system.service.gov.uk/" 
-                target="_blank" 
+              CitizenGuide.KE is a <strong>GDS-inspired</strong> civic information
+              site for Kenya. We adapt open patterns from the UK Government
+              Digital Service{" "}
+              <a
+                href="https://design-system.service.gov.uk/"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="govuk-link"
               >
-                UK Government Digital Service (GOV.UK) design system
-                <svg 
-                  xmlns="http://www.w3.org/2000/svg" 
-                  width="14" 
-                  height="14" 
-                  viewBox="0 0 24 24" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  strokeWidth="2" 
-                  strokeLinecap="round" 
+                Design System
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
                   strokeLinejoin="round"
                   aria-hidden="true"
                   focusable="false"
-                  style={{ marginLeft: '4px', verticalAlign: 'middle', display: 'inline-block' }}
+                  style={{
+                    marginLeft: "4px",
+                    verticalAlign: "middle",
+                    display: "inline-block",
+                  }}
                 >
                   <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
                   <polyline points="15 3 21 3 21 9" />
                   <line x1="10" y1="14" x2="21" y2="3" />
                 </svg>
                 <span className="govuk-visually-hidden"> (opens in a new tab)</span>
-              </a>
-              .
+              </a>{" "}
+              — plain language, clear structure and accessibility — with our own
+              branding, colours and Kenyan content.
             </p>
             <p className="govuk-body">
-              We use a clean layout with high contrast and simple navigation. This makes the website easy to read on any device and accessible to people using screen readers.
+              We are <strong>not</strong> GOV.UK, not a Government of Kenya
+              website, and not affiliated with the UK government. We use the
+              design system&apos;s open components and ideas; we do not use the
+              GOV.UK logo, crown or official brand.
+            </p>
+            <p className="govuk-body">
+              We use a clean layout with high contrast and simple navigation.
+              This makes the website easier to read on any device and more
+              usable with assistive technologies.
             </p>
 
             <h2 className="govuk-heading-l">Editorial standards</h2>

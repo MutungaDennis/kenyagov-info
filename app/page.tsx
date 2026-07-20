@@ -42,7 +42,8 @@ export const metadata: Metadata = {
 };
 
 /**
- * Homepage — GOV.UK-style: large green masthead (logo, title, search, Menu).
+ * Homepage — GDS-inspired product chrome: large green masthead
+ * (logo, CitizenGuide.KE title, search, Menu). Not a GOV.UK brand surface.
  * No strip header on home; other pages use SiteHeader.
  */
 export default function Home() {
@@ -312,7 +313,7 @@ export default function Home() {
                 Open data
               </Link>
               <p className="govuk-body govuk-!-margin-top-1">
-                Public datasets and machine-readable registers.
+                Kenya-first open datasets, collections and official portal links.
               </p>
             </li>
           </ul>

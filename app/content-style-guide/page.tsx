@@ -10,7 +10,7 @@ export const dynamic = "force-static";
 export const metadata: Metadata = {
   title: "Content style guide",
   description:
-    "How CitizenGuide.KE writes public information — plain language, structure and GOV.UK-inspired content design for Kenya.",
+    "How CitizenGuide.KE writes public information — plain language, structure and GDS-inspired content design for Kenya.",
 };
 
 export default function ContentStyleGuidePage() {
@@ -24,7 +24,7 @@ export default function ContentStyleGuidePage() {
         ]}
         caption="About this website"
         title="Content style guide"
-        lead="Rules for writing and structuring pages on CitizenGuide.KE. Adapted from GOV.UK content design principles for Kenyan civic information."
+        lead="Rules for writing and structuring pages on CitizenGuide.KE. We use GDS-inspired content design principles — plain language and clear structure — adapted for Kenyan civic information. We are not GOV.UK or a government website."
       />
 
       <div className="govuk-grid-row">
@@ -52,6 +52,10 @@ export default function ContentStyleGuidePage() {
               <li>
                 Never pretend to be government or process applications on this
                 site.
+              </li>
+              <li>
+                Describe the product as GDS-inspired or design-system-inspired —
+                never as “Kenya’s GOV.UK” or as an official government website.
               </li>
             </ul>
             <p className="govuk-body">

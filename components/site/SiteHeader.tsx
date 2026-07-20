@@ -1,8 +1,9 @@
 'use client';
 
 /**
- * Strip header for non-home pages — GOV.UK-like compact chrome:
- * logo + product name | search icon | Menu (mega panel).
+ * Strip header for non-home pages — GDS-inspired compact product chrome:
+ * logo + CitizenGuide.KE | search icon | Menu (mega panel).
+ * Brand green + product name (not GOV.UK branding).
  * Homepage uses HomeMasthead instead (see ClientLayoutWrapper).
  */
 

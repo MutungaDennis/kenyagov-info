@@ -80,6 +80,310 @@ body {
   padding-bottom: 40px;
 }
 
+/* -------------------------------------------------------------------------- */
+/* Open data — catalogue + accessible bar tables                              */
+/* -------------------------------------------------------------------------- */
+
+.app-open-data-catalogue {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid #b1b4b6;
+}
+
+.app-open-data-catalogue__item {
+  margin: 0;
+  padding: 1rem 0;
+  border-bottom: 1px solid #b1b4b6;
+}
+
+/* data.gov.uk-style topic / collection cards */
+.app-od-card-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin: 16px 0 0;
+}
+
+@media (min-width: 40.0625em) {
+  .app-od-card-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  .app-od-card-grid--stack {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 48.0625em) {
+  .app-od-card-grid {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+
+  .app-od-card-grid--stack {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.app-od-card {
+  display: block;
+  box-sizing: border-box;
+  padding: 20px;
+  border: 1px solid #b1b4b6;
+  border-top: 5px solid var(--app-brand-green, #047857);
+  background: #ffffff;
+  text-decoration: none !important;
+  color: inherit;
+  min-height: 100%;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.app-od-card:hover {
+  box-shadow: 0 2px 0 rgba(11, 12, 12, 0.12);
+  border-color: #0b0c0c;
+}
+
+.app-od-card:focus {
+  outline: 3px solid transparent;
+  color: #0b0c0c;
+  background-color: #ffdd00;
+  box-shadow: 0 -2px #ffdd00, 0 4px #0b0c0c;
+}
+
+.app-od-card__title {
+  margin: 0 0 8px;
+  font-size: 19px;
+  line-height: 1.25;
+  font-weight: 700;
+  color: var(--app-brand-green, #047857);
+}
+
+.app-od-card:hover .app-od-card__title,
+.app-od-card:focus .app-od-card__title {
+  color: #0b0c0c;
+  text-decoration: underline;
+}
+
+.app-od-card__desc {
+  margin: 0 0 8px;
+  font-size: 16px;
+  line-height: 1.25;
+  color: #0b0c0c;
+}
+
+.app-od-card__meta {
+  margin: 0;
+  font-size: 14px;
+  color: #505a5f;
+}
+
+.app-od-spotlight {
+  border-left: 5px solid var(--app-brand-green, #047857);
+  padding: 12px 16px;
+  background: #f3f2f1;
+}
+
+/* Charts */
+.app-data-chart__caption {
+  color: #505a5f;
+  margin-bottom: 12px;
+}
+
+.app-data-bars__table {
+  margin-bottom: 0;
+}
+
+.app-data-bars__cell-bar {
+  min-width: 8rem;
+  vertical-align: middle;
+}
+
+.app-data-bars__track {
+  width: 100%;
+  max-width: 20rem;
+  height: 1.25rem;
+  background-color: #f3f2f1;
+  border: 1px solid #b1b4b6;
+  box-sizing: border-box;
+}
+
+.app-data-bars__fill {
+  height: 100%;
+  background-color: var(--app-brand-green, #047857);
+  min-width: 2px;
+}
+
+.app-data-columns {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  min-height: 180px;
+  padding: 8px 0 0;
+  overflow-x: auto;
+  border-bottom: 1px solid #b1b4b6;
+}
+
+.app-data-columns__item {
+  flex: 1 1 0;
+  min-width: 3.2rem;
+  max-width: 5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 180px;
+}
+
+.app-data-columns__value {
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 4px;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.app-data-columns__track {
+  flex: 1 1 auto;
+  width: 100%;
+  max-width: 2.5rem;
+  display: flex;
+  align-items: flex-end;
+  background: #f3f2f1;
+  border: 1px solid #b1b4b6;
+  box-sizing: border-box;
+}
+
+.app-data-columns__fill {
+  width: 100%;
+  background: var(--app-brand-green, #047857);
+  min-height: 4px;
+}
+
+.app-data-columns__label {
+  margin-top: 6px;
+  font-size: 11px;
+  line-height: 1.2;
+  text-align: center;
+  max-width: 100%;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  word-break: break-word;
+}
+
+.app-data-chart__svg-wrap {
+  width: 100%;
+  max-width: 40rem;
+  overflow-x: auto;
+}
+
+.app-data-chart__svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.app-data-chart__grid {
+  stroke: #b1b4b6;
+  stroke-width: 1;
+}
+
+.app-data-chart__line {
+  stroke: var(--app-brand-green, #047857);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.app-data-chart__dot {
+  fill: var(--app-brand-green, #047857);
+  stroke: #fff;
+  stroke-width: 1.5;
+}
+
+.app-data-chart__axis-label {
+  font-size: 10px;
+  fill: #505a5f;
+}
+
+.app-data-donut {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  align-items: flex-start;
+}
+
+.app-data-donut__svg {
+  width: 160px;
+  height: 160px;
+  flex-shrink: 0;
+}
+
+.app-data-donut__total {
+  font-size: 14px;
+  font-weight: 700;
+  fill: #0b0c0c;
+}
+
+.app-data-donut__total-label {
+  font-size: 10px;
+  fill: #505a5f;
+}
+
+.app-data-donut__legend {
+  flex: 1 1 220px;
+  margin: 0;
+}
+
+.app-data-donut__swatch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-right: 6px;
+  vertical-align: middle;
+  border: 1px solid #0b0c0c;
+}
+
+.app-data-ranking {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid #b1b4b6;
+}
+
+.app-data-ranking__item {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid #b1b4b6;
+}
+
+.app-data-ranking__rank {
+  flex: 0 0 1.75rem;
+  font-weight: 700;
+  color: var(--app-brand-green, #047857);
+  font-variant-numeric: tabular-nums;
+}
+
+.app-data-ranking__label {
+  flex: 1 1 auto;
+  font-weight: 700;
+}
+
+.app-data-ranking__value {
+  flex: 0 0 auto;
+  font-variant-numeric: tabular-nums;
+  color: #505a5f;
+}
+
+.app-table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-bottom: 1.5rem;
+}
+
 /* Full-width brand band — GOV.UK homepage pattern, brand green not blue */
 .app-home-masthead {
   background-color: var(--app-brand-green);

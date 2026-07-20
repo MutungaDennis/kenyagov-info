@@ -1,8 +1,9 @@
 "use client";
 
 /**
- * Homepage-only GOV.UK-style masthead:
+ * Homepage-only masthead (GDS-inspired pattern, CitizenGuide brand):
  * full-width brand green band, logo + title, search, and Menu (no strip header).
+ * Not the GOV.UK brand — product colours and name only.
  */
 
 import { useEffect, useState } from "react";
