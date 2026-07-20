@@ -45,21 +45,12 @@ function missingColumnFromError(message: string): string | null {
   return m?.[1] || null;
 }
 
+/** Loose client type — avoid deep Supabase generic instantiation at build time */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type LooseSupabase = { from: (table: string) => any };
+
 async function updateLeadersWithFallback(
-  supabase: {
-    from: (t: string) => {
-      update: (v: Record<string, unknown>) => {
-        eq: (c: string, id: string) => {
-          select: (s: string) => {
-            single: () => PromiseLike<{
-              data: Record<string, unknown> | null;
-              error: { message: string } | null;
-            }>;
-          };
-        };
-      };
-    };
-  },
+  supabase: LooseSupabase,
   id: string,
   patch: Record<string, unknown>,
 ): Promise<{
@@ -85,10 +76,10 @@ async function updateLeadersWithFallback(
       return { data: data as Record<string, unknown>, error: null, dropped };
     }
 
-    lastError = error.message;
-    const col = missingColumnFromError(error.message);
+    lastError = String(error.message || error);
+    const col = missingColumnFromError(lastError);
     const isSchema =
-      /column|schema cache|PGRST204|does not exist/i.test(error.message) ||
+      /column|schema cache|PGRST204|does not exist/i.test(lastError) ||
       Boolean(col);
 
     if (!isSchema) {
@@ -138,16 +129,13 @@ async function updateLeadersWithFallback(
       if (Object.keys(slim).length === 0) {
         return { data: null, error: lastError, dropped };
       }
-      // Replace working with slim only once
       for (const k of Object.keys(working)) {
         if (!(k in slim)) {
           dropped.push(k);
           delete working[k];
         }
       }
-      // if nothing new dropped, stop
       if (Object.keys(working).length === Object.keys(slim).length && attempt > 0) {
-        // try slim update once more then exit
         const retry = await supabase
           .from("leaders")
           .update(slim)
@@ -163,7 +151,11 @@ async function updateLeadersWithFallback(
             dropped,
           };
         }
-        return { data: null, error: retry.error.message, dropped };
+        return {
+          data: null,
+          error: String(retry.error.message || retry.error),
+          dropped,
+        };
       }
     }
   }
@@ -345,7 +337,7 @@ export async function PATCH(request: NextRequest, context: Ctx) {
   }
 
   const { data, error, dropped } = await updateLeadersWithFallback(
-    auth.supabase as Parameters<typeof updateLeadersWithFallback>[0],
+    auth.supabase as LooseSupabase,
     id,
     patch,
   );
