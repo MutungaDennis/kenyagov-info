@@ -19,6 +19,7 @@ import {
   presidingRoleLabel,
 } from "@/lib/hansard/stats";
 import { resolveHansardRoleLabel } from "@/lib/hansard/roles";
+import ParliamentExplainer from "@/components/hansard/ParliamentExplainer";
 
 export const revalidate = 3600;
 
@@ -210,6 +211,52 @@ export default async function DailySittingPage({ params }: PageProps) {
         .join(" ")
     : null;
 
+  // Unique floor speakers (for citizen summary)
+  const uniqueSpeakerMap = new Map<
+    string,
+    { name: string; slug?: string; floorTurns: number }
+  >();
+  for (const c of ordered) {
+    if (c.type !== "spoken") continue;
+    if (
+      !countsTowardMemberStats({
+        type: c.type,
+        isChairContribution: c.isChairContribution,
+        speakerTitle: c.speakerTitle,
+        role: c.role,
+        speakerName: c.speakerName,
+        supabaseLeaderId: c.supabaseLeaderId,
+      })
+    ) {
+      continue;
+    }
+    const name = c.enrichedSpeaker?.full_name || c.speakerName || "Unknown";
+    const key = c.supabaseLeaderId || name;
+    const prev = uniqueSpeakerMap.get(key);
+    if (prev) prev.floorTurns += 1;
+    else
+      uniqueSpeakerMap.set(key, {
+        name,
+        slug: c.enrichedSpeaker?.slug,
+        floorTurns: 1,
+      });
+  }
+  const uniqueSpeakers = Array.from(uniqueSpeakerMap.values()).sort(
+    (a, b) => b.floorTurns - a.floorTurns,
+  );
+  const floorSpeechCount = ordered.filter(
+    (c) =>
+      c.type === "spoken" &&
+      countsTowardMemberStats({
+        type: c.type,
+        isChairContribution: c.isChairContribution,
+        speakerTitle: c.speakerTitle,
+        role: c.role,
+        speakerName: c.speakerName,
+        supabaseLeaderId: c.supabaseLeaderId,
+      }),
+  ).length;
+
   return (
     <>
       <GovUKBreadcrumbs items={crumbs} />
@@ -246,9 +293,21 @@ export default async function DailySittingPage({ params }: PageProps) {
               ) : null}
             </p>
           )}
+          <p className="govuk-body-s govuk-!-margin-bottom-2">
+            <strong>{uniqueSpeakers.length}</strong> member
+            {uniqueSpeakers.length === 1 ? "" : "s"} made{" "}
+            <strong>{floorSpeechCount}</strong> floor contribution
+            {floorSpeechCount === 1 ? "" : "s"} this day
+            {ordered.length > 0
+              ? ` · ${ordered.length} total items in the record (including procedural entries)`
+              : ""}
+            .
+          </p>
           <PrintPageButton />
         </div>
       </div>
+
+      <ParliamentExplainer variant="sitting" />
 
       {(sitting.youtubeUrl || sitting.officialHansardUrl) && (
         <ul className="govuk-list govuk-list--bullet">
@@ -301,6 +360,43 @@ export default async function DailySittingPage({ params }: PageProps) {
             </span>
           ))}
         </p>
+      )}
+
+      {uniqueSpeakers.length > 0 && (
+        <div className="govuk-!-margin-bottom-5">
+          <h2 className="govuk-heading-s">Who spoke on the floor</h2>
+          <p className="govuk-body-s">
+            Members with debate contributions (chairing turns not counted). Open
+            a name to see their full record and activity pulse.
+          </p>
+          <ul className="govuk-list govuk-list--bullet">
+            {uniqueSpeakers.slice(0, 20).map((s) => (
+              <li key={s.slug || s.name}>
+                {s.slug ? (
+                  <Link
+                    href={`/government/legislature/hansard/member/${s.slug}`}
+                    className="govuk-link"
+                  >
+                    {s.name}
+                  </Link>
+                ) : (
+                  <span>{s.name}</span>
+                )}
+                <span className="govuk-body-s" style={{ color: "#505a5f" }}>
+                  {" "}
+                  · {s.floorTurns} contribution
+                  {s.floorTurns === 1 ? "" : "s"}
+                </span>
+              </li>
+            ))}
+          </ul>
+          {uniqueSpeakers.length > 20 && (
+            <p className="govuk-body-s">
+              Showing top 20 by number of contributions. Full order is in the
+              record below.
+            </p>
+          )}
+        </div>
       )}
 
       {speakersInSitting.length > 3 && (

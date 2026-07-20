@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { createPublicClient } from '@/lib/supabase/public';
 import GovUKBreadcrumbs from '@/components/govuk/Breadcrumbs';
 import Pagination from '@/components/govuk/Pagination';
+import ParliamentExplainer from '@/components/hansard/ParliamentExplainer';
 
 interface PageProps {
   searchParams: Promise<{
@@ -109,9 +110,22 @@ export default async function FindMembersPage({ searchParams }: PageProps) {
 
       
         <h1 className="govuk-heading-l">Find Members of Parliament</h1>
-        <p className="govuk-body">
-          Search and filter Members of the National Assembly and Senate.
+        <p className="govuk-body-l">
+          Search MPs and Senators, then open their Hansard record — speaking
+          pulse while in office, floor contributions, and links to full sittings.
         </p>
+        <p className="govuk-body">
+          Not sure who represents you?{" "}
+          <Link href="/find-your-representatives" className="govuk-link">
+            Find your representatives
+          </Link>
+          {" · "}
+          <Link href="/government/legislature" className="govuk-link">
+            How Parliament works
+          </Link>
+        </p>
+
+        <ParliamentExplainer variant="members" />
 
         {/* Filters */}
         <form method="GET" className="govuk-!-margin-bottom-5">
@@ -219,10 +233,14 @@ export default async function FindMembersPage({ searchParams }: PageProps) {
                     <td className="govuk-table__cell govuk-table__cell--numeric">
                       <Link
                         href={`/government/legislature/hansard/member/${leader.slug}`}
-                        className="govuk-button govuk-button--secondary govuk-!-margin-bottom-0"
+                        className="govuk-link govuk-!-font-weight-bold"
                       >
-                        View contributions →
+                        View Hansard record
                       </Link>
+                      <span className="govuk-visually-hidden">
+                        {" "}
+                        for {leader.full_name}
+                      </span>
                     </td>
                   </tr>
                 ))}
@@ -241,7 +259,9 @@ export default async function FindMembersPage({ searchParams }: PageProps) {
         />
 
         <p className="govuk-body-s govuk-!-margin-top-6" style={{ color: '#505a5f' }}>
-          Showing Members of the National Assembly and Senate. Data sourced from official parliamentary records.
+          Directory of leaders we can link to Hansard contributions. Coverage
+          depends on sittings published and matched on CitizenGuide — not every
+          official intervention is online yet.
         </p>
       
     

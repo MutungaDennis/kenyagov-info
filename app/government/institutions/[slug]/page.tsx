@@ -38,14 +38,18 @@ type Institution = {
   social_media?: any;
   legal_basis_name?: string | null;
   parent_institution_id?: string | null;
+  supervising_ministry_id?: string | null;
+  reports_to_institution_id?: string | null;
   institution_leaders?: any[] | null;
   institution_locations?: any[] | null;
 };
 
-type ParentInstitution = {
+type LinkedInstitution = {
   id: string;
   slug: string;
   name: string;
+  short_name?: string | null;
+  institution_type?: string | null;
 };
 
 type ChildInstitution = {
@@ -53,6 +57,7 @@ type ChildInstitution = {
   slug: string;
   name: string;
   description?: string | null;
+  institution_type?: string | null;
 };
 
 export default function InstitutionProfilePage() {
@@ -60,8 +65,14 @@ export default function InstitutionProfilePage() {
   const slug = params.slug as string;
 
   const [institution, setInstitution] = useState<Institution | null>(null);
-  const [parentInstitution, setParentInstitution] = useState<ParentInstitution | null>(null);
-  const [childInstitutions, setChildInstitutions] = useState<ChildInstitution[]>([]);
+  /** Root-first chain of parents (ministry → … → direct parent) */
+  const [parentChain, setParentChain] = useState<LinkedInstitution[]>([]);
+  const [supervisingMinistry, setSupervisingMinistry] =
+    useState<LinkedInstitution | null>(null);
+  const [reportsTo, setReportsTo] = useState<LinkedInstitution | null>(null);
+  const [childInstitutions, setChildInstitutions] = useState<ChildInstitution[]>(
+    [],
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -71,45 +82,92 @@ export default function InstitutionProfilePage() {
 
       try {
         const supabase = await createBrowserClientAsync();
-        const { data: instData, error: instError } = await supabase
-          .from('institutions')
-          .select(`
+        let instData: Institution | null = null;
+        const withJoins = await supabase
+          .from("institutions")
+          .select(
+            `
             *,
             institution_leaders (*),
             institution_locations (*)
-          `)
-          .eq('slug', slug)
-          .eq('is_active', true)
+          `,
+          )
+          .eq("slug", slug)
+          .eq("is_active", true)
           .single();
 
-        if (instError) throw instError;
-        if (!instData) throw new Error('Institution not found');
-
-        setInstitution(instData);
-
-        // Fetch parent
-        if (instData.parent_institution_id) {
-          const { data: parentData } = await supabase
-            .from('institutions')
-            .select('id, slug, name')
-            .eq('id', instData.parent_institution_id)
+        if (withJoins.error) {
+          const basic = await supabase
+            .from("institutions")
+            .select("*")
+            .eq("slug", slug)
+            .eq("is_active", true)
             .single();
-          if (parentData) setParentInstitution(parentData);
+          if (basic.error || !basic.data) throw withJoins.error || basic.error;
+          instData = basic.data as Institution;
+        } else {
+          instData = withJoins.data as Institution;
         }
 
-        // Fetch children
+        if (!instData) throw new Error("Institution not found");
+        setInstitution(instData);
+
+        // Walk parent chain upward (max depth 8)
+        const chain: LinkedInstitution[] = [];
+        let parentId = instData.parent_institution_id;
+        const seen = new Set<string>([instData.id]);
+        for (let i = 0; i < 8 && parentId; i++) {
+          if (seen.has(parentId)) break;
+          seen.add(parentId);
+          const { data: parentData } = await supabase
+            .from("institutions")
+            .select("id, slug, name, short_name, institution_type, parent_institution_id")
+            .eq("id", parentId)
+            .maybeSingle();
+          if (!parentData) break;
+          chain.unshift(parentData as LinkedInstitution);
+          parentId = (parentData as { parent_institution_id?: string })
+            .parent_institution_id;
+        }
+        setParentChain(chain);
+
+        if (instData.supervising_ministry_id) {
+          const { data: sup } = await supabase
+            .from("institutions")
+            .select("id, slug, name, short_name, institution_type")
+            .eq("id", instData.supervising_ministry_id)
+            .maybeSingle();
+          if (sup) setSupervisingMinistry(sup as LinkedInstitution);
+        } else {
+          setSupervisingMinistry(null);
+        }
+
+        if (
+          instData.reports_to_institution_id &&
+          instData.reports_to_institution_id !==
+            instData.parent_institution_id
+        ) {
+          const { data: rep } = await supabase
+            .from("institutions")
+            .select("id, slug, name, short_name, institution_type")
+            .eq("id", instData.reports_to_institution_id)
+            .maybeSingle();
+          if (rep) setReportsTo(rep as LinkedInstitution);
+        } else {
+          setReportsTo(null);
+        }
+
         const { data: childrenData } = await supabase
-          .from('institutions')
-          .select('id, slug, name, description')
-          .eq('parent_institution_id', instData.id)
-          .eq('is_active', true)
-          .order('name');
+          .from("institutions")
+          .select("id, slug, name, description, institution_type")
+          .eq("parent_institution_id", instData.id)
+          .eq("is_active", true)
+          .order("name");
 
         if (childrenData) setChildInstitutions(childrenData);
-
-      } catch (err: any) {
-        console.error('Error fetching institution:', err);
-        setError('Failed to load institution profile.');
+      } catch (err: unknown) {
+        console.error("Error fetching institution:", err);
+        setError("Failed to load institution profile.");
       } finally {
         setIsLoading(false);
       }
@@ -151,6 +209,9 @@ export default function InstitutionProfilePage() {
   const currentLeaders = institution.institution_leaders?.filter((l: any) => l.is_current) || [];
   const headquarters = institution.institution_locations?.find((l: any) => l.is_headquarters);
   const otherLocations = institution.institution_locations?.filter((l: any) => !l.is_headquarters) || [];
+  const directParent = parentChain.length
+    ? parentChain[parentChain.length - 1]
+    : null;
 
   return (
   <>
@@ -159,7 +220,10 @@ export default function InstitutionProfilePage() {
         { text: "Home", href: "/" },
         { text: "Government", href: "/government" },
         { text: "Institutions", href: "/government/institutions" },
-        ...(parentInstitution ? [{ text: parentInstitution.name, href: `/government/institutions/${parentInstitution.slug}` }] : []),
+        ...parentChain.map((p) => ({
+          text: p.short_name || p.name,
+          href: `/government/institutions/${p.slug}`,
+        })),
         { text: institution.name },
       ]} />
 
@@ -172,6 +236,23 @@ export default function InstitutionProfilePage() {
 
             {institution.short_name && (
               <p className="govuk-body-l">Also known as: <strong>{institution.short_name}</strong></p>
+            )}
+
+            {parentChain.length > 0 && (
+              <p className="govuk-body">
+                <strong>Part of:</strong>{" "}
+                {parentChain.map((p, i) => (
+                  <span key={p.id}>
+                    {i > 0 && " → "}
+                    <Link
+                      href={`/government/institutions/${p.slug}`}
+                      className="govuk-link"
+                    >
+                      {p.name}
+                    </Link>
+                  </span>
+                ))}
+              </p>
             )}
 
             {/* Key Facts - Now includes COFOG and MTEF */}
@@ -206,17 +287,78 @@ export default function InstitutionProfilePage() {
                   <dd className="govuk-summary-list__value">{institution.legal_basis_name}</dd>
                 </div>
               )}
-              {parentInstitution && (
+              {directParent && (
                 <div className="govuk-summary-list__row">
-                  <dt className="govuk-summary-list__key">Parent Institution</dt>
+                  <dt className="govuk-summary-list__key">Parent institution</dt>
                   <dd className="govuk-summary-list__value">
-                    <Link href={`/government/institutions/${parentInstitution.slug}`} className="govuk-link">
-                      {parentInstitution.name}
+                    <Link href={`/government/institutions/${directParent.slug}`} className="govuk-link">
+                      {directParent.name}
+                    </Link>
+                  </dd>
+                </div>
+              )}
+              {supervisingMinistry && (
+                <div className="govuk-summary-list__row">
+                  <dt className="govuk-summary-list__key">Supervising ministry</dt>
+                  <dd className="govuk-summary-list__value">
+                    <Link
+                      href={`/government/institutions/${supervisingMinistry.slug}`}
+                      className="govuk-link"
+                    >
+                      {supervisingMinistry.name}
+                    </Link>
+                  </dd>
+                </div>
+              )}
+              {reportsTo && (
+                <div className="govuk-summary-list__row">
+                  <dt className="govuk-summary-list__key">Reports to</dt>
+                  <dd className="govuk-summary-list__value">
+                    <Link
+                      href={`/government/institutions/${reportsTo.slug}`}
+                      className="govuk-link"
+                    >
+                      {reportsTo.name}
                     </Link>
                   </dd>
                 </div>
               )}
             </dl>
+
+            {childInstitutions.length > 0 && (
+              <>
+                <h2 className="govuk-heading-m">
+                  Bodies under this institution
+                </h2>
+                <p className="govuk-body">
+                  Services and agencies that report to or form part of{" "}
+                  {institution.short_name || institution.name}.
+                </p>
+                <ul className="govuk-list govuk-list--bullet">
+                  {childInstitutions.map((child) => (
+                    <li key={child.id}>
+                      <Link
+                        href={`/government/institutions/${child.slug}`}
+                        className="govuk-link"
+                      >
+                        {child.name}
+                      </Link>
+                      {child.institution_type
+                        ? ` — ${child.institution_type}`
+                        : ""}
+                      {child.description ? (
+                        <span className="govuk-hint govuk-!-margin-bottom-0">
+                          {" "}
+                          {child.description.length > 120
+                            ? `${child.description.slice(0, 120)}…`
+                            : child.description}
+                        </span>
+                      ) : null}
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
 
             <hr className="govuk-section-break govuk-section-break--l govuk-section-break--visible" />
 
@@ -348,16 +490,66 @@ export default function InstitutionProfilePage() {
               <h2 className="govuk-heading-m govuk-!-margin-bottom-3">Related content</h2>
               <nav role="navigation">
                 <ul className="govuk-list govuk-list--spaced">
-                  {parentInstitution && (
+                  {directParent && (
                     <li>
-                      <Link href={`/government/institutions/${parentInstitution.slug}`} className="govuk-link">
-                        {parentInstitution.name}
+                      <Link
+                        href={`/government/institutions/${directParent.slug}`}
+                        className="govuk-link"
+                      >
+                        Parent: {directParent.name}
                       </Link>
                     </li>
                   )}
-                  <li><Link href="/government/institutions" className="govuk-link">All institutions</Link></li>
-                  <li><Link href="/government/ministers" className="govuk-link">Cabinet Secretaries</Link></li>
-                  <li><Link href="/government/people" className="govuk-link">All government officials</Link></li>
+                  {supervisingMinistry && (
+                    <li>
+                      <Link
+                        href={`/government/institutions/${supervisingMinistry.slug}`}
+                        className="govuk-link"
+                      >
+                        Supervising: {supervisingMinistry.name}
+                      </Link>
+                    </li>
+                  )}
+                  {parentChain
+                    .filter((p) => !directParent || p.id !== directParent.id)
+                    .map((p) => (
+                      <li key={p.id}>
+                        <Link
+                          href={`/government/institutions/${p.slug}`}
+                          className="govuk-link"
+                        >
+                          {p.name}
+                        </Link>
+                      </li>
+                    ))}
+                  {childInstitutions.slice(0, 8).map((c) => (
+                    <li key={c.id}>
+                      <Link
+                        href={`/government/institutions/${c.slug}`}
+                        className="govuk-link"
+                      >
+                        {c.name}
+                      </Link>
+                    </li>
+                  ))}
+                  <li>
+                    <Link
+                      href="/government/institutions"
+                      className="govuk-link"
+                    >
+                      All institutions
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/government/cabinet" className="govuk-link">
+                      The Cabinet
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/government/people" className="govuk-link">
+                      All government officials
+                    </Link>
+                  </li>
                 </ul>
               </nav>
 

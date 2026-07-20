@@ -49,7 +49,7 @@ export default function MinisterDetailPage() {
                       <>
                         {" at the "}
                         <Link 
-                          href={`/government/organisations/${assignment.departmentSlug}`}
+                          href={`/government/institutions/${assignment.departmentSlug}`}
                           className="govuk-link govuk-link--no-visited-state govuk-!-font-weight-bold"
                         >
                           {assignment.department}

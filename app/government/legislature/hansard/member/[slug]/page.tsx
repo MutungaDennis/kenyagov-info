@@ -10,6 +10,13 @@ import {
   portableTextToPlain,
 } from "@/lib/hansard/speech";
 import { countsTowardMemberStats } from "@/lib/hansard/stats";
+import {
+  buildMemberTenure,
+  resolvePulseYear,
+  yearWindowInTenure,
+  yearsWithActivity,
+} from "@/lib/hansard/tenure";
+import ParliamentExplainer from "@/components/hansard/ParliamentExplainer";
 
 export const revalidate = 3600;
 
@@ -56,6 +63,8 @@ interface PageProps {
     sort?: "newest" | "oldest";
     section?: string;
     month?: string;
+    /** Calendar year for the tenure-aware pulse */
+    pulseYear?: string;
   }>;
 }
 
@@ -96,11 +105,37 @@ export default async function MemberContributionsPage({
 
   const leader = leaderData as Leader;
 
-  const { data: historicalRoles } = await supabase
-    .from("leader_roles")
-    .select("title, party, constituency, term_start_date, term_end_date")
-    .eq("leader_id", leader.id)
-    .order("term_start_date", { ascending: false });
+  // Prefer rich role fields when present; ignore unknown columns via soft fallback
+  let historicalRoles: Array<{
+    title?: string | null;
+    party?: string | null;
+    constituency?: string | null;
+    term_start_date?: string | null;
+    term_end_date?: string | null;
+    entry_type?: string | null;
+    status?: string | null;
+  }> | null = null;
+
+  {
+    const rich = await supabase
+      .from("leader_roles")
+      .select(
+        "title, party, constituency, term_start_date, term_end_date, entry_type, status",
+      )
+      .eq("leader_id", leader.id)
+      .order("term_start_date", { ascending: false });
+
+    if (!rich.error) {
+      historicalRoles = rich.data;
+    } else {
+      const basic = await supabase
+        .from("leader_roles")
+        .select("title, party, constituency, term_start_date, term_end_date")
+        .eq("leader_id", leader.id)
+        .order("term_start_date", { ascending: false });
+      historicalRoles = basic.data;
+    }
+  }
 
   const rawSittings: Array<{
     sittingDate: string;
@@ -187,6 +222,50 @@ export default async function MemberContributionsPage({
     count,
   }));
 
+  const firstSpeech =
+    memberRecord.length > 0
+      ? [...memberRecord].sort((a, b) =>
+          a.sittingDate.localeCompare(b.sittingDate),
+        )[0].sittingDate
+      : null;
+  const lastSpeech =
+    memberRecord.length > 0
+      ? [...memberRecord].sort((a, b) =>
+          b.sittingDate.localeCompare(a.sittingDate),
+        )[0].sittingDate
+      : null;
+
+  const tenure = buildMemberTenure({
+    roles: historicalRoles,
+    activityFirst: firstSpeech,
+    activityLast: lastSpeech,
+  });
+
+  const activityYears = yearsWithActivity(heatmapDays, tenure.years);
+  const pulseYear = resolvePulseYear(
+    filters.pulseYear,
+    tenure.years.length ? tenure.years : activityYears,
+    activityYears,
+  );
+
+  const yearWin =
+    pulseYear && tenure.tenureStart && tenure.tenureEnd
+      ? yearWindowInTenure(pulseYear, tenure.tenureStart, tenure.tenureEnd)
+      : pulseYear && firstSpeech && lastSpeech
+        ? yearWindowInTenure(
+            pulseYear,
+            firstSpeech,
+            lastSpeech > new Date().toISOString().slice(0, 10)
+              ? new Date().toISOString().slice(0, 10)
+              : lastSpeech,
+          )
+        : null;
+
+  const tenureActiveDays = heatmapDays.filter((d) => {
+    if (!tenure.tenureStart || !tenure.tenureEnd) return true;
+    return d.date >= tenure.tenureStart && d.date <= tenure.tenureEnd;
+  }).length;
+
   let allContributions = [...memberRecord];
 
   const keyword = filters.keyword?.toLowerCase().trim();
@@ -227,18 +306,6 @@ export default async function MemberContributionsPage({
   const total = allContributions.length;
   const totalAll = memberRecord.length;
   const uniqueSittings = new Set(memberRecord.map((c) => c.sittingDate)).size;
-  const firstSpeech =
-    memberRecord.length > 0
-      ? [...memberRecord].sort((a, b) =>
-          a.sittingDate.localeCompare(b.sittingDate),
-        )[0].sittingDate
-      : null;
-  const lastSpeech =
-    memberRecord.length > 0
-      ? [...memberRecord].sort((a, b) =>
-          b.sittingDate.localeCompare(a.sittingDate),
-        )[0].sittingDate
-      : null;
 
   const houseMap = new Map<string, number>();
   memberRecord.forEach((c) => {
@@ -291,6 +358,26 @@ export default async function MemberContributionsPage({
       >
         Back to members
       </Link>
+
+      <p className="govuk-body-s govuk-!-margin-bottom-3">
+        <Link href="/find-your-representatives" className="govuk-link">
+          Find your representatives
+        </Link>
+        {" · "}
+        <Link
+          href="/government/legislature/hansard/national-assembly"
+          className="govuk-link"
+        >
+          National Assembly sittings
+        </Link>
+        {" · "}
+        <Link
+          href="/government/legislature/hansard/senate"
+          className="govuk-link"
+        >
+          Senate sittings
+        </Link>
+      </p>
 
       {/* Identity — compact */}
       <div
@@ -352,16 +439,24 @@ export default async function MemberContributionsPage({
               .join(" · ")}
           </p>
           {(leader.title || currentRole) && (
-            <p className="govuk-body-s govuk-!-margin-bottom-0">
+            <p className="govuk-body-s govuk-!-margin-bottom-1">
               {leader.title || currentRole?.title}
+            </p>
+          )}
+          {tenure.summaryLabel && tenure.summaryLabel !== "Office tenure not recorded" && (
+            <p className="govuk-body-s govuk-!-margin-bottom-0">
+              <strong>Office tenure (for pulse):</strong> {tenure.summaryLabel}
+              {tenure.stillServing ? " · still serving" : ""}
             </p>
           )}
         </div>
       </div>
 
+      <ParliamentExplainer variant="member" memberName={leader.full_name} />
+
       {/* Compact stats row */}
       <dl
-        className="govuk-!-margin-bottom-6"
+        className="govuk-!-margin-bottom-4"
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
@@ -370,10 +465,16 @@ export default async function MemberContributionsPage({
         }}
       >
         {[
-          { label: "Floor contributions", value: String(totalAll) },
-          { label: "Sittings spoken in", value: String(uniqueSittings) },
           {
-            label: "First recorded",
+            label: "Floor speeches (on this site)",
+            value: String(totalAll),
+          },
+          {
+            label: "Sitting days with a speech",
+            value: String(uniqueSittings),
+          },
+          {
+            label: "First speech here",
             value: firstSpeech
               ? new Date(firstSpeech + "T12:00:00").toLocaleDateString(
                   "en-KE",
@@ -382,7 +483,7 @@ export default async function MemberContributionsPage({
               : "—",
           },
           {
-            label: "Latest",
+            label: "Latest speech here",
             value: lastSpeech
               ? new Date(lastSpeech + "T12:00:00").toLocaleDateString(
                   "en-KE",
@@ -421,19 +522,70 @@ export default async function MemberContributionsPage({
             <strong>{chairOnlyCount}</strong> intervention
             {chairOnlyCount === 1 ? "" : "s"} as Speaker, Deputy Speaker, or
             Temporary Speaker (moderating the House) are{" "}
-            <strong>not included</strong> in floor totals, the activity chart, or
-            the list below. Those are chairing duties, not debate contributions.
+            <strong>not included</strong> in floor totals, the activity pulse, or
+            the list below. Chairing is important, but it is not the same as
+            speaking as a Member in debate — we keep them separate so
+            accountability stays fair.
           </p>
         </div>
       )}
 
-      {/* GitHub-style contribution pulse — floor activity only */}
-      {heatmapDays.length > 0 && (
+      {totalAll > 0 && (
+        <p className="govuk-body-s govuk-!-margin-bottom-4">
+          <strong>In plain language:</strong> On sittings we have published and
+          linked, this member made floor contributions on{" "}
+          <strong>{uniqueSittings}</strong> day
+          {uniqueSittings === 1 ? "" : "s"} (
+          <strong>{totalAll}</strong> speech
+          {totalAll === 1 ? "" : "es"}). Use the pulse below to see{" "}
+          <em>when</em>, and open a sitting to see <em>what</em> was said.
+        </p>
+      )}
+
+      {/* Tenure-aware contribution pulse — floor activity only */}
+      {yearWin && pulseYear && (
         <ContributionHeatmap
           days={heatmapDays}
           memberPath={memberPath}
           memberName={leader.full_name}
+          rangeStart={yearWin.rangeStart}
+          rangeEnd={yearWin.rangeEnd}
+          tenureSegments={tenure.segments.map((s) => ({
+            start: s.start,
+            end: s.end,
+          }))}
+          pulseYear={pulseYear}
+          yearOptions={
+            tenure.years.length
+              ? tenure.years
+              : activityYears.length
+                ? activityYears
+                : [pulseYear]
+          }
+          yearsWithActivity={activityYears}
+          queryPreserve={{
+            keyword: filters.keyword,
+            sort: filters.sort,
+          }}
+          tenureSummary={tenure.summaryLabel}
+          coverageNote={tenure.coverageNote}
+          entryHints={tenure.entryHints}
+          stillServing={tenure.stillServing}
+          tenureTotals={{
+            contributions: totalAll,
+            activeDays: tenureActiveDays,
+          }}
         />
+      )}
+
+      {!yearWin && heatmapDays.length === 0 && (
+        <div className="govuk-inset-text govuk-!-margin-bottom-6">
+          <p className="govuk-body-s govuk-!-margin-bottom-0">
+            No floor contributions linked yet. When sittings are published and
+            linked to this member, a tenure-aware activity pulse will appear
+            here.
+          </p>
+        </div>
       )}
 
       {houseBreakdown.length > 0 && (
@@ -522,13 +674,29 @@ export default async function MemberContributionsPage({
                   {historicalRoles!.map((role, idx) => (
                     <li key={idx}>
                       <strong>
-                        {new Date(role.term_start_date).getFullYear()} –{" "}
+                        {role.term_start_date
+                          ? new Date(
+                              role.term_start_date.slice(0, 10) + "T12:00:00",
+                            ).toLocaleDateString("en-KE", {
+                              month: "short",
+                              year: "numeric",
+                            })
+                          : "—"}{" "}
+                        –{" "}
                         {role.term_end_date
-                          ? new Date(role.term_end_date).getFullYear()
+                          ? new Date(
+                              role.term_end_date.slice(0, 10) + "T12:00:00",
+                            ).toLocaleDateString("en-KE", {
+                              month: "short",
+                              year: "numeric",
+                            })
                           : "Present"}
                       </strong>
                       : {role.title}
                       {role.constituency ? ` for ${role.constituency}` : ""}
+                      {role.entry_type
+                        ? ` (${String(role.entry_type).replace(/_/g, " ")})`
+                        : ""}
                     </li>
                   ))}
                 </ul>

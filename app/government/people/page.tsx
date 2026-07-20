@@ -1,39 +1,119 @@
-'use client';
+"use client";
 
 import Link from "next/link";
 import { useState, useEffect, useMemo, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import { createBrowserClientAsync } from "@/lib/supabase/client";
+import {
+  displayName,
+  displayNameWithTitles,
+  formatRoleHeadline,
+  formatTermRange,
+  resolvePrimaryRole,
+  type LeaderRoleLike,
+} from "@/lib/leaders/display";
 
-// Define the shape of the joined leader_roles data
-type LeaderRole = {
+type LeaderRole = LeaderRoleLike & {
   organization: string | null;
   status: string | null;
+  title?: string | null;
+  constituency?: string | null;
+  county?: string | null;
+  party?: string | null;
+  term_start_date?: string | null;
+  term_end_date?: string | null;
 };
 
 type Leader = {
   id: string;
   slug: string;
   first_name: string | null;
+  other_names: string | null;
   surname: string | null;
+  full_name: string | null;
+  title: string | null;
+  name_titles?: unknown;
+  national_honours?: unknown;
   category: string | null;
   bio: string | null;
   current_organization: string | null;
   current_constituency: string | null;
+  current_county: string | null;
+  current_party: string | null;
   leader_roles: LeaderRole[] | null;
 };
 
+/** Every organisation this person has been under (any role, any status). */
+function leaderOrganizations(leader: Leader): string[] {
+  const orgs = new Set<string>();
+  if (leader.current_organization?.trim()) {
+    orgs.add(leader.current_organization.trim());
+  }
+  for (const role of leader.leader_roles || []) {
+    if (role.organization?.trim()) orgs.add(role.organization.trim());
+  }
+  return Array.from(orgs);
+}
+
+function leaderPrimary(leader: Leader) {
+  const primary = resolvePrimaryRole(leader.leader_roles);
+  if (primary.role) {
+    return {
+      ...primary,
+      label: formatRoleHeadline(primary.role),
+      summaryBits: [
+        primary.role.title,
+        primary.role.organization,
+        primary.role.constituency,
+        primary.role.party,
+      ].filter(Boolean) as string[],
+    };
+  }
+  const snapshotTitle =
+    leader.title ||
+    (leader.current_organization
+      ? leader.current_organization
+      : leader.category) ||
+    null;
+  return {
+    role: snapshotTitle
+      ? {
+          title: leader.title,
+          organization: leader.current_organization,
+          constituency: leader.current_constituency,
+          county: leader.current_county,
+          party: leader.current_party,
+        }
+      : null,
+    isCurrent: Boolean(leader.title || leader.current_organization),
+    label: snapshotTitle || "Position not recorded",
+    summaryBits: [
+      leader.title,
+      leader.current_organization,
+      leader.current_constituency,
+      leader.current_party,
+    ].filter(Boolean) as string[],
+  };
+}
+
+function sortNameKey(l: Leader) {
+  const surname = (l.surname || "").trim().toLowerCase();
+  const first = (l.first_name || "").trim().toLowerCase();
+  const full = displayName(l).toLowerCase();
+  if (surname) return `${surname} ${first}`.trim();
+  return full;
+}
+
 export default function GovernmentPeoplePage() {
   return (
-    // Next.js requires a Suspense boundary when using useSearchParams()
-    <Suspense fallback={
-      
-        
+    <Suspense
+      fallback={
+        <div className="govuk-width-container">
           <p className="govuk-body">Loading directory...</p>
-        
-      
-    }>
+        </div>
+      }
+    >
       <PeopleDirectoryContent />
     </Suspense>
   );
@@ -43,35 +123,31 @@ function PeopleDirectoryContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  // --- Data States ---
   const [allLeaders, setAllLeaders] = useState<Leader[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // --- Filter & Search States ---
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("All");
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  /** default = as loaded; az / za = display name */
+  const [sortOrder, setSortOrder] = useState<"default" | "az" | "za">(
+    "default",
+  );
 
-  // --- Pagination States ---
   const itemsPerPage = 20;
-  const currentPage = Number(searchParams.get('page')) || 1;
+  const currentPage = Number(searchParams.get("page")) || 1;
 
-  // Helper to handle page changes and update the URL
   const handlePageChange = (page: number) => {
     const params = new URLSearchParams(searchParams.toString());
     if (page === 1) {
-      params.delete('page');
+      params.delete("page");
     } else {
-      params.set('page', page.toString());
+      params.set("page", page.toString());
     }
     router.push(`?${params.toString()}`);
-    // Scroll to top when changing pages
     window.scrollTo(0, 0);
   };
 
-  // 1. Fetch Data from Supabase (Joining leader_roles)
-  // createClient only inside useEffect so SSG/prerender never hits missing env
   useEffect(() => {
     let cancelled = false;
 
@@ -79,24 +155,72 @@ function PeopleDirectoryContent() {
       try {
         const supabase = await createBrowserClientAsync();
         const { data, error: fetchError } = await supabase
-          .from('leaders')
-          .select(`
-            id, slug, first_name, surname, category, bio, 
-            current_organization, current_constituency,
+          .from("leaders")
+          .select(
+            `
+            id, slug, first_name, other_names, surname, full_name, title,
+            name_titles, national_honours, category, bio, current_organization, current_constituency,
+            current_county, current_party,
             leader_roles!leader_roles_leader_id_fkey (
-              organization,
-              status
+              id, title, organization, constituency, county, party,
+              status, term_start_date, term_end_date
             )
-          `)
-          .eq('is_active', true)
-          .eq('status', 'Active')
-          .order('surname', { ascending: true });
+          `,
+          )
+          .eq("is_active", true)
+          .order("surname", { ascending: true });
 
-        if (fetchError) throw fetchError;
-        if (!cancelled) setAllLeaders(data || []);
-      } catch (err: any) {
-        console.error('Error fetching leaders:', err);
-        if (!cancelled) setError('Failed to load government officials.');
+        if (fetchError) {
+          // Fallback: simpler join; drop name_titles if column not migrated yet
+          const fallback = await supabase
+            .from("leaders")
+            .select(
+              `
+              id, slug, first_name, other_names, surname, full_name, title,
+              name_titles, national_honours, category, bio, current_organization, current_constituency,
+              current_county, current_party,
+              leader_roles (
+                id, title, organization, constituency, county, party,
+                status, term_start_date, term_end_date
+              )
+            `,
+            )
+            .order("surname", { ascending: true });
+          if (
+            fallback.error &&
+            /name_titles|national_honours|column|schema/i.test(
+              fallback.error.message || "",
+            )
+          ) {
+            const bare = await supabase
+              .from("leaders")
+              .select(
+                `
+                id, slug, first_name, other_names, surname, full_name, title,
+                category, bio, current_organization, current_constituency,
+                current_county, current_party,
+                leader_roles (
+                  id, title, organization, constituency, county, party,
+                  status, term_start_date, term_end_date
+                )
+              `,
+              )
+              .order("surname", { ascending: true });
+            if (bare.error) throw bare.error;
+            if (!cancelled) {
+              setAllLeaders((bare.data as unknown as Leader[]) || []);
+            }
+          } else if (fallback.error) {
+            throw fallback.error;
+          } else if (!cancelled) {
+            setAllLeaders((fallback.data as unknown as Leader[]) || []);
+          }
+        } else if (!cancelled) {
+          setAllLeaders((data as unknown as Leader[]) || []);
+        }
+      } catch (err: unknown) {
+        console.error("Error fetching leaders:", err);
+        if (!cancelled) setError("Failed to load government officials.");
       } finally {
         if (!cancelled) setIsLoading(false);
       }
@@ -108,85 +232,114 @@ function PeopleDirectoryContent() {
     };
   }, []);
 
-  // 2. Extract Unique Departments from ACTIVE leader_roles
   const departments = useMemo(() => {
     const depts = new Set<string>();
-    allLeaders.forEach(leader => {
-      if (leader.leader_roles) {
-        leader.leader_roles.forEach(role => {
-          // Only include organizations from active roles
-          if (role.status === 'Active' && role.organization) {
-            depts.add(role.organization);
-          }
-        });
-      }
+    allLeaders.forEach((leader) => {
+      leaderOrganizations(leader).forEach((o) => depts.add(o));
     });
-    return ['All', ...Array.from(depts).sort()];
+    return ["All", ...Array.from(depts).sort((a, b) => a.localeCompare(b))];
   }, [allLeaders]);
 
-  // 3. Apply Search, Department Filter, and Sorting
   const filteredAndSortedLeaders = useMemo(() => {
-    let result = [...allLeaders];
+    // Keep original index for stable "default" order
+    let result = allLeaders.map((l, index) => ({ leader: l, index }));
 
-    // Filter by Department (checking active roles in leader_roles table)
-    if (selectedDepartment !== 'All') {
-      result = result.filter(l => 
-        l.leader_roles?.some(role => role.status === 'Active' && role.organization === selectedDepartment)
-      );
+    if (selectedDepartment !== "All") {
+      const dept = selectedDepartment.toLowerCase();
+      result = result.filter(({ leader: l }) => {
+        if ((l.current_organization || "").toLowerCase() === dept) return true;
+        return (l.leader_roles || []).some(
+          (role) => (role.organization || "").toLowerCase() === dept,
+        );
+      });
     }
 
-    // Filter by Search Term
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase();
-      result = result.filter(l =>
-        (l.first_name || '').toLowerCase().includes(term) ||
-        (l.surname || '').toLowerCase().includes(term) ||
-        (l.current_organization || '').toLowerCase().includes(term) ||
-        (l.current_constituency || '').toLowerCase().includes(term) ||
-        (l.category || '').toLowerCase().includes(term)
-      );
+    if (searchTerm.trim()) {
+      const term = searchTerm.trim().toLowerCase();
+      result = result.filter(({ leader: l }) => {
+        const name = displayName(l).toLowerCase();
+        const withTitles = displayNameWithTitles(l).toLowerCase();
+        const primary = leaderPrimary(l);
+        const orgs = leaderOrganizations(l);
+        const roleTitles = (l.leader_roles || [])
+          .map((r) => r.title || "")
+          .filter(Boolean);
+        const roleConstituencies = (l.leader_roles || [])
+          .map((r) => r.constituency || "")
+          .filter(Boolean);
+        const roleCounties = (l.leader_roles || [])
+          .map((r) => r.county || "")
+          .filter(Boolean);
+        const roleParties = (l.leader_roles || [])
+          .map((r) => r.party || "")
+          .filter(Boolean);
+
+        return (
+          name.includes(term) ||
+          withTitles.includes(term) ||
+          (l.first_name || "").toLowerCase().includes(term) ||
+          (l.other_names || "").toLowerCase().includes(term) ||
+          (l.surname || "").toLowerCase().includes(term) ||
+          (l.full_name || "").toLowerCase().includes(term) ||
+          (l.current_organization || "").toLowerCase().includes(term) ||
+          (l.current_constituency || "").toLowerCase().includes(term) ||
+          (l.current_county || "").toLowerCase().includes(term) ||
+          (l.current_party || "").toLowerCase().includes(term) ||
+          (l.category || "").toLowerCase().includes(term) ||
+          (l.title || "").toLowerCase().includes(term) ||
+          (l.bio || "").toLowerCase().includes(term) ||
+          primary.label.toLowerCase().includes(term) ||
+          primary.summaryBits.some((b) => b.toLowerCase().includes(term)) ||
+          // All organisations (current + historical roles)
+          orgs.some((o) => o.toLowerCase().includes(term)) ||
+          roleTitles.some((t) => t.toLowerCase().includes(term)) ||
+          roleConstituencies.some((c) => c.toLowerCase().includes(term)) ||
+          roleCounties.some((c) => c.toLowerCase().includes(term)) ||
+          roleParties.some((p) => p.toLowerCase().includes(term))
+        );
+      });
     }
 
-    // Sort A-Z or Z-A by surname
     result.sort((a, b) => {
-      const nameA = (a.surname || '').toLowerCase();
-      const nameB = (b.surname || '').toLowerCase();
-      return sortOrder === 'asc' 
-        ? nameA.localeCompare(nameB) 
-        : nameB.localeCompare(nameA);
+      if (sortOrder === "default") {
+        // Stable: original fetch order (surname from API)
+        return a.index - b.index;
+      }
+      const nameA = sortNameKey(a.leader);
+      const nameB = sortNameKey(b.leader);
+      const cmp = nameA.localeCompare(nameB, "en", { sensitivity: "base" });
+      if (sortOrder === "az") return cmp;
+      return -cmp; // za
     });
 
-    return result;
+    return result.map((r) => r.leader);
   }, [allLeaders, selectedDepartment, searchTerm, sortOrder]);
 
-  // 4. Pagination Calculations
-  const totalPages = Math.max(1, Math.ceil(filteredAndSortedLeaders.length / itemsPerPage));
-  
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredAndSortedLeaders.length / itemsPerPage),
+  );
+
   const paginatedLeaders = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
     return filteredAndSortedLeaders.slice(startIndex, endIndex);
   }, [filteredAndSortedLeaders, currentPage]);
 
-  // Reset URL to Page 1 whenever filters or search change
   useEffect(() => {
     const params = new URLSearchParams(searchParams.toString());
-    if (params.has('page')) {
-      params.delete('page');
+    if (params.has("page")) {
+      params.delete("page");
       router.replace(`?${params.toString()}`);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm, selectedDepartment, sortOrder]);
 
-  // Helper to truncate bio (Increased to 280 chars for ~2.5 lines on desktop)
   const truncateBio = (bio: string | null) => {
     if (!bio) return null;
-    return bio.length > 280 ? bio.substring(0, 280).trim() + '...' : bio;
+    return bio.length > 220 ? bio.substring(0, 220).trim() + "…" : bio;
   };
 
-  // ==========================================
-  // INLINE GOV.UK PAGINATION COMPONENT
-  // ==========================================
   const renderPagination = () => {
     if (totalPages <= 1) return null;
 
@@ -204,16 +357,31 @@ function PeopleDirectoryContent() {
     }
 
     return (
-      <nav className="govuk-pagination" role="navigation" aria-label="Pagination">
+      <nav
+        className="govuk-pagination"
+        role="navigation"
+        aria-label="Pagination"
+      >
         {currentPage > 1 && (
           <div className="govuk-pagination__prev">
-            <a 
-              className="govuk-link govuk-pagination__link" 
-              href="#" 
-              onClick={(e) => { e.preventDefault(); handlePageChange(currentPage - 1); }}
+            <a
+              className="govuk-link govuk-pagination__link"
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                handlePageChange(currentPage - 1);
+              }}
               rel="prev"
             >
-              <svg className="govuk-pagination__icon govuk-pagination__icon--prev" xmlns="http://www.w3.org/2000/svg" height="13" width="15" aria-hidden="true" focusable="false" viewBox="0 0 15 13">
+              <svg
+                className="govuk-pagination__icon govuk-pagination__icon--prev"
+                xmlns="http://www.w3.org/2000/svg"
+                height="13"
+                width="15"
+                aria-hidden="true"
+                focusable="false"
+                viewBox="0 0 15 13"
+              >
                 <path d="m6.5938-0.0078125-6.7266 6.7266 6.7441 6.4062 1.377-1.449-4.1856-3.9768h12.896v-2h-12.984l4.2931-4.293-1.414-1.414z"></path>
               </svg>
               <span className="govuk-pagination__link-title">Previous</span>
@@ -225,20 +393,38 @@ function PeopleDirectoryContent() {
           {startPage > 1 && (
             <>
               <li className="govuk-pagination__item">
-                <a className="govuk-link govuk-pagination__link" href="#" onClick={(e) => { e.preventDefault(); handlePageChange(1); }} aria-label="Page 1">1</a>
+                <a
+                  className="govuk-link govuk-pagination__link"
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handlePageChange(1);
+                  }}
+                  aria-label="Page 1"
+                >
+                  1
+                </a>
               </li>
               {startPage > 2 && (
-                <li className="govuk-pagination__item govuk-pagination__item--ellipses">⋯</li>
+                <li className="govuk-pagination__item govuk-pagination__item--ellipses">
+                  ⋯
+                </li>
               )}
             </>
           )}
 
-          {pages.map(page => (
-            <li key={page} className={`govuk-pagination__item ${page === currentPage ? 'govuk-pagination__item--current' : ''}`}>
-              <a 
-                className="govuk-link govuk-pagination__link" 
-                href="#" 
-                onClick={(e) => { e.preventDefault(); handlePageChange(page); }}
+          {pages.map((page) => (
+            <li
+              key={page}
+              className={`govuk-pagination__item ${page === currentPage ? "govuk-pagination__item--current" : ""}`}
+            >
+              <a
+                className="govuk-link govuk-pagination__link"
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handlePageChange(page);
+                }}
                 aria-label={`Page ${page}`}
                 aria-current={page === currentPage ? "page" : undefined}
               >
@@ -250,10 +436,22 @@ function PeopleDirectoryContent() {
           {endPage < totalPages && (
             <>
               {endPage < totalPages - 1 && (
-                <li className="govuk-pagination__item govuk-pagination__item--ellipses">⋯</li>
+                <li className="govuk-pagination__item govuk-pagination__item--ellipses">
+                  ⋯
+                </li>
               )}
               <li className="govuk-pagination__item">
-                <a className="govuk-link govuk-pagination__link" href="#" onClick={(e) => { e.preventDefault(); handlePageChange(totalPages); }} aria-label={`Page ${totalPages}`}>{totalPages}</a>
+                <a
+                  className="govuk-link govuk-pagination__link"
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handlePageChange(totalPages);
+                  }}
+                  aria-label={`Page ${totalPages}`}
+                >
+                  {totalPages}
+                </a>
               </li>
             </>
           )}
@@ -261,14 +459,25 @@ function PeopleDirectoryContent() {
 
         {currentPage < totalPages && (
           <div className="govuk-pagination__next">
-            <a 
-              className="govuk-link govuk-pagination__link" 
-              href="#" 
-              onClick={(e) => { e.preventDefault(); handlePageChange(currentPage + 1); }}
+            <a
+              className="govuk-link govuk-pagination__link"
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                handlePageChange(currentPage + 1);
+              }}
               rel="next"
             >
               <span className="govuk-pagination__link-title">Next</span>
-              <svg className="govuk-pagination__icon govuk-pagination__icon--next" xmlns="http://www.w3.org/2000/svg" height="13" width="15" aria-hidden="true" focusable="false" viewBox="0 0 15 13">
+              <svg
+                className="govuk-pagination__icon govuk-pagination__icon--next"
+                xmlns="http://www.w3.org/2000/svg"
+                height="13"
+                width="15"
+                aria-hidden="true"
+                focusable="false"
+                viewBox="0 0 15 13"
+              >
                 <path d="m8.107-0.0078125-1.4136 1.414 4.2926 4.293h-12.986v2h12.896l-4.1855 3.9766 1.377 1.4492 6.7441-6.4062-6.7246-6.7266z"></path>
               </svg>
             </a>
@@ -279,8 +488,7 @@ function PeopleDirectoryContent() {
   };
 
   return (
-  <>
-    
+    <>
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
@@ -289,164 +497,219 @@ function PeopleDirectoryContent() {
         ]}
       />
 
-      
-        <div className="govuk-grid-row">
-          <div className="govuk-grid-column-full">
-            
-            <h1 className="govuk-heading-xl govuk-!-margin-bottom-4">
-              All government officials
-            </h1>
+      <div className="govuk-grid-row">
+        <div className="govuk-grid-column-full">
+          <h1 className="govuk-heading-xl govuk-!-margin-bottom-4">
+            All government officials
+          </h1>
 
-            <p className="govuk-body-l govuk-!-margin-bottom-8">
-              Find contact details and biographies of all current Cabinet Secretaries, Principal Secretaries, Members of Parliament, Senators, and other senior government officials.
-            </p>
+          <p className="govuk-body-l govuk-!-margin-bottom-4">
+            Find Kenya’s leaders by the office they hold now — or last held —
+            including Cabinet Secretaries, Principal Secretaries, Members of
+            Parliament, Senators, governors and other senior officials.
+          </p>
+          <p className="govuk-body govuk-!-margin-bottom-8">
+            Each profile summarises their current or most recent position first.
+            Open a name for full biography, career history (moves between
+            offices over time), and academic qualifications where available.
+          </p>
 
-            {/* ========================================== */}
-            {/* SEARCH AND FILTER CONTROLS                 */}
-            {/* ========================================== */}
-            <div className="govuk-grid-row govuk-!-margin-bottom-6">
-              <div className="govuk-grid-column-one-half">
-                <div className="govuk-form-group">
-                  <label className="govuk-label govuk-label--s" htmlFor="search-officials">
-                    Search officials
-                  </label>
-                  {/* Wrapped in relative div for the custom clear button */}
-                  <div className="relative">
-                    <input
-                      className="govuk-input govuk-!-padding-right-6"
-                      id="search-officials"
-                      name="search-officials"
-                      type="text" // Changed to 'text' to disable native hover-only X
-                      placeholder="Search by name, role, or constituency..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                    {/* Custom Always-Visible Clear Button */}
-                    {searchTerm && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSearchTerm("");
-                          document.getElementById("search-officials")?.focus();
-                        }}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer text-gray-500 hover:text-black text-xl leading-none"
-                        aria-label="Clear search"
-                      >
-                        ✕
-                      </button>
-                    )}
-                  </div>
+          <div className="govuk-grid-row govuk-!-margin-bottom-6">
+            <div className="govuk-grid-column-one-half">
+              <div className="govuk-form-group">
+                <label
+                  className="govuk-label govuk-label--s"
+                  htmlFor="search-officials"
+                >
+                  Search officials
+                </label>
+                <div className="govuk-hint">
+                  Name, organisation, position, constituency, or county
                 </div>
-              </div>
-
-              <div className="govuk-grid-column-one-quarter">
-                <div className="govuk-form-group">
-                  <label className="govuk-label govuk-label--s" htmlFor="filter-department">
-                    Department
-                  </label>
-                  <select
-                    className="govuk-select govuk-!-width-full"
-                    id="filter-department"
-                    value={selectedDepartment}
-                    onChange={(e) => setSelectedDepartment(e.target.value)}
-                  >
-                    {departments.map(dept => (
-                      <option key={dept} value={dept}>{dept}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="govuk-grid-column-one-quarter">
-                <div className="govuk-form-group">
-                  <label className="govuk-label govuk-label--s" htmlFor="sort-order">
-                    Sort by
-                  </label>
-                  <select
-                    className="govuk-select govuk-!-width-full"
-                    id="sort-order"
-                    value={sortOrder}
-                    onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
-                  >
-                    <option value="asc">A to Z</option>
-                    <option value="desc">Z to A</option>
-                  </select>
+                <div className="relative">
+                  <input
+                    className="govuk-input govuk-!-padding-right-6"
+                    id="search-officials"
+                    name="search-officials"
+                    type="search"
+                    placeholder="e.g. Ruto, Ministry of Health, Kisii…"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                  {searchTerm && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSearchTerm("");
+                        document.getElementById("search-officials")?.focus();
+                      }}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer text-gray-500 hover:text-black text-xl leading-none"
+                      aria-label="Clear search"
+                    >
+                      ✕
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
 
-            {/* ========================================== */}
-            {/* RESULTS COUNT & LIST                       */}
-            {/* ========================================== */}
-            {isLoading && <p className="govuk-body">Loading officials...</p>}
-            {error && <p className="govuk-error-message">{error}</p>}
+            <div className="govuk-grid-column-one-quarter">
+              <div className="govuk-form-group">
+                <label
+                  className="govuk-label govuk-label--s"
+                  htmlFor="filter-department"
+                >
+                  Organisation
+                </label>
+                <div className="govuk-hint">
+                  All organisations people serve or have served under
+                </div>
+                <select
+                  className="govuk-select govuk-!-width-full"
+                  id="filter-department"
+                  value={selectedDepartment}
+                  onChange={(e) => setSelectedDepartment(e.target.value)}
+                >
+                  {departments.map((dept) => (
+                    <option key={dept} value={dept}>
+                      {dept}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
 
-            {!isLoading && !error && (
-              <>
-                {/* Updated to say "people" instead of "results found" */}
-                <p className="govuk-body-s govuk-!-margin-bottom-4 govuk-!-font-weight-bold">
-                  {filteredAndSortedLeaders.length} {filteredAndSortedLeaders.length === 1 ? 'person' : 'people'}
-                  {selectedDepartment !== 'All' && ` in ${selectedDepartment}`}
-                  {searchTerm && ` for "${searchTerm}"`}
-                </p>
-
-                <ul className="govuk-list govuk-!-padding-left-0">
-                  {paginatedLeaders.map((leader) => {
-                    // STRICT NAME FORMATTING: Uses only first_name and surname to remove titles like "Hon."
-                    const displayName = `${leader.first_name || ''} ${leader.surname || ''}`.trim();
-                    
-                    const contextParts = [];
-                    if (leader.category) contextParts.push(leader.category);
-                    if (leader.current_organization) contextParts.push(leader.current_organization);
-                    if (leader.current_constituency) contextParts.push(leader.current_constituency);
-
-                    return (
-                      <li key={leader.id} className="govuk-!-margin-bottom-6 pb-6" style={{ borderBottom: "1px solid #b1b4b6" }}>
-                        <h3 className="govuk-heading-m govuk-!-margin-bottom-1">
-                          <Link 
-                            href={`/government/people/${leader.slug}`} 
-                            className="govuk-link govuk-link--no-visited-state"
-                          >
-                            {displayName}
-                          </Link>
-                        </h3>
-                        
-                        {contextParts.length > 0 && (
-                          <p className="govuk-body-s govuk-!-margin-bottom-2 govuk-!-font-weight-bold">
-                            {contextParts.join(' • ')}
-                          </p>
-                        )}
-
-                        {/* BIOGRAPHY SNIPPET (Now longer for desktop) */}
-                        {leader.bio && (
-                          <p className="govuk-body-s govuk-!-margin-bottom-2 govuk-text-secondary">
-                            {truncateBio(leader.bio)}
-                          </p>
-                        )}
-                      </li>
-                    );
-                  })}
-                </ul>
-
-                {/* Empty State */}
-                {paginatedLeaders.length === 0 && (
-                  <div className="govuk-inset-text">
-                    <p className="govuk-body">No officials found matching your criteria. Try adjusting your search or filters.</p>
-                  </div>
-                )}
-
-                {/* ========================================== */}
-                {/* PAGINATION                                 */}
-                {/* ========================================== */}
-                {renderPagination()}
-              </>
-            )}
-
+            <div className="govuk-grid-column-one-quarter">
+              <div className="govuk-form-group">
+                <label
+                  className="govuk-label govuk-label--s"
+                  htmlFor="sort-order"
+                >
+                  Sort by
+                </label>
+                <div className="govuk-hint">Name order</div>
+                <select
+                  className="govuk-select govuk-!-width-full"
+                  id="sort-order"
+                  value={sortOrder}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    if (v === "default" || v === "az" || v === "za") {
+                      setSortOrder(v);
+                    }
+                  }}
+                >
+                  <option value="default">Default</option>
+                  <option value="az">A to Z</option>
+                  <option value="za">Z to A</option>
+                </select>
+              </div>
+            </div>
           </div>
+
+          {isLoading && <p className="govuk-body">Loading officials...</p>}
+          {error && <p className="govuk-error-message">{error}</p>}
+
+          {!isLoading && !error && (
+            <>
+              <p className="govuk-body-s govuk-!-margin-bottom-4 govuk-!-font-weight-bold">
+                {filteredAndSortedLeaders.length}{" "}
+                {filteredAndSortedLeaders.length === 1 ? "person" : "people"}
+                {selectedDepartment !== "All" && ` in ${selectedDepartment}`}
+                {searchTerm && ` for "${searchTerm}"`}
+              </p>
+
+              <ul className="govuk-list govuk-!-padding-left-0">
+                {paginatedLeaders.map((leader) => {
+                  const name = displayNameWithTitles(leader);
+                  const primary = leaderPrimary(leader);
+                  const term =
+                    primary.role &&
+                    formatTermRange(
+                      primary.role.term_start_date,
+                      primary.role.term_end_date,
+                    );
+
+                  return (
+                    <li
+                      key={leader.id}
+                      className="govuk-!-margin-bottom-6 pb-6"
+                      style={{ borderBottom: "1px solid #b1b4b6" }}
+                    >
+                      <h2 className="govuk-heading-m govuk-!-margin-bottom-1">
+                        <Link
+                          href={`/government/people/${leader.slug}`}
+                          className="govuk-link govuk-link--no-visited-state"
+                        >
+                          {name}
+                        </Link>
+                      </h2>
+
+                      <p className="govuk-body govuk-!-margin-bottom-1 govuk-!-font-weight-bold">
+                        {primary.isCurrent ? (
+                          <>
+                            <span className="govuk-visually-hidden">
+                              Current position:{" "}
+                            </span>
+                            {primary.label}
+                          </>
+                        ) : (
+                          <>
+                            <span className="govuk-caption-m">
+                              Last held:{" "}
+                            </span>
+                            {primary.label}
+                          </>
+                        )}
+                      </p>
+
+                      {(term ||
+                        primary.role?.party ||
+                        leader.current_party) && (
+                        <p className="govuk-body-s govuk-!-margin-bottom-2">
+                          {[
+                            term,
+                            primary.role?.party || leader.current_party,
+                            primary.role?.county || leader.current_county,
+                          ]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </p>
+                      )}
+
+                      {leader.bio && (
+                        <p className="govuk-body-s govuk-!-margin-bottom-2 govuk-text-secondary">
+                          {truncateBio(leader.bio)}
+                        </p>
+                      )}
+
+                      <p className="govuk-body-s">
+                        <Link
+                          href={`/government/people/${leader.slug}`}
+                          className="govuk-link"
+                        >
+                          Full biography and career history
+                        </Link>
+                      </p>
+                    </li>
+                  );
+                })}
+              </ul>
+
+              {paginatedLeaders.length === 0 && (
+                <div className="govuk-inset-text">
+                  <p className="govuk-body">
+                    No officials found matching your criteria. Try adjusting
+                    your search or filters.
+                  </p>
+                </div>
+              )}
+
+              {renderPagination()}
+            </>
+          )}
         </div>
-      
-    
-  
-  </>
-);
+      </div>
+    </>
+  );
 }

@@ -6,20 +6,48 @@ export type DayCount = {
   count: number;
 };
 
+export type TenureSegmentView = {
+  start: string;
+  end: string;
+};
+
 type Props = {
-  /** Daily contribution counts (unfiltered speaking record) */
+  /** Daily contribution counts (floor speaking record) */
   days: DayCount[];
-  /** Base path for day filter links, e.g. /government/legislature/hansard/member/slug */
+  /** Base path for day filter links */
   memberPath: string;
-  /** Optional caption for screen readers */
   memberName?: string;
+  /**
+   * Inclusive window for the pulse grid (typically a calendar year ∩ tenure).
+   * YYYY-MM-DD
+   */
+  rangeStart: string;
+  rangeEnd: string;
+  /** When set, days outside tenure are not painted as “in office empty” */
+  tenureSegments?: TenureSegmentView[];
+  /** Year shown (for captions / tabs) */
+  pulseYear: number;
+  /** All tenure years for navigation tabs */
+  yearOptions: number[];
+  /** Years that have at least one contribution (for tab hints) */
+  yearsWithActivity?: number[];
+  /** Preserve other filters when switching year */
+  queryPreserve?: Record<string, string | undefined>;
+  tenureSummary?: string;
+  coverageNote?: string | null;
+  entryHints?: string[];
+  stillServing?: boolean;
+  /** Totals across full tenure (not just this year) */
+  tenureTotals?: {
+    contributions: number;
+    activeDays: number;
+  };
 };
 
 const CELL = 11;
 const GAP = 3;
 const WEEK_W = CELL + GAP;
 
-/** GitHub-like intensity greens */
 function cellColor(count: number, max: number): string {
   if (count <= 0) return "#ebedf0";
   if (max <= 1) return "#40c463";
@@ -48,52 +76,83 @@ function startOfWeekSunday(d: Date): Date {
   return x;
 }
 
+function inSegments(
+  ymd: string,
+  segments?: TenureSegmentView[],
+): boolean {
+  if (!segments?.length) return true;
+  return segments.some((s) => ymd >= s.start && ymd <= s.end);
+}
+
 /**
- * GitHub contribution graph / “pulse” calendar:
- * 53 weeks × 7 days, intensity by speaking volume that day.
+ * GitHub-style contribution pulse for a tenure-aware date window
+ * (usually one calendar year within office tenure).
  */
 export default function ContributionHeatmap({
   days,
   memberPath,
   memberName,
+  rangeStart,
+  rangeEnd,
+  tenureSegments,
+  pulseYear,
+  yearOptions,
+  yearsWithActivity = [],
+  queryPreserve = {},
+  tenureSummary,
+  coverageNote,
+  entryHints = [],
+  stillServing,
+  tenureTotals,
 }: Props) {
   const countByDate = new Map(days.map((d) => [d.date, d.count]));
   const maxCount = Math.max(0, ...days.map((d) => d.count), 1);
 
-  // Window: last ~52 weeks ending today (or last activity if earlier data only)
-  const today = new Date();
-  today.setHours(12, 0, 0, 0);
-  const end = startOfWeekSunday(today);
-  end.setDate(end.getDate() + 6); // end of this week (Saturday)
+  const windowStart = parseYmd(rangeStart);
+  const windowEnd = parseYmd(rangeEnd);
+  const gridStart = startOfWeekSunday(windowStart);
+  const gridEnd = startOfWeekSunday(windowEnd);
+  gridEnd.setDate(gridEnd.getDate() + 6);
 
-  const start = new Date(end);
-  start.setDate(start.getDate() - 7 * 52 + 1); // ~365 days
-  // Align start to Sunday
-  const gridStart = startOfWeekSunday(start);
+  const weeks: Array<
+    Array<{
+      date: string;
+      count: number;
+      /** In selected year window and in office */
+      active: boolean;
+      /** In office but outside this year window (padding cells) */
+      outOfWindow: boolean;
+    }>
+  > = [];
 
-  const weeks: Array<Array<{ date: string; count: number; inRange: boolean }>> =
-    [];
   const cursor = new Date(gridStart);
-  while (cursor <= end) {
-    const week: Array<{ date: string; count: number; inRange: boolean }> = [];
+  while (cursor <= gridEnd) {
+    const week: Array<{
+      date: string;
+      count: number;
+      active: boolean;
+      outOfWindow: boolean;
+    }> = [];
     for (let i = 0; i < 7; i++) {
       const ymd = formatYmd(cursor);
-      const inRange = cursor >= start && cursor <= today;
+      const inWindow = ymd >= rangeStart && ymd <= rangeEnd;
+      const inOffice = inSegments(ymd, tenureSegments);
+      const active = inWindow && inOffice;
       week.push({
         date: ymd,
-        count: inRange ? countByDate.get(ymd) || 0 : 0,
-        inRange,
+        count: active ? countByDate.get(ymd) || 0 : 0,
+        active,
+        outOfWindow: !inWindow || !inOffice,
       });
       cursor.setDate(cursor.getDate() + 1);
     }
     weeks.push(week);
   }
 
-  // Month labels: first week where month changes
   const monthLabels: Array<{ weekIndex: number; label: string }> = [];
   let lastMonth = -1;
   weeks.forEach((week, wi) => {
-    const mid = week[3] || week[0];
+    const mid = week.find((d) => d.active) || week[3] || week[0];
     if (!mid) return;
     const m = parseYmd(mid.date).getMonth();
     if (m !== lastMonth) {
@@ -109,24 +168,53 @@ export default function ContributionHeatmap({
 
   const totalInWindow = weeks
     .flat()
-    .filter((d) => d.inRange)
+    .filter((d) => d.active)
     .reduce((s, d) => s + d.count, 0);
 
   const activeDays = weeks
     .flat()
-    .filter((d) => d.inRange && d.count > 0).length;
+    .filter((d) => d.active && d.count > 0).length;
 
   const dayFilterHref = (ymd: string) => {
     const params = new URLSearchParams();
     params.set("dateFrom", ymd);
     params.set("dateTo", ymd);
+    if (pulseYear) params.set("pulseYear", String(pulseYear));
     return `${memberPath}?${params.toString()}`;
   };
 
   const monthFilterHref = (ymd: string) => {
     const month = ymd.slice(0, 7);
-    return `${memberPath}?month=${month}`;
+    const params = new URLSearchParams();
+    params.set("month", month);
+    params.set("pulseYear", String(pulseYear));
+    return `${memberPath}?${params.toString()}`;
   };
+
+  const yearHref = (year: number) => {
+    const params = new URLSearchParams();
+    params.set("pulseYear", String(year));
+    Object.entries(queryPreserve).forEach(([k, v]) => {
+      if (v && k !== "pulseYear" && k !== "dateFrom" && k !== "dateTo" && k !== "month") {
+        params.set(k, v);
+      }
+    });
+    const q = params.toString();
+    return q ? `${memberPath}?${q}` : memberPath;
+  };
+
+  const activityYearSet = new Set(yearsWithActivity);
+
+  // Monthly totals only within this year window
+  const monthlyInWindow = Array.from(
+    days
+      .filter((d) => d.date >= rangeStart && d.date <= rangeEnd)
+      .reduce((map, d) => {
+        const m = d.date.slice(0, 7);
+        map.set(m, (map.get(m) || 0) + d.count);
+        return map;
+      }, new Map<string, number>()),
+  ).sort(([a], [b]) => b.localeCompare(a));
 
   return (
     <section
@@ -134,20 +222,111 @@ export default function ContributionHeatmap({
       aria-labelledby="heatmap-heading"
     >
       <h2 id="heatmap-heading" className="govuk-heading-m">
-        Speaking activity
+        Speaking activity (pulse)
       </h2>
+
+      {tenureSummary && (
+        <p className="govuk-body govuk-!-margin-bottom-2">
+          <strong>In office:</strong> {tenureSummary}
+          {stillServing ? " (still serving)" : ""}
+          {memberName ? ` · ${memberName}` : ""}
+        </p>
+      )}
+
+      {entryHints.length > 0 && (
+        <ul className="govuk-list govuk-list--bullet govuk-!-margin-bottom-2">
+          {entryHints.map((h) => (
+            <li key={h} className="govuk-body-s">
+              {h}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {coverageNote && (
+        <div className="govuk-inset-text govuk-!-margin-bottom-3">
+          <p className="govuk-body-s govuk-!-margin-bottom-0">{coverageNote}</p>
+        </div>
+      )}
+
       <p className="govuk-body-s">
-        Pulse over the past year — denser squares mean more floor contributions
-        that day (GitHub-style activity). Chair interventions are excluded so
-        Temporary / Deputy Speakers are not overstated. Hover a day for the
-        count; select it to filter the list.
+        Pulse for <strong>{pulseYear}</strong> while in office — denser squares
+        mean more floor contributions that day. Days outside this office tenure
+        are blank. Chair / Temporary Speaker turns are excluded. Blank days in
+        office may mean no floor speech, a sitting not yet published, or no
+        sitting.
       </p>
+
+      {tenureTotals && (
+        <p className="govuk-body-s govuk-!-margin-bottom-2">
+          <strong>Full tenure (on this site):</strong>{" "}
+          {tenureTotals.contributions.toLocaleString()} floor contribution
+          {tenureTotals.contributions === 1 ? "" : "s"} on{" "}
+          {tenureTotals.activeDays.toLocaleString()} sitting day
+          {tenureTotals.activeDays === 1 ? "" : "s"}.
+        </p>
+      )}
+
+      {/* Year tabs */}
+      {yearOptions.length > 1 && (
+        <nav
+          className="govuk-!-margin-bottom-3"
+          aria-label="Pulse year"
+        >
+          <p className="govuk-body-s govuk-!-margin-bottom-1">
+            <strong>Year in office</strong>
+          </p>
+          <ul
+            className="govuk-list"
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 8,
+              listStyle: "none",
+              padding: 0,
+              margin: 0,
+            }}
+          >
+            {yearOptions.map((y) => {
+              const isCurrent = y === pulseYear;
+              const hasAct = activityYearSet.has(y);
+              return (
+                <li key={y}>
+                  {isCurrent ? (
+                    <span
+                      className="govuk-tag"
+                      style={{ background: "#047857", color: "#fff" }}
+                    >
+                      {y}
+                      {hasAct ? "" : " · no speeches"}
+                    </span>
+                  ) : (
+                    <Link
+                      href={yearHref(y)}
+                      className="govuk-link"
+                      style={{
+                        display: "inline-block",
+                        padding: "4px 10px",
+                        border: "1px solid #b1b4b6",
+                        textDecoration: "none",
+                        fontWeight: hasAct ? 700 : 400,
+                      }}
+                    >
+                      {y}
+                      {!hasAct ? " · —" : ""}
+                    </Link>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+      )}
 
       <p className="govuk-body-s govuk-!-margin-bottom-3">
         <strong>{totalInWindow}</strong> contribution
-        {totalInWindow === 1 ? "" : "s"} across{" "}
-        <strong>{activeDays}</strong> sitting day
-        {activeDays === 1 ? "" : "s"} in this window
+        {totalInWindow === 1 ? "" : "s"} across <strong>{activeDays}</strong>{" "}
+        sitting day{activeDays === 1 ? "" : "s"} in {pulseYear}
         {memberName ? ` for ${memberName}` : ""}.
       </p>
 
@@ -159,7 +338,6 @@ export default function ContributionHeatmap({
           background: "#fff",
         }}
       >
-        {/* Month labels */}
         <div
           style={{
             position: "relative",
@@ -187,7 +365,6 @@ export default function ContributionHeatmap({
         </div>
 
         <div style={{ display: "flex", gap: 0 }}>
-          {/* Day-of-week labels */}
           <div
             aria-hidden
             style={{
@@ -195,7 +372,6 @@ export default function ContributionHeatmap({
               flexDirection: "column",
               gap: GAP,
               marginRight: 6,
-              paddingTop: 0,
               width: 22,
             }}
           >
@@ -215,10 +391,9 @@ export default function ContributionHeatmap({
             ))}
           </div>
 
-          {/* Grid */}
           <div
             role="img"
-            aria-label={`Contribution activity calendar for the past year. ${totalInWindow} contributions on ${activeDays} days. Darker green means more activity.`}
+            aria-label={`Contribution activity for ${pulseYear}. ${totalInWindow} contributions on ${activeDays} days while in office. Darker green means more activity.`}
             style={{ display: "flex", gap: GAP }}
           >
             {weeks.map((week, wi) => (
@@ -231,7 +406,7 @@ export default function ContributionHeatmap({
                 }}
               >
                 {week.map((day) => {
-                  if (!day.inRange) {
+                  if (day.outOfWindow) {
                     return (
                       <div
                         key={day.date}
@@ -292,7 +467,6 @@ export default function ContributionHeatmap({
           </div>
         </div>
 
-        {/* Legend */}
         <div
           style={{
             display: "flex",
@@ -331,12 +505,11 @@ export default function ContributionHeatmap({
         </div>
       </div>
 
-      {/* Compact monthly summary for keyboard / AT users (not the old long a11y disclaimer) */}
-      {days.length > 0 && (
+      {monthlyInWindow.length > 0 && (
         <details className="govuk-details govuk-!-margin-top-3">
           <summary className="govuk-details__summary">
             <span className="govuk-details__summary-text">
-              Monthly totals (table)
+              Monthly totals for {pulseYear} (table)
             </span>
           </summary>
           <div className="govuk-details__text">
@@ -355,32 +528,24 @@ export default function ContributionHeatmap({
                 </tr>
               </thead>
               <tbody className="govuk-table__body">
-                {Array.from(
-                  days.reduce((map, d) => {
-                    const m = d.date.slice(0, 7);
-                    map.set(m, (map.get(m) || 0) + d.count);
-                    return map;
-                  }, new Map<string, number>()),
-                )
-                  .sort(([a], [b]) => b.localeCompare(a))
-                  .map(([month, count]) => (
-                    <tr key={month} className="govuk-table__row">
-                      <td className="govuk-table__cell">
-                        <Link
-                          href={monthFilterHref(`${month}-01`)}
-                          className="govuk-link"
-                        >
-                          {new Date(month + "-01").toLocaleDateString("en-KE", {
-                            month: "long",
-                            year: "numeric",
-                          })}
-                        </Link>
-                      </td>
-                      <td className="govuk-table__cell govuk-table__cell--numeric">
-                        {count}
-                      </td>
-                    </tr>
-                  ))}
+                {monthlyInWindow.map(([month, count]) => (
+                  <tr key={month} className="govuk-table__row">
+                    <td className="govuk-table__cell">
+                      <Link
+                        href={monthFilterHref(`${month}-01`)}
+                        className="govuk-link"
+                      >
+                        {new Date(month + "-15T12:00:00").toLocaleDateString(
+                          "en-KE",
+                          { month: "long", year: "numeric" },
+                        )}
+                      </Link>
+                    </td>
+                    <td className="govuk-table__cell govuk-table__cell--numeric">
+                      {count}
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>

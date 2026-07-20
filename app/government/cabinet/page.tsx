@@ -93,7 +93,7 @@ export default function CabinetPage() {
                       {csAssignment.roleTitle},{" "}
                       {csAssignment.department && csAssignment.departmentSlug ? (
                         <Link 
-                          href={`/government/organisations/${csAssignment.departmentSlug}`} 
+                          href={`/government/institutions/${csAssignment.departmentSlug}`} 
                           className="govuk-link govuk-!-font-weight-bold govuk-link--no-visited-state"
                         >
                           {csAssignment.department}
@@ -135,7 +135,7 @@ export default function CabinetPage() {
                         <>
                           {", "}
                           <Link 
-                            href={`/government/organisations/${baseAssignment.departmentSlug}`} 
+                            href={`/government/institutions/${baseAssignment.departmentSlug}`} 
                             className="govuk-link govuk-!-font-weight-bold govuk-link--no-visited-state"
                           >
                             {baseAssignment.department}

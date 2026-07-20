@@ -1,294 +1,187 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { adminPath } from "@/lib/admin-path";
-import { createBrowserClientAsync } from '@/lib/supabase/client';
-import GovUKBackLink from '@/components/govuk/BackLink';
-import GovUKBreadcrumbs from '@/components/govuk/Breadcrumbs';
-import GovUKFeedback from '@/components/govuk/Feedback';
-import Link from 'next/link';
+import { createBrowserClientAsync } from "@/lib/supabase/client";
+import GovUKBackLink from "@/components/govuk/BackLink";
+import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
+import InstitutionForm, {
+  emptyInstitutionForm,
+  type InstitutionFormState,
+} from "@/components/admin/InstitutionForm";
+
+function uniqueStrings(values: (string | null | undefined)[] | undefined) {
+  return [
+    ...new Set(
+      (values ?? []).filter(
+        (v): v is string => typeof v === "string" && v.trim().length > 0,
+      ),
+    ),
+  ].sort();
+}
 
 export default function NewInstitutionPage() {
   const router = useRouter();
-
-  const [loading, setLoading] = useState(false);
+  const [form, setForm] = useState<InstitutionFormState>(emptyInstitutionForm());
   const [submitting, setSubmitting] = useState(false);
-
-  // Dynamic dropdown options
+  const [error, setError] = useState<string | null>(null);
   const [institutionTypes, setInstitutionTypes] = useState<string[]>([]);
-  const [governmentLevels, setGovernmentLevels] = useState<string[]>([]);
   const [mtefSectors, setMtefSectors] = useState<string[]>([]);
 
-  const [formData, setFormData] = useState({
-    name: '',
-    short_name: '',
-    official_name: '',
-    slug: '',
-    institution_type: '',
-    institution_category: '',
-    institution_subtype: '',
-    government_level: 'National',
-    arm_of_government: 'Executive',
-    constitutional_status: 'Statutory',
-    mtef_sector: '',
-    description: '',
-    mandate: '',
-    headquarters: '',
-    physical_address: '',
-    website_url: '',
-    email: '',
-    phone: '',
-    current_head_name: '',
-    current_head_title: '',
-    has_board: false,
-    board_type: '',
-    is_active: true,
-  });
-
-  // Fetch unique values for dropdowns
   useEffect(() => {
-    const fetchOptions = async () => {
-      const supabase = await createBrowserClientAsync();
-      // Institution Types
-      const { data: typesData } = await supabase
-        .from('institutions')
-        .select('institution_type')
-        .not('institution_type', 'is', null)
-        .order('institution_type');
-
-      const unique = (values: (string | null | undefined)[] | undefined) =>
-        [...new Set((values ?? []).filter((v): v is string => typeof v === 'string' && v.length > 0))];
-
-      setInstitutionTypes(
-        unique(typesData?.map((item: { institution_type: string | null }) => item.institution_type)),
-      );
-
-      // Government Levels
-      const { data: levelsData } = await supabase
-        .from('institutions')
-        .select('government_level')
-        .not('government_level', 'is', null);
-
-      setGovernmentLevels(
-        unique(levelsData?.map((item: { government_level: string | null }) => item.government_level)),
-      );
-
-      // MTEF Sectors
-      const { data: sectorsData } = await supabase
-        .from('institutions')
-        .select('mtef_sector')
-        .not('mtef_sector', 'is', null);
-
-      setMtefSectors(
-        unique(sectorsData?.map((item: { mtef_sector: string | null }) => item.mtef_sector)),
-      );
-    };
-
-    fetchOptions();
+    (async () => {
+      try {
+        const sb = await createBrowserClientAsync();
+        const [types, sectors] = await Promise.all([
+          sb
+            .from("institutions")
+            .select("institution_type")
+            .not("institution_type", "is", null),
+          sb
+            .from("institutions")
+            .select("mtef_sector")
+            .not("mtef_sector", "is", null),
+        ]);
+        setInstitutionTypes(
+          uniqueStrings(
+            types.data?.map(
+              (r: { institution_type: string | null }) => r.institution_type,
+            ),
+          ),
+        );
+        setMtefSectors(
+          uniqueStrings(
+            sectors.data?.map(
+              (r: { mtef_sector: string | null }) => r.mtef_sector,
+            ),
+          ),
+        );
+      } catch {
+        /* ignore */
+      }
+    })();
   }, []);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const onChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
+  ) => {
     const { name, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
-
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
-
-    // Auto-generate slug from name
-    if (name === 'name') {
-      const generatedSlug = value
-        .toLowerCase()
-        .trim()
-        .replace(/[^a-z0-9\s-]/g, '')
-        .replace(/\s+/g, '-')
-        .replace(/-+/g, '-');
-      setFormData(prev => ({ ...prev, slug: generatedSlug }));
-    }
+    setForm((prev) => {
+      const next = {
+        ...prev,
+        [name]: type === "checkbox" ? checked : value,
+      } as InstitutionFormState;
+      if (name === "name" && !prev.slug) {
+        next.slug = value
+          .toLowerCase()
+          .trim()
+          .replace(/[^a-z0-9\s-]/g, "")
+          .replace(/\s+/g, "-")
+          .replace(/-+/g, "-");
+      }
+      return next;
+    });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const onHierarchyChange = (
+    field:
+      | "parent_institution"
+      | "supervising_ministry"
+      | "reports_to_institution",
+    pick: { id: string; label: string },
+  ) => {
+    setForm((prev) => {
+      if (field === "parent_institution") {
+        return {
+          ...prev,
+          parent_institution_id: pick.id,
+          parent_institution_label: pick.label,
+        };
+      }
+      if (field === "supervising_ministry") {
+        return {
+          ...prev,
+          supervising_ministry_id: pick.id,
+          supervising_ministry_label: pick.label,
+        };
+      }
+      return {
+        ...prev,
+        reports_to_institution_id: pick.id,
+        reports_to_institution_label: pick.label,
+      };
+    });
+  };
+
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-
-    const supabase = await createBrowserClientAsync();
-    const { error } = await supabase
-      .from('institutions')
-      .insert([formData]);
-
-    if (error) {
-      alert('Error creating institution: ' + error.message);
-    } else {
-      alert('Institution created successfully!');
-      router.push(adminPath('institutions'));
+    setError(null);
+    try {
+      const res = await fetch("/api/admin/institutions", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        throw new Error(
+          [json.error, json.hint].filter(Boolean).join(" — ") ||
+            "Create failed",
+        );
+      }
+      if (json.data?.id) {
+        router.push(adminPath(`institutions/${json.data.id}/edit`));
+      } else {
+        router.push(adminPath("institutions"));
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unknown error");
+    } finally {
+      setSubmitting(false);
     }
-
-    setSubmitting(false);
   };
 
   return (
     <div className="govuk-width-container">
-      <GovUKBackLink href={adminPath()} />
-
+      <GovUKBackLink href={adminPath("institutions")} />
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
           { text: "Admin", href: adminPath() },
-          { text: "Institutions", href: adminPath('institutions') },
-          { text: "New Institution", href: "#" },
+          { text: "Institutions", href: adminPath("institutions") },
+          { text: "New", href: "#" },
         ]}
       />
-
       <main className="govuk-main-wrapper">
-        <h1 className="govuk-heading-xl">Add New Government Institution</h1>
-        <p className="govuk-body">Fill in the details below. All fields marked with * are required.</p>
-
-        <form onSubmit={handleSubmit} className="govuk-!-margin-top-9">
-          <div className="govuk-grid-row">
-            <div className="govuk-grid-column-two-thirds">
-
-              {/* Basic Information */}
-              <div className="govuk-form-group">
-                <label className="govuk-label govuk-label--s" htmlFor="name">
-                  Institution Name <span className="govuk-required">*</span>
-                </label>
-                <input
-                  className="govuk-input"
-                  id="name"
-                  name="name"
-                  type="text"
-                  value={formData.name}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-
-              <div className="govuk-form-group">
-                <label className="govuk-label" htmlFor="short_name">Short Name / Acronym</label>
-                <input className="govuk-input" id="short_name" name="short_name" type="text" value={formData.short_name} onChange={handleChange} />
-              </div>
-
-              <div className="govuk-form-group">
-                <label className="govuk-label" htmlFor="slug">Slug (URL-friendly) <span className="govuk-required">*</span></label>
-                <input className="govuk-input" id="slug" name="slug" type="text" value={formData.slug} onChange={handleChange} required />
-              </div>
-
-              {/* Dynamic Dropdowns */}
-              <div className="govuk-grid-row">
-                <div className="govuk-grid-column-one-half">
-                  <div className="govuk-form-group">
-                    <label className="govuk-label" htmlFor="institution_type">Institution Type <span className="govuk-required">*</span></label>
-                    <select 
-                      className="govuk-select" 
-                      id="institution_type" 
-                      name="institution_type" 
-                      value={formData.institution_type} 
-                      onChange={handleChange}
-                      required
-                    >
-                      <option value="">Select Type</option>
-                      {institutionTypes.map(type => (
-                        <option key={type} value={type}>{type}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div className="govuk-grid-column-one-half">
-                  <div className="govuk-form-group">
-                    <label className="govuk-label" htmlFor="government_level">Government Level</label>
-                    <select 
-                      className="govuk-select" 
-                      id="government_level" 
-                      name="government_level" 
-                      value={formData.government_level} 
-                      onChange={handleChange}
-                    >
-                      <option value="">Select Level</option>
-                      {governmentLevels.map(level => (
-                        <option key={level} value={level}>{level}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              <div className="govuk-form-group">
-                <label className="govuk-label" htmlFor="mtef_sector">MTEF Sector</label>
-                <select 
-                  className="govuk-select" 
-                  id="mtef_sector" 
-                  name="mtef_sector" 
-                  value={formData.mtef_sector} 
-                  onChange={handleChange}
-                >
-                  <option value="">Select MTEF Sector</option>
-                  {mtefSectors.map(sector => (
-                    <option key={sector} value={sector}>{sector}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Description */}
-              <div className="govuk-form-group">
-                <label className="govuk-label" htmlFor="description">Description / Mandate</label>
-                <textarea
-                  className="govuk-textarea"
-                  id="description"
-                  name="description"
-                  rows={6}
-                  value={formData.description}
-                  onChange={handleChange}
-                />
-              </div>
-
-              {/* Contact Information */}
-              <h3 className="govuk-heading-m govuk-!-margin-top-9">Contact Information</h3>
-
-              <div className="govuk-form-group">
-                <label className="govuk-label" htmlFor="headquarters">Headquarters</label>
-                <input className="govuk-input" id="headquarters" name="headquarters" type="text" value={formData.headquarters} onChange={handleChange} />
-              </div>
-
-              <div className="govuk-form-group">
-                <label className="govuk-label" htmlFor="website_url">Official Website</label>
-                <input className="govuk-input" id="website_url" name="website_url" type="url" value={formData.website_url} onChange={handleChange} />
-              </div>
-
-              <div className="govuk-form-group">
-                <label className="govuk-label" htmlFor="physical_address">Physical Address</label>
-                <textarea className="govuk-textarea" id="physical_address" name="physical_address" rows={3} value={formData.physical_address} onChange={handleChange} />
-              </div>
-
-              {/* Status */}
-              <div className="govuk-form-group">
-                <label className="govuk-label govuk-checkboxes__label">
-                  <input
-                    type="checkbox"
-                    name="is_active"
-                    checked={formData.is_active}
-                    onChange={handleChange}
-                  />
-                  Published (Visible on the public website)
-                </label>
-              </div>
-
-              <div className="govuk-button-group govuk-!-margin-top-9">
-                <button type="submit" className="govuk-button" disabled={submitting}>
-                  {submitting ? 'Creating Institution...' : 'Create Institution'}
-                </button>
-                <Link href={adminPath()} className="govuk-button govuk-button--secondary">
-                  Cancel
-                </Link>
-              </div>
-            </div>
+        <h1 className="govuk-heading-xl">Add government institution</h1>
+        <p className="govuk-body">
+          Fields match the live <code>institutions</code> schema (enums,
+          arrays, contact, leadership, classification).
+        </p>
+        {error && (
+          <div className="govuk-error-summary" role="alert">
+            <h2 className="govuk-error-summary__title">There is a problem</h2>
+            <p className="govuk-body">{error}</p>
           </div>
-        </form>
+        )}
+        <InstitutionForm
+          form={form}
+          onChange={onChange}
+          onHierarchyChange={onHierarchyChange}
+          onSubmit={onSubmit}
+          submitting={submitting}
+          submitLabel="Create institution"
+          institutionTypes={institutionTypes}
+          mtefSectors={mtefSectors}
+          cancelHref={adminPath("institutions")}
+        />
       </main>
-
-      <GovUKFeedback />
     </div>
   );
 }
