@@ -155,7 +155,9 @@ export default function AdminInstitutionsPage() {
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Update failed");
       setActionMessage(
-        current ? "Institution deactivated." : "Institution activated.",
+        current
+          ? "Institution unpublished (hidden from the public site)."
+          : "Institution published on the public site.",
       );
       await fetchInstitutions();
     } catch (e) {
@@ -407,7 +409,9 @@ export default function AdminInstitutionsPage() {
                             : "govuk-tag--grey"
                         }`}
                       >
-                        {inst.is_active !== false ? "Active" : "Inactive"}
+                        {inst.is_active !== false
+                          ? "Published"
+                          : "Unpublished"}
                       </span>
                     </td>
                     <td className="govuk-table__cell">
@@ -424,8 +428,8 @@ export default function AdminInstitutionsPage() {
                           {
                             label:
                               inst.is_active !== false
-                                ? "Deactivate"
-                                : "Activate",
+                                ? "Unpublish"
+                                : "Publish",
                             onClick: () =>
                               toggleActive(inst.id, inst.is_active !== false),
                           },

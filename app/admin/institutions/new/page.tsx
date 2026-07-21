@@ -3,8 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { adminPath } from "@/lib/admin-path";
-import { createBrowserClientAsync } from "@/lib/supabase/client";
 import { INSTITUTION_STATUS_IMPLIES_INACTIVE } from "@/lib/institutions/fields";
+import { groupsForDivisionValue } from "@/lib/institutions/cofog";
 import GovUKBackLink from "@/components/govuk/BackLink";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import InstitutionForm, {
@@ -16,16 +16,6 @@ import InstitutionForm, {
 import type { LeaderPickResult } from "@/components/admin/LeaderLinkPicker";
 import type { SocialLink } from "@/lib/leaders/titles-social";
 
-function uniqueStrings(values: (string | null | undefined)[] | undefined) {
-  return [
-    ...new Set(
-      (values ?? []).filter(
-        (v): v is string => typeof v === "string" && v.trim().length > 0,
-      ),
-    ),
-  ].sort();
-}
-
 export default function NewInstitutionPage() {
   const router = useRouter();
   const [form, setForm] = useState<InstitutionFormState>(emptyInstitutionForm());
@@ -35,37 +25,21 @@ export default function NewInstitutionPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [institutionTypes, setInstitutionTypes] = useState<string[]>([]);
-  const [mtefSectors, setMtefSectors] = useState<string[]>([]);
+  const [fieldOptions, setFieldOptions] = useState<
+    Partial<Record<string, string[]>>
+  >({});
 
   useEffect(() => {
     (async () => {
       try {
-        const sb = await createBrowserClientAsync();
-        const [types, sectors] = await Promise.all([
-          sb
-            .from("institutions")
-            .select("institution_type")
-            .not("institution_type", "is", null),
-          sb
-            .from("institutions")
-            .select("mtef_sector")
-            .not("mtef_sector", "is", null),
-        ]);
-        setInstitutionTypes(
-          uniqueStrings(
-            types.data?.map(
-              (r: { institution_type: string | null }) => r.institution_type,
-            ),
-          ),
-        );
-        setMtefSectors(
-          uniqueStrings(
-            sectors.data?.map(
-              (r: { mtef_sector: string | null }) => r.mtef_sector,
-            ),
-          ),
-        );
+        const res = await fetch("/api/admin/institutions?facets=1", {
+          credentials: "include",
+          cache: "no-store",
+        });
+        const json = await res.json();
+        if (res.ok && json.facets && typeof json.facets === "object") {
+          setFieldOptions(json.facets as Partial<Record<string, string[]>>);
+        }
       } catch {
         /* ignore */
       }
@@ -77,7 +51,6 @@ export default function NewInstitutionPage() {
     [form, baseline],
   );
 
-  // Create requires at least a name
   const canSave = isDirty && form.name.trim().length > 0;
 
   const onChange = (
@@ -104,6 +77,18 @@ export default function NewInstitutionPage() {
         if (value === "Active") next.is_active = true;
         else if (INSTITUTION_STATUS_IMPLIES_INACTIVE.has(value)) {
           next.is_active = false;
+        }
+      }
+      if (name === "cofog_division" && typeof value === "string") {
+        const allowed = new Set(
+          groupsForDivisionValue(value).map((g) => g.value),
+        );
+        if (
+          next.cofog_group &&
+          allowed.size > 0 &&
+          !allowed.has(next.cofog_group)
+        ) {
+          next.cofog_group = "";
         }
       }
       return next;
@@ -183,7 +168,11 @@ export default function NewInstitutionPage() {
             "Create failed",
         );
       }
-      setSuccess("Institution created. Opening editor…");
+      setSuccess(
+        form.is_active
+          ? "Institution created and published. Opening editor…"
+          : "Institution created as unpublished. Opening editor…",
+      );
       if (json.data?.id) {
         router.push(adminPath(`institutions/${json.data.id}/edit`));
       } else {
@@ -211,8 +200,9 @@ export default function NewInstitutionPage() {
       <main className="govuk-main-wrapper">
         <h1 className="govuk-heading-xl">Add government institution</h1>
         <p className="govuk-body">
-          Enter identity details, optionally link a current head from leaders,
-          social profiles, and status. Verification defaults to Unverified.
+          Enter identity details, classification (custom values become
+          suggestions after save), optional leader head link, social profiles,
+          and publish status. Verification defaults to Unverified.
         </p>
         {error && (
           <div className="govuk-error-summary" role="alert">
@@ -243,8 +233,7 @@ export default function NewInstitutionPage() {
           submitting={submitting}
           canSave={canSave}
           submitLabel="Create institution"
-          institutionTypes={institutionTypes}
-          mtefSectors={mtefSectors}
+          fieldOptions={fieldOptions}
           cancelHref={adminPath("institutions")}
         />
       </main>

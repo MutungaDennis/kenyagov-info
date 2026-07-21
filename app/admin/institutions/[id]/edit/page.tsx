@@ -3,8 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { adminPath } from "@/lib/admin-path";
-import { createBrowserClientAsync } from "@/lib/supabase/client";
 import { INSTITUTION_STATUS_IMPLIES_INACTIVE } from "@/lib/institutions/fields";
+import { groupsForDivisionValue } from "@/lib/institutions/cofog";
 import GovUKBackLink from "@/components/govuk/BackLink";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import InstitutionForm, {
@@ -16,16 +16,6 @@ import InstitutionForm, {
 } from "@/components/admin/InstitutionForm";
 import type { LeaderPickResult } from "@/components/admin/LeaderLinkPicker";
 import type { SocialLink } from "@/lib/leaders/titles-social";
-
-function uniqueStrings(values: (string | null | undefined)[] | undefined) {
-  return [
-    ...new Set(
-      (values ?? []).filter(
-        (v): v is string => typeof v === "string" && v.trim().length > 0,
-      ),
-    ),
-  ].sort();
-}
 
 function leaderDisplayName(d: Record<string, unknown>): string {
   const parts = [d.first_name, d.other_names, d.surname]
@@ -48,45 +38,31 @@ export default function EditInstitutionPage({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [warnings, setWarnings] = useState<string[]>([]);
-  const [institutionTypes, setInstitutionTypes] = useState<string[]>([]);
-  const [mtefSectors, setMtefSectors] = useState<string[]>([]);
+  const [fieldOptions, setFieldOptions] = useState<
+    Partial<Record<string, string[]>>
+  >({});
 
   useEffect(() => {
     params.then((p) => setId(p.id));
   }, [params]);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const sb = await createBrowserClientAsync();
-        const [types, sectors] = await Promise.all([
-          sb
-            .from("institutions")
-            .select("institution_type")
-            .not("institution_type", "is", null),
-          sb
-            .from("institutions")
-            .select("mtef_sector")
-            .not("mtef_sector", "is", null),
-        ]);
-        setInstitutionTypes(
-          uniqueStrings(
-            types.data?.map(
-              (r: { institution_type: string | null }) => r.institution_type,
-            ),
-          ),
-        );
-        setMtefSectors(
-          uniqueStrings(
-            sectors.data?.map(
-              (r: { mtef_sector: string | null }) => r.mtef_sector,
-            ),
-          ),
-        );
-      } catch {
-        /* ignore */
+  const loadFacets = async () => {
+    try {
+      const res = await fetch("/api/admin/institutions?facets=1", {
+        credentials: "include",
+        cache: "no-store",
+      });
+      const json = await res.json();
+      if (res.ok && json.facets && typeof json.facets === "object") {
+        setFieldOptions(json.facets as Partial<Record<string, string[]>>);
       }
-    })();
+    } catch {
+      /* keep previous */
+    }
+  };
+
+  useEffect(() => {
+    loadFacets();
   }, []);
 
   useEffect(() => {
@@ -203,7 +179,19 @@ export default function EditInstitutionPage({
           next.is_active = false;
         }
       }
-      // Manual name edit without a picker still allowed; keep id if same label
+      // COFOG: clear group when it no longer belongs to the selected division
+      if (name === "cofog_division" && typeof value === "string") {
+        const allowed = new Set(
+          groupsForDivisionValue(value).map((g) => g.value),
+        );
+        if (
+          next.cofog_group &&
+          allowed.size > 0 &&
+          !allowed.has(next.cofog_group)
+        ) {
+          next.cofog_group = "";
+        }
+      }
       return next;
     });
     setSuccess(null);
@@ -291,7 +279,14 @@ export default function EditInstitutionPage({
       };
       setForm(nextForm);
       setBaseline(institutionFormSnapshot(nextForm));
-      setSuccess("Changes saved successfully.");
+      setSuccess(
+        nextForm.is_active
+          ? "Changes saved. Institution is published on the public site."
+          : "Changes saved. Institution is unpublished (hidden from the public site).",
+      );
+
+      // Refresh suggestions so any new free-text values appear in dropdowns
+      void loadFacets();
 
       const dropped = Array.isArray(json.dropped)
         ? (json.dropped as string[])
@@ -386,8 +381,7 @@ export default function EditInstitutionPage({
           submitting={submitting}
           canSave={isDirty}
           submitLabel="Save changes"
-          institutionTypes={institutionTypes}
-          mtefSectors={mtefSectors}
+          fieldOptions={fieldOptions}
           cancelHref={adminPath("institutions")}
           excludeInstitutionId={id}
           extraActions={

@@ -17,17 +17,27 @@ type Institution = {
   name: string;
   short_name?: string | null;
   official_name?: string | null;
+  former_names?: string[] | null;
+  aliases?: string[] | null;
   institution_type?: string | null;
   institution_category?: string | null;
+  institution_subtype?: string | null;
+  institution_nature?: string | null;
   arm_of_government?: string | null;
   government_level?: string | null;
+  constitutional_status?: string | null;
   mtef_sector?: string | null;
   cofog_division?: string | null;
+  cofog_group?: string | null;
+  operational_model?: string | null;
+  jurisdiction_scope?: string | null;
   description?: string | null;
   mandate?: string | null;
   vision?: string | null;
   mission?: string | null;
   functions?: string[] | null;
+  keywords?: string[] | null;
+  target_population?: string | null;
   regulated_sectors?: string[] | null;
   current_head_id?: string | null;
   current_head?: string | null;
@@ -35,18 +45,32 @@ type Institution = {
   head_appointment_date?: string | null;
   board_chair?: string | null;
   website_url?: string | null;
+  portal_url?: string | null;
   email?: string | null;
   phone?: string | null;
+  toll_free?: string | null;
+  whatsapp?: string | null;
   postal_address?: string | null;
   headquarters?: string | null;
   physical_address?: string | null;
   latitude?: number | null;
   longitude?: number | null;
   social_media?: unknown;
+  legal_basis_type?: string | null;
   legal_basis_name?: string | null;
+  legal_basis_reference?: string | null;
+  establishment_act?: string | null;
+  established_date?: string | null;
+  operational_date?: string | null;
+  appointing_authority?: string | null;
+  funding_model?: string | null;
+  status?: string | null;
   parent_institution_id?: string | null;
   supervising_ministry_id?: string | null;
   reports_to_institution_id?: string | null;
+  citizen_charter_url?: string | null;
+  complaints_mechanism_url?: string | null;
+  procurement_portal_url?: string | null;
   institution_leaders?: any[] | null;
   institution_locations?: any[] | null;
 };
@@ -300,8 +324,44 @@ export default function InstitutionProfilePage() {
               </p>
             )}
 
-            {/* Key Facts - Now includes COFOG and MTEF */}
+            {/* Key Facts */}
             <dl className="govuk-summary-list govuk-!-margin-bottom-9">
+              {institution.official_name &&
+                institution.official_name !== institution.name && (
+                  <div className="govuk-summary-list__row">
+                    <dt className="govuk-summary-list__key">Official name</dt>
+                    <dd className="govuk-summary-list__value">
+                      {institution.official_name}
+                    </dd>
+                  </div>
+                )}
+              {institution.institution_category && (
+                <div className="govuk-summary-list__row">
+                  <dt className="govuk-summary-list__key">Category</dt>
+                  <dd className="govuk-summary-list__value">
+                    {institution.institution_category}
+                  </dd>
+                </div>
+              )}
+              {institution.institution_type && (
+                <div className="govuk-summary-list__row">
+                  <dt className="govuk-summary-list__key">Type</dt>
+                  <dd className="govuk-summary-list__value">
+                    {institution.institution_type}
+                    {institution.institution_subtype
+                      ? ` · ${institution.institution_subtype}`
+                      : ""}
+                  </dd>
+                </div>
+              )}
+              {institution.institution_nature && (
+                <div className="govuk-summary-list__row">
+                  <dt className="govuk-summary-list__key">Nature</dt>
+                  <dd className="govuk-summary-list__value">
+                    {institution.institution_nature}
+                  </dd>
+                </div>
+              )}
               {institution.arm_of_government && (
                 <div className="govuk-summary-list__row">
                   <dt className="govuk-summary-list__key">Arm of Government</dt>
@@ -314,10 +374,42 @@ export default function InstitutionProfilePage() {
                   <dd className="govuk-summary-list__value">{institution.government_level}</dd>
                 </div>
               )}
+              {institution.constitutional_status && (
+                <div className="govuk-summary-list__row">
+                  <dt className="govuk-summary-list__key">Constitutional status</dt>
+                  <dd className="govuk-summary-list__value">
+                    {institution.constitutional_status}
+                  </dd>
+                </div>
+              )}
+              {institution.operational_model && (
+                <div className="govuk-summary-list__row">
+                  <dt className="govuk-summary-list__key">Operational model</dt>
+                  <dd className="govuk-summary-list__value">
+                    {institution.operational_model}
+                  </dd>
+                </div>
+              )}
+              {institution.jurisdiction_scope && (
+                <div className="govuk-summary-list__row">
+                  <dt className="govuk-summary-list__key">Jurisdiction</dt>
+                  <dd className="govuk-summary-list__value">
+                    {institution.jurisdiction_scope}
+                  </dd>
+                </div>
+              )}
               {institution.cofog_division && (
                 <div className="govuk-summary-list__row">
                   <dt className="govuk-summary-list__key">COFOG Division</dt>
                   <dd className="govuk-summary-list__value">{institution.cofog_division}</dd>
+                </div>
+              )}
+              {institution.cofog_group && (
+                <div className="govuk-summary-list__row">
+                  <dt className="govuk-summary-list__key">COFOG Group</dt>
+                  <dd className="govuk-summary-list__value">
+                    {institution.cofog_group}
+                  </dd>
                 </div>
               )}
               {institution.mtef_sector && (
@@ -326,10 +418,61 @@ export default function InstitutionProfilePage() {
                   <dd className="govuk-summary-list__value">{institution.mtef_sector}</dd>
                 </div>
               )}
-              {institution.legal_basis_name && (
+              {(institution.legal_basis_name ||
+                institution.legal_basis_type ||
+                institution.establishment_act) && (
                 <div className="govuk-summary-list__row">
-                  <dt className="govuk-summary-list__key">Legal Basis</dt>
-                  <dd className="govuk-summary-list__value">{institution.legal_basis_name}</dd>
+                  <dt className="govuk-summary-list__key">Legal basis</dt>
+                  <dd className="govuk-summary-list__value">
+                    {[
+                      institution.legal_basis_type,
+                      institution.legal_basis_name,
+                      institution.establishment_act,
+                    ]
+                      .filter(Boolean)
+                      .join(" — ")}
+                    {institution.legal_basis_reference ? (
+                      <span className="govuk-hint govuk-!-margin-bottom-0">
+                        {" "}
+                        ({institution.legal_basis_reference})
+                      </span>
+                    ) : null}
+                  </dd>
+                </div>
+              )}
+              {institution.established_date && (
+                <div className="govuk-summary-list__row">
+                  <dt className="govuk-summary-list__key">Established</dt>
+                  <dd className="govuk-summary-list__value">
+                    {String(institution.established_date).slice(0, 10)}
+                    {institution.operational_date
+                      ? ` · Operational ${String(institution.operational_date).slice(0, 10)}`
+                      : ""}
+                  </dd>
+                </div>
+              )}
+              {institution.appointing_authority && (
+                <div className="govuk-summary-list__row">
+                  <dt className="govuk-summary-list__key">Appointing authority</dt>
+                  <dd className="govuk-summary-list__value">
+                    {institution.appointing_authority}
+                  </dd>
+                </div>
+              )}
+              {institution.funding_model && (
+                <div className="govuk-summary-list__row">
+                  <dt className="govuk-summary-list__key">Funding model</dt>
+                  <dd className="govuk-summary-list__value">
+                    {institution.funding_model}
+                  </dd>
+                </div>
+              )}
+              {institution.status && institution.status !== "Active" && (
+                <div className="govuk-summary-list__row">
+                  <dt className="govuk-summary-list__key">Status</dt>
+                  <dd className="govuk-summary-list__value">
+                    {institution.status}
+                  </dd>
                 </div>
               )}
               {directParent && (
@@ -369,6 +512,29 @@ export default function InstitutionProfilePage() {
                 </div>
               )}
             </dl>
+
+            {(Array.isArray(institution.former_names) &&
+              institution.former_names.length > 0) ||
+            (Array.isArray(institution.aliases) &&
+              institution.aliases.length > 0) ? (
+              <p className="govuk-body">
+                {Array.isArray(institution.former_names) &&
+                  institution.former_names.length > 0 && (
+                    <>
+                      <strong>Formerly:</strong>{" "}
+                      {institution.former_names.join("; ")}
+                      <br />
+                    </>
+                  )}
+                {Array.isArray(institution.aliases) &&
+                  institution.aliases.length > 0 && (
+                    <>
+                      <strong>Also known as:</strong>{" "}
+                      {institution.aliases.join("; ")}
+                    </>
+                  )}
+              </p>
+            ) : null}
 
             {childInstitutions.length > 0 && (
               <>
@@ -521,20 +687,85 @@ export default function InstitutionProfilePage() {
               </>
             )}
 
+            {/* About / mandate (if description section above didn't cover) */}
+            {institution.mandate && (
+              <>
+                <h2 className="govuk-heading-l govuk-!-margin-top-9">Mandate</h2>
+                <p className="govuk-body" style={{ whiteSpace: "pre-wrap" }}>
+                  {institution.mandate}
+                </p>
+              </>
+            )}
+
+            {institution.target_population && (
+              <>
+                <h2 className="govuk-heading-m govuk-!-margin-top-6">
+                  Who it serves
+                </h2>
+                <p className="govuk-body">{institution.target_population}</p>
+              </>
+            )}
+
+            {Array.isArray(institution.keywords) &&
+              institution.keywords.length > 0 && (
+                <p className="govuk-body-s">
+                  <strong>Keywords:</strong> {institution.keywords.join(", ")}
+                </p>
+              )}
+
             {/* Contact Information */}
             {(institution.website_url ||
+              institution.portal_url ||
               institution.email ||
               institution.phone ||
+              institution.toll_free ||
+              institution.whatsapp ||
               institution.postal_address ||
-              socialLinks.length > 0) && (
+              institution.physical_address ||
+              institution.headquarters ||
+              socialLinks.length > 0 ||
+              institution.citizen_charter_url ||
+              institution.complaints_mechanism_url ||
+              institution.procurement_portal_url) && (
               <>
                 <h2 className="govuk-heading-l govuk-!-margin-top-9">Contact Information</h2>
                 <dl className="govuk-summary-list">
+                  {institution.headquarters && (
+                    <div className="govuk-summary-list__row">
+                      <dt className="govuk-summary-list__key">Headquarters</dt>
+                      <dd className="govuk-summary-list__value">
+                        {institution.headquarters}
+                      </dd>
+                    </div>
+                  )}
+                  {institution.physical_address && (
+                    <div className="govuk-summary-list__row">
+                      <dt className="govuk-summary-list__key">Physical address</dt>
+                      <dd className="govuk-summary-list__value">
+                        {institution.physical_address}
+                      </dd>
+                    </div>
+                  )}
                   {institution.website_url && (
                     <div className="govuk-summary-list__row">
                       <dt className="govuk-summary-list__key">Website</dt>
                       <dd className="govuk-summary-list__value">
                         <a href={institution.website_url} target="_blank" rel="noreferrer" className="govuk-link">{institution.website_url}</a>
+                      </dd>
+                    </div>
+                  )}
+                  {institution.portal_url && (
+                    <div className="govuk-summary-list__row">
+                      <dt className="govuk-summary-list__key">Service portal</dt>
+                      <dd className="govuk-summary-list__value">
+                        <a
+                          href={institution.portal_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="govuk-link"
+                        >
+                          {institution.portal_url}
+                        </a>
                       </dd>
                     </div>
                   )}
@@ -554,10 +785,71 @@ export default function InstitutionProfilePage() {
                       </dd>
                     </div>
                   )}
+                  {institution.toll_free && (
+                    <div className="govuk-summary-list__row">
+                      <dt className="govuk-summary-list__key">Toll free</dt>
+                      <dd className="govuk-summary-list__value">
+                        {institution.toll_free}
+                      </dd>
+                    </div>
+                  )}
+                  {institution.whatsapp && (
+                    <div className="govuk-summary-list__row">
+                      <dt className="govuk-summary-list__key">WhatsApp</dt>
+                      <dd className="govuk-summary-list__value">
+                        {institution.whatsapp}
+                      </dd>
+                    </div>
+                  )}
                   {institution.postal_address && (
                     <div className="govuk-summary-list__row">
                       <dt className="govuk-summary-list__key">Postal Address</dt>
                       <dd className="govuk-summary-list__value">{institution.postal_address}</dd>
+                    </div>
+                  )}
+                  {institution.citizen_charter_url && (
+                    <div className="govuk-summary-list__row">
+                      <dt className="govuk-summary-list__key">Citizen charter</dt>
+                      <dd className="govuk-summary-list__value">
+                        <a
+                          href={institution.citizen_charter_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="govuk-link"
+                        >
+                          View
+                        </a>
+                      </dd>
+                    </div>
+                  )}
+                  {institution.complaints_mechanism_url && (
+                    <div className="govuk-summary-list__row">
+                      <dt className="govuk-summary-list__key">Complaints</dt>
+                      <dd className="govuk-summary-list__value">
+                        <a
+                          href={institution.complaints_mechanism_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="govuk-link"
+                        >
+                          How to complain
+                        </a>
+                      </dd>
+                    </div>
+                  )}
+                  {institution.procurement_portal_url && (
+                    <div className="govuk-summary-list__row">
+                      <dt className="govuk-summary-list__key">Procurement</dt>
+                      <dd className="govuk-summary-list__value">
+                        <a
+                          href={institution.procurement_portal_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="govuk-link"
+                        >
+                          Procurement portal
+                        </a>
+                      </dd>
                     </div>
                   )}
                   {socialLinks.map((link) => (

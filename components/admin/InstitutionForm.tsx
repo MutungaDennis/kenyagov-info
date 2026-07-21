@@ -18,11 +18,18 @@ import InstitutionLinkPicker from "@/components/admin/InstitutionLinkPicker";
 import LeaderLinkPicker, {
   type LeaderPickResult,
 } from "@/components/admin/LeaderLinkPicker";
+import SuggestField from "@/components/admin/SuggestField";
 import {
   SOCIAL_PLATFORM_OPTIONS,
   parseSocialLinks,
   type SocialLink,
 } from "@/lib/leaders/titles-social";
+import {
+  COFOG_DIVISIONS,
+  groupsForDivisionValue,
+  withCurrentOption,
+  mergeOptionLists,
+} from "@/lib/institutions/cofog";
 
 export type InstitutionFormState = {
   name: string;
@@ -336,7 +343,11 @@ type Props = {
   submitLabel: string;
   /** When false, Save is disabled (no unsaved changes) */
   canSave?: boolean;
+  /** Distinct values from DB — free-text entries reappear in suggestions after save */
+  fieldOptions?: Partial<Record<string, string[]>>;
+  /** @deprecated use fieldOptions.institution_type */
   institutionTypes?: string[];
+  /** @deprecated use fieldOptions.mtef_sector */
   mtefSectors?: string[];
   cancelHref: string;
   extraActions?: ReactNode;
@@ -376,6 +387,7 @@ export default function InstitutionForm({
   submitting,
   submitLabel,
   canSave = true,
+  fieldOptions = {},
   institutionTypes = [],
   mtefSectors = [],
   cancelHref,
@@ -383,6 +395,35 @@ export default function InstitutionForm({
   excludeInstitutionId,
 }: Props) {
   const saveEnabled = canSave && !submitting;
+  const db = (key: string) => fieldOptions[key] || [];
+  const typeOpts = db("institution_type").length
+    ? db("institution_type")
+    : institutionTypes;
+  const mtefOpts = db("mtef_sector").length ? db("mtef_sector") : mtefSectors;
+
+  const cofogDivisionOptions = withCurrentOption(
+    mergeOptionLists(
+      COFOG_DIVISIONS.map((d) => d.value),
+      db("cofog_division"),
+    ),
+    form.cofog_division,
+  );
+  const cofogGroupOptions = withCurrentOption(
+    mergeOptionLists(
+      groupsForDivisionValue(form.cofog_division).map((g) => g.value),
+      db("cofog_group"),
+    ),
+    form.cofog_group,
+  );
+
+  const statusOptions = withCurrentOption(
+    mergeOptionLists(INSTITUTION_STATUS_OPTIONS, db("status")),
+    form.status,
+  );
+  const verificationOptions = withCurrentOption(
+    mergeOptionLists(VERIFICATION_STATUS_OPTIONS, db("verification_status")),
+    form.verification_status,
+  );
 
   return (
     <form onSubmit={onSubmit} className="govuk-!-margin-top-4">
@@ -515,209 +556,175 @@ export default function InstitutionForm({
 
       <h2 className="govuk-heading-m">Classification</h2>
       <p className="govuk-hint">
-        Enum fields use exact database values. Free-text type/sector use
-        suggestions from existing institutions.
+        Pick a suggestion or type a new value. After you save, custom values
+        become available in the dropdown for every admin.
       </p>
       <div className="govuk-grid-row">
         <div className="govuk-grid-column-one-half">
-          <Field id="institution_category" label="Institution category">
-            <select
-              className="govuk-select"
-              id="institution_category"
-              name="institution_category"
-              value={form.institution_category}
-              onChange={onChange}
-            >
-              <option value="">— Select —</option>
-              {INSTITUTION_CATEGORY_OPTIONS.map((o) => (
-                <option key={o} value={o}>
-                  {o}
-                </option>
-              ))}
-            </select>
-          </Field>
+          <SuggestField
+            id="institution_category"
+            name="institution_category"
+            label="Institution category"
+            value={form.institution_category}
+            onChange={onChange}
+            options={INSTITUTION_CATEGORY_OPTIONS}
+            dbOptions={db("institution_category")}
+            placeholder="e.g. State Corporation"
+          />
         </div>
         <div className="govuk-grid-column-one-half">
-          <Field id="institution_type" label="Institution type">
-            <input
-              className="govuk-input"
-              id="institution_type"
-              name="institution_type"
-              list="itype-list"
-              value={form.institution_type}
-              onChange={onChange}
-              placeholder="Ministry, State Corporation…"
-            />
-            <datalist id="itype-list">
-              {institutionTypes.map((t) => (
-                <option key={t} value={t} />
-              ))}
-            </datalist>
-          </Field>
+          <SuggestField
+            id="institution_type"
+            name="institution_type"
+            label="Institution type"
+            value={form.institution_type}
+            onChange={onChange}
+            options={typeOpts}
+            dbOptions={typeOpts}
+            placeholder="Ministry, State Corporation…"
+          />
         </div>
       </div>
       <div className="govuk-grid-row">
         <div className="govuk-grid-column-one-half">
-          <Field id="institution_subtype" label="Subtype">
-            <input
-              className="govuk-input"
-              id="institution_subtype"
-              name="institution_subtype"
-              value={form.institution_subtype}
-              onChange={onChange}
-            />
-          </Field>
+          <SuggestField
+            id="institution_subtype"
+            name="institution_subtype"
+            label="Subtype"
+            value={form.institution_subtype}
+            onChange={onChange}
+            dbOptions={db("institution_subtype")}
+          />
         </div>
         <div className="govuk-grid-column-one-half">
-          <Field
+          <SuggestField
             id="institution_nature"
+            name="institution_nature"
             label="Nature"
-            hint="Pick a suggestion or type a value not in the list"
-          >
-            <input
-              className="govuk-input"
-              id="institution_nature"
-              name="institution_nature"
-              list="nature-list"
-              value={form.institution_nature}
-              onChange={onChange}
-              placeholder="e.g. Service delivery agency"
-            />
-            <datalist id="nature-list">
-              {INSTITUTION_NATURE_OPTIONS.map((o) => (
-                <option key={o} value={o} />
-              ))}
-            </datalist>
-          </Field>
+            value={form.institution_nature}
+            onChange={onChange}
+            options={INSTITUTION_NATURE_OPTIONS}
+            dbOptions={db("institution_nature")}
+            placeholder="e.g. Service delivery agency"
+          />
         </div>
       </div>
       <div className="govuk-grid-row">
         <div className="govuk-grid-column-one-third">
-          <Field id="government_level" label="Government level">
-            <select
-              className="govuk-select"
-              id="government_level"
-              name="government_level"
-              value={form.government_level}
-              onChange={onChange}
-            >
-              {GOVERNMENT_LEVEL_OPTIONS.map((o) => (
-                <option key={o} value={o}>
-                  {o}
-                </option>
-              ))}
-            </select>
-          </Field>
+          <SuggestField
+            id="government_level"
+            name="government_level"
+            label="Government level"
+            value={form.government_level}
+            onChange={onChange}
+            options={GOVERNMENT_LEVEL_OPTIONS}
+            dbOptions={db("government_level")}
+          />
         </div>
         <div className="govuk-grid-column-one-third">
-          <Field id="arm_of_government" label="Arm of government">
-            <select
-              className="govuk-select"
-              id="arm_of_government"
-              name="arm_of_government"
-              value={form.arm_of_government}
-              onChange={onChange}
-            >
-              {ARM_OF_GOVERNMENT_OPTIONS.map((o) => (
-                <option key={o} value={o}>
-                  {o}
-                </option>
-              ))}
-            </select>
-          </Field>
+          <SuggestField
+            id="arm_of_government"
+            name="arm_of_government"
+            label="Arm of government"
+            value={form.arm_of_government}
+            onChange={onChange}
+            options={ARM_OF_GOVERNMENT_OPTIONS}
+            dbOptions={db("arm_of_government")}
+          />
         </div>
         <div className="govuk-grid-column-one-third">
-          <Field id="constitutional_status" label="Constitutional status">
-            <select
-              className="govuk-select"
-              id="constitutional_status"
-              name="constitutional_status"
-              value={form.constitutional_status}
-              onChange={onChange}
-            >
-              <option value="">— Select —</option>
-              {CONSTITUTIONAL_STATUS_OPTIONS.map((o) => (
-                <option key={o} value={o}>
-                  {o}
-                </option>
-              ))}
-            </select>
-          </Field>
+          <SuggestField
+            id="constitutional_status"
+            name="constitutional_status"
+            label="Constitutional status"
+            value={form.constitutional_status}
+            onChange={onChange}
+            options={CONSTITUTIONAL_STATUS_OPTIONS}
+            dbOptions={db("constitutional_status")}
+          />
         </div>
       </div>
       <div className="govuk-grid-row">
         <div className="govuk-grid-column-one-half">
-          <Field id="mtef_sector" label="MTEF sector">
-            <input
-              className="govuk-input"
-              id="mtef_sector"
-              name="mtef_sector"
-              list="mtef-list"
-              value={form.mtef_sector}
-              onChange={onChange}
-            />
-            <datalist id="mtef-list">
-              {mtefSectors.map((s) => (
-                <option key={s} value={s} />
-              ))}
-            </datalist>
-          </Field>
+          <SuggestField
+            id="mtef_sector"
+            name="mtef_sector"
+            label="MTEF sector"
+            value={form.mtef_sector}
+            onChange={onChange}
+            dbOptions={mtefOpts}
+          />
         </div>
         <div className="govuk-grid-column-one-half">
-          <Field
+          <SuggestField
             id="operational_model"
+            name="operational_model"
             label="Operational model"
-            hint="Pick a suggestion or type a new model"
-          >
-            <input
-              className="govuk-input"
-              id="operational_model"
-              name="operational_model"
-              list="opmodel-list"
-              value={form.operational_model}
-              onChange={onChange}
-              placeholder="e.g. Department, Service agency"
-            />
-            <datalist id="opmodel-list">
-              {OPERATIONAL_MODEL_OPTIONS.map((o) => (
-                <option key={o} value={o} />
-              ))}
-            </datalist>
-          </Field>
+            value={form.operational_model}
+            onChange={onChange}
+            options={OPERATIONAL_MODEL_OPTIONS}
+            dbOptions={db("operational_model")}
+            placeholder="e.g. Department, Service agency"
+          />
         </div>
       </div>
       <div className="govuk-grid-row">
-        <div className="govuk-grid-column-one-half">
-          <Field id="jurisdiction_scope" label="Jurisdiction scope">
-            <input
-              className="govuk-input"
-              id="jurisdiction_scope"
-              name="jurisdiction_scope"
-              value={form.jurisdiction_scope}
-              onChange={onChange}
-            />
-          </Field>
+        <div className="govuk-grid-column-one-third">
+          <SuggestField
+            id="jurisdiction_scope"
+            name="jurisdiction_scope"
+            label="Jurisdiction scope"
+            value={form.jurisdiction_scope}
+            onChange={onChange}
+            dbOptions={db("jurisdiction_scope")}
+          />
         </div>
-        <div className="govuk-grid-column-one-quarter">
-          <Field id="cofog_division" label="COFOG division">
-            <input
-              className="govuk-input"
+        <div className="govuk-grid-column-one-third">
+          <Field
+            id="cofog_division"
+            label="COFOG division"
+            hint="UN Classification of the Functions of Government"
+          >
+            <select
+              className="govuk-select"
               id="cofog_division"
               name="cofog_division"
               value={form.cofog_division}
               onChange={onChange}
-            />
+            >
+              <option value="">— Select —</option>
+              {cofogDivisionOptions.map((o) => (
+                <option key={o} value={o}>
+                  {o}
+                </option>
+              ))}
+            </select>
           </Field>
         </div>
-        <div className="govuk-grid-column-one-quarter">
-          <Field id="cofog_group" label="COFOG group">
-            <input
-              className="govuk-input"
+        <div className="govuk-grid-column-one-third">
+          <Field
+            id="cofog_group"
+            label="COFOG group"
+            hint={
+              form.cofog_division
+                ? "Groups for the selected division"
+                : "Select a division first (or pick any group)"
+            }
+          >
+            <select
+              className="govuk-select"
               id="cofog_group"
               name="cofog_group"
               value={form.cofog_group}
               onChange={onChange}
-            />
+            >
+              <option value="">— Select —</option>
+              {cofogGroupOptions.map((o) => (
+                <option key={o} value={o}>
+                  {o}
+                </option>
+              ))}
+            </select>
           </Field>
         </div>
       </div>
@@ -725,33 +732,17 @@ export default function InstitutionForm({
       <h2 className="govuk-heading-m">Legal basis & history</h2>
       <div className="govuk-grid-row">
         <div className="govuk-grid-column-one-third">
-          <Field
+          <SuggestField
             id="legal_basis_type"
+            name="legal_basis_type"
             label="Legal basis type"
-            hint="Suggestion or free text (e.g. Constitution, Executive Order)"
-          >
-            <input
-              className="govuk-input"
-              id="legal_basis_type"
-              name="legal_basis_type"
-              list="legal-basis-type-list"
-              value={form.legal_basis_type}
-              onChange={onChange}
-              placeholder="e.g. Act of Parliament"
-            />
-            <datalist id="legal-basis-type-list">
-              {LEGAL_BASIS_TYPE_OPTIONS.map((o) => (
-                <option key={o} value={o} />
-              ))}
-              <option value="Constitution" />
-              <option value="Executive Order" />
-              <option value="Presidential Decree" />
-              <option value="Gazette Notice" />
-              <option value="Treaty" />
-              <option value="Regulation" />
-              <option value="Other" />
-            </datalist>
-          </Field>
+            value={form.legal_basis_type}
+            onChange={onChange}
+            options={LEGAL_BASIS_TYPE_OPTIONS}
+            dbOptions={db("legal_basis_type")}
+            hint="Pick or type a new value (saved values reappear next time)"
+            placeholder="e.g. Act of Parliament"
+          />
         </div>
         <div className="govuk-grid-column-one-third">
           <Field id="legal_basis_name" label="Legal basis name">
@@ -824,22 +815,16 @@ export default function InstitutionForm({
       </div>
 
       <h2 className="govuk-heading-m">Funding & services</h2>
-      <Field id="funding_model" label="Funding model">
-        <select
-          className="govuk-select"
-          id="funding_model"
-          name="funding_model"
-          value={form.funding_model}
-          onChange={onChange}
-        >
-          <option value="">— Select —</option>
-          {FUNDING_MODEL_OPTIONS.map((o) => (
-            <option key={o} value={o}>
-              {o}
-            </option>
-          ))}
-        </select>
-      </Field>
+      <SuggestField
+        id="funding_model"
+        name="funding_model"
+        label="Funding model"
+        value={form.funding_model}
+        onChange={onChange}
+        options={FUNDING_MODEL_OPTIONS}
+        dbOptions={db("funding_model")}
+        hint="Pick a suggestion or type a model not yet listed"
+      />
       <div className="govuk-checkboxes govuk-!-margin-bottom-4">
         {(
           [
@@ -1399,88 +1384,109 @@ export default function InstitutionForm({
         </div>
       </div>
 
-      <h2 className="govuk-heading-m">Status</h2>
+      <h2 className="govuk-heading-m">Status & publishing</h2>
       <p className="govuk-hint">
-        <strong>Status</strong> is the organisation’s real-world lifecycle
-        (active, former, restructured, etc.).{" "}
-        <strong>Published on public site</strong> controls whether it appears in
-        the public directory. New records default to Unverified until reviewed.
+        <strong>Status</strong> is the organisation’s real-world lifecycle.
+        <strong> Publish / Unpublish</strong> controls the public directory only
+        — unpublished institutions stay in admin but are hidden on the site.
       </p>
       <div className="govuk-grid-row">
         <div className="govuk-grid-column-one-third">
-          <Field
+          <SuggestField
             id="status"
+            name="status"
             label="Status"
-            hint="Use Former / Dissolved / Merged for organisations that no longer exist as listed."
-          >
-            <select
-              className="govuk-select"
-              id="status"
-              name="status"
-              value={form.status}
-              onChange={onChange}
-            >
-              {!INSTITUTION_STATUS_OPTIONS.includes(
-                form.status as (typeof INSTITUTION_STATUS_OPTIONS)[number],
-              ) &&
-                form.status && (
-                  <option value={form.status}>{form.status}</option>
-                )}
-              {INSTITUTION_STATUS_OPTIONS.map((o) => (
-                <option key={o} value={o}>
-                  {o}
-                </option>
-              ))}
-            </select>
-          </Field>
+            value={form.status}
+            onChange={onChange}
+            options={statusOptions}
+            dbOptions={db("status")}
+            hint="Active, Former, Dissolved, etc. — or type a custom status"
+          />
         </div>
         <div className="govuk-grid-column-one-third">
-          <Field
+          <SuggestField
             id="verification_status"
+            name="verification_status"
             label="Verification"
-            hint="Default Unverified. Set Verified when facts are checked."
-          >
-            <select
-              className="govuk-select"
-              id="verification_status"
-              name="verification_status"
-              value={form.verification_status}
-              onChange={onChange}
-            >
-              {!VERIFICATION_STATUS_OPTIONS.includes(
-                form.verification_status as (typeof VERIFICATION_STATUS_OPTIONS)[number],
-              ) &&
-                form.verification_status && (
-                  <option value={form.verification_status}>
-                    {form.verification_status}
-                  </option>
-                )}
-              {VERIFICATION_STATUS_OPTIONS.map((o) => (
-                <option key={o} value={o}>
-                  {o}
-                </option>
-              ))}
-            </select>
-          </Field>
+            value={form.verification_status}
+            onChange={onChange}
+            options={verificationOptions}
+            dbOptions={db("verification_status")}
+            hint="Default Unverified. Mark Verified when checked."
+          />
         </div>
         <div className="govuk-grid-column-one-third">
-          <div className="govuk-checkboxes govuk-!-margin-top-6">
-            <div className="govuk-checkboxes__item">
-              <input
-                className="govuk-checkboxes__input"
-                id="is_active"
-                name="is_active"
-                type="checkbox"
-                checked={form.is_active}
-                onChange={onChange}
-              />
-              <label
-                className="govuk-label govuk-checkboxes__label"
-                htmlFor="is_active"
-              >
-                Published on public site
-              </label>
-            </div>
+          <div className="govuk-form-group">
+            <fieldset className="govuk-fieldset">
+              <legend className="govuk-fieldset__legend govuk-fieldset__legend--s">
+                Public visibility
+              </legend>
+              <div className="govuk-hint">
+                Unpublished institutions do not appear on{" "}
+                <code>/government/institutions</code> or public profiles.
+              </div>
+              <div className="govuk-radios" data-module="govuk-radios">
+                <div className="govuk-radios__item">
+                  <input
+                    className="govuk-radios__input"
+                    id="is_active_published"
+                    name="is_active"
+                    type="radio"
+                    value="true"
+                    checked={form.is_active === true}
+                    onChange={(e) => {
+                      // Synthesize checkbox-compatible change for parent handlers
+                      const synthetic = {
+                        ...e,
+                        target: {
+                          ...e.target,
+                          name: "is_active",
+                          type: "checkbox",
+                          checked: true,
+                          value: "true",
+                        },
+                      } as ChangeEvent<HTMLInputElement>;
+                      onChange(synthetic);
+                    }}
+                  />
+                  <label
+                    className="govuk-label govuk-radios__label"
+                    htmlFor="is_active_published"
+                  >
+                    Published
+                  </label>
+                </div>
+                <div className="govuk-radios__item">
+                  <input
+                    className="govuk-radios__input"
+                    id="is_active_unpublished"
+                    name="is_active"
+                    type="radio"
+                    value="false"
+                    checked={form.is_active === false}
+                    onChange={(e) => {
+                      const synthetic = {
+                        ...e,
+                        target: {
+                          ...e.target,
+                          name: "is_active",
+                          type: "checkbox",
+                          checked: false,
+                          value: "false",
+                        },
+                      } as ChangeEvent<HTMLInputElement>;
+                      onChange(synthetic);
+                    }}
+                  />
+                  <label
+                    className="govuk-label govuk-radios__label"
+                    htmlFor="is_active_unpublished"
+                  >
+                    Unpublished
+                  </label>
+                </div>
+              </div>
+            </fieldset>
           </div>
         </div>
       </div>

@@ -18,11 +18,39 @@ function quoteFilterValue(value: string): string {
   return `"${value.replace(/"/g, "")}"`;
 }
 
-type FacetRow = {
-  arm_of_government?: string | null;
-  institution_category?: string | null;
-  institution_type?: string | null;
-};
+type FacetRow = Record<string, string | null | undefined>;
+
+const FACET_COLUMNS = [
+  "arm_of_government",
+  "institution_category",
+  "institution_type",
+  "institution_subtype",
+  "institution_nature",
+  "government_level",
+  "constitutional_status",
+  "mtef_sector",
+  "operational_model",
+  "legal_basis_type",
+  "funding_model",
+  "jurisdiction_scope",
+  "cofog_division",
+  "cofog_group",
+  "status",
+  "verification_status",
+  "head_title",
+] as const;
+
+function collectFacet(
+  sets: Record<string, Set<string>>,
+  row: FacetRow,
+  key: string,
+) {
+  const v = row[key];
+  if (typeof v === "string" && v.trim()) {
+    if (!sets[key]) sets[key] = new Set();
+    sets[key].add(v.trim());
+  }
+}
 
 /**
  * GET /api/admin/institutions
@@ -32,7 +60,7 @@ type FacetRow = {
  * - type: filter institution_type (exact)
  * - active: "1" = active only (is_active true or null); omit for all
  * - limit / offset: page size (max 100) and start index
- * - facets: "1" = return distinct filter options only (no list rows)
+ * - facets: "1" = return distinct option values from DB (grows as admins save new values)
  */
 export async function GET(request: NextRequest) {
   const auth = await requireAdminApi();
@@ -45,35 +73,77 @@ export async function GET(request: NextRequest) {
   const activeOnly = searchParams.get("active") === "1";
   const wantFacets = searchParams.get("facets") === "1";
 
-  // Facets: scan filter columns only (paged) so dropdowns cover the full catalogue
+  // Facets: scan classification columns so free-text values reappear in dropdowns
   if (wantFacets) {
-    const arms = new Set<string>();
-    const types = new Set<string>();
+    const sets: Record<string, Set<string>> = {};
+    for (const col of FACET_COLUMNS) sets[col] = new Set();
     const PAGE = 1000;
     let offset = 0;
     for (let i = 0; i < 50; i++) {
       const { data, error } = await auth.supabase
         .from("institutions")
-        .select("arm_of_government, institution_category, institution_type")
+        .select(FACET_COLUMNS.join(", "))
         .range(offset, offset + PAGE - 1);
       if (error) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        // Fallback minimal facets if some columns missing
+        const fb = await auth.supabase
+          .from("institutions")
+          .select(
+            "arm_of_government, institution_category, institution_type, mtef_sector, institution_nature, status",
+          )
+          .range(offset, offset + PAGE - 1);
+        if (fb.error) {
+          return NextResponse.json({ error: fb.error.message }, { status: 500 });
+        }
+        for (const row of (fb.data || []) as FacetRow[]) {
+          for (const key of Object.keys(row)) collectFacet(sets, row, key);
+        }
+        if ((fb.data || []).length < PAGE) break;
+        offset += (fb.data || []).length;
+        continue;
       }
       const rows = (data || []) as FacetRow[];
       for (const row of rows) {
-        for (const v of [row.arm_of_government, row.institution_category]) {
-          if (typeof v === "string" && v.trim()) arms.add(v.trim());
-        }
-        if (typeof row.institution_type === "string" && row.institution_type.trim()) {
-          types.add(row.institution_type.trim());
-        }
+        for (const col of FACET_COLUMNS) collectFacet(sets, row, col);
       }
       if (rows.length < PAGE) break;
       offset += rows.length;
     }
+
+    const sorted = (key: string) =>
+      Array.from(sets[key] || []).sort((a, b) => a.localeCompare(b));
+
     return NextResponse.json({
-      arms: Array.from(arms).sort((a, b) => a.localeCompare(b)),
-      types: Array.from(types).sort((a, b) => a.localeCompare(b)),
+      // list-page shortcuts
+      arms: sorted("arm_of_government").length
+        ? [
+            ...new Set([
+              ...sorted("arm_of_government"),
+              ...sorted("institution_category"),
+            ]),
+          ].sort((a, b) => a.localeCompare(b))
+        : sorted("institution_category"),
+      types: sorted("institution_type"),
+      // full facet map for admin form dropdowns (static + these = growing list)
+      facets: {
+        arm_of_government: sorted("arm_of_government"),
+        institution_category: sorted("institution_category"),
+        institution_type: sorted("institution_type"),
+        institution_subtype: sorted("institution_subtype"),
+        institution_nature: sorted("institution_nature"),
+        government_level: sorted("government_level"),
+        constitutional_status: sorted("constitutional_status"),
+        mtef_sector: sorted("mtef_sector"),
+        operational_model: sorted("operational_model"),
+        legal_basis_type: sorted("legal_basis_type"),
+        funding_model: sorted("funding_model"),
+        jurisdiction_scope: sorted("jurisdiction_scope"),
+        cofog_division: sorted("cofog_division"),
+        cofog_group: sorted("cofog_group"),
+        status: sorted("status"),
+        verification_status: sorted("verification_status"),
+        head_title: sorted("head_title"),
+      },
     });
   }
 

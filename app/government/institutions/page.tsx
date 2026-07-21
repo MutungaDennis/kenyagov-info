@@ -11,12 +11,15 @@ type Institution = {
   slug: string;
   name: string;
   short_name?: string | null;
+  official_name?: string | null;
   institution_type?: string | null;
   institution_category?: string | null;
   arm_of_government?: string | null;
   government_level?: string | null;
   parent_institution_id?: string | null;
   description?: string | null;
+  aliases?: string[] | null;
+  former_names?: string[] | null;
 };
 
 type InstitutionWithChildren = Institution & {
@@ -43,132 +46,282 @@ export default function GovernmentInstitutionsPage() {
   useEffect(() => {
     const fetchData = async () => {
       const supabase = await createBrowserClientAsync();
+      // Published only — is_active is the public publish flag
+      const pageSize = 1000;
+      const all: Institution[] = [];
+      let from = 0;
+      for (let i = 0; i < 20; i++) {
+        const { data, error } = await supabase
+          .from("institutions")
+          .select(
+            `
+            id, slug, name, short_name, official_name, institution_type, institution_category,
+            arm_of_government, government_level, parent_institution_id, description,
+            aliases, former_names
+          `,
+          )
+          .eq("is_active", true)
+          .order("name")
+          .range(from, from + pageSize - 1);
 
-      const { data, error } = await supabase
-        .from('institutions')
-        .select(`
-          id, slug, name, short_name, institution_type, institution_category,
-          arm_of_government, government_level, parent_institution_id, description
-        `)
-        .eq('is_active', true)
-        .order('name');
-
-      if (error) {
-        console.error("Error fetching institutions:", error);
-      } else {
-        setAllInstitutions(data || []);
+        if (error) {
+          console.error("Error fetching institutions:", error);
+          // Retry without array columns if missing
+          const basic = await supabase
+            .from("institutions")
+            .select(
+              `id, slug, name, short_name, official_name, institution_type, institution_category,
+               arm_of_government, government_level, parent_institution_id, description`,
+            )
+            .eq("is_active", true)
+            .order("name")
+            .range(from, from + pageSize - 1);
+          if (basic.error) break;
+          all.push(...((basic.data || []) as Institution[]));
+          if ((basic.data || []).length < pageSize) break;
+          from += (basic.data || []).length;
+          continue;
+        }
+        all.push(...((data || []) as Institution[]));
+        if ((data || []).length < pageSize) break;
+        from += (data || []).length;
       }
 
+      setAllInstitutions(all);
       setLoading(false);
     };
 
     fetchData();
   }, []);
 
-  // Group institutions into GOV.UK-style categories
+  const matchesSearch = (inst: Institution, term: string): boolean => {
+    if (!term) return true;
+    const t = term.toLowerCase();
+    const hay = [
+      inst.name,
+      inst.short_name,
+      inst.official_name,
+      inst.description,
+      inst.institution_type,
+      inst.institution_category,
+      ...(Array.isArray(inst.aliases) ? inst.aliases : []),
+      ...(Array.isArray(inst.former_names) ? inst.former_names : []),
+    ]
+      .filter(Boolean)
+      .map((s) => String(s).toLowerCase());
+    return hay.some((s) => s.includes(t));
+  };
+
+  // Group institutions into GOV.UK-style categories.
+  // Child institutions (with parents) remain first-class for search & discovery.
   const categoryGroups = useMemo((): CategoryGroup[] => {
     if (allInstitutions.length === 0) return [];
 
-    const parentInstitutions = allInstitutions.filter(i => !i.parent_institution_id);
-    const childInstitutions = allInstitutions.filter(i => i.parent_institution_id);
+    const term = searchTerm.trim();
+    const searching = term.length > 0;
 
-    const categories: { title: string; slug: string; filter: (inst: Institution) => boolean }[] = [
+    // Pool: every published institution is discoverable in its own right
+    const pool = searching
+      ? allInstitutions.filter((i) => matchesSearch(i, term))
+      : allInstitutions;
+
+    const byId = new Map(allInstitutions.map((i) => [i.id, i]));
+    const childrenOf = (parentId: string) =>
+      allInstitutions.filter((c) => c.parent_institution_id === parentId);
+
+    const categories: {
+      title: string;
+      slug: string;
+      filter: (inst: Institution) => boolean;
+    }[] = [
       {
         title: "Ministries",
         slug: "ministries",
-        filter: (inst) => inst.institution_type === "Ministry"
+        filter: (inst) => inst.institution_type === "Ministry",
       },
       {
         title: "State Departments",
         slug: "state-departments",
-        filter: (inst) => inst.institution_type === "State Department"
+        filter: (inst) => inst.institution_type === "State Department",
       },
       {
         title: "Independent Commissions",
         slug: "independent-commissions",
-        filter: (inst) => 
-          inst.arm_of_government === "Independent" || 
-          inst.institution_type === "Commission"
+        filter: (inst) =>
+          inst.arm_of_government === "Independent" ||
+          inst.institution_type === "Commission" ||
+          inst.institution_category === "Constitutional Commission" ||
+          inst.institution_category === "Independent Office",
       },
       {
         title: "State Corporations and Parastatals",
         slug: "state-corporations",
-        filter: (inst) => 
+        filter: (inst) =>
           inst.institution_category === "State Corporation" ||
-          inst.institution_type === "State Corporation"
+          inst.institution_type === "State Corporation",
       },
       {
         title: "Judicial Bodies",
         slug: "judicial-bodies",
-        filter: (inst) => inst.arm_of_government === "Judiciary"
+        filter: (inst) => inst.arm_of_government === "Judiciary",
       },
       {
         title: "Parliamentary Bodies",
         slug: "parliamentary-bodies",
-        filter: (inst) => inst.arm_of_government === "Parliament"
+        filter: (inst) =>
+          inst.arm_of_government === "Parliament" ||
+          inst.arm_of_government === "Legislature",
       },
       {
         title: "County Governments",
         slug: "county-governments",
-        filter: (inst) => inst.government_level === "County"
+        filter: (inst) => inst.government_level === "County",
       },
       {
         title: "Other Public Bodies",
         slug: "other-bodies",
-        filter: (inst) => 
-          !inst.institution_type || 
-          (!["Ministry", "State Department", "Commission", "State Corporation"].includes(inst.institution_type) &&
-           inst.arm_of_government !== "Independent" &&
-           inst.arm_of_government !== "Judiciary" &&
-           inst.arm_of_government !== "Parliament" &&
-           inst.government_level !== "County")
-      }
+        filter: (inst) =>
+          !inst.institution_type ||
+          (![
+            "Ministry",
+            "State Department",
+            "Commission",
+            "State Corporation",
+          ].includes(inst.institution_type) &&
+            inst.arm_of_government !== "Independent" &&
+            inst.arm_of_government !== "Judiciary" &&
+            inst.arm_of_government !== "Parliament" &&
+            inst.arm_of_government !== "Legislature" &&
+            inst.government_level !== "County" &&
+            inst.institution_category !== "State Corporation" &&
+            inst.institution_category !== "Constitutional Commission" &&
+            inst.institution_category !== "Independent Office"),
+      },
     ];
 
+    const assigned = new Set<string>();
     const groups: CategoryGroup[] = [];
 
-    categories.forEach(cat => {
-      let institutions = parentInstitutions.filter(cat.filter);
+    categories.forEach((cat) => {
+      let institutions: InstitutionWithChildren[] = [];
 
-      if (searchTerm) {
-        const term = searchTerm.toLowerCase();
-        institutions = institutions.filter(inst =>
-          inst.name.toLowerCase().includes(term) ||
-          (inst.short_name && inst.short_name.toLowerCase().includes(term)) ||
-          (inst.description && inst.description.toLowerCase().includes(term))
-        );
+      if (cat.slug === "ministries" && !searching) {
+        // Browse: ministries as parents with nested children
+        institutions = pool
+          .filter(cat.filter)
+          .filter((i) => !i.parent_institution_id || i.institution_type === "Ministry")
+          .map((ministry) => {
+            const children = childrenOf(ministry.id).sort((a, b) =>
+              a.name.localeCompare(b.name),
+            );
+            return {
+              ...ministry,
+              children: children.length ? children : undefined,
+            };
+          });
+      } else if (cat.slug === "ministries" && searching) {
+        // Search: ministries that match OR have a matching child, plus show matching children nested
+        const ministryHits = new Map<string, InstitutionWithChildren>();
+        for (const inst of pool.filter(cat.filter)) {
+          ministryHits.set(inst.id, { ...inst, children: undefined });
+        }
+        // Parents of matching non-ministry children that are ministries
+        for (const inst of pool) {
+          if (!inst.parent_institution_id) continue;
+          const parent = byId.get(inst.parent_institution_id);
+          if (parent && parent.institution_type === "Ministry") {
+            const existing = ministryHits.get(parent.id) || {
+              ...parent,
+              children: [],
+            };
+            const kids = existing.children || [];
+            if (!kids.some((k) => k.id === inst.id) && matchesSearch(inst, term)) {
+              kids.push(inst);
+            }
+            existing.children = kids.length ? kids : undefined;
+            ministryHits.set(parent.id, existing);
+          }
+        }
+        institutions = Array.from(ministryHits.values());
+      } else {
+        // All other categories: every matching institution is listed in its own right
+        // (including those that have a parent)
+        institutions = pool.filter(cat.filter).map((inst) => ({ ...inst }));
       }
 
-      if (cat.slug === "ministries") {
-        institutions = institutions.map(ministry => {
-          const children = childInstitutions
-            .filter(child => child.parent_institution_id === ministry.id)
-            .filter(child => {
-              if (!searchTerm) return true;
-              const term = searchTerm.toLowerCase();
-              return child.name.toLowerCase().includes(term) ||
-                     (child.short_name && child.short_name.toLowerCase().includes(term));
-            });
+      institutions = institutions
+        .filter((i) => {
+          if (assigned.has(i.id) && cat.slug !== "ministries") return false;
+          return true;
+        })
+        .sort((a, b) => a.name.localeCompare(b.name));
 
-          return {
-            ...ministry,
-            children: children.length > 0 ? children : undefined
-          };
-        });
+      for (const i of institutions) {
+        assigned.add(i.id);
+        if (i.children) for (const c of i.children) assigned.add(c.id);
       }
 
       if (institutions.length > 0) {
+        // Count leaf-visible rows: parents + (for search) top-level children already in list
+        const count =
+          cat.slug === "ministries" && !searching
+            ? institutions.reduce(
+                (n, m) => n + 1 + (m.children?.length || 0),
+                0,
+              )
+            : institutions.length +
+              institutions.reduce((n, m) => n + (m.children?.length || 0), 0);
+
         groups.push({
           title: cat.title,
           slug: cat.slug,
-          count: institutions.length,
-          institutions: institutions.sort((a, b) => a.name.localeCompare(b.name))
+          count: searching
+            ? institutions.reduce(
+                (n, m) =>
+                  n +
+                  (matchesSearch(m, term) ? 1 : 0) +
+                  (m.children?.filter((c) => matchesSearch(c, term)).length ||
+                    0),
+                0,
+              ) || institutions.length
+            : count,
+          institutions,
         });
       }
     });
 
+    // Any published institution that matched search but was not assigned (edge types)
+    if (searching) {
+      const leftovers = pool.filter((i) => !assigned.has(i.id));
+      if (leftovers.length) {
+        groups.push({
+          title: "Other matches",
+          slug: "search-other",
+          count: leftovers.length,
+          institutions: leftovers
+            .map((i) => ({ ...i }))
+            .sort((a, b) => a.name.localeCompare(b.name)),
+        });
+      }
+    }
+
     return groups;
   }, [allInstitutions, searchTerm]);
+
+  // Auto-expand categories while searching
+  useEffect(() => {
+    if (searchTerm.trim()) {
+      setExpandedCategories(new Set(categoryGroups.map((g) => g.slug)));
+      // Expand nested children under ministries when search hits them
+      const expandIds = new Set<string>();
+      for (const g of categoryGroups) {
+        for (const inst of g.institutions) {
+          if (inst.children?.length) expandIds.add(inst.id);
+        }
+      }
+      setExpandedInstitutions(expandIds);
+    }
+  }, [searchTerm, categoryGroups]);
 
   const toggleCategory = (slug: string) => {
     setExpandedCategories(prev => {
@@ -250,7 +403,9 @@ export default function GovernmentInstitutionsPage() {
             </p>
 
             <p className="govuk-body govuk-!-font-weight-bold">
-              {totalInstitutions} institutions
+              {searchTerm.trim()
+                ? `${totalInstitutions} matching (of ${allInstitutions.length} published)`
+                : `${allInstitutions.length} published institutions`}
             </p>
           </div>
 
@@ -455,25 +610,63 @@ export default function GovernmentInstitutionsPage() {
                           </h3>
                         </td>
                       </tr>
-                      {group.institutions.map((inst) => (
-                        <tr key={inst.id} className="govuk-table__row">
-                          <td className="govuk-table__cell">
-                            <Link 
-                              href={`/government/institutions/${inst.slug}`} 
-                              className="govuk-link govuk-link--no-visited-state"
-                            >
-                              {inst.name}
-                            </Link>
-                            {inst.short_name && (
-                              <span className="institution-table__short-name">
-                                ({inst.short_name})
-                              </span>
-                            )}
-                          </td>
-                          <td className="govuk-table__cell">{inst.institution_type || '—'}</td>
-                          <td className="govuk-table__cell">{inst.arm_of_government || inst.institution_category || '—'}</td>
-                        </tr>
-                      ))}
+                      {group.institutions.flatMap((inst) => {
+                        const rows = [
+                          <tr key={inst.id} className="govuk-table__row">
+                            <td className="govuk-table__cell">
+                              <Link
+                                href={`/government/institutions/${inst.slug}`}
+                                className="govuk-link govuk-link--no-visited-state"
+                              >
+                                {inst.name}
+                              </Link>
+                              {inst.short_name && (
+                                <span className="institution-table__short-name">
+                                  ({inst.short_name})
+                                </span>
+                              )}
+                            </td>
+                            <td className="govuk-table__cell">
+                              {inst.institution_type || "—"}
+                            </td>
+                            <td className="govuk-table__cell">
+                              {inst.arm_of_government ||
+                                inst.institution_category ||
+                                "—"}
+                            </td>
+                          </tr>,
+                        ];
+                        // Child bodies are full institutions — list them too
+                        for (const child of inst.children || []) {
+                          rows.push(
+                            <tr key={child.id} className="govuk-table__row">
+                              <td className="govuk-table__cell">
+                                <span className="govuk-!-margin-left-4">↳ </span>
+                                <Link
+                                  href={`/government/institutions/${child.slug}`}
+                                  className="govuk-link govuk-link--no-visited-state"
+                                >
+                                  {child.name}
+                                </Link>
+                                {child.short_name && (
+                                  <span className="institution-table__short-name">
+                                    ({child.short_name})
+                                  </span>
+                                )}
+                              </td>
+                              <td className="govuk-table__cell">
+                                {child.institution_type || "—"}
+                              </td>
+                              <td className="govuk-table__cell">
+                                {child.arm_of_government ||
+                                  child.institution_category ||
+                                  "—"}
+                              </td>
+                            </tr>,
+                          );
+                        }
+                        return rows;
+                      })}
                     </tbody>
                   ))}
                 </table>
