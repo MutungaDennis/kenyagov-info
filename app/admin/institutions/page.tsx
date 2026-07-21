@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { adminPath } from "@/lib/admin-path";
 import GovUKBackLink from "@/components/govuk/BackLink";
@@ -22,14 +22,24 @@ type Institution = {
   description?: string | null;
 };
 
+const PAGE_SIZE = 50;
+
 export default function AdminInstitutionsPage() {
   const [institutions, setInstitutions] = useState<Institution[]>([]);
+  const [total, setTotal] = useState(0);
+  const [offset, setOffset] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
+
+  const [searchInput, setSearchInput] = useState("");
+  const [q, setQ] = useState("");
   const [selectedMainCategory, setSelectedMainCategory] = useState("All");
   const [selectedSubCategory, setSelectedSubCategory] = useState("All");
   const [showInactive, setShowInactive] = useState(false);
+
+  const [armOptions, setArmOptions] = useState<string[]>([]);
+  const [typeOptions, setTypeOptions] = useState<string[]>([]);
+
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [institutionToDelete, setInstitutionToDelete] = useState<{
     id: string;
@@ -37,107 +47,100 @@ export default function AdminInstitutionsPage() {
   } | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
 
-  const fetchInstitutions = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      // API max page is 1000; walk offsets until every row is loaded.
-      const PAGE_SIZE = 1000;
-      const all: Institution[] = [];
-      let offset = 0;
-      let total = Number.POSITIVE_INFINITY;
-
-      while (offset < total) {
-        const params = new URLSearchParams({
-          limit: String(PAGE_SIZE),
-          offset: String(offset),
-        });
-        const res = await fetch(`/api/admin/institutions?${params}`, {
+  // Distinct filter options across the full catalogue (not just the current page)
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/admin/institutions?facets=1", {
           credentials: "include",
           cache: "no-store",
         });
         const json = await res.json();
-        if (!res.ok) {
-          throw new Error(json.error || `Failed to load (${res.status})`);
+        if (!cancelled && res.ok) {
+          if (Array.isArray(json.arms)) setArmOptions(json.arms);
+          if (Array.isArray(json.types)) setTypeOptions(json.types);
         }
-        const batch = (json.data || []) as Institution[];
-        if (typeof json.total === "number" && Number.isFinite(json.total)) {
-          total = json.total;
-        } else if (batch.length < PAGE_SIZE) {
-          total = offset + batch.length;
-        }
-        all.push(...batch);
-        if (batch.length === 0) break;
-        offset += batch.length;
-        // Safety valve against runaway loops
-        if (offset > 50_000) break;
+      } catch {
+        /* dropdowns stay empty; free search still works */
       }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
-      setInstitutions(all);
+  const fetchInstitutions = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const params = new URLSearchParams();
+      params.set("limit", String(PAGE_SIZE));
+      params.set("offset", String(offset));
+      if (q.trim()) params.set("q", q.trim());
+      if (selectedMainCategory !== "All") {
+        params.set("arm", selectedMainCategory);
+      }
+      if (selectedSubCategory !== "All") {
+        params.set("type", selectedSubCategory);
+      }
+      // Default: active only. Checkbox “Show inactive” loads everyone.
+      if (!showInactive) params.set("active", "1");
+
+      const res = await fetch(`/api/admin/institutions?${params}`, {
+        credentials: "include",
+        cache: "no-store",
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        throw new Error(json.error || `Failed to load (${res.status})`);
+      }
+      setInstitutions(json.data || []);
+      setTotal(typeof json.total === "number" ? json.total : 0);
     } catch (e) {
       console.error(e);
       setError(e instanceof Error ? e.message : "Failed to load institutions");
       setInstitutions([]);
+      setTotal(0);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [offset, q, selectedMainCategory, selectedSubCategory, showInactive]);
 
   useEffect(() => {
     fetchInstitutions();
   }, [fetchInstitutions]);
 
-  const mainCategories = useMemo<string[]>(() => {
-    const cats = institutions
-      .map((i) => i.arm_of_government ?? i.institution_category)
-      .filter((v): v is string => typeof v === "string" && v.trim() !== "");
-    return ["All", ...Array.from(new Set(cats)).sort()];
-  }, [institutions]);
+  const mainCategories = useMemo(
+    () => ["All", ...armOptions],
+    [armOptions],
+  );
 
-  const subCategoryOptions = useMemo<string[]>(() => {
-    if (selectedMainCategory === "All") return ["All"];
-    const relevant = institutions.filter(
-      (inst) =>
-        inst.arm_of_government === selectedMainCategory ||
-        inst.institution_category === selectedMainCategory,
-    );
-    const subs = relevant
-      .map((i) => i.institution_type)
-      .filter((v): v is string => typeof v === "string" && v.trim() !== "");
-    return ["All", ...Array.from(new Set(subs)).sort()];
-  }, [selectedMainCategory, institutions]);
+  // Full type catalogue from facets (server filters by type across all pages)
+  const subCategoryOptions = useMemo(
+    () => ["All", ...typeOptions],
+    [typeOptions],
+  );
 
-  const filteredInstitutions = useMemo(() => {
-    return institutions
-      .filter((inst) => {
-        const searchMatch =
-          inst.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (inst.short_name &&
-            inst.short_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-          (inst.description &&
-            inst.description.toLowerCase().includes(searchTerm.toLowerCase()));
+  const applySearch = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    setOffset(0);
+    setQ(searchInput.trim());
+  };
 
-        const mainMatch =
-          selectedMainCategory === "All" ||
-          inst.arm_of_government === selectedMainCategory ||
-          inst.institution_category === selectedMainCategory;
+  const clearFilters = () => {
+    setSearchInput("");
+    setQ("");
+    setSelectedMainCategory("All");
+    setSelectedSubCategory("All");
+    setShowInactive(false);
+    setOffset(0);
+  };
 
-        const subMatch =
-          selectedSubCategory === "All" ||
-          inst.institution_type === selectedSubCategory;
-
-        const activeMatch = showInactive || inst.is_active !== false;
-
-        return searchMatch && mainMatch && subMatch && activeMatch;
-      })
-      .sort((a, b) => a.name.localeCompare(b.name));
-  }, [
-    institutions,
-    searchTerm,
-    selectedMainCategory,
-    selectedSubCategory,
-    showInactive,
-  ]);
+  const page = Math.floor(offset / PAGE_SIZE) + 1;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const rangeStart = total === 0 ? 0 : offset + 1;
+  const rangeEnd = Math.min(offset + institutions.length, total);
 
   const toggleActive = async (id: string, current: boolean) => {
     setActionMessage(null);
@@ -151,7 +154,9 @@ export default function AdminInstitutionsPage() {
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Update failed");
-      setActionMessage(current ? "Institution deactivated." : "Institution activated.");
+      setActionMessage(
+        current ? "Institution deactivated." : "Institution activated.",
+      );
       await fetchInstitutions();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to update status");
@@ -174,7 +179,12 @@ export default function AdminInstitutionsPage() {
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Delete failed");
       setActionMessage(`Deleted “${institutionToDelete.name}”.`);
-      await fetchInstitutions();
+      // If last item on page deleted, step back a page when possible
+      if (institutions.length <= 1 && offset >= PAGE_SIZE) {
+        setOffset(Math.max(0, offset - PAGE_SIZE));
+      } else {
+        await fetchInstitutions();
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Delete failed");
     } finally {
@@ -200,8 +210,14 @@ export default function AdminInstitutionsPage() {
           <div className="govuk-grid-column-two-thirds">
             <h1 className="govuk-heading-xl">Government Institutions</h1>
             <p className="govuk-body-l">
-              Manage public institutions — currently {institutions.length}{" "}
-              records loaded from Supabase.
+              Manage public institutions —{" "}
+              <strong>{total.toLocaleString()}</strong> matching
+              {loading ? " (loading…)" : ""} record
+              {total === 1 ? "" : "s"} in Supabase
+              {q || selectedMainCategory !== "All" || selectedSubCategory !== "All"
+                ? " for the current filters"
+                : ""}
+              .
             </p>
           </div>
           <div className="govuk-grid-column-one-third">
@@ -229,86 +245,114 @@ export default function AdminInstitutionsPage() {
           </div>
         )}
 
-        <div className="govuk-grid-row govuk-!-margin-bottom-6">
-          <div className="govuk-grid-column-one-third">
-            <label className="govuk-label" htmlFor="search">
-              Search
-            </label>
-            <input
-              id="search"
-              className="govuk-input"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+        <form onSubmit={applySearch}>
+          <div className="govuk-grid-row govuk-!-margin-bottom-4">
+            <div className="govuk-grid-column-one-third">
+              <label className="govuk-label" htmlFor="search">
+                Search
+              </label>
+              <input
+                id="search"
+                className="govuk-input"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                placeholder="Name, short name, slug…"
+              />
+            </div>
+            <div className="govuk-grid-column-one-third">
+              <label className="govuk-label" htmlFor="main">
+                Main category
+              </label>
+              <select
+                id="main"
+                className="govuk-select"
+                value={selectedMainCategory}
+                onChange={(e) => {
+                  setSelectedMainCategory(e.target.value);
+                  setSelectedSubCategory("All");
+                  setOffset(0);
+                }}
+              >
+                {mainCategories.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="govuk-grid-column-one-third">
+              <label className="govuk-label" htmlFor="sub">
+                Sub category (type)
+              </label>
+              <select
+                id="sub"
+                className="govuk-select"
+                value={selectedSubCategory}
+                onChange={(e) => {
+                  setSelectedSubCategory(e.target.value);
+                  setOffset(0);
+                }}
+              >
+                {subCategoryOptions.map((sub) => (
+                  <option key={sub} value={sub}>
+                    {sub}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
-          <div className="govuk-grid-column-one-third">
-            <label className="govuk-label" htmlFor="main">
-              Main category
-            </label>
-            <select
-              id="main"
-              className="govuk-select"
-              value={selectedMainCategory}
-              onChange={(e) => {
-                setSelectedMainCategory(e.target.value);
-                setSelectedSubCategory("All");
-              }}
-            >
-              {mainCategories.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="govuk-grid-column-one-third">
-            <label className="govuk-label" htmlFor="sub">
-              Sub category
-            </label>
-            <select
-              id="sub"
-              className="govuk-select"
-              value={selectedSubCategory}
-              onChange={(e) => setSelectedSubCategory(e.target.value)}
-              disabled={selectedMainCategory === "All"}
-            >
-              {subCategoryOptions.map((sub) => (
-                <option key={sub} value={sub}>
-                  {sub}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
 
-        <div className="govuk-checkboxes govuk-!-margin-bottom-4">
-          <div className="govuk-checkboxes__item">
-            <input
-              className="govuk-checkboxes__input"
-              id="inactive"
-              type="checkbox"
-              checked={showInactive}
-              onChange={(e) => setShowInactive(e.target.checked)}
-            />
-            <label
-              className="govuk-label govuk-checkboxes__label"
-              htmlFor="inactive"
-            >
-              Show inactive
-            </label>
+          <div className="govuk-checkboxes govuk-!-margin-bottom-4">
+            <div className="govuk-checkboxes__item">
+              <input
+                className="govuk-checkboxes__input"
+                id="inactive"
+                type="checkbox"
+                checked={showInactive}
+                onChange={(e) => {
+                  setShowInactive(e.target.checked);
+                  setOffset(0);
+                }}
+              />
+              <label
+                className="govuk-label govuk-checkboxes__label"
+                htmlFor="inactive"
+              >
+                Show inactive
+              </label>
+            </div>
           </div>
-        </div>
+
+          <div className="govuk-button-group">
+            <button type="submit" className="govuk-button">
+              Search
+            </button>
+            <button
+              type="button"
+              className="govuk-button govuk-button--secondary"
+              onClick={clearFilters}
+            >
+              Clear filters
+            </button>
+          </div>
+        </form>
 
         <p className="govuk-body-s">
-          Showing <strong>{filteredInstitutions.length}</strong>
-          {loading ? " (loading…)" : ""} institutions
+          {total === 0
+            ? loading
+              ? "Loading…"
+              : "No institutions match your filters."
+            : `Showing ${rangeStart.toLocaleString()}–${rangeEnd.toLocaleString()} of ${total.toLocaleString()}`}
+          {totalPages > 1
+            ? ` · Page ${page.toLocaleString()} of ${totalPages.toLocaleString()}`
+            : ""}
         </p>
 
-        {!loading && filteredInstitutions.length === 0 && (
+        {!loading && institutions.length === 0 && (
           <p className="govuk-body">No institutions match your filters.</p>
         )}
 
-        {filteredInstitutions.length > 0 && (
+        {institutions.length > 0 && (
           <div className="govuk-table-wrapper">
             <table className="govuk-table">
               <thead className="govuk-table__head">
@@ -337,9 +381,9 @@ export default function AdminInstitutionsPage() {
                 </tr>
               </thead>
               <tbody className="govuk-table__body">
-                {filteredInstitutions.map((inst, index) => (
+                {institutions.map((inst, index) => (
                   <tr key={inst.id} className="govuk-table__row">
-                    <td className="govuk-table__cell">{index + 1}</td>
+                    <td className="govuk-table__cell">{offset + index + 1}</td>
                     <td className="govuk-table__cell">
                       <strong>{inst.name}</strong>
                       {inst.short_name && ` (${inst.short_name})`}
@@ -398,6 +442,30 @@ export default function AdminInstitutionsPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {totalPages > 1 && (
+          <div className="govuk-button-group govuk-!-margin-top-4">
+            <button
+              type="button"
+              className="govuk-button govuk-button--secondary"
+              disabled={page <= 1 || loading}
+              onClick={() => setOffset(Math.max(0, offset - PAGE_SIZE))}
+            >
+              Previous
+            </button>
+            <span className="govuk-body">
+              Page {page} of {totalPages}
+            </span>
+            <button
+              type="button"
+              className="govuk-button govuk-button--secondary"
+              disabled={page >= totalPages || loading}
+              onClick={() => setOffset(offset + PAGE_SIZE)}
+            >
+              Next
+            </button>
           </div>
         )}
 
