@@ -37,18 +37,18 @@ export async function GET(request: NextRequest) {
   if (need("parties")) {
     tasks.push(
       (async () => {
-        let query = sb
+        // Include former / inactive parties for historical roles
+        const { data, error } = await sb
           .from("political_parties")
-          .select("id, name, abbreviation, slug, code")
+          .select("id, name, abbreviation, slug, status")
           .order("name", { ascending: true })
-          .limit(300);
-        const { data, error } = await query;
+          .limit(500);
         if (error) {
           const retry = await sb
             .from("political_parties")
             .select("id, name, abbreviation, slug")
             .order("name", { ascending: true })
-            .limit(300);
+            .limit(500);
           result.parties = retry.data || [];
           if (retry.error) result.parties_error = retry.error.message;
         } else {
@@ -63,13 +63,13 @@ export async function GET(request: NextRequest) {
       (async () => {
         const { data, error } = await sb
           .from("counties")
-          .select("id, name, code, slug")
+          .select("id, name, code, slug, former_province, region")
           .order("name", { ascending: true })
           .limit(100);
         if (error) {
           const retry = await sb
             .from("counties")
-            .select("id, name, code")
+            .select("id, name, code, slug")
             .order("name", { ascending: true })
             .limit(100);
           result.counties = retry.data || [];
@@ -83,22 +83,37 @@ export async function GET(request: NextRequest) {
   if (need("constituencies")) {
     tasks.push(
       (async () => {
+        // Include former/abolished (is_active=false) for historical MP seats
         let query = sb
           .from("constituencies")
-          .select("id, name, code, county_id, slug")
+          .select("id, name, county_id, slug, is_active")
           .order("name", { ascending: true })
-          .limit(500);
+          .limit(1000);
         if (countyId) query = query.eq("county_id", countyId);
+        // Optional name search
+        if (q.length >= 1) {
+          const safe = q.replace(/[%_,.()]/g, " ").trim();
+          if (safe) {
+            query = query.or(
+              `name.ilike.%${safe}%,slug.ilike.%${safe}%`,
+            );
+          }
+        }
         const { data, error } = await query;
         if (error) {
           let q2 = sb
             .from("constituencies")
-            .select("id, name, code, county_id")
+            .select("id, name, county_id, slug")
             .order("name", { ascending: true })
-            .limit(500);
+            .limit(1000);
           if (countyId) q2 = q2.eq("county_id", countyId);
+          if (q.length >= 1) {
+            const safe = q.replace(/[%_,.()]/g, " ").trim();
+            if (safe) q2 = q2.ilike("name", `%${safe}%`);
+          }
           const retry = await q2;
           result.constituencies = retry.data || [];
+          if (retry.error) result.constituencies_error = retry.error.message;
         } else {
           result.constituencies = data || [];
         }

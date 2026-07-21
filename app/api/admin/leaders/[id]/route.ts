@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdminApi, slugify } from "@/lib/admin-api";
 import { nameForSlug, splitFullName } from "@/lib/leaders/display";
+import { normalizeLeaderLevel } from "@/lib/leaders/role-normalize";
 import {
   normalizeSocialUrl,
   parseNameTitles,
@@ -104,6 +105,38 @@ async function updateLeadersWithFallback(
     const isSchema =
       /column|schema cache|PGRST204|does not exist/i.test(lastError) ||
       Boolean(col);
+    const isEnum =
+      /invalid input value for enum/i.test(lastError) ||
+      /22P02/.test(lastError);
+
+    // Drop invalid enum values (e.g. level "National" vs allowed national|county|ward)
+    if (isEnum) {
+      const badVal = lastError.match(
+        /invalid input value for enum \w+: "([^"]+)"/i,
+      )?.[1];
+      let droppedEnum: string | null = null;
+      for (const key of Object.keys(working)) {
+        if (badVal != null && String(working[key]) === badVal) {
+          delete working[key];
+          dropped.push(key);
+          droppedEnum = key;
+          break;
+        }
+      }
+      // Common enum columns if we couldn't match the value
+      if (!droppedEnum) {
+        for (const key of ["level", "status", "category", "sub_category"]) {
+          if (key in working) {
+            delete working[key];
+            dropped.push(key);
+            droppedEnum = key;
+            break;
+          }
+        }
+      }
+      if (droppedEnum) continue;
+      return { data: null, error: lastError, dropped };
+    }
 
     if (!isSchema) {
       return { data: null, error: lastError, dropped };
@@ -339,6 +372,16 @@ export async function PATCH(request: NextRequest, context: Ctx) {
     if (r.constituency) patch.current_constituency = r.constituency;
     if (r.county) patch.current_county = r.county;
     if (r.organization) patch.current_organization = r.organization;
+  }
+
+  // leaders.level is enum leader_level: national | county | ward (lowercase only)
+  if ("level" in patch && patch.level != null && patch.level !== "") {
+    patch.level = normalizeLeaderLevel(
+      String(patch.level),
+      patch.title ? String(patch.title) : null,
+    );
+  } else if ("level" in patch && (patch.level === "" || patch.level === null)) {
+    delete patch.level;
   }
 
   if (Object.keys(patch).length === 0) {

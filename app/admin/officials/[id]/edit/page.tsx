@@ -15,6 +15,10 @@ import {
   fieldsForPosition,
 } from "@/lib/leaders/role-fields";
 import {
+  FORMER_PROVINCES,
+  geographicRequirementsForTerm,
+} from "@/lib/leaders/kenya-geography";
+import {
   LEADER_LEVELS,
   ROLE_STATUSES,
   SEAT_TYPES,
@@ -58,8 +62,14 @@ type RoleForm = {
   institution_id: string;
   organization: string;
   party_id: string;
+  /** Free-text party name when creating / historical parties */
+  party_name: string;
   county_id: string;
+  /** Former province (pre-devolution) stored on leader_roles.county when no county_id */
+  province: string;
   constituency_id: string;
+  /** Free-text constituency (former seat not yet in catalogue) */
+  constituency_name: string;
   ward_id: string;
   government_level_id: string;
   level: string;
@@ -125,8 +135,11 @@ const emptyRole: RoleForm = {
   institution_id: "",
   organization: "",
   party_id: "",
+  party_name: "",
   county_id: "",
+  province: "",
   constituency_id: "",
+  constituency_name: "",
   ward_id: "",
   government_level_id: "",
   level: "national",
@@ -223,6 +236,16 @@ export default function EditOfficialPage({
     description: "",
   });
   const [positionSaving, setPositionSaving] = useState(false);
+  const [showNewParty, setShowNewParty] = useState(false);
+  const [newParty, setNewParty] = useState({ name: "", abbreviation: "" });
+  const [partySaving, setPartySaving] = useState(false);
+  const [showNewConstituency, setShowNewConstituency] = useState(false);
+  const [newConstituency, setNewConstituency] = useState({
+    name: "",
+    county_id: "",
+    is_active: false,
+  });
+  const [constSaving, setConstSaving] = useState(false);
   const [orgSearch, setOrgSearch] = useState("");
   const [orgResults, setOrgResults] = useState<RefItem[]>([]);
   const [orgSearching, setOrgSearching] = useState(false);
@@ -431,7 +454,9 @@ export default function EditOfficialPage({
         current_constituency: d.current_constituency || "",
         current_county: d.current_county || "",
         current_organization: d.current_organization || "",
-        level: d.level || "",
+        level: d.level
+          ? normalizeLeaderLevel(String(d.level), d.title)
+          : "",
         bio: d.bio || "",
         image_url: d.image_url || "",
         contact_email: d.contact_email || "",
@@ -502,7 +527,14 @@ export default function EditOfficialPage({
   }, [loadLeader]);
 
   const setField = (key: keyof FormState, value: string | boolean) => {
-    setForm((prev) => ({ ...prev, [key]: value }));
+    setForm((prev) => {
+      let nextVal: string | boolean = value;
+      // leaders.level enum is national|county|ward (never "National")
+      if (key === "level" && typeof value === "string") {
+        nextVal = value ? normalizeLeaderLevel(value, prev.title) : "";
+      }
+      return { ...prev, [key]: nextVal };
+    });
     setPersonalDirty(true);
     setSaved(false);
     setSuccessMessage(null);
@@ -530,6 +562,22 @@ export default function EditOfficialPage({
   const visibility = useMemo(
     () => fieldsForPosition(roleForm.title || roleForm.position_id),
     [roleForm.title, roleForm.position_id],
+  );
+
+  const geoReqs = useMemo(
+    () =>
+      geographicRequirementsForTerm(
+        {
+          countyRequired: visibility.countyRequired,
+          constituencyRequired: visibility.constituencyRequired,
+        },
+        roleForm.term_start_date,
+      ),
+    [
+      visibility.countyRequired,
+      visibility.constituencyRequired,
+      roleForm.term_start_date,
+    ],
   );
 
   const handlePositionSelect = (positionId: string) => {
@@ -636,6 +684,11 @@ export default function EditOfficialPage({
     setSuccessMessage(null);
     setWarnings([]);
     try {
+      // level must be enum national|county|ward (never "National")
+      const levelNorm = form.level.trim()
+        ? normalizeLeaderLevel(form.level, form.title)
+        : null;
+
       const payload: Record<string, unknown> = {
         first_name: form.first_name.trim(),
         other_names: form.other_names.trim() || null,
@@ -646,7 +699,7 @@ export default function EditOfficialPage({
         current_constituency: form.current_constituency.trim() || null,
         current_county: form.current_county.trim() || null,
         current_organization: form.current_organization.trim() || null,
-        level: form.level.trim() || null,
+        level: levelNorm,
         bio: form.bio.trim() || null,
         image_url: form.image_url.trim() || null,
         contact_email: form.contact_email.trim() || null,
@@ -690,50 +743,7 @@ export default function EditOfficialPage({
         );
       }
 
-      const data = (json.data || {}) as Record<string, unknown>;
-      // Merge server row into form so UI matches DB (incl. current_organization)
-      setForm((prev) => ({
-        ...prev,
-        first_name:
-          data.first_name != null
-            ? String(data.first_name)
-            : prev.first_name,
-        other_names:
-          data.other_names != null
-            ? String(data.other_names)
-            : prev.other_names,
-        surname:
-          data.surname != null ? String(data.surname) : prev.surname,
-        slug: data.slug != null ? String(data.slug) : prev.slug,
-        title: data.title != null ? String(data.title) : prev.title,
-        current_party:
-          data.current_party != null
-            ? String(data.current_party)
-            : prev.current_party,
-        current_constituency:
-          data.current_constituency != null
-            ? String(data.current_constituency)
-            : prev.current_constituency,
-        current_county:
-          data.current_county != null
-            ? String(data.current_county)
-            : prev.current_county,
-        current_organization:
-          data.current_organization != null
-            ? String(data.current_organization)
-            : prev.current_organization,
-        level: data.level != null ? String(data.level) : prev.level,
-        bio: data.bio != null ? String(data.bio) : prev.bio,
-        is_active:
-          data.is_active !== undefined
-            ? data.is_active !== false
-            : prev.is_active,
-      }));
-      if (data.full_name) setDisplayFullName(String(data.full_name));
-      if (data.current_organization != null) {
-        setSnapOrgSearch(String(data.current_organization));
-      }
-
+      // Reload from DB so UI matches server and dirty flag clears cleanly
       setPersonalDirty(false);
       setSaved(true);
       setSuccessMessage(
@@ -750,6 +760,15 @@ export default function EditOfficialPage({
           `Saved without optional columns: ${(json.dropped as string[]).join(", ")}.`,
         ]);
       }
+      // Refresh form from server (keeps personalDirty false)
+      await loadLeader();
+      setPersonalDirty(false);
+      setSaved(true);
+      setSuccessMessage(
+        form.is_active
+          ? "Personal details saved successfully (including organisation snapshot)."
+          : "Personal details saved. Profile is inactive (not listed publicly).",
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Update failed");
       setSuccessMessage(null);
@@ -792,15 +811,18 @@ export default function EditOfficialPage({
           "code",
           "name",
         ]),
+      party_name: "",
       county_id:
         idStr(role.county_id) ||
         matchIdByName(lookups.counties, role.county, ["code", "name"]),
+      province: "",
       constituency_id:
         idStr(role.constituency_id) ||
         matchIdByName(lookups.constituencies, role.constituency, [
           "code",
           "name",
         ]),
+      constituency_name: "",
       ward_id:
         idStr(role.ward_id) ||
         matchIdByName(lookups.wards, role.ward, ["code", "name"]),
@@ -823,10 +845,144 @@ export default function EditOfficialPage({
         !role.term_end_date ||
         String(role.status || "").toLowerCase() === "active",
     });
+    // After setRoleForm base, fill free-text fallbacks for unmatched refs
+    setRoleForm((prev) => {
+      const partyId = prev.party_id;
+      const countyId = prev.county_id;
+      const constId = prev.constituency_id;
+      const countyText = role.county || "";
+      const isProvince =
+        !countyId &&
+        FORMER_PROVINCES.some(
+          (p) => p.toLowerCase() === String(countyText).toLowerCase(),
+        );
+      return {
+        ...prev,
+        party_name: !partyId && role.party ? String(role.party) : "",
+        province: isProvince ? String(countyText) : "",
+        constituency_name:
+          !constId && role.constituency ? String(role.constituency) : "",
+      };
+    });
     setOrgSearch(role.organization || "");
     setOrgResults([]);
     setOrgSearchOpen(false);
+    setShowNewParty(false);
+    setShowNewConstituency(false);
     setShowRoleForm(true);
+  };
+
+  const createParty = async (): Promise<string | null> => {
+    const name = newParty.name.trim();
+    if (!name) {
+      setError("Enter a party name to add");
+      return null;
+    }
+    setPartySaving(true);
+    try {
+      const res = await fetch("/api/admin/parties", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          abbreviation: newParty.abbreviation.trim() || undefined,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        throw new Error(json.error || "Failed to create party");
+      }
+      const created = json.data as RefItem;
+      setLookups((prev) => {
+        const exists = prev.parties.some(
+          (p) => String(p.id) === String(created.id),
+        );
+        const parties = exists
+          ? prev.parties
+          : [...prev.parties, created].sort((a, b) =>
+              partyLabel(a).localeCompare(partyLabel(b)),
+            );
+        return { ...prev, parties };
+      });
+      setRoleForm((prev) => ({
+        ...prev,
+        party_id: String(created.id),
+        party_name: "",
+      }));
+      setNewParty({ name: "", abbreviation: "" });
+      setShowNewParty(false);
+      return String(created.id);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create party");
+      return null;
+    } finally {
+      setPartySaving(false);
+    }
+  };
+
+  const createConstituency = async (): Promise<string | null> => {
+    const name = newConstituency.name.trim();
+    if (!name) {
+      setError("Enter a constituency name (e.g. Eldoret North)");
+      return null;
+    }
+    const county_id =
+      newConstituency.county_id.trim() || roleForm.county_id.trim();
+    if (!county_id) {
+      setError(
+        "Select the modern county that covers this former seat (e.g. Uasin Gishu for Eldoret North). The database requires a county link.",
+      );
+      return null;
+    }
+    setConstSaving(true);
+    try {
+      const res = await fetch("/api/admin/constituencies", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          county_id,
+          is_active: newConstituency.is_active,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        throw new Error(
+          [json.error, json.hint].filter(Boolean).join(" — ") ||
+            "Failed to create constituency",
+        );
+      }
+      const created = json.data as RefItem;
+      setLookups((prev) => {
+        const exists = prev.constituencies.some(
+          (c) => String(c.id) === String(created.id),
+        );
+        const constituencies = exists
+          ? prev.constituencies
+          : [...prev.constituencies, created].sort((a, b) =>
+              String(a.name || "").localeCompare(String(b.name || "")),
+            );
+        return { ...prev, constituencies };
+      });
+      setRoleForm((prev) => ({
+        ...prev,
+        constituency_id: String(created.id),
+        constituency_name: "",
+        county_id: prev.county_id || String(created.county_id || county_id),
+      }));
+      setNewConstituency({ name: "", county_id: "", is_active: false });
+      setShowNewConstituency(false);
+      return String(created.id);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to create constituency",
+      );
+      return null;
+    } finally {
+      setConstSaving(false);
+    }
   };
 
   const saveRole = async (e: React.FormEvent) => {
@@ -836,16 +992,81 @@ export default function EditOfficialPage({
       return;
     }
     const vis = fieldsForPosition(roleForm.title);
-    if (vis.partyRequired && !roleForm.party_id) {
-      setError("Party is required for this type of position");
+    const geo = geographicRequirementsForTerm(
+      {
+        countyRequired: vis.countyRequired,
+        constituencyRequired: vis.constituencyRequired,
+      },
+      roleForm.term_start_date,
+    );
+
+    let partyId = roleForm.party_id;
+    if (vis.partyRequired && !partyId && !roleForm.party_name.trim()) {
+      setError(
+        "Party is required — select one or use “Add party” to create it in the database.",
+      );
       return;
     }
-    if (vis.constituencyRequired && !roleForm.constituency_id) {
-      setError("Constituency is required for this type of position");
+    // Create party on the fly if free-text name provided without id
+    if (!partyId && roleForm.party_name.trim() && vis.showParty) {
+      setNewParty({
+        name: roleForm.party_name.trim(),
+        abbreviation: "",
+      });
+      // inline create
+      setPartySaving(true);
+      try {
+        const res = await fetch("/api/admin/parties", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: roleForm.party_name.trim() }),
+        });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.error || "Failed to create party");
+        partyId = String(json.data.id);
+        setLookups((prev) => {
+          const created = json.data as RefItem;
+          const exists = prev.parties.some(
+            (p) => String(p.id) === String(created.id),
+          );
+          return {
+            ...prev,
+            parties: exists
+              ? prev.parties
+              : [...prev.parties, created].sort((a, b) =>
+                  partyLabel(a).localeCompare(partyLabel(b)),
+                ),
+          };
+        });
+        setRoleForm((prev) => ({
+          ...prev,
+          party_id: partyId,
+          party_name: "",
+        }));
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to create party");
+        setPartySaving(false);
+        return;
+      }
+      setPartySaving(false);
+    }
+
+    const hasConst =
+      Boolean(roleForm.constituency_id) ||
+      Boolean(roleForm.constituency_name.trim());
+    if (geo.constituencyRequired && !hasConst) {
+      setError(
+        "Constituency is required — select one, add a former constituency, or type the historical seat name.",
+      );
       return;
     }
-    if (vis.countyRequired && !roleForm.county_id) {
-      setError("County is required for this type of position");
+    if (
+      geo.countyRequired &&
+      !roleForm.county_id &&
+      !roleForm.province
+    ) {
+      setError("County is required for this position (post-2013 seats).");
       return;
     }
     if (vis.organizationRequired && !roleForm.institution_id && !roleForm.organization) {
@@ -860,18 +1081,41 @@ export default function EditOfficialPage({
     setRoleSaving(true);
     setError(null);
     try {
+      // Free-text geography for pre-devolution / former seats
+      const partyText =
+        roleForm.party_name.trim() ||
+        (partyId
+          ? partyLabel(
+              lookups.parties.find((p) => String(p.id) === partyId) || {
+                id: partyId,
+                name: "",
+              },
+            )
+          : null);
+      const countyText = roleForm.county_id
+        ? lookups.counties.find((c) => String(c.id) === roleForm.county_id)
+            ?.name || null
+        : roleForm.province.trim() || null;
+      const constText =
+        roleForm.constituency_name.trim() ||
+        (roleForm.constituency_id
+          ? lookups.constituencies.find(
+              (c) => String(c.id) === roleForm.constituency_id,
+            )?.name || null
+          : null);
+
       const body: Record<string, unknown> = {
         // position_id from positions table is integer — API resolves title only
         position_id: roleForm.position_id || null,
         title: roleForm.title.trim(),
         institution_id: roleForm.institution_id || null,
         organization: roleForm.organization.trim() || null,
-        party_id: vis.showParty ? roleForm.party_id || null : null,
-        party: null,
-        county_id: vis.showCounty ? roleForm.county_id || null : null,
-        constituency_id: vis.showConstituency
-          ? roleForm.constituency_id || null
-          : null,
+        party_id: vis.showParty ? partyId || null : null,
+        party: vis.showParty ? partyText : null,
+        county_id: roleForm.county_id || null,
+        county: countyText,
+        constituency_id: roleForm.constituency_id || null,
+        constituency: constText,
         ward_id: vis.showWard ? roleForm.ward_id || null : null,
         // level must be DB enum: national | county | ward
         level: normalizeLeaderLevel(roleForm.level, roleForm.title),
@@ -898,9 +1142,20 @@ export default function EditOfficialPage({
         body.party_id = null;
         body.party = null;
       }
-      if (!vis.showConstituency) body.constituency_id = null;
+      if (!vis.showConstituency && !roleForm.constituency_name) {
+        body.constituency_id = null;
+        if (!constText) body.constituency = null;
+      }
       if (!vis.showWard) body.ward_id = null;
-      if (!vis.showCounty && !vis.showConstituency) body.county_id = null;
+      if (
+        !vis.showCounty &&
+        !geo.showProvince &&
+        !roleForm.county_id &&
+        !roleForm.province
+      ) {
+        body.county_id = null;
+        if (!countyText) body.county = null;
+      }
 
       const url = editingRoleId
         ? `/api/admin/leaders/${id}/roles/${editingRoleId}`
@@ -988,10 +1243,6 @@ export default function EditOfficialPage({
     form.current_constituency,
     ["code", "name"],
   );
-  const snapshotLevelId = matchIdByName(lookups.levels, form.level, [
-    "code",
-    "name",
-  ]);
   const snapshotPositionId = matchIdByName(lookups.positions, form.title, [
     "title",
     "code",
@@ -1357,18 +1608,20 @@ export default function EditOfficialPage({
                 <select
                   id="snap_level"
                   className="govuk-select"
-                  value={snapshotLevelId}
+                  value={
+                    form.level
+                      ? normalizeLeaderLevel(form.level, form.title)
+                      : ""
+                  }
                   onChange={(e) => {
-                    const l = lookups.levels.find(
-                      (x) => String(x.id) === e.target.value,
-                    );
-                    setField("level", l ? l.name || l.code || "" : "");
+                    // DB enum is lowercase national|county|ward only
+                    setField("level", e.target.value);
                   }}
                 >
                   <option value="">— Select level —</option>
-                  {lookups.levels.map((l) => (
-                    <option key={String(l.id)} value={String(l.id)}>
-                      {l.name || l.code}
+                  {LEADER_LEVELS.map((lv) => (
+                    <option key={lv} value={lv}>
+                      {lv.charAt(0).toUpperCase() + lv.slice(1)}
                     </option>
                   ))}
                 </select>
@@ -1525,7 +1778,13 @@ export default function EditOfficialPage({
                         setSnapOrgResults([]);
                         setField("current_organization", name);
                         if (i.government_level) {
-                          setField("level", String(i.government_level));
+                          setField(
+                            "level",
+                            normalizeLeaderLevel(
+                              String(i.government_level),
+                              form.title,
+                            ),
+                          );
                         }
                       }}
                     >
@@ -2377,19 +2636,146 @@ export default function EditOfficialPage({
                   Political party
                   {visibility.partyRequired ? " *" : " (optional)"}
                 </label>
+                <div className="govuk-hint">
+                  Select from the catalogue, or add a party that is missing so it
+                  can be reused for other officials.
+                </div>
                 <select
                   id="role_party"
                   className="govuk-select"
                   value={roleForm.party_id}
                   onChange={(e) =>
-                    setRoleForm({ ...roleForm, party_id: e.target.value })
+                    setRoleForm({
+                      ...roleForm,
+                      party_id: e.target.value,
+                      party_name: "",
+                    })
                   }
-                  required={visibility.partyRequired}
+                  required={
+                    visibility.partyRequired &&
+                    !roleForm.party_name.trim() &&
+                    !showNewParty
+                  }
                 >
                   <option value="">— Not applicable / none —</option>
                   {lookups.parties.map((p) => (
                     <option key={String(p.id)} value={String(p.id)}>
                       {partyLabel(p)}
+                    </option>
+                  ))}
+                </select>
+                {!roleForm.party_id && (
+                  <div className="govuk-form-group govuk-!-margin-top-2">
+                    <label className="govuk-label" htmlFor="role_party_name">
+                      Or type party name (will be saved to the database)
+                    </label>
+                    <input
+                      id="role_party_name"
+                      className="govuk-input"
+                      value={roleForm.party_name}
+                      onChange={(e) =>
+                        setRoleForm({
+                          ...roleForm,
+                          party_name: e.target.value,
+                          party_id: "",
+                        })
+                      }
+                      placeholder="e.g. Kenya African National Union"
+                    />
+                  </div>
+                )}
+                <button
+                  type="button"
+                  className="govuk-button govuk-button--secondary govuk-!-margin-top-2"
+                  onClick={() => setShowNewParty((v) => !v)}
+                >
+                  {showNewParty ? "Hide add party" : "Add party to catalogue"}
+                </button>
+                {showNewParty && (
+                  <div
+                    className="govuk-!-margin-top-2 govuk-!-padding-3"
+                    style={{
+                      border: "1px solid #b1b4b6",
+                      background: "#f3f2f1",
+                    }}
+                  >
+                    <div className="govuk-form-group">
+                      <label className="govuk-label" htmlFor="new_party_name">
+                        Party full name *
+                      </label>
+                      <input
+                        id="new_party_name"
+                        className="govuk-input"
+                        value={newParty.name}
+                        onChange={(e) =>
+                          setNewParty({ ...newParty, name: e.target.value })
+                        }
+                        placeholder="e.g. United Democratic Alliance"
+                      />
+                    </div>
+                    <div className="govuk-form-group">
+                      <label className="govuk-label" htmlFor="new_party_abbr">
+                        Abbreviation
+                      </label>
+                      <input
+                        id="new_party_abbr"
+                        className="govuk-input"
+                        value={newParty.abbreviation}
+                        onChange={(e) =>
+                          setNewParty({
+                            ...newParty,
+                            abbreviation: e.target.value,
+                          })
+                        }
+                        placeholder="e.g. UDA"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      className="govuk-button"
+                      disabled={partySaving}
+                      onClick={() => void createParty()}
+                    >
+                      {partySaving ? "Saving party…" : "Save party & select"}
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {geoReqs.preDevolution && (
+              <div className="govuk-inset-text">
+                Term starts before March 2013 — counties did not exist yet. You
+                can leave County empty and pick a former province instead.
+                Constituencies may be historical (abolished or split).
+              </div>
+            )}
+
+            {geoReqs.showProvince && (
+              <div className="govuk-form-group">
+                <label className="govuk-label" htmlFor="role_province">
+                  Former province (pre-devolution)
+                </label>
+                <div className="govuk-hint">
+                  The eight provinces used before the 2010 Constitution / 2013
+                  county governments.
+                </div>
+                <select
+                  id="role_province"
+                  className="govuk-select"
+                  value={roleForm.province}
+                  onChange={(e) =>
+                    setRoleForm({
+                      ...roleForm,
+                      province: e.target.value,
+                      county_id: "",
+                    })
+                  }
+                >
+                  <option value="">— Optional province —</option>
+                  {FORMER_PROVINCES.map((p) => (
+                    <option key={p} value={p}>
+                      {p}
                     </option>
                   ))}
                 </select>
@@ -2400,8 +2786,13 @@ export default function EditOfficialPage({
               <div className="govuk-form-group">
                 <label className="govuk-label" htmlFor="role_county">
                   County
-                  {visibility.countyRequired ? " *" : ""}
+                  {geoReqs.countyRequired ? " *" : " (optional)"}
                 </label>
+                <div className="govuk-hint">
+                  {geoReqs.preDevolution
+                    ? "Optional for terms before 2013. For former constituencies, pick the modern county that covers the area when adding a seat."
+                    : "Required for most county-based seats after devolution (2013)."}
+                </div>
                 <select
                   id="role_county"
                   className="govuk-select"
@@ -2410,11 +2801,12 @@ export default function EditOfficialPage({
                     setRoleForm({
                       ...roleForm,
                       county_id: e.target.value,
+                      province: "",
                       constituency_id: "",
                       ward_id: "",
                     })
                   }
-                  required={visibility.countyRequired}
+                  required={geoReqs.countyRequired}
                 >
                   <option value="">— Select county —</option>
                   {lookups.counties.map((c) => (
@@ -2430,8 +2822,13 @@ export default function EditOfficialPage({
               <div className="govuk-form-group">
                 <label className="govuk-label" htmlFor="role_const">
                   Constituency
-                  {visibility.constituencyRequired ? " *" : ""}
+                  {geoReqs.constituencyRequired ? " *" : ""}
                 </label>
+                <div className="govuk-hint">
+                  Includes former/abolished seats when present in the catalogue.
+                  Example: Eldoret North was split into Turbo and Soy — add it as
+                  a former constituency if missing.
+                </div>
                 <select
                   id="role_const"
                   className="govuk-select"
@@ -2440,10 +2837,14 @@ export default function EditOfficialPage({
                     setRoleForm({
                       ...roleForm,
                       constituency_id: e.target.value,
+                      constituency_name: "",
                       ward_id: "",
                     })
                   }
-                  required={visibility.constituencyRequired}
+                  required={
+                    geoReqs.constituencyRequired &&
+                    !roleForm.constituency_name.trim()
+                  }
                 >
                   <option value="">— Select constituency —</option>
                   {lookups.constituencies
@@ -2455,9 +2856,137 @@ export default function EditOfficialPage({
                     .map((c) => (
                       <option key={String(c.id)} value={String(c.id)}>
                         {c.name}
+                        {c.is_active === false ? " (former)" : ""}
                       </option>
                     ))}
                 </select>
+                {!roleForm.constituency_id && (
+                  <div className="govuk-form-group govuk-!-margin-top-2">
+                    <label className="govuk-label" htmlFor="role_const_name">
+                      Or type historical constituency name
+                    </label>
+                    <input
+                      id="role_const_name"
+                      className="govuk-input"
+                      value={roleForm.constituency_name}
+                      onChange={(e) =>
+                        setRoleForm({
+                          ...roleForm,
+                          constituency_name: e.target.value,
+                          constituency_id: "",
+                        })
+                      }
+                      placeholder="e.g. Eldoret North"
+                    />
+                  </div>
+                )}
+                <button
+                  type="button"
+                  className="govuk-button govuk-button--secondary govuk-!-margin-top-2"
+                  onClick={() => {
+                    setShowNewConstituency((v) => !v);
+                    setNewConstituency((prev) => ({
+                      ...prev,
+                      county_id: prev.county_id || roleForm.county_id,
+                      name: prev.name || roleForm.constituency_name,
+                      is_active: false,
+                    }));
+                  }}
+                >
+                  {showNewConstituency
+                    ? "Hide add constituency"
+                    : "Add former / new constituency to catalogue"}
+                </button>
+                {showNewConstituency && (
+                  <div
+                    className="govuk-!-margin-top-2 govuk-!-padding-3"
+                    style={{
+                      border: "1px solid #b1b4b6",
+                      background: "#f3f2f1",
+                    }}
+                  >
+                    <p className="govuk-hint">
+                      Saved into <code>constituencies</code> for reuse. Link to
+                      the modern county that covers the area (required by the
+                      database).
+                    </p>
+                    <div className="govuk-form-group">
+                      <label className="govuk-label" htmlFor="new_const_name">
+                        Constituency name *
+                      </label>
+                      <input
+                        id="new_const_name"
+                        className="govuk-input"
+                        value={newConstituency.name}
+                        onChange={(e) =>
+                          setNewConstituency({
+                            ...newConstituency,
+                            name: e.target.value,
+                          })
+                        }
+                        placeholder="e.g. Eldoret North"
+                      />
+                    </div>
+                    <div className="govuk-form-group">
+                      <label className="govuk-label" htmlFor="new_const_county">
+                        Modern county covering this area *
+                      </label>
+                      <select
+                        id="new_const_county"
+                        className="govuk-select"
+                        value={
+                          newConstituency.county_id || roleForm.county_id
+                        }
+                        onChange={(e) =>
+                          setNewConstituency({
+                            ...newConstituency,
+                            county_id: e.target.value,
+                          })
+                        }
+                      >
+                        <option value="">— Select county —</option>
+                        {lookups.counties.map((c) => (
+                          <option key={String(c.id)} value={String(c.id)}>
+                            {c.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="govuk-checkboxes">
+                      <div className="govuk-checkboxes__item">
+                        <input
+                          className="govuk-checkboxes__input"
+                          id="new_const_active"
+                          type="checkbox"
+                          checked={newConstituency.is_active}
+                          onChange={(e) =>
+                            setNewConstituency({
+                              ...newConstituency,
+                              is_active: e.target.checked,
+                            })
+                          }
+                        />
+                        <label
+                          className="govuk-label govuk-checkboxes__label"
+                          htmlFor="new_const_active"
+                        >
+                          Currently active IEBC seat (leave unchecked for
+                          abolished / former seats)
+                        </label>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      className="govuk-button govuk-!-margin-top-2"
+                      disabled={constSaving}
+                      onClick={() => void createConstituency()}
+                    >
+                      {constSaving
+                        ? "Saving…"
+                        : "Save constituency & select"}
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 
