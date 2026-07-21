@@ -687,16 +687,6 @@ export default function InstitutionProfilePage() {
               </>
             )}
 
-            {/* About / mandate (if description section above didn't cover) */}
-            {institution.mandate && (
-              <>
-                <h2 className="govuk-heading-l govuk-!-margin-top-9">Mandate</h2>
-                <p className="govuk-body" style={{ whiteSpace: "pre-wrap" }}>
-                  {institution.mandate}
-                </p>
-              </>
-            )}
-
             {institution.target_population && (
               <>
                 <h2 className="govuk-heading-m govuk-!-margin-top-6">
