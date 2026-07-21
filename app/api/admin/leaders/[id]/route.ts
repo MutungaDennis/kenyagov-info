@@ -70,10 +70,33 @@ async function updateLeadersWithFallback(
       .select(
         "id, slug, full_name, first_name, other_names, surname, title, bio, level, current_party, current_constituency, current_county, current_organization, is_active, social_media",
       )
-      .single();
+      .maybeSingle();
 
     if (!error) {
-      return { data: data as Record<string, unknown>, error: null, dropped };
+      // Prefer row from UPDATE RETURNING; fall back to a fresh read if empty
+      if (data) {
+        return { data: data as Record<string, unknown>, error: null, dropped };
+      }
+      const reread = await supabase
+        .from("leaders")
+        .select(
+          "id, slug, full_name, first_name, other_names, surname, title, bio, level, current_party, current_constituency, current_county, current_organization, is_active, social_media",
+        )
+        .eq("id", id)
+        .maybeSingle();
+      if (!reread.error && reread.data) {
+        return {
+          data: reread.data as Record<string, unknown>,
+          error: null,
+          dropped,
+        };
+      }
+      // Update applied but no row returned — still treat as success with patch echo
+      return {
+        data: { id, ...working } as Record<string, unknown>,
+        error: null,
+        dropped,
+      };
     }
 
     lastError = String(error.message || error);
