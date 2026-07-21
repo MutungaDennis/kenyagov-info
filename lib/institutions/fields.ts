@@ -71,6 +71,7 @@ export const INSTITUTION_WRITABLE_FIELDS = [
   "latitude",
   "longitude",
   // Leadership
+  "current_head_id",
   "current_head",
   "head_title",
   "head_appointment_date",
@@ -256,9 +257,40 @@ export const FUNDING_MODEL_OPTIONS = [
   "Exchequer & Permit Fees",
 ] as const;
 
-export const INSTITUTION_STATUS_OPTIONS = ["Active"] as const;
+/**
+ * Lifecycle / organisational status (not the same as is_active publish flag).
+ * is_active controls public directory visibility; status describes real-world state.
+ */
+export const INSTITUTION_STATUS_OPTIONS = [
+  "Active",
+  "Inactive",
+  "Former",
+  "Restructured",
+  "Merged",
+  "Succeeded",
+  "Dissolved",
+  "Abolished",
+  "Suspended",
+  "Proposed",
+] as const;
 
-export const VERIFICATION_STATUS_OPTIONS = ["Pending"] as const;
+/** Default for new records: Unverified until an admin marks Verified */
+export const VERIFICATION_STATUS_OPTIONS = [
+  "Unverified",
+  "Verified",
+  "Pending",
+  "Needs review",
+] as const;
+
+/** Statuses that usually mean the org should not appear as a live public listing */
+export const INSTITUTION_STATUS_IMPLIES_INACTIVE = new Set([
+  "Inactive",
+  "Former",
+  "Dissolved",
+  "Abolished",
+  "Merged",
+  "Succeeded",
+]);
 
 /** Map legacy form field names → live column names */
 export function mapLegacyInstitutionFields(
@@ -335,16 +367,25 @@ export function buildInstitutionRow(
     }
 
     if (JSON_FIELDS.has(key)) {
+      if (key === "social_media") {
+        row[key] = normalizeSocialMedia(val);
+        continue;
+      }
       if (typeof val === "string") {
         try {
           row[key] = JSON.parse(val);
         } catch {
-          if (key === "social_media") row[key] = {};
-          else row[key] = parseTextArray(val);
+          row[key] = parseTextArray(val);
         }
       } else {
         row[key] = val;
       }
+      continue;
+    }
+
+    if (key === "current_head_id") {
+      const id = val == null || val === "" ? null : String(val).trim();
+      row[key] = id || null;
       continue;
     }
 
@@ -367,10 +408,50 @@ export function buildInstitutionRow(
     if (!row.status) row.status = "Active";
     if (!row.government_level) row.government_level = "National";
     if (!row.arm_of_government) row.arm_of_government = "Executive";
-    if (!row.verification_status) row.verification_status = "Pending";
+    if (!row.verification_status) row.verification_status = "Unverified";
+    if (row.social_media === undefined) row.social_media = {};
   }
 
   return row;
+}
+
+/** Accept array of {platform,url}, record, or JSON string → platform→url object */
+export function normalizeSocialMedia(val: unknown): Record<string, string> {
+  if (val == null || val === "") return {};
+  if (typeof val === "string") {
+    try {
+      return normalizeSocialMedia(JSON.parse(val));
+    } catch {
+      return {};
+    }
+  }
+  if (Array.isArray(val)) {
+    const out: Record<string, string> = {};
+    for (const item of val) {
+      if (!item || typeof item !== "object") continue;
+      const o = item as Record<string, unknown>;
+      const platform = String(o.platform || o.network || "")
+        .trim()
+        .toLowerCase();
+      let url = String(o.url || o.href || o.link || "").trim();
+      if (!platform || !url) continue;
+      if (!/^https?:\/\//i.test(url)) url = `https://${url}`;
+      out[platform] = url;
+    }
+    return out;
+  }
+  if (typeof val === "object") {
+    const out: Record<string, string> = {};
+    for (const [k, v] of Object.entries(val as Record<string, unknown>)) {
+      if (v == null || v === "") continue;
+      let url = String(v).trim();
+      if (!url) continue;
+      if (!/^https?:\/\//i.test(url)) url = `https://${url}`;
+      out[k.toLowerCase()] = url;
+    }
+    return out;
+  }
+  return {};
 }
 
 export function missingColumnFromError(message: string): string | null {

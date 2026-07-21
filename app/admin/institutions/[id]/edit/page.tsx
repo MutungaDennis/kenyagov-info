@@ -1,16 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { adminPath } from "@/lib/admin-path";
 import { createBrowserClientAsync } from "@/lib/supabase/client";
+import { INSTITUTION_STATUS_IMPLIES_INACTIVE } from "@/lib/institutions/fields";
 import GovUKBackLink from "@/components/govuk/BackLink";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import InstitutionForm, {
   emptyInstitutionForm,
   institutionFormFromRow,
+  institutionFormSnapshot,
+  institutionFormToPayload,
   type InstitutionFormState,
 } from "@/components/admin/InstitutionForm";
+import type { LeaderPickResult } from "@/components/admin/LeaderLinkPicker";
+import type { SocialLink } from "@/lib/leaders/titles-social";
 
 function uniqueStrings(values: (string | null | undefined)[] | undefined) {
   return [
@@ -22,6 +27,14 @@ function uniqueStrings(values: (string | null | undefined)[] | undefined) {
   ].sort();
 }
 
+function leaderDisplayName(d: Record<string, unknown>): string {
+  const parts = [d.first_name, d.other_names, d.surname]
+    .filter(Boolean)
+    .join(" ")
+    .trim();
+  return parts || String(d.full_name || "").trim() || "";
+}
+
 export default function EditInstitutionPage({
   params,
 }: {
@@ -29,10 +42,12 @@ export default function EditInstitutionPage({
 }) {
   const [id, setId] = useState("");
   const [form, setForm] = useState<InstitutionFormState>(emptyInstitutionForm());
+  const [baseline, setBaseline] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [saved, setSaved] = useState(false);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [warnings, setWarnings] = useState<string[]>([]);
   const [institutionTypes, setInstitutionTypes] = useState<string[]>([]);
   const [mtefSectors, setMtefSectors] = useState<string[]>([]);
 
@@ -79,6 +94,7 @@ export default function EditInstitutionPage({
     (async () => {
       setLoading(true);
       setError(null);
+      setSuccess(null);
       try {
         const res = await fetch(`/api/admin/institutions/${id}`, {
           credentials: "include",
@@ -132,7 +148,28 @@ export default function EditInstitutionPage({
               labels[String(row.reports_to_institution_id)] || "";
           }
         }
+
+        // Resolve linked head label from leaders if needed
+        if (base.current_head_id && !base.current_head) {
+          try {
+            const lr = await fetch(
+              `/api/admin/leaders/${base.current_head_id}`,
+              { credentials: "include", cache: "no-store" },
+            );
+            const lj = await lr.json();
+            if (lr.ok && lj.data) {
+              base.current_head = leaderDisplayName(lj.data);
+              if (!base.head_title && lj.data.title) {
+                base.head_title = String(lj.data.title);
+              }
+            }
+          } catch {
+            /* ignore */
+          }
+        }
+
         setForm(base);
+        setBaseline(institutionFormSnapshot(base));
       } catch (e) {
         setError(e instanceof Error ? e.message : "Failed to load");
       } finally {
@@ -141,6 +178,11 @@ export default function EditInstitutionPage({
     })();
   }, [id]);
 
+  const isDirty = useMemo(
+    () => institutionFormSnapshot(form) !== baseline,
+    [form, baseline],
+  );
+
   const onChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
@@ -148,14 +190,24 @@ export default function EditInstitutionPage({
   ) => {
     const { name, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
-    setForm(
-      (prev) =>
-        ({
-          ...prev,
-          [name]: type === "checkbox" ? checked : value,
-        }) as InstitutionFormState,
-    );
-    setSaved(false);
+    setForm((prev) => {
+      const next = {
+        ...prev,
+        [name]: type === "checkbox" ? checked : value,
+      } as InstitutionFormState;
+
+      // Lifecycle status can suggest publish flag (admin can still override)
+      if (name === "status" && typeof value === "string") {
+        if (value === "Active") next.is_active = true;
+        else if (INSTITUTION_STATUS_IMPLIES_INACTIVE.has(value)) {
+          next.is_active = false;
+        }
+      }
+      // Manual name edit without a picker still allowed; keep id if same label
+      return next;
+    });
+    setSuccess(null);
+    setError(null);
   };
 
   const onHierarchyChange = (
@@ -186,20 +238,43 @@ export default function EditInstitutionPage({
         reports_to_institution_label: pick.label,
       };
     });
-    setSaved(false);
+    setSuccess(null);
+    setError(null);
+  };
+
+  const onHeadLeaderChange = (pick: LeaderPickResult) => {
+    setForm((prev) => ({
+      ...prev,
+      current_head_id: pick.id,
+      current_head: pick.label || prev.current_head,
+      // Prefill title only when empty so role-at-institution can differ from leader snapshot
+      head_title: prev.head_title.trim()
+        ? prev.head_title
+        : pick.title || prev.head_title,
+    }));
+    setSuccess(null);
+    setError(null);
+  };
+
+  const onSocialLinksChange = (links: SocialLink[]) => {
+    setForm((prev) => ({ ...prev, social_links: links }));
+    setSuccess(null);
+    setError(null);
   };
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isDirty || submitting) return;
     setSubmitting(true);
     setError(null);
-    setSaved(false);
+    setSuccess(null);
+    setWarnings([]);
     try {
       const res = await fetch(`/api/admin/institutions/${id}`, {
         method: "PATCH",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify(institutionFormToPayload(form)),
       });
       const json = await res.json();
       if (!res.ok) {
@@ -208,12 +283,27 @@ export default function EditInstitutionPage({
             "Update failed",
         );
       }
-      setSaved(true);
-      if (json.data?.slug) {
-        setForm((f) => ({ ...f, slug: json.data.slug }));
+
+      // Re-baseline from saved form (+ server slug if returned)
+      const nextForm: InstitutionFormState = {
+        ...form,
+        slug: json.data?.slug ? String(json.data.slug) : form.slug,
+      };
+      setForm(nextForm);
+      setBaseline(institutionFormSnapshot(nextForm));
+      setSuccess("Changes saved successfully.");
+
+      const dropped = Array.isArray(json.dropped)
+        ? (json.dropped as string[])
+        : [];
+      if (dropped.length) {
+        setWarnings([
+          `Saved, but some fields were skipped (missing column or enum value): ${dropped.join(", ")}. Run enhance_institutions_head_social_status.sql if needed.`,
+        ]);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
+      setSuccess(null);
     } finally {
       setSubmitting(false);
     }
@@ -241,19 +331,26 @@ export default function EditInstitutionPage({
       <main className="govuk-main-wrapper">
         <h1 className="govuk-heading-xl">Edit institution</h1>
         <p className="govuk-body">
-          All classification enums and array fields match the database schema
-          you provided.
+          Link the current head to a leader, set organisation social profiles,
+          lifecycle status, and verification. Save activates only when you change
+          something.
         </p>
         {error && (
           <div className="govuk-error-summary" role="alert">
-            <h2 className="govuk-error-summary__title">There is a problem</h2>
+            <h2 className="govuk-error-summary__title">Save failed</h2>
             <p className="govuk-body">{error}</p>
           </div>
         )}
-        {saved && (
-          <div className="govuk-notification-banner govuk-notification-banner--success">
+        {success && (
+          <div
+            className="govuk-notification-banner govuk-notification-banner--success"
+            role="status"
+          >
+            <div className="govuk-notification-banner__header">
+              <h2 className="govuk-notification-banner__title">Success</h2>
+            </div>
             <div className="govuk-notification-banner__content">
-              <p className="govuk-notification-banner__heading">Saved</p>
+              <p className="govuk-notification-banner__heading">{success}</p>
               {form.slug && (
                 <p className="govuk-body">
                   <Link
@@ -268,12 +365,26 @@ export default function EditInstitutionPage({
             </div>
           </div>
         )}
+        {warnings.length > 0 && (
+          <div className="govuk-warning-text">
+            <span className="govuk-warning-text__icon" aria-hidden="true">
+              !
+            </span>
+            <strong className="govuk-warning-text__text">
+              <span className="govuk-visually-hidden">Warning</span>
+              {warnings.join(" ")}
+            </strong>
+          </div>
+        )}
         <InstitutionForm
           form={form}
           onChange={onChange}
           onHierarchyChange={onHierarchyChange}
+          onHeadLeaderChange={onHeadLeaderChange}
+          onSocialLinksChange={onSocialLinksChange}
           onSubmit={onSubmit}
           submitting={submitting}
+          canSave={isDirty}
           submitLabel="Save changes"
           institutionTypes={institutionTypes}
           mtefSectors={mtefSectors}

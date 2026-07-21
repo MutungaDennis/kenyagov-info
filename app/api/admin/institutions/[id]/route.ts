@@ -94,6 +94,7 @@ export async function PATCH(request: NextRequest, context: Ctx) {
         "arm_of_government",
         "status",
         "verification_status",
+        "current_head_id",
       ]) {
         if (col in working && badValMatch?.[2] === String(working[col])) {
           delete working[col];

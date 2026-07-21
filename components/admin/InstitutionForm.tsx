@@ -15,6 +15,14 @@ import {
   formatTextArray,
 } from "@/lib/institutions/fields";
 import InstitutionLinkPicker from "@/components/admin/InstitutionLinkPicker";
+import LeaderLinkPicker, {
+  type LeaderPickResult,
+} from "@/components/admin/LeaderLinkPicker";
+import {
+  SOCIAL_PLATFORM_OPTIONS,
+  parseSocialLinks,
+  type SocialLink,
+} from "@/lib/leaders/titles-social";
 
 export type InstitutionFormState = {
   name: string;
@@ -84,10 +92,15 @@ export type InstitutionFormState = {
   whatsapp: string;
   latitude: string;
   longitude: string;
+  /** FK to leaders.id when head is linked from the directory */
+  current_head_id: string;
+  /** Display name snapshot (auto-filled when a leader is picked) */
   current_head: string;
   head_title: string;
   head_appointment_date: string;
   board_chair: string;
+  /** Organisation social profiles (saved as social_media jsonb) */
+  social_links: SocialLink[];
   logo_url: string;
   cover_image_url: string;
   citizen_charter_url: string;
@@ -172,10 +185,12 @@ export const emptyInstitutionForm = (): InstitutionFormState => ({
   whatsapp: "",
   latitude: "",
   longitude: "",
+  current_head_id: "",
   current_head: "",
   head_title: "",
   head_appointment_date: "",
   board_chair: "",
+  social_links: [],
   logo_url: "",
   cover_image_url: "",
   citizen_charter_url: "",
@@ -187,7 +202,7 @@ export const emptyInstitutionForm = (): InstitutionFormState => ({
   number_of_employees: "",
   annual_budget_estimate: "",
   status: "Active",
-  verification_status: "Pending",
+  verification_status: "Unverified",
   is_active: true,
   data_source: "",
   source_url: "",
@@ -275,10 +290,12 @@ export function institutionFormFromRow(
     whatsapp: s("whatsapp"),
     latitude: n("latitude"),
     longitude: n("longitude"),
+    current_head_id: s("current_head_id"),
     current_head: s("current_head"),
     head_title: s("head_title"),
     head_appointment_date: d("head_appointment_date"),
     board_chair: s("board_chair"),
+    social_links: parseSocialLinks(data.social_media),
     logo_url: s("logo_url"),
     cover_image_url: s("cover_image_url"),
     citizen_charter_url: s("citizen_charter_url"),
@@ -290,7 +307,7 @@ export function institutionFormFromRow(
     number_of_employees: n("number_of_employees"),
     annual_budget_estimate: n("annual_budget_estimate"),
     status: s("status") || "Active",
-    verification_status: s("verification_status") || "Pending",
+    verification_status: s("verification_status") || "Unverified",
     is_active: data.is_active !== false,
     data_source: s("data_source"),
     source_url: s("source_url"),
@@ -310,9 +327,15 @@ type Props = {
       | "reports_to_institution",
     pick: { id: string; label: string },
   ) => void;
+  /** Link current head from leaders directory */
+  onHeadLeaderChange?: (pick: LeaderPickResult) => void;
+  /** Social media rows */
+  onSocialLinksChange?: (links: SocialLink[]) => void;
   onSubmit: (e: FormEvent) => void;
   submitting: boolean;
   submitLabel: string;
+  /** When false, Save is disabled (no unsaved changes) */
+  canSave?: boolean;
   institutionTypes?: string[];
   mtefSectors?: string[];
   cancelHref: string;
@@ -347,15 +370,20 @@ export default function InstitutionForm({
   form,
   onChange,
   onHierarchyChange,
+  onHeadLeaderChange,
+  onSocialLinksChange,
   onSubmit,
   submitting,
   submitLabel,
+  canSave = true,
   institutionTypes = [],
   mtefSectors = [],
   cancelHref,
   extraActions,
   excludeInstitutionId,
 }: Props) {
+  const saveEnabled = canSave && !submitting;
+
   return (
     <form onSubmit={onSubmit} className="govuk-!-margin-top-4">
       <h2 className="govuk-heading-m">Identity</h2>
@@ -963,9 +991,28 @@ export default function InstitutionForm({
       </div>
 
       <h2 className="govuk-heading-m">Leadership</h2>
+      <p className="govuk-hint">
+        Link the current head to an existing leader so the public page can open
+        their profile. Fill head title and appointment date for this role at the
+        institution.
+      </p>
+      {onHeadLeaderChange && (
+        <LeaderLinkPicker
+          id="current_head_leader"
+          label="Current head (from leaders)"
+          hint="Search the officials directory. Creates a proper link on the public site."
+          valueId={form.current_head_id}
+          valueLabel={form.current_head}
+          onChange={onHeadLeaderChange}
+        />
+      )}
       <div className="govuk-grid-row">
-        <div className="govuk-grid-column-one-quarter">
-          <Field id="current_head" label="Current head">
+        <div className="govuk-grid-column-one-half">
+          <Field
+            id="current_head"
+            label="Current head name"
+            hint="Auto-filled when you pick a leader; you can also type a name if they are not in the directory yet."
+          >
             <input
               className="govuk-input"
               id="current_head"
@@ -975,18 +1022,25 @@ export default function InstitutionForm({
             />
           </Field>
         </div>
-        <div className="govuk-grid-column-one-quarter">
-          <Field id="head_title" label="Head title">
+        <div className="govuk-grid-column-one-half">
+          <Field
+            id="head_title"
+            label="Head title"
+            hint="Role at this institution (e.g. Cabinet Secretary, Chairperson, Director General)"
+          >
             <input
               className="govuk-input"
               id="head_title"
               name="head_title"
               value={form.head_title}
               onChange={onChange}
+              placeholder="e.g. Cabinet Secretary"
             />
           </Field>
         </div>
-        <div className="govuk-grid-column-one-quarter">
+      </div>
+      <div className="govuk-grid-row">
+        <div className="govuk-grid-column-one-half">
           <Field id="head_appointment_date" label="Head appointment date">
             <input
               className="govuk-input"
@@ -998,7 +1052,7 @@ export default function InstitutionForm({
             />
           </Field>
         </div>
-        <div className="govuk-grid-column-one-quarter">
+        <div className="govuk-grid-column-one-half">
           <Field id="board_chair" label="Board chair">
             <input
               className="govuk-input"
@@ -1156,6 +1210,92 @@ export default function InstitutionForm({
         </div>
       </div>
 
+      <h2 className="govuk-heading-m">Social media</h2>
+      <p className="govuk-hint">
+        Organisation profiles (not the head’s personal accounts). Choose the
+        platform, then paste the full profile URL.
+      </p>
+      {(form.social_links || []).map((link, i) => (
+        <div
+          key={i}
+          className="govuk-grid-row govuk-!-margin-bottom-2"
+          style={{ alignItems: "end" }}
+        >
+          <div className="govuk-grid-column-one-third">
+            <div className="govuk-form-group">
+              <label className="govuk-label" htmlFor={`inst-soc-plat-${i}`}>
+                Platform
+              </label>
+              <select
+                id={`inst-soc-plat-${i}`}
+                className="govuk-select"
+                value={link.platform}
+                onChange={(e) => {
+                  if (!onSocialLinksChange) return;
+                  const next = [...(form.social_links || [])];
+                  next[i] = { ...next[i], platform: e.target.value };
+                  onSocialLinksChange(next);
+                }}
+              >
+                <option value="">— Select —</option>
+                {SOCIAL_PLATFORM_OPTIONS.map((p) => (
+                  <option key={p.value} value={p.value}>
+                    {p.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className="govuk-grid-column-one-half">
+            <div className="govuk-form-group">
+              <label className="govuk-label" htmlFor={`inst-soc-url-${i}`}>
+                Profile URL
+              </label>
+              <input
+                id={`inst-soc-url-${i}`}
+                className="govuk-input"
+                type="url"
+                value={link.url}
+                onChange={(e) => {
+                  if (!onSocialLinksChange) return;
+                  const next = [...(form.social_links || [])];
+                  next[i] = { ...next[i], url: e.target.value };
+                  onSocialLinksChange(next);
+                }}
+                placeholder="https://x.com/…"
+              />
+            </div>
+          </div>
+          <div className="govuk-grid-column-one-sixth">
+            <button
+              type="button"
+              className="govuk-button govuk-button--secondary"
+              onClick={() => {
+                if (!onSocialLinksChange) return;
+                onSocialLinksChange(
+                  (form.social_links || []).filter((_, j) => j !== i),
+                );
+              }}
+            >
+              Remove
+            </button>
+          </div>
+        </div>
+      ))}
+      <button
+        type="button"
+        className="govuk-button govuk-button--secondary govuk-!-margin-bottom-6"
+        onClick={() => {
+          if (!onSocialLinksChange) return;
+          onSocialLinksChange([
+            ...(form.social_links || []),
+            { platform: "x", url: "" },
+          ]);
+        }}
+      >
+        Add social link
+      </button>
+
       <h2 className="govuk-heading-m">Transparency & size</h2>
       <div className="govuk-grid-row">
         <div className="govuk-grid-column-one-half">
@@ -1260,9 +1400,19 @@ export default function InstitutionForm({
       </div>
 
       <h2 className="govuk-heading-m">Status</h2>
+      <p className="govuk-hint">
+        <strong>Status</strong> is the organisation’s real-world lifecycle
+        (active, former, restructured, etc.).{" "}
+        <strong>Published on public site</strong> controls whether it appears in
+        the public directory. New records default to Unverified until reviewed.
+      </p>
       <div className="govuk-grid-row">
         <div className="govuk-grid-column-one-third">
-          <Field id="status" label="Status">
+          <Field
+            id="status"
+            label="Status"
+            hint="Use Former / Dissolved / Merged for organisations that no longer exist as listed."
+          >
             <select
               className="govuk-select"
               id="status"
@@ -1270,6 +1420,12 @@ export default function InstitutionForm({
               value={form.status}
               onChange={onChange}
             >
+              {!INSTITUTION_STATUS_OPTIONS.includes(
+                form.status as (typeof INSTITUTION_STATUS_OPTIONS)[number],
+              ) &&
+                form.status && (
+                  <option value={form.status}>{form.status}</option>
+                )}
               {INSTITUTION_STATUS_OPTIONS.map((o) => (
                 <option key={o} value={o}>
                   {o}
@@ -1279,7 +1435,11 @@ export default function InstitutionForm({
           </Field>
         </div>
         <div className="govuk-grid-column-one-third">
-          <Field id="verification_status" label="Verification">
+          <Field
+            id="verification_status"
+            label="Verification"
+            hint="Default Unverified. Set Verified when facts are checked."
+          >
             <select
               className="govuk-select"
               id="verification_status"
@@ -1287,6 +1447,14 @@ export default function InstitutionForm({
               value={form.verification_status}
               onChange={onChange}
             >
+              {!VERIFICATION_STATUS_OPTIONS.includes(
+                form.verification_status as (typeof VERIFICATION_STATUS_OPTIONS)[number],
+              ) &&
+                form.verification_status && (
+                  <option value={form.verification_status}>
+                    {form.verification_status}
+                  </option>
+                )}
               {VERIFICATION_STATUS_OPTIONS.map((o) => (
                 <option key={o} value={o}>
                   {o}
@@ -1310,7 +1478,7 @@ export default function InstitutionForm({
                 className="govuk-label govuk-checkboxes__label"
                 htmlFor="is_active"
               >
-                Active / published on site
+                Published on public site
               </label>
             </div>
           </div>
@@ -1343,7 +1511,12 @@ export default function InstitutionForm({
       </div>
 
       <div className="govuk-button-group govuk-!-margin-top-6">
-        <button type="submit" className="govuk-button" disabled={submitting}>
+        <button
+          type="submit"
+          className="govuk-button"
+          disabled={!saveEnabled}
+          aria-disabled={!saveEnabled}
+        >
           {submitting ? "Saving…" : submitLabel}
         </button>
         <a href={cancelHref} className="govuk-button govuk-button--secondary">
@@ -1351,6 +1524,46 @@ export default function InstitutionForm({
         </a>
         {extraActions}
       </div>
+      {!canSave && !submitting && (
+        <p className="govuk-hint">No unsaved changes.</p>
+      )}
     </form>
   );
+}
+
+/** Stable snapshot for dirty-checking (ignores label-only hierarchy fields). */
+export function institutionFormSnapshot(form: InstitutionFormState): string {
+  const {
+    parent_institution_label: _p,
+    supervising_ministry_label: _s,
+    reports_to_institution_label: _r,
+    social_links,
+    ...rest
+  } = form;
+  return JSON.stringify({
+    ...rest,
+    social_links: (social_links || [])
+      .map((l) => ({
+        platform: (l.platform || "").trim().toLowerCase(),
+        url: (l.url || "").trim(),
+      }))
+      .filter((l) => l.platform || l.url)
+      .sort((a, b) => a.platform.localeCompare(b.platform)),
+  });
+}
+
+/** Payload for create/update APIs (maps social_links → social_media). */
+export function institutionFormToPayload(
+  form: InstitutionFormState,
+): Record<string, unknown> {
+  const { social_links, parent_institution_label, supervising_ministry_label, reports_to_institution_label, ...rest } =
+    form;
+  void parent_institution_label;
+  void supervising_ministry_label;
+  void reports_to_institution_label;
+  return {
+    ...rest,
+    social_media: (social_links || []).filter((l) => l.platform && l.url.trim()),
+    current_head_id: form.current_head_id || null,
+  };
 }

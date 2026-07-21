@@ -1,15 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { adminPath } from "@/lib/admin-path";
 import { createBrowserClientAsync } from "@/lib/supabase/client";
+import { INSTITUTION_STATUS_IMPLIES_INACTIVE } from "@/lib/institutions/fields";
 import GovUKBackLink from "@/components/govuk/BackLink";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import InstitutionForm, {
   emptyInstitutionForm,
+  institutionFormSnapshot,
+  institutionFormToPayload,
   type InstitutionFormState,
 } from "@/components/admin/InstitutionForm";
+import type { LeaderPickResult } from "@/components/admin/LeaderLinkPicker";
+import type { SocialLink } from "@/lib/leaders/titles-social";
 
 function uniqueStrings(values: (string | null | undefined)[] | undefined) {
   return [
@@ -24,8 +29,12 @@ function uniqueStrings(values: (string | null | undefined)[] | undefined) {
 export default function NewInstitutionPage() {
   const router = useRouter();
   const [form, setForm] = useState<InstitutionFormState>(emptyInstitutionForm());
+  const [baseline] = useState(() =>
+    institutionFormSnapshot(emptyInstitutionForm()),
+  );
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [institutionTypes, setInstitutionTypes] = useState<string[]>([]);
   const [mtefSectors, setMtefSectors] = useState<string[]>([]);
 
@@ -63,6 +72,14 @@ export default function NewInstitutionPage() {
     })();
   }, []);
 
+  const isDirty = useMemo(
+    () => institutionFormSnapshot(form) !== baseline,
+    [form, baseline],
+  );
+
+  // Create requires at least a name
+  const canSave = isDirty && form.name.trim().length > 0;
+
   const onChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
@@ -83,8 +100,16 @@ export default function NewInstitutionPage() {
           .replace(/\s+/g, "-")
           .replace(/-+/g, "-");
       }
+      if (name === "status" && typeof value === "string") {
+        if (value === "Active") next.is_active = true;
+        else if (INSTITUTION_STATUS_IMPLIES_INACTIVE.has(value)) {
+          next.is_active = false;
+        }
+      }
       return next;
     });
+    setError(null);
+    setSuccess(null);
   };
 
   const onHierarchyChange = (
@@ -115,18 +140,41 @@ export default function NewInstitutionPage() {
         reports_to_institution_label: pick.label,
       };
     });
+    setError(null);
+    setSuccess(null);
+  };
+
+  const onHeadLeaderChange = (pick: LeaderPickResult) => {
+    setForm((prev) => ({
+      ...prev,
+      current_head_id: pick.id,
+      current_head: pick.label || prev.current_head,
+      head_title: prev.head_title.trim()
+        ? prev.head_title
+        : pick.title || prev.head_title,
+    }));
+    setError(null);
+    setSuccess(null);
+  };
+
+  const onSocialLinksChange = (links: SocialLink[]) => {
+    setForm((prev) => ({ ...prev, social_links: links }));
+    setError(null);
+    setSuccess(null);
   };
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canSave || submitting) return;
     setSubmitting(true);
     setError(null);
+    setSuccess(null);
     try {
       const res = await fetch("/api/admin/institutions", {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify(institutionFormToPayload(form)),
       });
       const json = await res.json();
       if (!res.ok) {
@@ -135,6 +183,7 @@ export default function NewInstitutionPage() {
             "Create failed",
         );
       }
+      setSuccess("Institution created. Opening editor…");
       if (json.data?.id) {
         router.push(adminPath(`institutions/${json.data.id}/edit`));
       } else {
@@ -142,6 +191,7 @@ export default function NewInstitutionPage() {
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
+      setSuccess(null);
     } finally {
       setSubmitting(false);
     }
@@ -161,21 +211,37 @@ export default function NewInstitutionPage() {
       <main className="govuk-main-wrapper">
         <h1 className="govuk-heading-xl">Add government institution</h1>
         <p className="govuk-body">
-          Fields match the live <code>institutions</code> schema (enums,
-          arrays, contact, leadership, classification).
+          Enter identity details, optionally link a current head from leaders,
+          social profiles, and status. Verification defaults to Unverified.
         </p>
         {error && (
           <div className="govuk-error-summary" role="alert">
-            <h2 className="govuk-error-summary__title">There is a problem</h2>
+            <h2 className="govuk-error-summary__title">Create failed</h2>
             <p className="govuk-body">{error}</p>
+          </div>
+        )}
+        {success && (
+          <div
+            className="govuk-notification-banner govuk-notification-banner--success"
+            role="status"
+          >
+            <div className="govuk-notification-banner__header">
+              <h2 className="govuk-notification-banner__title">Success</h2>
+            </div>
+            <div className="govuk-notification-banner__content">
+              <p className="govuk-notification-banner__heading">{success}</p>
+            </div>
           </div>
         )}
         <InstitutionForm
           form={form}
           onChange={onChange}
           onHierarchyChange={onHierarchyChange}
+          onHeadLeaderChange={onHeadLeaderChange}
+          onSocialLinksChange={onSocialLinksChange}
           onSubmit={onSubmit}
           submitting={submitting}
+          canSave={canSave}
           submitLabel="Create institution"
           institutionTypes={institutionTypes}
           mtefSectors={mtefSectors}

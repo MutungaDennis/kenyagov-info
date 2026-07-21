@@ -5,6 +5,11 @@ import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { createBrowserClientAsync } from "@/lib/supabase/client";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
+import {
+  parseSocialLinks,
+  socialPlatformLabel,
+  normalizeSocialUrl,
+} from "@/lib/leaders/titles-social";
 
 type Institution = {
   id: string;
@@ -24,8 +29,10 @@ type Institution = {
   mission?: string | null;
   functions?: string[] | null;
   regulated_sectors?: string[] | null;
+  current_head_id?: string | null;
   current_head?: string | null;
   head_title?: string | null;
+  head_appointment_date?: string | null;
   board_chair?: string | null;
   website_url?: string | null;
   email?: string | null;
@@ -35,7 +42,7 @@ type Institution = {
   physical_address?: string | null;
   latitude?: number | null;
   longitude?: number | null;
-  social_media?: any;
+  social_media?: unknown;
   legal_basis_name?: string | null;
   parent_institution_id?: string | null;
   supervising_ministry_id?: string | null;
@@ -73,6 +80,8 @@ export default function InstitutionProfilePage() {
   const [childInstitutions, setChildInstitutions] = useState<ChildInstitution[]>(
     [],
   );
+  /** Resolved from current_head_id for public people link */
+  const [headLeaderSlug, setHeadLeaderSlug] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -165,6 +174,36 @@ export default function InstitutionProfilePage() {
           .order("name");
 
         if (childrenData) setChildInstitutions(childrenData);
+
+        // Resolve linked head → people profile slug
+        if (instData.current_head_id) {
+          const { data: headLeader } = await supabase
+            .from("leaders")
+            .select("slug, full_name, first_name, other_names, surname")
+            .eq("id", instData.current_head_id)
+            .maybeSingle();
+          if (headLeader?.slug) {
+            setHeadLeaderSlug(String(headLeader.slug));
+          } else {
+            setHeadLeaderSlug(null);
+          }
+          // Prefer live name from leaders when available
+          if (headLeader && !instData.current_head) {
+            const parts = [
+              headLeader.first_name,
+              headLeader.other_names,
+              headLeader.surname,
+            ]
+              .filter(Boolean)
+              .join(" ")
+              .trim();
+            instData.current_head =
+              parts || headLeader.full_name || instData.current_head;
+            setInstitution({ ...instData });
+          }
+        } else {
+          setHeadLeaderSlug(null);
+        }
       } catch (err: unknown) {
         console.error("Error fetching institution:", err);
         setError("Failed to load institution profile.");
@@ -212,6 +251,12 @@ export default function InstitutionProfilePage() {
   const directParent = parentChain.length
     ? parentChain[parentChain.length - 1]
     : null;
+  const socialLinks = parseSocialLinks(institution.social_media);
+  const hasHead =
+    Boolean(institution.current_head) ||
+    Boolean(institution.head_title) ||
+    Boolean(institution.board_chair) ||
+    currentLeaders.length > 0;
 
   return (
   <>
@@ -381,10 +426,43 @@ export default function InstitutionProfilePage() {
             )}
 
             {/* Leadership */}
-            {(currentLeaders.length > 0 || institution.board_chair) && (
+            {hasHead && (
               <>
                 <h2 className="govuk-heading-l govuk-!-margin-top-9">Leadership</h2>
                 <dl className="govuk-summary-list">
+                  {(institution.current_head || institution.head_title) && (
+                    <div className="govuk-summary-list__row">
+                      <dt className="govuk-summary-list__key">
+                        {institution.head_title || "Current head"}
+                      </dt>
+                      <dd className="govuk-summary-list__value">
+                        {institution.current_head ? (
+                          headLeaderSlug ? (
+                            <Link
+                              href={`/government/people/${headLeaderSlug}`}
+                              className="govuk-link"
+                            >
+                              {institution.current_head}
+                            </Link>
+                          ) : (
+                            institution.current_head
+                          )
+                        ) : (
+                          "—"
+                        )}
+                        {institution.head_appointment_date && (
+                          <span className="govuk-hint govuk-!-margin-bottom-0">
+                            {" "}
+                            · Appointed{" "}
+                            {String(institution.head_appointment_date).slice(
+                              0,
+                              10,
+                            )}
+                          </span>
+                        )}
+                      </dd>
+                    </div>
+                  )}
                   {currentLeaders.map((leader: any, index: number) => (
                     <div key={index} className="govuk-summary-list__row">
                       <dt className="govuk-summary-list__key">{leader.title}</dt>
@@ -444,7 +522,11 @@ export default function InstitutionProfilePage() {
             )}
 
             {/* Contact Information */}
-            {(institution.website_url || institution.email || institution.phone || institution.postal_address) && (
+            {(institution.website_url ||
+              institution.email ||
+              institution.phone ||
+              institution.postal_address ||
+              socialLinks.length > 0) && (
               <>
                 <h2 className="govuk-heading-l govuk-!-margin-top-9">Contact Information</h2>
                 <dl className="govuk-summary-list">
@@ -478,6 +560,26 @@ export default function InstitutionProfilePage() {
                       <dd className="govuk-summary-list__value">{institution.postal_address}</dd>
                     </div>
                   )}
+                  {socialLinks.map((link) => (
+                    <div
+                      key={`${link.platform}-${link.url}`}
+                      className="govuk-summary-list__row"
+                    >
+                      <dt className="govuk-summary-list__key">
+                        {socialPlatformLabel(link.platform)}
+                      </dt>
+                      <dd className="govuk-summary-list__value">
+                        <a
+                          href={normalizeSocialUrl(link.url)}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="govuk-link"
+                        >
+                          {link.url}
+                        </a>
+                      </dd>
+                    </div>
+                  ))}
                 </dl>
               </>
             )}
