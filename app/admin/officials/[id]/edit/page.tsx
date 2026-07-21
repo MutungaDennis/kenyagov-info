@@ -831,13 +831,14 @@ export default function EditOfficialPage({
         );
       }
 
+      const wasEdit = Boolean(editingRoleId);
       setShowRoleForm(false);
       setEditingRoleId(null);
       setRoleForm(emptyRole);
       await loadLeader();
       setSaved(true);
       setSuccessMessage(
-        editingRoleId
+        wasEdit
           ? "Position updated successfully."
           : "Position saved successfully.",
       );
