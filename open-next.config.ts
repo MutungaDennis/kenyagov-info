@@ -1,27 +1,28 @@
+import type { OpenNextConfig } from "@opennextjs/aws/types/open-next.js";
 import { defineCloudflareConfig } from "@opennextjs/cloudflare";
 import staticAssetsIncrementalCache from "@opennextjs/cloudflare/overrides/incremental-cache/static-assets-incremental-cache";
 
 /**
- * OpenNext Cloudflare adapter config.
+ * OpenNext Cloudflare adapter — no R2 required.
  *
- * Incremental cache uses Workers Static Assets (build-time prerender data).
- * This does NOT require R2, so deploy succeeds even when R2 is not enabled
- * on the Cloudflare account.
+ * Uses Workers Static Assets for the incremental cache so deploy works
+ * without enabling R2 on the Cloudflare account.
  *
- * Trade-off: no runtime write-back for ISR revalidation into object storage.
- * Time-based revalidate still works by regenerating via the Worker when needed.
+ * After changing this file you MUST rebuild before deploy:
+ *   pnpm run deploy
  *
- * To upgrade later (optional R2 ISR store):
- * 1. Enable R2 in the Cloudflare dashboard
- * 2. `pnpm exec wrangler r2 bucket create kenyagov-info-next-cache`
- * 3. Restore r2_buckets in wrangler.jsonc and r2IncrementalCache here
+ * Do not run only `npx wrangler deploy` after a config change — that reuses
+ * the last `.open-next` output (which may still reference R2).
  *
  * @see https://opennext.js.org/cloudflare/caching
  */
-export default {
+const config = {
   ...defineCloudflareConfig({
     incrementalCache: staticAssetsIncrementalCache,
     enableCacheInterception: true,
   }),
+  // Avoid recursive `pnpm run build` → opennext → build → …
   buildCommand: "pnpm run build:next",
-};
+} satisfies OpenNextConfig;
+
+export default config;

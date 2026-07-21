@@ -84,11 +84,19 @@ export async function POST(request: NextRequest) {
     if (Number.isFinite(n)) row.rank_order = n;
   }
 
-  let { data, error } = await auth.supabase
-    .from("positions")
-    .insert(row)
-    .select("id, title, code, level, rank_order, description")
-    .single();
+  // Loose result type — select shapes differ when optional columns are dropped
+  let data: Record<string, unknown> | null = null;
+  let error: { message: string } | null = null;
+
+  {
+    const res = await auth.supabase
+      .from("positions")
+      .insert(row)
+      .select("id, title, code, level, rank_order, description")
+      .single();
+    data = res.data as Record<string, unknown> | null;
+    error = res.error;
+  }
 
   // Unique code collision — append suffix
   if (error && /unique|duplicate|code/i.test(error.message)) {
@@ -98,7 +106,7 @@ export async function POST(request: NextRequest) {
       .insert(row)
       .select("id, title, code, level, rank_order, description")
       .single();
-    data = retry.data;
+    data = retry.data as Record<string, unknown> | null;
     error = retry.error;
   }
 
@@ -111,7 +119,7 @@ export async function POST(request: NextRequest) {
       .insert(row)
       .select("id, title, code, level")
       .single();
-    data = retry.data;
+    data = retry.data as Record<string, unknown> | null;
     error = retry.error;
   }
 
