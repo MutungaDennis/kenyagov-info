@@ -14,11 +14,14 @@ export async function GET(request: NextRequest) {
 
   const { searchParams } = new URL(request.url);
   const q = searchParams.get("q")?.trim() || "";
+  // Supabase/PostgREST typically caps a single range at 1000 rows.
+  // Admin list clients should page with offset until total is reached.
+  const MAX_PAGE = 1000;
   const limit = Math.min(
-    500,
-    Math.max(1, parseInt(searchParams.get("limit") || "200", 10)),
+    MAX_PAGE,
+    Math.max(1, parseInt(searchParams.get("limit") || "200", 10) || 200),
   );
-  const offset = Math.max(0, parseInt(searchParams.get("offset") || "0", 10));
+  const offset = Math.max(0, parseInt(searchParams.get("offset") || "0", 10) || 0);
 
   let query = auth.supabase
     .from("institutions")

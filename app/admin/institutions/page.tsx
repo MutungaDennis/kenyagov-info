@@ -41,15 +41,39 @@ export default function AdminInstitutionsPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/admin/institutions?limit=500", {
-        credentials: "include",
-        cache: "no-store",
-      });
-      const json = await res.json();
-      if (!res.ok) {
-        throw new Error(json.error || `Failed to load (${res.status})`);
+      // API max page is 1000; walk offsets until every row is loaded.
+      const PAGE_SIZE = 1000;
+      const all: Institution[] = [];
+      let offset = 0;
+      let total = Number.POSITIVE_INFINITY;
+
+      while (offset < total) {
+        const params = new URLSearchParams({
+          limit: String(PAGE_SIZE),
+          offset: String(offset),
+        });
+        const res = await fetch(`/api/admin/institutions?${params}`, {
+          credentials: "include",
+          cache: "no-store",
+        });
+        const json = await res.json();
+        if (!res.ok) {
+          throw new Error(json.error || `Failed to load (${res.status})`);
+        }
+        const batch = (json.data || []) as Institution[];
+        if (typeof json.total === "number" && Number.isFinite(json.total)) {
+          total = json.total;
+        } else if (batch.length < PAGE_SIZE) {
+          total = offset + batch.length;
+        }
+        all.push(...batch);
+        if (batch.length === 0) break;
+        offset += batch.length;
+        // Safety valve against runaway loops
+        if (offset > 50_000) break;
       }
-      setInstitutions(json.data || []);
+
+      setInstitutions(all);
     } catch (e) {
       console.error(e);
       setError(e instanceof Error ? e.message : "Failed to load institutions");
