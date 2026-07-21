@@ -79,30 +79,41 @@ export async function GET(request: NextRequest) {
     for (const col of FACET_COLUMNS) sets[col] = new Set();
     const PAGE = 1000;
     let offset = 0;
+    // Static select string so supabase-js types resolve; cast rows via unknown
+    // (dynamic .select(string) is typed as GenericStringError[]).
+    const FACET_SELECT = `
+      arm_of_government, institution_category, institution_type, institution_subtype,
+      institution_nature, government_level, constitutional_status, mtef_sector,
+      operational_model, legal_basis_type, funding_model, jurisdiction_scope,
+      cofog_division, cofog_group, status, verification_status, head_title
+    `;
+    const FACET_SELECT_MINIMAL = `
+      arm_of_government, institution_category, institution_type,
+      mtef_sector, institution_nature, status
+    `;
     for (let i = 0; i < 50; i++) {
       const { data, error } = await auth.supabase
         .from("institutions")
-        .select(FACET_COLUMNS.join(", "))
+        .select(FACET_SELECT)
         .range(offset, offset + PAGE - 1);
       if (error) {
         // Fallback minimal facets if some columns missing
         const fb = await auth.supabase
           .from("institutions")
-          .select(
-            "arm_of_government, institution_category, institution_type, mtef_sector, institution_nature, status",
-          )
+          .select(FACET_SELECT_MINIMAL)
           .range(offset, offset + PAGE - 1);
         if (fb.error) {
           return NextResponse.json({ error: fb.error.message }, { status: 500 });
         }
-        for (const row of (fb.data || []) as FacetRow[]) {
+        const fbRows = (fb.data ?? []) as unknown as FacetRow[];
+        for (const row of fbRows) {
           for (const key of Object.keys(row)) collectFacet(sets, row, key);
         }
-        if ((fb.data || []).length < PAGE) break;
-        offset += (fb.data || []).length;
+        if (fbRows.length < PAGE) break;
+        offset += fbRows.length;
         continue;
       }
-      const rows = (data || []) as FacetRow[];
+      const rows = (data ?? []) as unknown as FacetRow[];
       for (const row of rows) {
         for (const col of FACET_COLUMNS) collectFacet(sets, row, col);
       }
