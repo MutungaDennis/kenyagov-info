@@ -3,8 +3,13 @@
 import { useState, useRef, useEffect, useTransition, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Script from "next/script";
-import { createClient } from "@/lib/supabase/client";
+import {
+  createBrowserClientAsync,
+  createClient,
+} from "@/lib/supabase/client";
+import { hasRealSupabasePublicEnv, readSupabasePublicEnv } from "@/lib/supabase/env";
 import { adminPath } from "@/lib/admin-path";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 declare global {
   interface Window {
@@ -28,17 +33,46 @@ declare global {
   }
 }
 
+function mapAuthError(error: {
+  message?: string;
+  code?: string;
+  status?: number;
+} | null): string {
+  const raw = error?.message || "";
+  const code = (error?.code || "").toLowerCase();
+  const lower = raw.toLowerCase();
+
+  if (
+    code === "invalid_credentials" ||
+    lower.includes("invalid login credentials")
+  ) {
+    return (
+      "That email or password is not recognised. Check for typos, or use “Forgotten your password?”. " +
+      "If you just set up the project, run: node scripts/ensure-admin-login.mjs (with ADMIN_PASSWORD set)."
+    );
+  }
+  if (lower.includes("email not confirmed") || code === "email_not_confirmed") {
+    return "Confirm your email in Supabase Authentication before signing in (or run ensure-admin-login.mjs).";
+  }
+  if (lower.includes("captcha") || lower.includes("captcha_token")) {
+    return "Security check failed or expired. Complete the checkbox again, then try signing in.";
+  }
+  if (lower.includes("too many requests") || code === "over_request_rate_limit") {
+    return "Too many sign-in attempts. Wait a few minutes and try again.";
+  }
+  return raw || "Sign-in failed. Check your email and password, then try again.";
+}
+
 export default function AdminLoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
 
-  const supabase = createClient();
-
   const errorSummaryRef = useRef<HTMLDivElement>(null);
   const emailInputRef = useRef<HTMLInputElement>(null);
   const captchaWidgetRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string | null>(null);
+  const supabaseRef = useRef<SupabaseClient | null>(null);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -50,13 +84,43 @@ export default function AdminLoginPage() {
   const [captchaToken, setCaptchaToken] = useState("");
   const [captchaSolved, setCaptchaSolved] = useState(false);
   const [turnstileReady, setTurnstileReady] = useState(false);
+  const [clientReady, setClientReady] = useState(false);
 
   const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "";
-  // Production Cloudflare always needs captcha when site key is set.
-  // Dev without site key: auto-enable button.
   const captchaRequired = Boolean(siteKey);
   const canSubmit =
-    !isPending && (!captchaRequired || captchaSolved || Boolean(captchaToken));
+    clientReady &&
+    !isPending &&
+    (!captchaRequired || captchaSolved || Boolean(captchaToken));
+
+  // Prefer async client so Worker /api/public-env works when build-time env was missing
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const client = await createBrowserClientAsync();
+        if (cancelled) return;
+        supabaseRef.current = client;
+        const env = readSupabasePublicEnv();
+        if (!hasRealSupabasePublicEnv(env)) {
+          setErrorMessage(
+            "Supabase is not configured in this environment (missing URL or public key). Check NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY.",
+          );
+          setClientReady(false);
+          return;
+        }
+        setClientReady(true);
+      } catch (e) {
+        console.error(e);
+        // Fallback sync client
+        supabaseRef.current = createClient();
+        setClientReady(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     const error = searchParams.get("error");
@@ -94,7 +158,6 @@ export default function AdminLoginPage() {
     if (!window.turnstile || !captchaWidgetRef.current) return;
     if (widgetIdRef.current) return;
 
-    // Clear any prior auto-rendered children
     captchaWidgetRef.current.innerHTML = "";
 
     try {
@@ -122,7 +185,6 @@ export default function AdminLoginPage() {
       setTurnstileReady(true);
     } catch (e) {
       console.error("Turnstile render failed:", e);
-      // Do not leave the button permanently disabled if widget fails
       setErrorMessage(
         "Security check failed to load. Refresh the page, or try again in a moment.",
       );
@@ -135,7 +197,6 @@ export default function AdminLoginPage() {
       return;
     }
 
-    // If script already present (global layout), mount immediately
     if (window.turnstile) {
       mountTurnstile();
       return;
@@ -165,7 +226,6 @@ export default function AdminLoginPage() {
     };
   }, [captchaRequired, mountTurnstile]);
 
-  // Fallback: if checkbox appears solved but React state missed the callback
   useEffect(() => {
     if (!captchaRequired || captchaSolved) return;
     const t = setInterval(() => {
@@ -192,7 +252,7 @@ export default function AdminLoginPage() {
 
     const currentErrors: { email?: boolean; password?: boolean } = {};
     if (!email.trim()) currentErrors.email = true;
-    if (!password.trim()) currentErrors.password = true;
+    if (!password) currentErrors.password = true;
 
     if (Object.keys(currentErrors).length > 0) {
       setErrors(currentErrors);
@@ -200,7 +260,6 @@ export default function AdminLoginPage() {
       return;
     }
 
-    // Re-read token at submit time (callback race safety)
     let tokenToUse = captchaToken;
     if (captchaRequired && !tokenToUse) {
       try {
@@ -222,26 +281,36 @@ export default function AdminLoginPage() {
     }
 
     startTransition(async () => {
-      const { error, data } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
+      const supabase =
+        supabaseRef.current || (await createBrowserClientAsync());
+      supabaseRef.current = supabase;
+
+      const env = readSupabasePublicEnv();
+      if (!hasRealSupabasePublicEnv(env)) {
+        setErrorMessage(
+          "Supabase public env is missing. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, then restart the dev server.",
+        );
+        return;
+      }
+
+      const signInOpts: {
+        email: string;
+        password: string;
+        options?: { captchaToken: string };
+      } = {
+        email: email.trim().toLowerCase(),
         password,
-        options: tokenToUse ? { captchaToken: tokenToUse } : undefined,
-      });
+      };
+      // Only send captcha when we have a real token (avoids empty-token noise)
+      if (tokenToUse && tokenToUse.length > 10) {
+        signInOpts.options = { captchaToken: tokenToUse };
+      }
+
+      const { error, data } = await supabase.auth.signInWithPassword(signInOpts);
 
       if (error || !data.user) {
         console.error("Supabase AuthApiError:", error);
-
-        const raw = error?.message || "";
-        const lower = raw.toLowerCase();
-        let message =
-          raw || "The email address or password you entered is incorrect.";
-
-        if (lower.includes("captcha") || lower.includes("captcha_token")) {
-          message =
-            "Security check failed or expired. Complete the checkbox again, then try signing in.";
-        }
-
-        setErrorMessage(message);
+        setErrorMessage(mapAuthError(error));
         setErrors({ email: true, password: true });
         setCaptchaToken("");
         setCaptchaSolved(false);
@@ -255,12 +324,13 @@ export default function AdminLoginPage() {
         return;
       }
 
+      // Ensure profile row exists (RLS may block insert for non-self; service path is preferred offline)
       try {
         const { data: existing } = await supabase
           .from("profiles")
-          .select("id")
+          .select("id, is_admin")
           .eq("id", data.user.id)
-          .single();
+          .maybeSingle();
 
         if (!existing) {
           await supabase.from("profiles").insert({
@@ -273,7 +343,11 @@ export default function AdminLoginPage() {
         /* ignore */
       }
 
-      if (data.user.email === "dennis.mutunga14@gmail.com") {
+      // Bootstrap: known primary admin email always allowed after successful auth
+      const bootstrapEmail = "dennis.mutunga14@gmail.com";
+      if (
+        (data.user.email || "").toLowerCase() === bootstrapEmail.toLowerCase()
+      ) {
         window.location.href = adminPath();
         return;
       }
@@ -283,12 +357,12 @@ export default function AdminLoginPage() {
           .from("profiles")
           .select("is_admin")
           .eq("id", data.user.id)
-          .single();
+          .maybeSingle();
 
         if (!profile?.is_admin) {
           await supabase.auth.signOut();
           setErrorMessage(
-            "This account is not marked as admin. An existing administrator must set is_admin = true for your user in Supabase.",
+            "This account is signed in but not marked as admin. In Supabase, set profiles.is_admin = true for your user, or run: node scripts/ensure-admin-login.mjs",
           );
           setErrors({ email: true, password: true });
           return;
@@ -296,7 +370,7 @@ export default function AdminLoginPage() {
       } catch {
         await supabase.auth.signOut();
         setErrorMessage(
-          "Could not verify admin status. Check the profiles table in Supabase.",
+          "Could not verify admin status. Check the profiles table in Supabase (run create_profiles_table.sql if needed).",
         );
         setErrors({ email: true, password: true });
         return;
@@ -315,12 +389,19 @@ export default function AdminLoginPage() {
       return;
     }
 
-    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-      redirectTo: `${window.location.origin}${adminPath("reset-password")}`,
-    });
+    const supabase =
+      supabaseRef.current || (await createBrowserClientAsync());
+    const { error } = await supabase.auth.resetPasswordForEmail(
+      email.trim().toLowerCase(),
+      {
+        redirectTo: `${window.location.origin}${adminPath("reset-password")}`,
+      },
+    );
 
     if (error) {
-      setErrorMessage("Could not send password reset email. Please try again.");
+      setErrorMessage(
+        "Could not send password reset email. Check the email address, or set a new password with: node scripts/ensure-admin-login.mjs",
+      );
     } else {
       setErrorMessage(null);
       router.push(
@@ -331,7 +412,6 @@ export default function AdminLoginPage() {
 
   return (
     <div className="govuk-width-container govuk-!-margin-top-6 govuk-!-margin-bottom-8">
-      {/* Explicit Turnstile API (explicit render mode — no auto-render attrs) */}
       {captchaRequired && (
         <Script
           src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=onTurnstileLoad"
@@ -451,9 +531,11 @@ export default function AdminLoginPage() {
         >
           {isPending
             ? "Signing in…"
-            : canSubmit
-              ? "Sign in"
-              : "Complete security check to sign in"}
+            : !clientReady
+              ? "Connecting…"
+              : canSubmit
+                ? "Sign in"
+                : "Complete security check to sign in"}
         </button>
 
         <p className="govuk-body">
