@@ -1,4 +1,3 @@
-import type { OpenNextConfig } from "@opennextjs/aws/types/open-next.js";
 import { defineCloudflareConfig } from "@opennextjs/cloudflare";
 import staticAssetsIncrementalCache from "@opennextjs/cloudflare/overrides/incremental-cache/static-assets-incremental-cache";
 
@@ -16,13 +15,11 @@ import staticAssetsIncrementalCache from "@opennextjs/cloudflare/overrides/incre
  *
  * @see https://opennext.js.org/cloudflare/caching
  */
-const config = {
+export default {
   ...defineCloudflareConfig({
     incrementalCache: staticAssetsIncrementalCache,
     enableCacheInterception: true,
   }),
   // Avoid recursive `pnpm run build` → opennext → build → …
   buildCommand: "pnpm run build:next",
-} satisfies OpenNextConfig;
-
-export default config;
+};
