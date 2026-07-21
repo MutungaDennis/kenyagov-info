@@ -197,6 +197,9 @@ export default function EditOfficialPage({
   const [roleSaving, setRoleSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  /** Snapshot of personal-details form for dirty checking */
+  const [personalBaseline, setPersonalBaseline] = useState("");
   const [displayFullName, setDisplayFullName] = useState("");
   const [lookups, setLookups] = useState<Lookups>({
     parties: [],
@@ -376,7 +379,38 @@ export default function EditOfficialPage({
             .map((line: string) => ({ degree: line.trim() }));
         }
       }
-      setQualifications(quals.length ? quals : []);
+      const nextQuals = quals.length ? quals : [];
+      setQualifications(nextQuals);
+      const nextForm: FormState = {
+        first_name: d.first_name || "",
+        other_names: d.other_names || "",
+        surname: d.surname || "",
+        slug: d.slug || "",
+        title: d.title || "",
+        current_party: d.current_party || "",
+        current_constituency: d.current_constituency || "",
+        current_county: d.current_county || "",
+        current_organization: d.current_organization || "",
+        level: d.level || "",
+        bio: d.bio || "",
+        image_url: d.image_url || "",
+        contact_email: d.contact_email || "",
+        phone: d.phone || "",
+        official_website: d.official_website || "",
+        is_active: d.is_active !== false,
+      };
+      // Baseline for dirty Save button (same values as state above)
+      setPersonalBaseline(
+        personalSnapshot(
+          nextForm,
+          parseNameTitles(d.name_titles ?? d.honorifics),
+          parseNationalHonours(d.national_honours ?? d.awards),
+          parseSocialLinks(d.social_media),
+          nextQuals,
+        ),
+      );
+      setSaved(false);
+      setSuccessMessage(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load");
     } finally {
@@ -388,9 +422,65 @@ export default function EditOfficialPage({
     loadLeader();
   }, [loadLeader]);
 
+  function personalSnapshot(
+    f: FormState,
+    titles: string[],
+    honours: string[],
+    social: SocialLink[],
+    quals: AcademicQualification[],
+  ): string {
+    return JSON.stringify({
+      form: f,
+      nameTitles: [...titles].sort(),
+      nationalHonours: [...honours].sort(),
+      socialLinks: social
+        .map((l) => ({
+          platform: (l.platform || "").trim().toLowerCase(),
+          url: (l.url || "").trim(),
+        }))
+        .filter((l) => l.platform || l.url)
+        .sort((a, b) => a.platform.localeCompare(b.platform)),
+      qualifications: quals
+        .filter((q) => q.degree || q.institution)
+        .map((q) => ({
+          degree: q.degree || "",
+          field: q.field || "",
+          institution: q.institution || "",
+          year: q.year || "",
+          notes: q.notes || "",
+        })),
+    });
+  }
+
+  const isPersonalDirty = useMemo(
+    () =>
+      personalBaseline !== "" &&
+      personalSnapshot(
+        form,
+        nameTitles,
+        nationalHonours,
+        socialLinks,
+        qualifications,
+      ) !== personalBaseline,
+    [
+      personalBaseline,
+      form,
+      nameTitles,
+      nationalHonours,
+      socialLinks,
+      qualifications,
+    ],
+  );
+
   const setField = (key: keyof FormState, value: string | boolean) => {
     setForm((prev) => ({ ...prev, [key]: value }));
     setSaved(false);
+    setSuccessMessage(null);
+  };
+
+  const markPersonalDirty = () => {
+    setSaved(false);
+    setSuccessMessage(null);
   };
 
   const positionLabel = (p: RefItem) =>
@@ -497,9 +587,11 @@ export default function EditOfficialPage({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isPersonalDirty || saving) return;
     setSaving(true);
     setError(null);
     setSaved(false);
+    setSuccessMessage(null);
     try {
       const payload: Record<string, unknown> = {
         first_name: form.first_name.trim(),
@@ -546,15 +638,34 @@ export default function EditOfficialPage({
             .join(" — ") || "Update failed",
         );
       }
-      setSaved(true);
+      const nextSlug = json.data?.slug ? String(json.data.slug) : form.slug;
+      const nextForm = json.data?.slug
+        ? { ...form, slug: nextSlug }
+        : form;
       if (json.data?.full_name) setDisplayFullName(json.data.full_name);
-      if (json.data?.slug) setForm((f) => ({ ...f, slug: json.data.slug }));
+      if (json.data?.slug) setForm(nextForm);
+      setPersonalBaseline(
+        personalSnapshot(
+          nextForm,
+          nameTitles,
+          nationalHonours,
+          socialLinks,
+          qualifications,
+        ),
+      );
+      setSaved(true);
+      setSuccessMessage(
+        form.is_active
+          ? "Personal details saved successfully. Profile is active in the public directory."
+          : "Personal details saved successfully. Profile is inactive (not listed publicly).",
+      );
       // Surface partial saves (e.g. titles dropped because column missing)
       if (Array.isArray(json.warnings) && json.warnings.length) {
         setError(json.warnings.join(" "));
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Update failed");
+      setSuccessMessage(null);
     } finally {
       setSaving(false);
     }
@@ -725,8 +836,14 @@ export default function EditOfficialPage({
       setRoleForm(emptyRole);
       await loadLeader();
       setSaved(true);
+      setSuccessMessage(
+        editingRoleId
+          ? "Position updated successfully."
+          : "Position saved successfully.",
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save position");
+      setSuccessMessage(null);
     } finally {
       setRoleSaving(false);
     }
@@ -859,15 +976,23 @@ export default function EditOfficialPage({
 
         {error && (
           <div className="govuk-error-summary" role="alert">
-            <h2 className="govuk-error-summary__title">There is a problem</h2>
+            <h2 className="govuk-error-summary__title">Save failed</h2>
             <p className="govuk-body">{error}</p>
           </div>
         )}
 
-        {saved && (
-          <div className="govuk-notification-banner govuk-notification-banner--success">
+        {(saved || successMessage) && (
+          <div
+            className="govuk-notification-banner govuk-notification-banner--success"
+            role="status"
+          >
+            <div className="govuk-notification-banner__header">
+              <h2 className="govuk-notification-banner__title">Success</h2>
+            </div>
             <div className="govuk-notification-banner__content">
-              <p className="govuk-notification-banner__heading">Saved</p>
+              <p className="govuk-notification-banner__heading">
+                {successMessage || "Saved"}
+              </p>
               <p className="govuk-body">
                 Changes are in the database.{" "}
                 {form.slug && (
@@ -1517,7 +1642,12 @@ export default function EditOfficialPage({
           </div>
 
           <div className="govuk-button-group">
-            <button type="submit" className="govuk-button" disabled={saving}>
+            <button
+              type="submit"
+              className="govuk-button"
+              disabled={saving || !isPersonalDirty}
+              aria-disabled={saving || !isPersonalDirty}
+            >
               {saving ? "Saving…" : "Save personal details"}
             </button>
             <button
@@ -1537,6 +1667,9 @@ export default function EditOfficialPage({
               </Link>
             )}
           </div>
+          {!isPersonalDirty && !saving && personalBaseline && (
+            <p className="govuk-hint">No unsaved changes to personal details.</p>
+          )}
         </form>
 
         <hr className="govuk-section-break govuk-section-break--xl govuk-section-break--visible" />

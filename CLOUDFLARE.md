@@ -91,24 +91,42 @@ Also set as **plain environment variables** (not secrets) so the browser can rea
 > as runtime vars. For CLI builds, export them in your shell or `.env.production`
 > before `pnpm run deploy`.
 
-### 2.4 R2 incremental cache (required for solid ISR)
+### 2.4 Incremental cache (default: Static Assets — no R2 required)
 
-OpenNext stores regenerated HTML in R2 so Free-tier Workers do not re-render
-on every visit after `revalidate`.
+By default this project uses **Workers Static Assets** for the OpenNext
+incremental cache so **deploy works without enabling R2**.
 
-**One-time** (if the bucket does not exist yet):
+Config:
+
+- `open-next.config.ts` → `staticAssetsIncrementalCache`
+- `wrangler.jsonc` → no `r2_buckets` binding required
+
+#### Optional: R2 incremental cache (better long-term ISR)
+
+If you want runtime ISR writes to R2:
+
+1. Cloudflare Dashboard → **R2** → enable the product  
+2. Create the bucket:
 
 ```bash
 pnpm exec wrangler r2 bucket create kenyagov-info-next-cache
 ```
 
-Repo config (already wired):
+3. Add to `wrangler.jsonc`:
 
-- `wrangler.jsonc` → `r2_buckets` binding `NEXT_INC_CACHE_R2_BUCKET`
-- `open-next.config.ts` → `incrementalCache: r2IncrementalCache`
+```jsonc
+"r2_buckets": [
+  {
+    "binding": "NEXT_INC_CACHE_R2_BUCKET",
+    "bucket_name": "kenyagov-info-next-cache"
+  }
+]
+```
 
-If deploy fails with “bucket not found”, create the bucket once with the
-command above, then redeploy.
+4. Switch `open-next.config.ts` back to `r2IncrementalCache` (see OpenNext docs).
+
+If deploy fails with *“Please enable R2 through the Cloudflare Dashboard”*,
+either enable R2 or keep the static-assets cache configuration above.
 
 ### 2.5 Flattened URLs (301s)
 

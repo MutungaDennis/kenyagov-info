@@ -23,13 +23,9 @@
       "service": "kenyagov-info"
     }
   ],
-  // OpenNext ISR / data cache — bucket created in R2 dashboard
-  "r2_buckets": [
-    {
-      "binding": "NEXT_INC_CACHE_R2_BUCKET",
-      "bucket_name": "kenyagov-info-next-cache"
-    }
-  ],
+  // R2 optional — static-assets incremental cache is used in open-next.config.ts
+  // so deploy works without enabling R2. When you enable R2 later, add:
+  // "r2_buckets": [{ "binding": "NEXT_INC_CACHE_R2_BUCKET", "bucket_name": "kenyagov-info-next-cache" }]
   "observability": {
     "enabled": true
   }
