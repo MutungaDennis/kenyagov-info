@@ -85,6 +85,9 @@ type RefItem = {
   constituency_id?: string | number | null;
   government_level?: string | null;
   institution_type?: string | null;
+  is_active?: boolean | null;
+  official_name?: string | null;
+  slug?: string | null;
 };
 
 type Lookups = {
@@ -226,6 +229,10 @@ export default function EditOfficialPage({
   /** Current-snapshot organisation search (full catalogue, not truncated dropdown) */
   const [snapOrgSearch, setSnapOrgSearch] = useState("");
   const [snapOrgResults, setSnapOrgResults] = useState<RefItem[]>([]);
+  /** Full list loaded once for Current snapshot browse + client filter */
+  const [snapOrgCatalogue, setSnapOrgCatalogue] = useState<RefItem[] | null>(
+    null,
+  );
   const [snapOrgSearching, setSnapOrgSearching] = useState(false);
   const [snapOrgSearchOpen, setSnapOrgSearchOpen] = useState(false);
   const [snapOrgSelectedId, setSnapOrgSelectedId] = useState("");
@@ -262,39 +269,102 @@ export default function EditOfficialPage({
     }
   }, []);
 
-  /** Search institutions by name (full catalogue — not limited to A–K slice). */
+  /** Load every institution (paged) for Current snapshot browse */
+  const loadSnapOrgCatalogue = useCallback(async () => {
+    if (snapOrgCatalogue && snapOrgCatalogue.length > 0) {
+      return snapOrgCatalogue;
+    }
+    setSnapOrgSearching(true);
+    try {
+      const all: RefItem[] = [];
+      const PAGE = 1000;
+      let offset = 0;
+      for (let i = 0; i < 20; i++) {
+        const params = new URLSearchParams();
+        params.set("only", "institutions");
+        params.set("limit", String(PAGE));
+        params.set("offset", String(offset));
+        // Admin: include unpublished institutions too
+        const res = await fetch(
+          `/api/admin/leaders/lookups?${params.toString()}`,
+          { credentials: "include", cache: "no-store" },
+        );
+        const json = await res.json();
+        if (!res.ok) break;
+        const batch = (json.institutions as RefItem[]) || [];
+        all.push(...batch);
+        const total =
+          typeof json.institutions_total === "number"
+            ? json.institutions_total
+            : all.length;
+        if (batch.length < PAGE || all.length >= total) break;
+        offset += batch.length;
+      }
+      setSnapOrgCatalogue(all);
+      return all;
+    } catch {
+      return snapOrgCatalogue || [];
+    } finally {
+      setSnapOrgSearching(false);
+    }
+  }, [snapOrgCatalogue]);
+
+  /** Search institutions by name (full catalogue). */
   const searchInstitutions = useCallback(
     async (query: string, target: "role" | "snap" = "role") => {
       const q = query.trim();
-      const setResults = target === "snap" ? setSnapOrgResults : setOrgResults;
-      const setSearching =
-        target === "snap" ? setSnapOrgSearching : setOrgSearching;
-      if (q.length < 1) {
-        setResults([]);
+      if (target === "snap") {
+        const catalogue = await loadSnapOrgCatalogue();
+        if (!q) {
+          setSnapOrgResults(catalogue);
+          return;
+        }
+        const lower = q.toLowerCase();
+        setSnapOrgResults(
+          catalogue.filter((i) => {
+            const hay = [
+              i.name,
+              i.short_name,
+              i.slug,
+              i.institution_type,
+              (i as { official_name?: string }).official_name,
+            ]
+              .filter(Boolean)
+              .map((s) => String(s).toLowerCase());
+            return hay.some((s) => s.includes(lower));
+          }),
+        );
         return;
       }
-      setSearching(true);
+
+      // Role form: server search (higher limit)
+      if (q.length < 1) {
+        setOrgResults([]);
+        return;
+      }
+      setOrgSearching(true);
       try {
         const params = new URLSearchParams();
         params.set("only", "institutions");
         params.set("q", q);
+        params.set("limit", "300");
         const res = await fetch(
           `/api/admin/leaders/lookups?${params.toString()}`,
           { credentials: "include", cache: "no-store" },
         );
         const json = await res.json();
         if (res.ok) {
-          setResults((json.institutions as RefItem[]) || []);
+          setOrgResults((json.institutions as RefItem[]) || []);
         } else {
-          setResults([]);
+          setOrgResults([]);
         }
       } catch {
-        setResults([]);
+        setOrgResults([]);
       } finally {
-        setSearching(false);
+        setOrgSearching(false);
       }
     },
-    [],
+    [loadSnapOrgCatalogue],
   );
 
   // Debounce organisation search (role form)
@@ -310,20 +380,15 @@ export default function EditOfficialPage({
     return () => clearTimeout(t);
   }, [orgSearch, showRoleForm, searchInstitutions]);
 
-  // Debounce organisation search (current snapshot)
+  // Debounce organisation filter (current snapshot — uses full catalogue)
   useEffect(() => {
     if (!snapOrgSearchOpen) return;
-    // Don't search while showing a locked selection label only
     if (snapOrgSelectedId && snapOrgSearch === form.current_organization) {
       return;
     }
     const t = setTimeout(() => {
-      if (snapOrgSearch.trim().length >= 1) {
-        searchInstitutions(snapOrgSearch, "snap");
-      } else {
-        setSnapOrgResults([]);
-      }
-    }, 280);
+      void searchInstitutions(snapOrgSearch, "snap");
+    }, 200);
     return () => clearTimeout(t);
   }, [
     snapOrgSearch,
@@ -1388,16 +1453,15 @@ export default function EditOfficialPage({
               Organisation
             </label>
             <div className="govuk-hint">
-              Type to search the full institutions catalogue (same as Positions
-              below). Pick a match so list pages stay linked to real bodies —
-              or clear and leave blank if not applicable.
+              Focus the field to load every institution, or type to filter. All
+              bodies in the catalogue are available (not a short dropdown).
             </div>
             <input
               id="snap_org_search"
               className="govuk-input"
               type="search"
               autoComplete="off"
-              placeholder="Search e.g. Ministry of Health, IEBC, Kisii…"
+              placeholder="Click or type to list all organisations…"
               value={snapOrgSearch}
               onChange={(e) => {
                 const v = e.target.value;
@@ -1406,16 +1470,23 @@ export default function EditOfficialPage({
                 setSnapOrgSelectedId("");
                 setField("current_organization", v);
               }}
-              onFocus={() => setSnapOrgSearchOpen(true)}
+              onFocus={() => {
+                setSnapOrgSearchOpen(true);
+                void loadSnapOrgCatalogue().then((all) => {
+                  if (!snapOrgSearch.trim()) setSnapOrgResults(all);
+                });
+              }}
             />
             {snapOrgSearching && (
-              <p className="govuk-hint govuk-!-margin-top-1">Searching…</p>
+              <p className="govuk-hint govuk-!-margin-top-1">
+                Loading institutions…
+              </p>
             )}
             {snapOrgSearchOpen && snapOrgResults.length > 0 && (
               <ul
                 className="govuk-list"
                 style={{
-                  maxHeight: 220,
+                  maxHeight: 320,
                   overflowY: "auto",
                   border: "1px solid #b1b4b6",
                   background: "#fff",
@@ -1424,6 +1495,18 @@ export default function EditOfficialPage({
                 }}
                 role="listbox"
               >
+                <li
+                  className="govuk-hint"
+                  style={{ padding: "6px 12px", margin: 0 }}
+                >
+                  Showing {snapOrgResults.length.toLocaleString()}
+                  {snapOrgCatalogue
+                    ? ` of ${snapOrgCatalogue.length.toLocaleString()}`
+                    : ""}{" "}
+                  institution
+                  {snapOrgResults.length === 1 ? "" : "s"}
+                  {snapOrgSearch.trim() ? " matching your search" : ""}
+                </li>
                 {snapOrgResults.map((i) => (
                   <li key={String(i.id)} style={{ margin: 0 }}>
                     <button
@@ -1458,6 +1541,7 @@ export default function EditOfficialPage({
                       {i.institution_type ? (
                         <div className="govuk-hint govuk-!-margin-bottom-0">
                           {i.institution_type}
+                          {i.is_active === false ? " · unpublished" : ""}
                         </div>
                       ) : null}
                     </button>
@@ -1466,14 +1550,13 @@ export default function EditOfficialPage({
               </ul>
             )}
             {snapOrgSearchOpen &&
-              snapOrgSearch.trim().length >= 1 &&
               !snapOrgSearching &&
               snapOrgResults.length === 0 &&
               !snapOrgSelectedId && (
                 <p className="govuk-hint govuk-!-margin-top-1">
-                  No catalogue match. Free text is saved as typed — create the
-                  institution under Admin → Institutions if it should be
-                  linked.
+                  {snapOrgSearch.trim()
+                    ? "No catalogue match. Free text is still saved — create the institution under Admin → Institutions to link it later."
+                    : "No institutions loaded. Check admin API access or refresh the page."}
                 </p>
               )}
             {(form.current_organization || snapOrgSelectedId) && (

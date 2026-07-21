@@ -6,6 +6,10 @@ export const dynamic = "force-dynamic";
 /**
  * Reference data for admin leader / role forms.
  * Pulls parties, counties, constituencies, wards, institutions, levels, positions.
+ *
+ * Institutions: pass only=institutions with optional q, limit, offset.
+ * Default without q returns up to 1000 rows (full catalogue for ~791 orgs).
+ * Admin includes inactive unless active=1.
  */
 export async function GET(request: NextRequest) {
   const auth = await requireAdminApi();
@@ -38,7 +42,6 @@ export async function GET(request: NextRequest) {
           .select("id, name, abbreviation, slug, code")
           .order("name", { ascending: true })
           .limit(300);
-        // Some DBs have code, some don't
         const { data, error } = await query;
         if (error) {
           const retry = await sb
@@ -122,43 +125,69 @@ export async function GET(request: NextRequest) {
   if (need("institutions")) {
     tasks.push(
       (async () => {
-        // Search-driven: without q return a modest page; with q search full catalogue
-        const instLimit = q.length >= 1 ? 80 : 100;
+        const rawLimit = parseInt(searchParams.get("limit") || "", 10);
+        const rawOffset = parseInt(searchParams.get("offset") || "0", 10);
+        const instLimit = Math.min(
+          1000,
+          Math.max(
+            1,
+            Number.isFinite(rawLimit) && rawLimit > 0
+              ? rawLimit
+              : q.length >= 1
+                ? 300
+                : 1000,
+          ),
+        );
+        const offset = Math.max(0, Number.isFinite(rawOffset) ? rawOffset : 0);
+        const activeOnly = searchParams.get("active") === "1";
+
         let query = sb
           .from("institutions")
           .select(
-            "id, name, short_name, slug, institution_type, government_level, is_active",
+            "id, name, short_name, slug, institution_type, government_level, is_active, official_name",
+            { count: "exact" },
           )
           .order("name", { ascending: true })
-          .limit(instLimit);
-        // Prefer active when not searching; include inactive when searching by name
-        if (q.length < 1) {
+          .range(offset, offset + instLimit - 1);
+        if (activeOnly) {
           query = query.eq("is_active", true);
         }
         if (q.length >= 1) {
-          const safe = q.replace(/[%_,]/g, " ").trim();
-          query = query.or(
-            `name.ilike.%${safe}%,short_name.ilike.%${safe}%,official_name.ilike.%${safe}%,slug.ilike.%${safe}%`,
-          );
+          const safe = q.replace(/[%_,.()]/g, " ").trim();
+          if (safe) {
+            query = query.or(
+              `name.ilike.%${safe}%,short_name.ilike.%${safe}%,official_name.ilike.%${safe}%,slug.ilike.%${safe}%`,
+            );
+          }
         }
-        const { data, error } = await query;
+        const { data, error, count } = await query;
         if (error) {
           let q2 = sb
             .from("institutions")
-            .select("id, name, short_name, slug, government_level")
+            .select("id, name, short_name, slug, government_level, is_active", {
+              count: "exact",
+            })
             .order("name", { ascending: true })
-            .limit(instLimit);
+            .range(offset, offset + instLimit - 1);
           if (q.length >= 1) {
-            const safe = q.replace(/[%_,]/g, " ").trim();
-            q2 = q2.or(
-              `name.ilike.%${safe}%,short_name.ilike.%${safe}%`,
-            );
+            const safe = q.replace(/[%_,.()]/g, " ").trim();
+            if (safe) {
+              q2 = q2.or(
+                `name.ilike.%${safe}%,short_name.ilike.%${safe}%`,
+              );
+            }
           }
           const retry = await q2;
           result.institutions = retry.data || [];
+          result.institutions_total = retry.count ?? (retry.data || []).length;
+          result.institutions_limit = instLimit;
+          result.institutions_offset = offset;
           if (retry.error) result.institutions_error = retry.error.message;
         } else {
           result.institutions = data || [];
+          result.institutions_total = count ?? (data || []).length;
+          result.institutions_limit = instLimit;
+          result.institutions_offset = offset;
         }
       })(),
     );
@@ -173,7 +202,6 @@ export async function GET(request: NextRequest) {
           .order("name", { ascending: true })
           .limit(50);
         if (error || !data?.length) {
-          // Fallback: distinct from positions.level and institutions
           const pos = await sb
             .from("positions")
             .select("level")
@@ -186,12 +214,11 @@ export async function GET(request: NextRequest) {
                 .filter(Boolean) as string[],
             ),
           ).sort();
-          result.levels = levels.map((name, i) => ({
+          result.levels = levels.map((name) => ({
             id: name,
             name,
             code: name,
           }));
-          // Also try institutions.government_level
           if (!levels.length) {
             const inst = await sb
               .from("institutions")
@@ -224,7 +251,6 @@ export async function GET(request: NextRequest) {
   if (need("positions")) {
     tasks.push(
       (async () => {
-        // Prefer title sort so admin-created posts appear alphabetically
         const { data, error } = await sb
           .from("positions")
           .select("id, title, code, level, rank_order, description")
@@ -245,7 +271,6 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  // Distinct organisations assigned to leaders (for admin filter dropdown)
   if (need("leader_organizations") || need("organizations")) {
     tasks.push(
       (async () => {
