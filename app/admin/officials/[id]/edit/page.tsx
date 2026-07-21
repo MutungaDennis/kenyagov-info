@@ -223,6 +223,12 @@ export default function EditOfficialPage({
   const [orgResults, setOrgResults] = useState<RefItem[]>([]);
   const [orgSearching, setOrgSearching] = useState(false);
   const [orgSearchOpen, setOrgSearchOpen] = useState(false);
+  /** Current-snapshot organisation search (full catalogue, not truncated dropdown) */
+  const [snapOrgSearch, setSnapOrgSearch] = useState("");
+  const [snapOrgResults, setSnapOrgResults] = useState<RefItem[]>([]);
+  const [snapOrgSearching, setSnapOrgSearching] = useState(false);
+  const [snapOrgSearchOpen, setSnapOrgSearchOpen] = useState(false);
+  const [snapOrgSelectedId, setSnapOrgSelectedId] = useState("");
 
   useEffect(() => {
     params.then((p) => setId(p.id));
@@ -257,46 +263,75 @@ export default function EditOfficialPage({
   }, []);
 
   /** Search institutions by name (full catalogue — not limited to A–K slice). */
-  const searchInstitutions = useCallback(async (query: string) => {
-    const q = query.trim();
-    if (q.length < 1) {
-      setOrgResults([]);
-      return;
-    }
-    setOrgSearching(true);
-    try {
-      const params = new URLSearchParams();
-      params.set("only", "institutions");
-      params.set("q", q);
-      const res = await fetch(
-        `/api/admin/leaders/lookups?${params.toString()}`,
-        { credentials: "include", cache: "no-store" },
-      );
-      const json = await res.json();
-      if (res.ok) {
-        setOrgResults((json.institutions as RefItem[]) || []);
-      } else {
-        setOrgResults([]);
+  const searchInstitutions = useCallback(
+    async (query: string, target: "role" | "snap" = "role") => {
+      const q = query.trim();
+      const setResults = target === "snap" ? setSnapOrgResults : setOrgResults;
+      const setSearching =
+        target === "snap" ? setSnapOrgSearching : setOrgSearching;
+      if (q.length < 1) {
+        setResults([]);
+        return;
       }
-    } catch {
-      setOrgResults([]);
-    } finally {
-      setOrgSearching(false);
-    }
-  }, []);
+      setSearching(true);
+      try {
+        const params = new URLSearchParams();
+        params.set("only", "institutions");
+        params.set("q", q);
+        const res = await fetch(
+          `/api/admin/leaders/lookups?${params.toString()}`,
+          { credentials: "include", cache: "no-store" },
+        );
+        const json = await res.json();
+        if (res.ok) {
+          setResults((json.institutions as RefItem[]) || []);
+        } else {
+          setResults([]);
+        }
+      } catch {
+        setResults([]);
+      } finally {
+        setSearching(false);
+      }
+    },
+    [],
+  );
 
-  // Debounce organisation search
+  // Debounce organisation search (role form)
   useEffect(() => {
     if (!showRoleForm) return;
     const t = setTimeout(() => {
       if (orgSearch.trim().length >= 1) {
-        searchInstitutions(orgSearch);
+        searchInstitutions(orgSearch, "role");
       } else {
         setOrgResults([]);
       }
     }, 280);
     return () => clearTimeout(t);
   }, [orgSearch, showRoleForm, searchInstitutions]);
+
+  // Debounce organisation search (current snapshot)
+  useEffect(() => {
+    if (!snapOrgSearchOpen) return;
+    // Don't search while showing a locked selection label only
+    if (snapOrgSelectedId && snapOrgSearch === form.current_organization) {
+      return;
+    }
+    const t = setTimeout(() => {
+      if (snapOrgSearch.trim().length >= 1) {
+        searchInstitutions(snapOrgSearch, "snap");
+      } else {
+        setSnapOrgResults([]);
+      }
+    }, 280);
+    return () => clearTimeout(t);
+  }, [
+    snapOrgSearch,
+    snapOrgSearchOpen,
+    snapOrgSelectedId,
+    form.current_organization,
+    searchInstitutions,
+  ]);
 
   useEffect(() => {
     loadLookups();
@@ -344,6 +379,10 @@ export default function EditOfficialPage({
         parseNationalHonours(d.national_honours ?? d.awards),
       );
       setSocialLinks(parseSocialLinks(d.social_media));
+      setSnapOrgSearch(d.current_organization || "");
+      setSnapOrgSelectedId("");
+      setSnapOrgResults([]);
+      setSnapOrgSearchOpen(false);
       const roleList = Array.isArray(d.leader_roles) ? d.leader_roles : [];
       setRoles(
         [...roleList].sort((a, b) =>
@@ -900,11 +939,6 @@ export default function EditOfficialPage({
     form.current_constituency,
     ["code", "name"],
   );
-  const snapshotInstId = matchIdByName(
-    lookups.institutions,
-    form.current_organization,
-    ["short_name", "name"],
-  );
   const snapshotLevelId = matchIdByName(lookups.levels, form.level, [
     "code",
     "name",
@@ -1350,32 +1384,124 @@ export default function EditOfficialPage({
           </div>
 
           <div className="govuk-form-group">
-            <label className="govuk-label" htmlFor="snap_org">
+            <label className="govuk-label" htmlFor="snap_org_search">
               Organisation
             </label>
-            <select
-              id="snap_org"
-              className="govuk-select"
-              value={snapshotInstId}
+            <div className="govuk-hint">
+              Type to search the full institutions catalogue (same as Positions
+              below). Pick a match so list pages stay linked to real bodies —
+              or clear and leave blank if not applicable.
+            </div>
+            <input
+              id="snap_org_search"
+              className="govuk-input"
+              type="search"
+              autoComplete="off"
+              placeholder="Search e.g. Ministry of Health, IEBC, Kisii…"
+              value={snapOrgSearch}
               onChange={(e) => {
-                const i = lookups.institutions.find(
-                  (x) => String(x.id) === e.target.value,
-                );
-                setField(
-                  "current_organization",
-                  i ? i.name || i.short_name || "" : "",
-                );
-                if (i?.government_level)
-                  setField("level", String(i.government_level));
+                const v = e.target.value;
+                setSnapOrgSearch(v);
+                setSnapOrgSearchOpen(true);
+                setSnapOrgSelectedId("");
+                setField("current_organization", v);
               }}
-            >
-              <option value="">— Not applicable / none —</option>
-              {lookups.institutions.map((i) => (
-                <option key={String(i.id)} value={String(i.id)}>
-                  {instLabel(i)}
-                </option>
-              ))}
-            </select>
+              onFocus={() => setSnapOrgSearchOpen(true)}
+            />
+            {snapOrgSearching && (
+              <p className="govuk-hint govuk-!-margin-top-1">Searching…</p>
+            )}
+            {snapOrgSearchOpen && snapOrgResults.length > 0 && (
+              <ul
+                className="govuk-list"
+                style={{
+                  maxHeight: 220,
+                  overflowY: "auto",
+                  border: "1px solid #b1b4b6",
+                  background: "#fff",
+                  marginTop: 4,
+                  padding: 0,
+                }}
+                role="listbox"
+              >
+                {snapOrgResults.map((i) => (
+                  <li key={String(i.id)} style={{ margin: 0 }}>
+                    <button
+                      type="button"
+                      style={{
+                        display: "block",
+                        width: "100%",
+                        textAlign: "left",
+                        padding: "8px 12px",
+                        border: "none",
+                        borderBottom: "1px solid #f3f2f1",
+                        background: "transparent",
+                        cursor: "pointer",
+                        font: "inherit",
+                      }}
+                      onClick={() => {
+                        const name = i.name || i.short_name || "";
+                        setSnapOrgSelectedId(String(i.id));
+                        setSnapOrgSearch(name);
+                        setSnapOrgSearchOpen(false);
+                        setSnapOrgResults([]);
+                        setField("current_organization", name);
+                        if (i.government_level) {
+                          setField("level", String(i.government_level));
+                        }
+                      }}
+                    >
+                      <strong>{i.name}</strong>
+                      {i.short_name ? (
+                        <span className="govuk-hint"> ({i.short_name})</span>
+                      ) : null}
+                      {i.institution_type ? (
+                        <div className="govuk-hint govuk-!-margin-bottom-0">
+                          {i.institution_type}
+                        </div>
+                      ) : null}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {snapOrgSearchOpen &&
+              snapOrgSearch.trim().length >= 1 &&
+              !snapOrgSearching &&
+              snapOrgResults.length === 0 &&
+              !snapOrgSelectedId && (
+                <p className="govuk-hint govuk-!-margin-top-1">
+                  No catalogue match. Free text is saved as typed — create the
+                  institution under Admin → Institutions if it should be
+                  linked.
+                </p>
+              )}
+            {(form.current_organization || snapOrgSelectedId) && (
+              <p className="govuk-body-s govuk-!-margin-top-2">
+                <strong>Selected:</strong>{" "}
+                {form.current_organization || snapOrgSearch || "—"}{" "}
+                <button
+                  type="button"
+                  className="govuk-link"
+                  style={{
+                    background: "none",
+                    border: "none",
+                    padding: 0,
+                    font: "inherit",
+                    cursor: "pointer",
+                    textDecoration: "underline",
+                  }}
+                  onClick={() => {
+                    setSnapOrgSelectedId("");
+                    setSnapOrgSearch("");
+                    setSnapOrgResults([]);
+                    setField("current_organization", "");
+                  }}
+                >
+                  Clear
+                </button>
+              </p>
+            )}
           </div>
 
           <h2 className="govuk-heading-m">Biography</h2>
