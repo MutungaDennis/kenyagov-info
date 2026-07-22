@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
         .insert(row)
         .select("id, name, abbreviation, slug, status")
         .single();
-      data = retry.data;
+      data = retry.data as typeof data;
       error = retry.error;
     }
   }
@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
       .insert({ name, abbreviation: abbreviation || null, slug: row.slug })
       .select("id, name, abbreviation, slug")
       .single();
-    data = retry.data;
+    data = retry.data as typeof data;
     error = retry.error;
   }
 
