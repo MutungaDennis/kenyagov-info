@@ -3,7 +3,10 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { adminPath } from "@/lib/admin-path";
-import { INSTITUTION_STATUS_IMPLIES_INACTIVE } from "@/lib/institutions/fields";
+import {
+  isInstitutionEarmarked,
+  isInstitutionHistorical,
+} from "@/lib/institutions/fields";
 import { groupsForDivisionValue } from "@/lib/institutions/cofog";
 import GovUKBackLink from "@/components/govuk/BackLink";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
@@ -83,11 +86,13 @@ export default function EditInstitutionPage({
         const row = json.data as Record<string, unknown>;
         const base = institutionFormFromRow(row);
 
-        // Resolve hierarchy labels for display
+        // Resolve hierarchy + lineage labels for display
         const linkIds = [
           row.parent_institution_id,
           row.supervising_ministry_id,
           row.reports_to_institution_id,
+          row.predecessor_institution_id,
+          row.successor_institution_id,
         ].filter(Boolean) as string[];
 
         if (linkIds.length) {
@@ -122,6 +127,14 @@ export default function EditInstitutionPage({
           if (row.reports_to_institution_id) {
             base.reports_to_institution_label =
               labels[String(row.reports_to_institution_id)] || "";
+          }
+          if (row.predecessor_institution_id) {
+            base.predecessor_institution_label =
+              labels[String(row.predecessor_institution_id)] || "";
+          }
+          if (row.successor_institution_id) {
+            base.successor_institution_label =
+              labels[String(row.successor_institution_id)] || "";
           }
         }
 
@@ -172,11 +185,36 @@ export default function EditInstitutionPage({
         [name]: type === "checkbox" ? checked : value,
       } as InstitutionFormState;
 
-      // Lifecycle status can suggest publish flag (admin can still override)
+      // Do NOT clear has_organisational_change when status is Active — the
+      // change box can be ticked while nature is still unselected (status Active).
       if (name === "status" && typeof value === "string") {
-        if (value === "Active") next.is_active = true;
-        else if (INSTITUTION_STATUS_IMPLIES_INACTIVE.has(value)) {
+        if (value === "Active") {
+          next.is_active = true;
+        } else if (value === "Proposed") {
           next.is_active = false;
+          next.has_organisational_change = true;
+        } else if (
+          isInstitutionHistorical(value) ||
+          isInstitutionEarmarked(value)
+        ) {
+          next.has_organisational_change = true;
+          if (next.is_active === false) next.is_active = true;
+        } else if (value && value !== "Active") {
+          next.has_organisational_change = true;
+        }
+      }
+      if (name === "has_organisational_change" && type === "checkbox") {
+        next.has_organisational_change = checked;
+        if (!checked) {
+          // Clear lifecycle trail when admin unticks the box
+          next.status = "Active";
+          next.status_effective_date = "";
+          next.lifecycle_change_reason = "";
+          next.successor_institution_id = "";
+          next.successor_institution_label = "";
+          next.predecessor_institution_id = "";
+          next.predecessor_institution_label = "";
+          next.is_active = true;
         }
       }
       // COFOG: clear group when it no longer belongs to the selected division
@@ -202,7 +240,9 @@ export default function EditInstitutionPage({
     field:
       | "parent_institution"
       | "supervising_ministry"
-      | "reports_to_institution",
+      | "reports_to_institution"
+      | "predecessor_institution"
+      | "successor_institution",
     pick: { id: string; label: string },
   ) => {
     setForm((prev) => {
@@ -218,6 +258,20 @@ export default function EditInstitutionPage({
           ...prev,
           supervising_ministry_id: pick.id,
           supervising_ministry_label: pick.label,
+        };
+      }
+      if (field === "predecessor_institution") {
+        return {
+          ...prev,
+          predecessor_institution_id: pick.id,
+          predecessor_institution_label: pick.label,
+        };
+      }
+      if (field === "successor_institution") {
+        return {
+          ...prev,
+          successor_institution_id: pick.id,
+          successor_institution_label: pick.label,
         };
       }
       return {
@@ -267,16 +321,89 @@ export default function EditInstitutionPage({
       const json = await res.json();
       if (!res.ok) {
         throw new Error(
-          [json.error, json.hint].filter(Boolean).join(" — ") ||
+          [json.error, json.hint, json.detail].filter(Boolean).join(" — ") ||
             "Update failed",
         );
       }
 
-      // Re-baseline from saved form (+ server slug if returned)
-      const nextForm: InstitutionFormState = {
+      // Reload from server so the form matches what was stored
+      let nextForm: InstitutionFormState = {
         ...form,
         slug: json.data?.slug ? String(json.data.slug) : form.slug,
       };
+      try {
+        const reload = await fetch(`/api/admin/institutions/${id}`, {
+          credentials: "include",
+          cache: "no-store",
+        });
+        const reloadJson = await reload.json();
+        if (reload.ok && reloadJson.data) {
+          const row = reloadJson.data as Record<string, unknown>;
+          nextForm = institutionFormFromRow(row);
+          // Keep resolved labels; re-fetch if IDs present
+          nextForm.parent_institution_label = form.parent_institution_label;
+          nextForm.supervising_ministry_label =
+            form.supervising_ministry_label;
+          nextForm.reports_to_institution_label =
+            form.reports_to_institution_label;
+          nextForm.predecessor_institution_label =
+            form.predecessor_institution_label;
+          nextForm.successor_institution_label =
+            form.successor_institution_label;
+
+          const linkIds = [
+            row.parent_institution_id,
+            row.supervising_ministry_id,
+            row.reports_to_institution_id,
+            row.predecessor_institution_id,
+            row.successor_institution_id,
+          ].filter(Boolean) as string[];
+          if (linkIds.length) {
+            const labels: Record<string, string> = {};
+            await Promise.all(
+              linkIds.map(async (linkId) => {
+                try {
+                  const r = await fetch(`/api/admin/institutions/${linkId}`, {
+                    credentials: "include",
+                    cache: "no-store",
+                  });
+                  const j = await r.json();
+                  if (r.ok && j.data) {
+                    labels[linkId] = j.data.short_name
+                      ? `${j.data.name} (${j.data.short_name})`
+                      : j.data.name || linkId;
+                  }
+                } catch {
+                  /* ignore */
+                }
+              }),
+            );
+            if (row.parent_institution_id) {
+              nextForm.parent_institution_label =
+                labels[String(row.parent_institution_id)] || "";
+            }
+            if (row.supervising_ministry_id) {
+              nextForm.supervising_ministry_label =
+                labels[String(row.supervising_ministry_id)] || "";
+            }
+            if (row.reports_to_institution_id) {
+              nextForm.reports_to_institution_label =
+                labels[String(row.reports_to_institution_id)] || "";
+            }
+            if (row.predecessor_institution_id) {
+              nextForm.predecessor_institution_label =
+                labels[String(row.predecessor_institution_id)] || "";
+            }
+            if (row.successor_institution_id) {
+              nextForm.successor_institution_label =
+                labels[String(row.successor_institution_id)] || "";
+            }
+          }
+        }
+      } catch {
+        /* keep local nextForm */
+      }
+
       setForm(nextForm);
       setBaseline(institutionFormSnapshot(nextForm));
       setSuccess(
@@ -285,7 +412,6 @@ export default function EditInstitutionPage({
           : "Changes saved. Institution is unpublished (hidden from the public site).",
       );
 
-      // Refresh suggestions so any new free-text values appear in dropdowns
       void loadFacets();
 
       const dropped = Array.isArray(json.dropped)
@@ -293,7 +419,7 @@ export default function EditInstitutionPage({
         : [];
       if (dropped.length) {
         setWarnings([
-          `Saved, but some fields were skipped (missing column or enum value): ${dropped.join(", ")}. Run enhance_institutions_head_social_status.sql if needed.`,
+          `Saved, but some fields were skipped (missing column or enum value): ${dropped.join(", ")}. If lifecycle fields failed, run enhance_institutions_lifecycle.sql in Supabase.`,
         ]);
       }
     } catch (err) {

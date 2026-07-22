@@ -10,6 +10,14 @@ import {
   socialPlatformLabel,
   normalizeSocialUrl,
 } from "@/lib/leaders/titles-social";
+import {
+  isInstitutionEarmarked,
+  isInstitutionHistorical,
+  predecessorLinkLabel,
+  statusEffectiveDateLabel,
+  statusLifecyclePhrase,
+  successorLinkLabel,
+} from "@/lib/institutions/fields";
 
 type Institution = {
   id: string;
@@ -62,12 +70,17 @@ type Institution = {
   establishment_act?: string | null;
   established_date?: string | null;
   operational_date?: string | null;
+  status_effective_date?: string | null;
+  lifecycle_change_reason?: string | null;
   appointing_authority?: string | null;
   funding_model?: string | null;
   status?: string | null;
+  is_active?: boolean | null;
   parent_institution_id?: string | null;
   supervising_ministry_id?: string | null;
   reports_to_institution_id?: string | null;
+  predecessor_institution_id?: string | null;
+  successor_institution_id?: string | null;
   citizen_charter_url?: string | null;
   complaints_mechanism_url?: string | null;
   procurement_portal_url?: string | null;
@@ -81,6 +94,7 @@ type LinkedInstitution = {
   name: string;
   short_name?: string | null;
   institution_type?: string | null;
+  status?: string | null;
 };
 
 type ChildInstitution = {
@@ -101,6 +115,12 @@ export default function InstitutionProfilePage() {
   const [supervisingMinistry, setSupervisingMinistry] =
     useState<LinkedInstitution | null>(null);
   const [reportsTo, setReportsTo] = useState<LinkedInstitution | null>(null);
+  const [successor, setSuccessor] = useState<LinkedInstitution | null>(null);
+  const [predecessor, setPredecessor] = useState<LinkedInstitution | null>(
+    null,
+  );
+  /** Bodies that list this one as their successor (merged into / renamed to this) */
+  const [precededBy, setPrecededBy] = useState<LinkedInstitution[]>([]);
   const [childInstitutions, setChildInstitutions] = useState<ChildInstitution[]>(
     [],
   );
@@ -116,6 +136,7 @@ export default function InstitutionProfilePage() {
       try {
         const supabase = await createBrowserClientAsync();
         let instData: Institution | null = null;
+        // Prefer published; fall back without is_active so historical records remain reachable by slug/link
         const withJoins = await supabase
           .from("institutions")
           .select(
@@ -127,19 +148,36 @@ export default function InstitutionProfilePage() {
           )
           .eq("slug", slug)
           .eq("is_active", true)
-          .single();
+          .maybeSingle();
 
-        if (withJoins.error) {
-          const basic = await supabase
-            .from("institutions")
-            .select("*")
-            .eq("slug", slug)
-            .eq("is_active", true)
-            .single();
-          if (basic.error || !basic.data) throw withJoins.error || basic.error;
-          instData = basic.data as Institution;
-        } else {
+        if (withJoins.data) {
           instData = withJoins.data as Institution;
+        } else {
+          const historical = await supabase
+            .from("institutions")
+            .select(
+              `
+              *,
+              institution_leaders (*),
+              institution_locations (*)
+            `,
+            )
+            .eq("slug", slug)
+            .maybeSingle();
+
+          if (historical.data) {
+            instData = historical.data as Institution;
+          } else {
+            const basic = await supabase
+              .from("institutions")
+              .select("*")
+              .eq("slug", slug)
+              .maybeSingle();
+            if (basic.error || !basic.data) {
+              throw withJoins.error || historical.error || basic.error;
+            }
+            instData = basic.data as Institution;
+          }
         }
 
         if (!instData) throw new Error("Institution not found");
@@ -188,6 +226,43 @@ export default function InstitutionProfilePage() {
           if (rep) setReportsTo(rep as LinkedInstitution);
         } else {
           setReportsTo(null);
+        }
+
+        if (instData.successor_institution_id) {
+          const { data: succ } = await supabase
+            .from("institutions")
+            .select("id, slug, name, short_name, institution_type")
+            .eq("id", instData.successor_institution_id)
+            .maybeSingle();
+          if (succ) setSuccessor(succ as LinkedInstitution);
+          else setSuccessor(null);
+        } else {
+          setSuccessor(null);
+        }
+
+        if (instData.predecessor_institution_id) {
+          const { data: pred } = await supabase
+            .from("institutions")
+            .select("id, slug, name, short_name, institution_type")
+            .eq("id", instData.predecessor_institution_id)
+            .maybeSingle();
+          if (pred) setPredecessor(pred as LinkedInstitution);
+          else setPredecessor(null);
+        } else {
+          setPredecessor(null);
+        }
+
+        // Reverse lineage: orgs that were renamed/merged into this one
+        const { data: fromHistory } = await supabase
+          .from("institutions")
+          .select("id, slug, name, short_name, institution_type, status")
+          .eq("successor_institution_id", instData.id)
+          .order("name")
+          .limit(50);
+        if (fromHistory?.length) {
+          setPrecededBy(fromHistory as LinkedInstitution[]);
+        } else {
+          setPrecededBy([]);
         }
 
         const { data: childrenData } = await supabase
@@ -281,6 +356,35 @@ export default function InstitutionProfilePage() {
     Boolean(institution.head_title) ||
     Boolean(institution.board_chair) ||
     currentLeaders.length > 0;
+  const historical = isInstitutionHistorical(institution.status);
+  const earmarked = isInstitutionEarmarked(institution.status);
+  const changeReason = String(institution.lifecycle_change_reason || "").trim();
+  const statusDateLabel = statusEffectiveDateLabel(institution.status);
+  const eventDate = institution.status_effective_date
+    ? String(institution.status_effective_date).slice(0, 10)
+    : null;
+  /** Past-tense labels for location / contact on defunct orgs only (not earmarked) */
+  const loc = {
+    headquarters: historical ? "Was headquartered at" : "Headquarters",
+    physical: historical ? "Was located at" : "Physical address",
+    postal: historical ? "Postal address (historical)" : "Postal Address",
+    contactSection: historical
+      ? "Historical location & records"
+      : "Contact Information",
+    hqSection: historical ? "Former headquarters" : "Headquarters",
+    website: historical ? "Former website" : "Website",
+    email: historical ? "Former email (may no longer work)" : "Email",
+    phone: historical ? "Former phone (may no longer work)" : "Phone",
+    leadership: historical ? "Last recorded leadership" : "Leadership",
+    headKey: historical
+      ? institution.head_title
+        ? `Last ${institution.head_title}`
+        : "Last recorded head"
+      : institution.head_title || "Current head",
+    mandateHeading: historical
+      ? "What this institution did"
+      : "What this institution does",
+  };
 
   return (
   <>
@@ -300,8 +404,69 @@ export default function InstitutionProfilePage() {
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-two-thirds">
 
-            <span className="govuk-caption-l">{institution.institution_type || 'Public Institution'}</span>
+            <span className="govuk-caption-l">
+              {historical
+                ? `Former · ${institution.institution_type || "Public Institution"}`
+                : earmarked
+                  ? `Earmarked for change · ${institution.institution_type || "Public Institution"}`
+                  : institution.institution_type || "Public Institution"}
+            </span>
             <h1 className="govuk-heading-xl">{institution.name}</h1>
+
+            {earmarked && (
+              <div className="govuk-warning-text">
+                <span className="govuk-warning-text__icon" aria-hidden="true">
+                  !
+                </span>
+                <strong className="govuk-warning-text__text">
+                  <span className="govuk-warning-text__assistive">Warning</span>
+                  This organisation {statusLifecyclePhrase(institution.status)}
+                  {eventDate ? ` (planned from ${eventDate})` : ""}. It is still
+                  operating under this name for now
+                  {successor ? (
+                    <>
+                      ; planned target:{" "}
+                      <Link
+                        href={`/government/institutions/${successor.slug}`}
+                        className="govuk-link"
+                      >
+                        {successor.name}
+                      </Link>
+                    </>
+                  ) : null}
+                  {changeReason ? `. ${changeReason}` : "."}
+                </strong>
+              </div>
+            )}
+
+            {historical && (
+              <div className="govuk-warning-text">
+                <span className="govuk-warning-text__icon" aria-hidden="true">
+                  !
+                </span>
+                <strong className="govuk-warning-text__text">
+                  <span className="govuk-warning-text__assistive">Warning</span>
+                  Historical record — this organisation{" "}
+                  {statusLifecyclePhrase(institution.status)}
+                  {eventDate ? ` on ${eventDate}` : ""}. It is not the same as
+                  any current body with a similar name
+                  {successor ? (
+                    <>
+                      ; {successorLinkLabel(institution.status).toLowerCase()}:{" "}
+                      <Link
+                        href={`/government/institutions/${successor.slug}`}
+                        className="govuk-link"
+                      >
+                        {successor.name}
+                      </Link>
+                    </>
+                  ) : (
+                    "; contact details below are historical and may no longer work"
+                  )}
+                  {changeReason ? `. ${changeReason}` : "."}
+                </strong>
+              </div>
+            )}
 
             {institution.short_name && (
               <p className="govuk-body-l">Also known as: <strong>{institution.short_name}</strong></p>
@@ -309,7 +474,7 @@ export default function InstitutionProfilePage() {
 
             {parentChain.length > 0 && (
               <p className="govuk-body">
-                <strong>Part of:</strong>{" "}
+                <strong>{historical ? "Was part of:" : "Part of:"}</strong>{" "}
                 {parentChain.map((p, i) => (
                   <span key={p.id}>
                     {i > 0 && " → "}
@@ -451,6 +616,83 @@ export default function InstitutionProfilePage() {
                   </dd>
                 </div>
               )}
+              {/* Status / date / reason / successor: only in Key Facts when NOT already in the warning above */}
+              {!historical && !earmarked && institution.status && institution.status !== "Active" ? (
+                <div className="govuk-summary-list__row">
+                  <dt className="govuk-summary-list__key">Status</dt>
+                  <dd className="govuk-summary-list__value">
+                    <strong>{institution.status}</strong>
+                    {eventDate ? (
+                      <>
+                        {" "}
+                        · {statusDateLabel} {eventDate}
+                      </>
+                    ) : null}
+                  </dd>
+                </div>
+              ) : null}
+              {/* For historical/earmarked, warning has status+date+reason+primary successor;
+                  only add Key Facts rows that add new info (predecessor / reverse lineage) */}
+              {!historical && !earmarked && successor && (
+                <div className="govuk-summary-list__row">
+                  <dt className="govuk-summary-list__key">
+                    {successorLinkLabel(institution.status)}
+                  </dt>
+                  <dd className="govuk-summary-list__value">
+                    <Link
+                      href={`/government/institutions/${successor.slug}`}
+                      className="govuk-link"
+                    >
+                      {successor.name}
+                    </Link>
+                    {successor.institution_type
+                      ? ` — ${successor.institution_type}`
+                      : ""}
+                  </dd>
+                </div>
+              )}
+              {predecessor && (
+                <div className="govuk-summary-list__row">
+                  <dt className="govuk-summary-list__key">
+                    {predecessorLinkLabel(institution.status)}
+                  </dt>
+                  <dd className="govuk-summary-list__value">
+                    <Link
+                      href={`/government/institutions/${predecessor.slug}`}
+                      className="govuk-link"
+                    >
+                      {predecessor.name}
+                    </Link>
+                  </dd>
+                </div>
+              )}
+              {precededBy.length > 0 && (
+                <div className="govuk-summary-list__row">
+                  <dt className="govuk-summary-list__key">
+                    Formed from / replaced
+                  </dt>
+                  <dd className="govuk-summary-list__value">
+                    <ul className="govuk-list govuk-!-margin-bottom-0">
+                      {precededBy.map((p) => (
+                        <li key={p.id}>
+                          <Link
+                            href={`/government/institutions/${p.slug}`}
+                            className="govuk-link"
+                          >
+                            {p.name}
+                          </Link>
+                          {p.status && p.status !== "Active" ? (
+                            <span className="govuk-hint">
+                              {" "}
+                              ({p.status})
+                            </span>
+                          ) : null}
+                        </li>
+                      ))}
+                    </ul>
+                  </dd>
+                </div>
+              )}
               {institution.appointing_authority && (
                 <div className="govuk-summary-list__row">
                   <dt className="govuk-summary-list__key">Appointing authority</dt>
@@ -467,17 +709,11 @@ export default function InstitutionProfilePage() {
                   </dd>
                 </div>
               )}
-              {institution.status && institution.status !== "Active" && (
-                <div className="govuk-summary-list__row">
-                  <dt className="govuk-summary-list__key">Status</dt>
-                  <dd className="govuk-summary-list__value">
-                    {institution.status}
-                  </dd>
-                </div>
-              )}
               {directParent && (
                 <div className="govuk-summary-list__row">
-                  <dt className="govuk-summary-list__key">Parent institution</dt>
+                  <dt className="govuk-summary-list__key">
+                    {historical ? "Parent institution (historical)" : "Parent institution"}
+                  </dt>
                   <dd className="govuk-summary-list__value">
                     <Link href={`/government/institutions/${directParent.slug}`} className="govuk-link">
                       {directParent.name}
@@ -487,7 +723,11 @@ export default function InstitutionProfilePage() {
               )}
               {supervisingMinistry && (
                 <div className="govuk-summary-list__row">
-                  <dt className="govuk-summary-list__key">Supervising ministry</dt>
+                  <dt className="govuk-summary-list__key">
+                    {historical
+                      ? "Supervising ministry (historical)"
+                      : "Supervising ministry"}
+                  </dt>
                   <dd className="govuk-summary-list__value">
                     <Link
                       href={`/government/institutions/${supervisingMinistry.slug}`}
@@ -500,7 +740,9 @@ export default function InstitutionProfilePage() {
               )}
               {reportsTo && (
                 <div className="govuk-summary-list__row">
-                  <dt className="govuk-summary-list__key">Reports to</dt>
+                  <dt className="govuk-summary-list__key">
+                    {historical ? "Reported to" : "Reports to"}
+                  </dt>
                   <dd className="govuk-summary-list__value">
                     <Link
                       href={`/government/institutions/${reportsTo.slug}`}
@@ -576,7 +818,7 @@ export default function InstitutionProfilePage() {
             {/* Mandate & Description */}
             {(institution.mandate || institution.description) && (
               <>
-                <h2 className="govuk-heading-l">What this institution does</h2>
+                <h2 className="govuk-heading-l">{loc.mandateHeading}</h2>
                 {institution.mandate && <p className="govuk-body">{institution.mandate}</p>}
                 {institution.description && <p className="govuk-body">{institution.description}</p>}
               </>
@@ -594,12 +836,14 @@ export default function InstitutionProfilePage() {
             {/* Leadership */}
             {hasHead && (
               <>
-                <h2 className="govuk-heading-l govuk-!-margin-top-9">Leadership</h2>
+                <h2 className="govuk-heading-l govuk-!-margin-top-9">
+                  {loc.leadership}
+                </h2>
                 <dl className="govuk-summary-list">
                   {(institution.current_head || institution.head_title) && (
                     <div className="govuk-summary-list__row">
                       <dt className="govuk-summary-list__key">
-                        {institution.head_title || "Current head"}
+                        {loc.headKey}
                       </dt>
                       <dd className="govuk-summary-list__value">
                         {institution.current_head ? (
@@ -672,7 +916,9 @@ export default function InstitutionProfilePage() {
             {/* Headquarters & Locations */}
             {headquarters && (
               <>
-                <h2 className="govuk-heading-l govuk-!-margin-top-9">Headquarters</h2>
+                <h2 className="govuk-heading-l govuk-!-margin-top-9">
+                  {loc.hqSection}
+                </h2>
                 <div className="govuk-body">
                   <p className="govuk-body govuk-!-font-weight-bold">{headquarters.office_name}</p>
                   {headquarters.address && <p className="govuk-body">{headquarters.address}</p>}
@@ -690,7 +936,7 @@ export default function InstitutionProfilePage() {
             {institution.target_population && (
               <>
                 <h2 className="govuk-heading-m govuk-!-margin-top-6">
-                  Who it serves
+                  {historical ? "Who it served" : "Who it serves"}
                 </h2>
                 <p className="govuk-body">{institution.target_population}</p>
               </>
@@ -703,7 +949,7 @@ export default function InstitutionProfilePage() {
                 </p>
               )}
 
-            {/* Contact Information */}
+            {/* Contact / historical location */}
             {(institution.website_url ||
               institution.portal_url ||
               institution.email ||
@@ -718,11 +964,35 @@ export default function InstitutionProfilePage() {
               institution.complaints_mechanism_url ||
               institution.procurement_portal_url) && (
               <>
-                <h2 className="govuk-heading-l govuk-!-margin-top-9">Contact Information</h2>
+                <h2 className="govuk-heading-l govuk-!-margin-top-9">
+                  {loc.contactSection}
+                </h2>
+                {historical && (
+                  <p className="govuk-hint">
+                    These details are historical. Prefer the successor institution
+                    for current contacts
+                    {successor ? (
+                      <>
+                        {" "}
+                        (
+                        <Link
+                          href={`/government/institutions/${successor.slug}`}
+                          className="govuk-link"
+                        >
+                          {successor.name}
+                        </Link>
+                        )
+                      </>
+                    ) : null}
+                    .
+                  </p>
+                )}
                 <dl className="govuk-summary-list">
                   {institution.headquarters && (
                     <div className="govuk-summary-list__row">
-                      <dt className="govuk-summary-list__key">Headquarters</dt>
+                      <dt className="govuk-summary-list__key">
+                        {loc.headquarters}
+                      </dt>
                       <dd className="govuk-summary-list__value">
                         {institution.headquarters}
                       </dd>
@@ -730,7 +1000,7 @@ export default function InstitutionProfilePage() {
                   )}
                   {institution.physical_address && (
                     <div className="govuk-summary-list__row">
-                      <dt className="govuk-summary-list__key">Physical address</dt>
+                      <dt className="govuk-summary-list__key">{loc.physical}</dt>
                       <dd className="govuk-summary-list__value">
                         {institution.physical_address}
                       </dd>
@@ -738,7 +1008,7 @@ export default function InstitutionProfilePage() {
                   )}
                   {institution.website_url && (
                     <div className="govuk-summary-list__row">
-                      <dt className="govuk-summary-list__key">Website</dt>
+                      <dt className="govuk-summary-list__key">{loc.website}</dt>
                       <dd className="govuk-summary-list__value">
                         <a href={institution.website_url} target="_blank" rel="noreferrer" className="govuk-link">{institution.website_url}</a>
                       </dd>
@@ -746,7 +1016,9 @@ export default function InstitutionProfilePage() {
                   )}
                   {institution.portal_url && (
                     <div className="govuk-summary-list__row">
-                      <dt className="govuk-summary-list__key">Service portal</dt>
+                      <dt className="govuk-summary-list__key">
+                        {historical ? "Former service portal" : "Service portal"}
+                      </dt>
                       <dd className="govuk-summary-list__value">
                         <a
                           href={institution.portal_url}
@@ -761,23 +1033,33 @@ export default function InstitutionProfilePage() {
                   )}
                   {institution.email && (
                     <div className="govuk-summary-list__row">
-                      <dt className="govuk-summary-list__key">Email</dt>
+                      <dt className="govuk-summary-list__key">{loc.email}</dt>
                       <dd className="govuk-summary-list__value">
-                        <a href={`mailto:${institution.email}`} className="govuk-link">{institution.email}</a>
+                        {historical ? (
+                          institution.email
+                        ) : (
+                          <a href={`mailto:${institution.email}`} className="govuk-link">{institution.email}</a>
+                        )}
                       </dd>
                     </div>
                   )}
                   {institution.phone && (
                     <div className="govuk-summary-list__row">
-                      <dt className="govuk-summary-list__key">Phone</dt>
+                      <dt className="govuk-summary-list__key">{loc.phone}</dt>
                       <dd className="govuk-summary-list__value">
-                        <a href={`tel:${institution.phone}`} className="govuk-link">{institution.phone}</a>
+                        {historical ? (
+                          institution.phone
+                        ) : (
+                          <a href={`tel:${institution.phone}`} className="govuk-link">{institution.phone}</a>
+                        )}
                       </dd>
                     </div>
                   )}
                   {institution.toll_free && (
                     <div className="govuk-summary-list__row">
-                      <dt className="govuk-summary-list__key">Toll free</dt>
+                      <dt className="govuk-summary-list__key">
+                        {historical ? "Former toll free" : "Toll free"}
+                      </dt>
                       <dd className="govuk-summary-list__value">
                         {institution.toll_free}
                       </dd>
@@ -785,7 +1067,9 @@ export default function InstitutionProfilePage() {
                   )}
                   {institution.whatsapp && (
                     <div className="govuk-summary-list__row">
-                      <dt className="govuk-summary-list__key">WhatsApp</dt>
+                      <dt className="govuk-summary-list__key">
+                        {historical ? "Former WhatsApp" : "WhatsApp"}
+                      </dt>
                       <dd className="govuk-summary-list__value">
                         {institution.whatsapp}
                       </dd>
@@ -793,7 +1077,7 @@ export default function InstitutionProfilePage() {
                   )}
                   {institution.postal_address && (
                     <div className="govuk-summary-list__row">
-                      <dt className="govuk-summary-list__key">Postal Address</dt>
+                      <dt className="govuk-summary-list__key">{loc.postal}</dt>
                       <dd className="govuk-summary-list__value">{institution.postal_address}</dd>
                     </div>
                   )}

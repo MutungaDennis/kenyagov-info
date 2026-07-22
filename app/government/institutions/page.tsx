@@ -20,6 +20,7 @@ type Institution = {
   description?: string | null;
   aliases?: string[] | null;
   former_names?: string[] | null;
+  status?: string | null;
 };
 
 type InstitutionWithChildren = Institution & {
@@ -57,7 +58,7 @@ export default function GovernmentInstitutionsPage() {
             `
             id, slug, name, short_name, official_name, institution_type, institution_category,
             arm_of_government, government_level, parent_institution_id, description,
-            aliases, former_names
+            aliases, former_names, status
           `,
           )
           .eq("is_active", true)
@@ -104,12 +105,27 @@ export default function GovernmentInstitutionsPage() {
       inst.description,
       inst.institution_type,
       inst.institution_category,
+      inst.status,
       ...(Array.isArray(inst.aliases) ? inst.aliases : []),
       ...(Array.isArray(inst.former_names) ? inst.former_names : []),
     ]
       .filter(Boolean)
       .map((s) => String(s).toLowerCase());
     return hay.some((s) => s.includes(t));
+  };
+
+  /** Tag for former / dissolved / renamed bodies in the directory */
+  const statusTag = (status?: string | null) => {
+    const s = (status || "").trim();
+    if (!s || s.toLowerCase() === "active") return null;
+    return (
+      <span
+        className="govuk-tag govuk-tag--grey govuk-!-margin-left-1"
+        style={{ fontSize: "0.75rem", verticalAlign: "middle" }}
+      >
+        {s}
+      </span>
+    );
   };
 
   // Group institutions into GOV.UK-style categories.
@@ -540,6 +556,7 @@ export default function GovernmentInstitutionsPage() {
                                           ({inst.short_name})
                                         </span>
                                       )}
+                                      {statusTag(inst.status)}
                                     </h3>
                                     
                                     {inst.description && (
@@ -625,6 +642,7 @@ export default function GovernmentInstitutionsPage() {
                                   ({inst.short_name})
                                 </span>
                               )}
+                              {statusTag(inst.status)}
                             </td>
                             <td className="govuk-table__cell">
                               {inst.institution_type || "—"}

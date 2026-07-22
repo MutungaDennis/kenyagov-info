@@ -3,7 +3,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { adminPath } from "@/lib/admin-path";
-import { INSTITUTION_STATUS_IMPLIES_INACTIVE } from "@/lib/institutions/fields";
+import {
+  isInstitutionEarmarked,
+  isInstitutionHistorical,
+} from "@/lib/institutions/fields";
 import { groupsForDivisionValue } from "@/lib/institutions/cofog";
 import GovUKBackLink from "@/components/govuk/BackLink";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
@@ -74,9 +77,32 @@ export default function NewInstitutionPage() {
           .replace(/-+/g, "-");
       }
       if (name === "status" && typeof value === "string") {
-        if (value === "Active") next.is_active = true;
-        else if (INSTITUTION_STATUS_IMPLIES_INACTIVE.has(value)) {
+        if (value === "Active") {
+          next.is_active = true;
+        } else if (value === "Proposed") {
           next.is_active = false;
+          next.has_organisational_change = true;
+        } else if (
+          isInstitutionHistorical(value) ||
+          isInstitutionEarmarked(value)
+        ) {
+          next.has_organisational_change = true;
+          next.is_active = true;
+        } else if (value && value !== "Active") {
+          next.has_organisational_change = true;
+        }
+      }
+      if (name === "has_organisational_change" && type === "checkbox") {
+        next.has_organisational_change = checked;
+        if (!checked) {
+          next.status = "Active";
+          next.status_effective_date = "";
+          next.lifecycle_change_reason = "";
+          next.successor_institution_id = "";
+          next.successor_institution_label = "";
+          next.predecessor_institution_id = "";
+          next.predecessor_institution_label = "";
+          next.is_active = true;
         }
       }
       if (name === "cofog_division" && typeof value === "string") {
@@ -101,7 +127,9 @@ export default function NewInstitutionPage() {
     field:
       | "parent_institution"
       | "supervising_ministry"
-      | "reports_to_institution",
+      | "reports_to_institution"
+      | "predecessor_institution"
+      | "successor_institution",
     pick: { id: string; label: string },
   ) => {
     setForm((prev) => {
@@ -117,6 +145,20 @@ export default function NewInstitutionPage() {
           ...prev,
           supervising_ministry_id: pick.id,
           supervising_ministry_label: pick.label,
+        };
+      }
+      if (field === "predecessor_institution") {
+        return {
+          ...prev,
+          predecessor_institution_id: pick.id,
+          predecessor_institution_label: pick.label,
+        };
+      }
+      if (field === "successor_institution") {
+        return {
+          ...prev,
+          successor_institution_id: pick.id,
+          successor_institution_label: pick.label,
         };
       }
       return {

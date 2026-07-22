@@ -7,12 +7,21 @@ import {
   FUNDING_MODEL_OPTIONS,
   GOVERNMENT_LEVEL_OPTIONS,
   INSTITUTION_CATEGORY_OPTIONS,
+  INSTITUTION_CHANGE_NATURE_OPTIONS,
   INSTITUTION_NATURE_OPTIONS,
   INSTITUTION_STATUS_OPTIONS,
   LEGAL_BASIS_TYPE_OPTIONS,
   OPERATIONAL_MODEL_OPTIONS,
   VERIFICATION_STATUS_OPTIONS,
+  formHasOrganisationalChange,
   formatTextArray,
+  fundingModelImpliesExchequer,
+  isInstitutionEarmarked,
+  isInstitutionHistorical,
+  isInstitutionLifecycleNoted,
+  joinMultiValueField,
+  lifecycleChangeUi,
+  parseMultiValueField,
 } from "@/lib/institutions/fields";
 import InstitutionLinkPicker from "@/components/admin/InstitutionLinkPicker";
 import LeaderLinkPicker, {
@@ -43,6 +52,12 @@ export type InstitutionFormState = {
   supervising_ministry_label: string;
   reports_to_institution_id: string;
   reports_to_institution_label: string;
+  /** Historical lineage: this body replaced / was renamed from */
+  predecessor_institution_id: string;
+  predecessor_institution_label: string;
+  /** Historical lineage: renamed to / merged into / succeeded by */
+  successor_institution_id: string;
+  successor_institution_label: string;
   former_names: string;
   aliases: string;
   common_misspellings: string;
@@ -64,6 +79,10 @@ export type InstitutionFormState = {
   establishment_act: string;
   established_date: string;
   operational_date: string;
+  /** When the current Status took effect (merged, dissolved, renamed, …) or planned date if earmarked */
+  status_effective_date: string;
+  /** Why the change happened or why it is planned */
+  lifecycle_change_reason: string;
   appointing_authority: string;
   funding_model: string;
   is_exchequer_funded: boolean;
@@ -121,6 +140,11 @@ export type InstitutionFormState = {
   status: string;
   verification_status: string;
   is_active: boolean;
+  /**
+   * UI-only: admin ticked that organisational change(s) occurred.
+   * Not a DB column — drives nature-of-change / successor fields.
+   */
+  has_organisational_change: boolean;
   data_source: string;
   source_url: string;
 };
@@ -136,6 +160,10 @@ export const emptyInstitutionForm = (): InstitutionFormState => ({
   supervising_ministry_label: "",
   reports_to_institution_id: "",
   reports_to_institution_label: "",
+  predecessor_institution_id: "",
+  predecessor_institution_label: "",
+  successor_institution_id: "",
+  successor_institution_label: "",
   former_names: "",
   aliases: "",
   common_misspellings: "",
@@ -157,6 +185,8 @@ export const emptyInstitutionForm = (): InstitutionFormState => ({
   establishment_act: "",
   established_date: "",
   operational_date: "",
+  status_effective_date: "",
+  lifecycle_change_reason: "",
   appointing_authority: "",
   funding_model: "",
   is_exchequer_funded: false,
@@ -211,6 +241,7 @@ export const emptyInstitutionForm = (): InstitutionFormState => ({
   status: "Active",
   verification_status: "Unverified",
   is_active: true,
+  has_organisational_change: false,
   data_source: "",
   source_url: "",
 });
@@ -241,6 +272,10 @@ export function institutionFormFromRow(
     supervising_ministry_label: s("supervising_ministry_label"),
     reports_to_institution_id: s("reports_to_institution_id"),
     reports_to_institution_label: s("reports_to_institution_label"),
+    predecessor_institution_id: s("predecessor_institution_id"),
+    predecessor_institution_label: s("predecessor_institution_label"),
+    successor_institution_id: s("successor_institution_id"),
+    successor_institution_label: s("successor_institution_label"),
     former_names: formatTextArray(data.former_names),
     aliases: formatTextArray(data.aliases),
     common_misspellings: formatTextArray(data.common_misspellings),
@@ -262,6 +297,8 @@ export function institutionFormFromRow(
     establishment_act: s("establishment_act"),
     established_date: d("established_date"),
     operational_date: d("operational_date"),
+    status_effective_date: d("status_effective_date"),
+    lifecycle_change_reason: s("lifecycle_change_reason"),
     appointing_authority: s("appointing_authority"),
     funding_model: s("funding_model"),
     is_exchequer_funded: b("is_exchequer_funded"),
@@ -316,6 +353,13 @@ export function institutionFormFromRow(
     status: s("status") || "Active",
     verification_status: s("verification_status") || "Unverified",
     is_active: data.is_active !== false,
+    has_organisational_change: formHasOrganisationalChange({
+      status: data.status,
+      status_effective_date: data.status_effective_date,
+      successor_institution_id: data.successor_institution_id,
+      predecessor_institution_id: data.predecessor_institution_id,
+      lifecycle_change_reason: data.lifecycle_change_reason,
+    }),
     data_source: s("data_source"),
     source_url: s("source_url"),
   };
@@ -326,12 +370,14 @@ type Props = {
   onChange: (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
   ) => void;
-  /** Update hierarchy UUID + display label fields */
+  /** Update hierarchy / lineage UUID + display label fields */
   onHierarchyChange?: (
     field:
       | "parent_institution"
       | "supervising_ministry"
-      | "reports_to_institution",
+      | "reports_to_institution"
+      | "predecessor_institution"
+      | "successor_institution",
     pick: { id: string; label: string },
   ) => void;
   /** Link current head from leaders directory */
@@ -408,13 +454,134 @@ export default function InstitutionForm({
     ),
     form.cofog_division,
   );
+  const selectedCofogGroups = parseMultiValueField(form.cofog_group);
+  const selectedLegalBasisTypes = parseMultiValueField(form.legal_basis_type);
+
   const cofogGroupOptions = withCurrentOption(
     mergeOptionLists(
       groupsForDivisionValue(form.cofog_division).map((g) => g.value),
       db("cofog_group"),
+      selectedCofogGroups,
     ),
-    form.cofog_group,
+    "",
   );
+
+  const legalBasisOptions = withCurrentOption(
+    mergeOptionLists(LEGAL_BASIS_TYPE_OPTIONS, db("legal_basis_type"), selectedLegalBasisTypes),
+    "",
+  );
+
+  const fundingImpliesExchequer = fundingModelImpliesExchequer(
+    form.funding_model || "",
+  );
+
+  /** Emit a field change without a real DOM event (multi-select / sync) */
+  const emitField = (name: string, value: string | boolean) => {
+    if (typeof value === "boolean") {
+      onChange({
+        target: {
+          name,
+          type: "checkbox",
+          checked: value,
+          value: value ? "true" : "false",
+        },
+      } as ChangeEvent<HTMLInputElement>);
+      return;
+    }
+    onChange({
+      target: { name, type: "text", value },
+    } as ChangeEvent<HTMLInputElement>);
+  };
+
+  const toggleMulti = (
+    field: "cofog_group" | "legal_basis_type",
+    option: string,
+    selected: string[],
+  ) => {
+    const has = selected.some(
+      (s) => s.toLowerCase() === option.toLowerCase(),
+    );
+    const next = has
+      ? selected.filter((s) => s.toLowerCase() !== option.toLowerCase())
+      : [...selected, option];
+    emitField(field, joinMultiValueField(next));
+  };
+
+  const hasChange = Boolean(form.has_organisational_change);
+  const earmarked = isInstitutionEarmarked(form.status);
+  const historical = isInstitutionHistorical(form.status);
+  const lifecycleNoted = isInstitutionLifecycleNoted(form.status);
+  const changeUi = lifecycleChangeUi(form.status);
+  const knownNatures = new Set<string>(
+    INSTITUTION_CHANGE_NATURE_OPTIONS.map((o) => o.value),
+  );
+  const natureIsCustom =
+    hasChange &&
+    Boolean(form.status) &&
+    form.status !== "Active" &&
+    !knownNatures.has(form.status);
+  const natureSelectValue = !hasChange
+    ? ""
+    : natureIsCustom
+      ? "__other__"
+      : knownNatures.has(form.status)
+        ? form.status
+        : "";
+
+  /**
+   * Toggle change section in one form update path.
+   * Important: do NOT also emit status=Active when enabling — parent handlers
+   * used to clear has_organisational_change whenever status was Active.
+   */
+  const setLifecycleChangeEnabled = (enabled: boolean) => {
+    if (enabled) {
+      // Single update: tick only. Nature of change is chosen next.
+      onChange({
+        target: {
+          name: "has_organisational_change",
+          type: "checkbox",
+          checked: true,
+          value: "true",
+        },
+      } as ChangeEvent<HTMLInputElement>);
+      return;
+    }
+    // Untick: clear lifecycle fields in one shot via sequential emits is racy;
+    // use a dedicated synthetic that parent pages also handle via checkbox first.
+    onChange({
+      target: {
+        name: "has_organisational_change",
+        type: "checkbox",
+        checked: false,
+        value: "false",
+      },
+    } as ChangeEvent<HTMLInputElement>);
+  };
+
+  const onNatureOfChange = (value: string) => {
+    if (value === "__other__") {
+      if (
+        !form.status ||
+        form.status === "Active" ||
+        knownNatures.has(form.status)
+      ) {
+        emitField("status", "Other");
+      }
+      return;
+    }
+    if (!value) {
+      // Keep the section open; user cleared the dropdown only
+      emitField("status", "Active");
+      return;
+    }
+    emitField("status", value);
+    if (
+      (isInstitutionHistorical(value) || isInstitutionEarmarked(value)) &&
+      !form.is_active
+    ) {
+      emitField("is_active", true);
+    }
+  };
 
   const statusOptions = withCurrentOption(
     mergeOptionLists(INSTITUTION_STATUS_OPTIONS, db("status")),
@@ -705,46 +872,152 @@ export default function InstitutionForm({
           <Field
             id="cofog_group"
             label="COFOG group"
-            hint={
-              form.cofog_division
-                ? "Groups for the selected division"
-                : "Select a division first (or pick any group)"
-            }
+            hint="Select one or more groups (ministries often span several). Stored as a combined list."
           >
-            <select
-              className="govuk-select"
-              id="cofog_group"
-              name="cofog_group"
-              value={form.cofog_group}
-              onChange={onChange}
+            <div
+              className="govuk-checkboxes govuk-checkboxes--small"
+              style={{
+                maxHeight: 220,
+                overflowY: "auto",
+                border: "1px solid #b1b4b6",
+                padding: "8px 12px",
+                background: "#fff",
+              }}
             >
-              <option value="">— Select —</option>
-              {cofogGroupOptions.map((o) => (
-                <option key={o} value={o}>
-                  {o}
-                </option>
-              ))}
-            </select>
+              {cofogGroupOptions.length === 0 && (
+                <p className="govuk-hint">
+                  Select a COFOG division to list groups, or they will appear
+                  after you add free-text values below.
+                </p>
+              )}
+              {cofogGroupOptions.map((o) => {
+                const checked = selectedCofogGroups.some(
+                  (s) => s.toLowerCase() === o.toLowerCase(),
+                );
+                return (
+                  <div className="govuk-checkboxes__item" key={o}>
+                    <input
+                      className="govuk-checkboxes__input"
+                      id={`cofog-g-${o.slice(0, 40)}`}
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() =>
+                        toggleMulti("cofog_group", o, selectedCofogGroups)
+                      }
+                    />
+                    <label
+                      className="govuk-label govuk-checkboxes__label"
+                      htmlFor={`cofog-g-${o.slice(0, 40)}`}
+                    >
+                      {o}
+                    </label>
+                  </div>
+                );
+              })}
+            </div>
+            {selectedCofogGroups.length > 0 && (
+              <p className="govuk-body-s govuk-!-margin-top-2">
+                <strong>Selected:</strong> {selectedCofogGroups.join(" · ")}
+              </p>
+            )}
+            <label
+              className="govuk-label govuk-!-margin-top-2"
+              htmlFor="cofog_group_extra"
+            >
+              Add another group (free text)
+            </label>
+            <input
+              className="govuk-input"
+              id="cofog_group_extra"
+              type="text"
+              placeholder="Type and press Enter to add"
+              onKeyDown={(e) => {
+                if (e.key !== "Enter") return;
+                e.preventDefault();
+                const v = (e.target as HTMLInputElement).value.trim();
+                if (!v) return;
+                toggleMulti("cofog_group", v, selectedCofogGroups);
+                (e.target as HTMLInputElement).value = "";
+              }}
+            />
+            {/* Hidden field keeps native form payload in sync for any legacy submit paths */}
+            <input type="hidden" name="cofog_group" value={form.cofog_group} />
           </Field>
         </div>
       </div>
 
       <h2 className="govuk-heading-m">Legal basis & history</h2>
-      <div className="govuk-grid-row">
-        <div className="govuk-grid-column-one-third">
-          <SuggestField
-            id="legal_basis_type"
-            name="legal_basis_type"
-            label="Legal basis type"
-            value={form.legal_basis_type}
-            onChange={onChange}
-            options={LEGAL_BASIS_TYPE_OPTIONS}
-            dbOptions={db("legal_basis_type")}
-            hint="Pick or type a new value (saved values reappear next time)"
-            placeholder="e.g. Act of Parliament"
-          />
+      <Field
+        id="legal_basis_type"
+        label="Legal basis type"
+        hint="Select all that apply (e.g. Constitution and Act of Parliament). New free-text values are saved and reappear next time."
+      >
+        <div
+          className="govuk-checkboxes govuk-checkboxes--small"
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(14rem, 1fr))",
+            gap: "0.25rem 1rem",
+          }}
+        >
+          {legalBasisOptions.map((o) => {
+            const checked = selectedLegalBasisTypes.some(
+              (s) => s.toLowerCase() === o.toLowerCase(),
+            );
+            return (
+              <div className="govuk-checkboxes__item" key={o}>
+                <input
+                  className="govuk-checkboxes__input"
+                  id={`lbt-${o}`}
+                  type="checkbox"
+                  checked={checked}
+                  onChange={() =>
+                    toggleMulti("legal_basis_type", o, selectedLegalBasisTypes)
+                  }
+                />
+                <label
+                  className="govuk-label govuk-checkboxes__label"
+                  htmlFor={`lbt-${o}`}
+                >
+                  {o}
+                </label>
+              </div>
+            );
+          })}
         </div>
-        <div className="govuk-grid-column-one-third">
+        {selectedLegalBasisTypes.length > 0 && (
+          <p className="govuk-body-s govuk-!-margin-top-2">
+            <strong>Selected:</strong> {selectedLegalBasisTypes.join(" · ")}
+          </p>
+        )}
+        <label
+          className="govuk-label govuk-!-margin-top-2"
+          htmlFor="legal_basis_type_extra"
+        >
+          Add another legal basis type
+        </label>
+        <input
+          className="govuk-input"
+          id="legal_basis_type_extra"
+          type="text"
+          placeholder="Type and press Enter to add"
+          onKeyDown={(e) => {
+            if (e.key !== "Enter") return;
+            e.preventDefault();
+            const v = (e.target as HTMLInputElement).value.trim();
+            if (!v) return;
+            toggleMulti("legal_basis_type", v, selectedLegalBasisTypes);
+            (e.target as HTMLInputElement).value = "";
+          }}
+        />
+        <input
+          type="hidden"
+          name="legal_basis_type"
+          value={form.legal_basis_type}
+        />
+      </Field>
+      <div className="govuk-grid-row">
+        <div className="govuk-grid-column-one-half">
           <Field id="legal_basis_name" label="Legal basis name">
             <input
               className="govuk-input"
@@ -755,7 +1028,7 @@ export default function InstitutionForm({
             />
           </Field>
         </div>
-        <div className="govuk-grid-column-one-third">
+        <div className="govuk-grid-column-one-half">
           <Field id="establishment_act" label="Establishment act">
             <input
               className="govuk-input"
@@ -777,8 +1050,12 @@ export default function InstitutionForm({
         />
       </Field>
       <div className="govuk-grid-row">
-        <div className="govuk-grid-column-one-third">
-          <Field id="established_date" label="Established date">
+        <div className="govuk-grid-column-one-half">
+          <Field
+            id="established_date"
+            label="Established date"
+            hint="When this body was first created under law or policy"
+          >
             <input
               className="govuk-input"
               id="established_date"
@@ -789,8 +1066,12 @@ export default function InstitutionForm({
             />
           </Field>
         </div>
-        <div className="govuk-grid-column-one-third">
-          <Field id="operational_date" label="Operational date">
+        <div className="govuk-grid-column-one-half">
+          <Field
+            id="operational_date"
+            label="Operational date"
+            hint="When it began operating (if different)"
+          >
             <input
               className="govuk-input"
               id="operational_date"
@@ -801,7 +1082,9 @@ export default function InstitutionForm({
             />
           </Field>
         </div>
-        <div className="govuk-grid-column-one-third">
+      </div>
+      <div className="govuk-grid-row">
+        <div className="govuk-grid-column-two-thirds">
           <Field id="appointing_authority" label="Appointing authority">
             <input
               className="govuk-input"
@@ -814,21 +1097,271 @@ export default function InstitutionForm({
         </div>
       </div>
 
+      <h2 className="govuk-heading-m">Organisational changes over time</h2>
+      <p className="govuk-body">
+        Tick the box if this institution was <strong>renamed</strong>,{" "}
+        <strong>merged</strong>, <strong>dissolved</strong>,{" "}
+        <strong>restructured</strong>, is <strong>earmarked for upcoming change</strong>,
+        or otherwise needs a historical trail. That lets citizens follow history —
+        e.g. former “Ministry of Education, Science and Technology” → current
+        Ministry of Education — instead of confusing two different bodies with
+        similar names.
+      </p>
+
+      <div className="govuk-form-group">
+        <div className="govuk-checkboxes">
+          <div className="govuk-checkboxes__item">
+            <input
+              className="govuk-checkboxes__input"
+              id="has_organisational_change"
+              name="has_organisational_change"
+              type="checkbox"
+              checked={hasChange}
+              onChange={(e) => setLifecycleChangeEnabled(e.target.checked)}
+            />
+            <label
+              className="govuk-label govuk-checkboxes__label"
+              htmlFor="has_organisational_change"
+            >
+              Record organisational change (past or upcoming)
+            </label>
+            <div className="govuk-hint govuk-checkboxes__hint">
+              Past: rename, merger, dissolution, restructure, succession, former
+              body. Upcoming: earmarked for change in the coming days or weeks.
+              Leave unticked if nothing material to record.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {hasChange && (
+        <div className="govuk-!-margin-top-4">
+          <div className="govuk-form-group">
+            <label className="govuk-label" htmlFor="nature_of_change">
+              Nature of the change
+            </label>
+            <div className="govuk-hint" id="nature_of_change-hint">
+              What happened — or what is planned? This sets{" "}
+              <strong>Status</strong> and controls which institution links appear
+              below.
+            </div>
+            <select
+              className="govuk-select"
+              id="nature_of_change"
+              name="nature_of_change"
+              aria-describedby="nature_of_change-hint"
+              value={natureSelectValue}
+              onChange={(e) => onNatureOfChange(e.target.value)}
+            >
+              <option value="">Select nature of change</option>
+              {INSTITUTION_CHANGE_NATURE_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+              <option value="__other__">Other (type a custom status)</option>
+            </select>
+          </div>
+
+          {(natureSelectValue === "__other__" || natureIsCustom) && (
+            <SuggestField
+              id="status"
+              name="status"
+              label="Custom status"
+              value={form.status === "Active" ? "" : form.status}
+              onChange={onChange}
+              options={statusOptions}
+              dbOptions={db("status")}
+              hint="e.g. Split, Wound up, Transferred — or any label used in your records"
+            />
+          )}
+
+          {/* Show detail fields once a nature is chosen, or while custom status is entered */}
+          {(lifecycleNoted ||
+            natureSelectValue === "__other__" ||
+            (hasChange && form.status && form.status !== "Active")) && (
+            <>
+              <div className="govuk-grid-row">
+                <div className="govuk-grid-column-one-half">
+                  <Field
+                    id="status_effective_date"
+                    label={changeUi.dateLabel}
+                    hint={
+                      earmarked
+                        ? "When the change is expected to take effect"
+                        : "When this change took place"
+                    }
+                  >
+                    <input
+                      className="govuk-input"
+                      id="status_effective_date"
+                      name="status_effective_date"
+                      type="date"
+                      value={form.status_effective_date}
+                      onChange={onChange}
+                    />
+                  </Field>
+                </div>
+              </div>
+
+              <Field
+                id="lifecycle_change_reason"
+                label={
+                  earmarked
+                    ? "Why this change is planned / earmarked"
+                    : "Why this change took place"
+                }
+                hint="e.g. Executive Order, Act of Parliament, Cabinet decision, presidential directive, merger announcement — explain clearly for citizens"
+              >
+                <textarea
+                  className="govuk-textarea"
+                  id="lifecycle_change_reason"
+                  name="lifecycle_change_reason"
+                  rows={4}
+                  value={form.lifecycle_change_reason}
+                  onChange={onChange}
+                  placeholder={
+                    earmarked
+                      ? "e.g. Announced for merger under Executive Order … effective from …"
+                      : "e.g. Renamed under the … Act / Merged following Cabinet decision of …"
+                  }
+                />
+              </Field>
+
+              {changeUi.showSuccessor && (
+                <InstitutionLinkPicker
+                  id="successor_institution"
+                  label={
+                    changeUi.successorRequired
+                      ? `${changeUi.successorLabel} *`
+                      : changeUi.successorLabel
+                  }
+                  hint={changeUi.successorHint}
+                  valueId={form.successor_institution_id}
+                  valueLabel={form.successor_institution_label}
+                  excludeId={excludeInstitutionId}
+                  onChange={(pick) =>
+                    onHierarchyChange?.("successor_institution", pick)
+                  }
+                />
+              )}
+
+              {changeUi.showPredecessor && (
+                <InstitutionLinkPicker
+                  id="predecessor_institution"
+                  label={changeUi.predecessorLabel}
+                  hint={changeUi.predecessorHint}
+                  valueId={form.predecessor_institution_id}
+                  valueLabel={form.predecessor_institution_label}
+                  excludeId={excludeInstitutionId}
+                  onChange={(pick) =>
+                    onHierarchyChange?.("predecessor_institution", pick)
+                  }
+                />
+              )}
+
+              {form.status === "Merged" && (
+                <p className="govuk-body-s">
+                  <strong>Tip for multi-body mergers:</strong> create or edit each
+                  former body and set <em>Merged into</em> to the surviving
+                  institution. On the survivor, leave this box unticked (or link
+                  a predecessor if useful). Citizens can then walk from each
+                  former name to the current organisation.
+                </p>
+              )}
+
+              {earmarked && (
+                <div className="govuk-warning-text">
+                  <span className="govuk-warning-text__icon" aria-hidden="true">
+                    !
+                  </span>
+                  <strong className="govuk-warning-text__text">
+                    <span className="govuk-warning-text__assistive">Warning</span>
+                    This body is still current. Keep it <strong>Published</strong>{" "}
+                    and explain the planned change so citizens know what is
+                    coming. Update status again when the change takes effect
+                    (e.g. to Renamed or Merged).
+                  </strong>
+                </div>
+              )}
+
+              {historical && (
+                <div className="govuk-warning-text">
+                  <span className="govuk-warning-text__icon" aria-hidden="true">
+                    !
+                  </span>
+                  <strong className="govuk-warning-text__text">
+                    <span className="govuk-warning-text__assistive">Warning</span>
+                    Keep this record <strong>Published</strong> so the public can
+                    see the change and follow the linked institution. Prefer
+                    historical location over live contacts (emails/phones may no
+                    longer work).
+                  </strong>
+                </div>
+              )}
+
+              {changeUi.successorRequired &&
+                !form.successor_institution_id && (
+                  <p className="govuk-error-message" role="status">
+                    Link the institution this body became (or was merged into) so
+                    users can track the change.
+                  </p>
+                )}
+            </>
+          )}
+
+          {hasChange &&
+            (!form.status || form.status === "Active") &&
+            natureSelectValue === "" && (
+              <p className="govuk-hint">
+                Select the nature of the change above to enter the date, reason,
+                and related institutions.
+              </p>
+            )}
+        </div>
+      )}
+
       <h2 className="govuk-heading-m">Funding & services</h2>
       <SuggestField
         id="funding_model"
         name="funding_model"
         label="Funding model"
         value={form.funding_model}
-        onChange={onChange}
+        onChange={(e) => {
+          onChange(e);
+          const v = e.target.value;
+          // Auto-set Exchequer flag when the model already says so
+          if (fundingModelImpliesExchequer(v) && !form.is_exchequer_funded) {
+            emitField("is_exchequer_funded", true);
+          }
+        }}
         options={FUNDING_MODEL_OPTIONS}
         dbOptions={db("funding_model")}
-        hint="Pick a suggestion or type a model not yet listed"
+        hint="Pick a suggestion or type a model not yet listed. Models that include Exchequer automatically mark “Exchequer funded”."
       />
-      <div className="govuk-checkboxes govuk-!-margin-bottom-4">
+      {fundingImpliesExchequer && (
+        <p className="govuk-inset-text">
+          <strong>Exchequer funded</strong> is set automatically because the
+          funding model includes Exchequer. You do not need to tick it again.
+        </p>
+      )}
+      <div
+        className="govuk-checkboxes govuk-!-margin-bottom-4"
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(14rem, 1fr))",
+          columnGap: "1rem",
+          rowGap: "0.25rem",
+        }}
+      >
         {(
           [
-            ["is_exchequer_funded", "Exchequer funded"],
+            ...(fundingImpliesExchequer
+              ? []
+              : ([["is_exchequer_funded", "Exchequer funded"]] as [
+                  string,
+                  string,
+                ][])),
             ["generates_own_revenue", "Generates own revenue"],
             ["receives_donor_funding", "Receives donor funding"],
             ["is_commercial_entity", "Commercial entity"],
@@ -840,7 +1373,7 @@ export default function InstitutionForm({
             ["open_data_available", "Open data available"],
             ["publishes_annual_reports", "Publishes annual reports"],
             ["publishes_budget", "Publishes budget"],
-          ] as const
+          ] as [string, string][]
         ).map(([name, label]) => (
           <div className="govuk-checkboxes__item" key={name}>
             <input
@@ -848,7 +1381,9 @@ export default function InstitutionForm({
               id={name}
               name={name}
               type="checkbox"
-              checked={form[name]}
+              checked={Boolean(
+                form[name as keyof InstitutionFormState],
+              )}
               onChange={onChange}
             />
             <label
@@ -1051,7 +1586,17 @@ export default function InstitutionForm({
       </div>
 
       <h2 className="govuk-heading-m">Contact & location</h2>
-      <Field id="headquarters" label="Headquarters">
+      {historical && (
+        <p className="govuk-inset-text">
+          This body is historical. Prefer filling <strong>headquarters / address</strong>{" "}
+          (shown in past tense on the public site). Leave email and phone empty if they
+          no longer work.
+        </p>
+      )}
+      <Field
+        id="headquarters"
+        label={historical ? "Headquarters (was located / headquartered)" : "Headquarters"}
+      >
         <input
           className="govuk-input"
           id="headquarters"
@@ -1062,7 +1607,14 @@ export default function InstitutionForm({
       </Field>
       <div className="govuk-grid-row">
         <div className="govuk-grid-column-one-half">
-          <Field id="physical_address" label="Physical address">
+          <Field
+            id="physical_address"
+            label={
+              historical
+                ? "Physical address (was located at)"
+                : "Physical address"
+            }
+          >
             <textarea
               className="govuk-textarea"
               id="physical_address"
@@ -1074,7 +1626,14 @@ export default function InstitutionForm({
           </Field>
         </div>
         <div className="govuk-grid-column-one-half">
-          <Field id="postal_address" label="Postal address">
+          <Field
+            id="postal_address"
+            label={
+              historical
+                ? "Postal address (historical)"
+                : "Postal address"
+            }
+          >
             <textarea
               className="govuk-textarea"
               id="postal_address"
@@ -1386,22 +1945,36 @@ export default function InstitutionForm({
 
       <h2 className="govuk-heading-m">Status & publishing</h2>
       <p className="govuk-hint">
-        <strong>Status</strong> is the organisation’s real-world lifecycle.
-        <strong> Publish / Unpublish</strong> controls the public directory only
-        — unpublished institutions stay in admin but are hidden on the site.
+        Lifecycle status is set under <strong>Organisational changes over time</strong>{" "}
+        when the change box is ticked.{" "}
+        <strong>Publish / Unpublish</strong> only controls directory visibility —
+        keep historical bodies published so citizens can track what they became.
       </p>
       <div className="govuk-grid-row">
         <div className="govuk-grid-column-one-third">
-          <SuggestField
-            id="status"
-            name="status"
-            label="Status"
-            value={form.status}
-            onChange={onChange}
-            options={statusOptions}
-            dbOptions={db("status")}
-            hint="Active, Former, Dissolved, etc. — or type a custom status"
-          />
+          {hasChange ? (
+            <div className="govuk-form-group">
+              <p className="govuk-label">Status</p>
+              <p className="govuk-body">
+                <strong>{form.status || "— (select nature of change)"}</strong>
+              </p>
+              <p className="govuk-hint">
+                Date, reason, and related institutions are under Organisational
+                changes over time (above).
+              </p>
+            </div>
+          ) : (
+            <SuggestField
+              id="status"
+              name="status"
+              label="Status"
+              value={form.status}
+              onChange={onChange}
+              options={statusOptions}
+              dbOptions={db("status")}
+              hint="Normally Active. Tick organisational change above for rename, merger, dissolution, etc."
+            />
+          )}
         </div>
         <div className="govuk-grid-column-one-third">
           <SuggestField
@@ -1415,15 +1988,18 @@ export default function InstitutionForm({
             hint="Default Unverified. Mark Verified when checked."
           />
         </div>
-        <div className="govuk-grid-column-one-third">
+      </div>
+      <div className="govuk-grid-row">
+        <div className="govuk-grid-column-two-thirds">
           <div className="govuk-form-group">
             <fieldset className="govuk-fieldset">
               <legend className="govuk-fieldset__legend govuk-fieldset__legend--s">
                 Public visibility
               </legend>
               <div className="govuk-hint">
-                Unpublished institutions do not appear on{" "}
-                <code>/government/institutions</code> or public profiles.
+                For former / renamed / dissolved bodies, prefer{" "}
+                <strong>Published</strong> so citizens can find the history and
+                successor. Unpublish only for drafts or admin-only records.
               </div>
               <div className="govuk-radios" data-module="govuk-radios">
                 <div className="govuk-radios__item">
@@ -1543,11 +2119,27 @@ export function institutionFormSnapshot(form: InstitutionFormState): string {
     parent_institution_label: _p,
     supervising_ministry_label: _s,
     reports_to_institution_label: _r,
+    predecessor_institution_label: _pred,
+    successor_institution_label: _succ,
     social_links,
     ...rest
   } = form;
+  void _p;
+  void _s;
+  void _r;
+  void _pred;
+  void _succ;
   return JSON.stringify({
     ...rest,
+    // Normalize empties so dirty state is stable after load/save
+    parent_institution_id: form.parent_institution_id || "",
+    supervising_ministry_id: form.supervising_ministry_id || "",
+    reports_to_institution_id: form.reports_to_institution_id || "",
+    predecessor_institution_id: form.predecessor_institution_id || "",
+    successor_institution_id: form.successor_institution_id || "",
+    current_head_id: form.current_head_id || "",
+    status_effective_date: form.status_effective_date || "",
+    lifecycle_change_reason: (form.lifecycle_change_reason || "").trim(),
     social_links: (social_links || [])
       .map((l) => ({
         platform: (l.platform || "").trim().toLowerCase(),
@@ -1558,18 +2150,53 @@ export function institutionFormSnapshot(form: InstitutionFormState): string {
   });
 }
 
+const UUID_LIKE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function nullIfEmptyId(id: string | null | undefined): string | null {
+  const s = String(id || "").trim();
+  if (!s) return null;
+  return s;
+}
+
 /** Payload for create/update APIs (maps social_links → social_media). */
 export function institutionFormToPayload(
   form: InstitutionFormState,
 ): Record<string, unknown> {
-  const { social_links, parent_institution_label, supervising_ministry_label, reports_to_institution_label, ...rest } =
-    form;
+  const {
+    social_links,
+    parent_institution_label,
+    supervising_ministry_label,
+    reports_to_institution_label,
+    predecessor_institution_label,
+    successor_institution_label,
+    has_organisational_change,
+    ...rest
+  } = form;
   void parent_institution_label;
   void supervising_ministry_label;
   void reports_to_institution_label;
+  void predecessor_institution_label;
+  void successor_institution_label;
+  void has_organisational_change;
+
+  const fk = (id: string) => {
+    const v = nullIfEmptyId(id);
+    if (!v) return null;
+    // Only send well-formed UUIDs; bad values would fail the whole PATCH
+    return UUID_LIKE.test(v) ? v : null;
+  };
+
   return {
     ...rest,
     social_media: (social_links || []).filter((l) => l.platform && l.url.trim()),
-    current_head_id: form.current_head_id || null,
+    current_head_id: fk(form.current_head_id),
+    parent_institution_id: fk(form.parent_institution_id),
+    supervising_ministry_id: fk(form.supervising_ministry_id),
+    reports_to_institution_id: fk(form.reports_to_institution_id),
+    predecessor_institution_id: fk(form.predecessor_institution_id),
+    successor_institution_id: fk(form.successor_institution_id),
+    status_effective_date: form.status_effective_date || null,
+    lifecycle_change_reason: (form.lifecycle_change_reason || "").trim() || null,
   };
 }
