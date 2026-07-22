@@ -114,7 +114,7 @@ export async function POST(request: NextRequest) {
     const retry = await auth.supabase
       .from("constituencies")
       .insert(row)
-      .select("id, name, county_id, slug")
+      .select("id, name, county_id, is_active, slug")
       .single();
     data = retry.data;
     error = retry.error;
