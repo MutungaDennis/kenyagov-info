@@ -42,10 +42,16 @@ export async function PATCH(request: NextRequest, context: Ctx) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const patch = buildInstitutionRow(body);
+  console.error(`=== INSTITUTION UPDATE PAYLOAD (ID: ${id}) ===`);
+  console.error(JSON.stringify(body, null, 2));
+
+  let patch = buildInstitutionRow(body);
+
+  // Legacy cleanup
   delete patch.board_type;
   delete patch.has_board;
 
+  // Slug handling
   if (patch.name && !patch.slug && !body.slug) {
     patch.slug = slugify(String(patch.name));
   }
@@ -53,12 +59,25 @@ export async function PATCH(request: NextRequest, context: Ctx) {
     patch.slug = slugify(String(patch.slug)) || patch.slug;
   }
 
+  // === CRITICAL: Fix date fields (same as POST) ===
+  const DATE_KEYS = [
+    "established_date",
+    "operational_date",
+    "status_effective_date",
+    "head_appointment_date",
+  ];
+  for (const key of DATE_KEYS) {
+    if (patch[key] === "null" || patch[key] === "" || patch[key] == null) {
+      patch[key] = null;
+    }
+  }
+
   if (Object.keys(patch).length === 0) {
     return NextResponse.json({ error: "No fields to update" }, { status: 400 });
   }
 
   let working = { ...patch };
-  let lastError: string | null = null;
+  let lastError: any = null;
   const dropped: string[] = [];
 
   for (let attempt = 0; attempt < 25; attempt++) {
@@ -70,71 +89,118 @@ export async function PATCH(request: NextRequest, context: Ctx) {
       .single();
 
     if (!error) {
+      console.log("✅ Institution updated successfully:", data);
       return NextResponse.json({
         data,
         dropped: dropped.length ? dropped : undefined,
       });
     }
 
-    lastError = error.message;
+    lastError = error;
+    console.error(`Update attempt ${attempt + 1} failed:`, error);
+
+    // Unique violation
+    if (error?.code === "23505") {
+      return NextResponse.json(
+        {
+          error: "Slug or name conflict",
+          detail: error.message,
+          hint: "The slug is already taken by another institution.",
+        },
+        { status: 409 },
+      );
+    }
+
     const enumHint = enumErrorFromMessage(error.message);
     if (enumHint) {
       const badValMatch = error.message.match(
         /invalid input value for enum (\w+): "([^"]+)"/i,
       );
+      const enumName = badValMatch?.[1]?.toLowerCase() || "";
+
       let droppedEnum: string | null = null;
-      for (const col of [
-        "institution_nature",
-        "legal_basis_type",
-        "operational_model",
-        "funding_model",
-        "constitutional_status",
-        "institution_category",
-        "government_level",
-        "arm_of_government",
-        "status",
-        "verification_status",
-        "current_head_id",
-      ]) {
-        if (col in working && badValMatch?.[2] === String(working[col])) {
+      const enumToCol: Record<string, string> = {
+        institution_nature: "institution_nature",
+        operational_model: "operational_model",
+        institution_category: "institution_category",
+        government_level: "government_level",
+        arm_of_government: "arm_of_government",
+        constitutional_status: "constitutional_status",
+        funding_model: "funding_model",
+        verification_status: "verification_status",
+        status: "status",
+      };
+
+      for (const [key, col] of Object.entries(enumToCol)) {
+        if (enumName.includes(key.replace(/_enum$/, "")) && col in working) {
           delete working[col];
           dropped.push(col);
           droppedEnum = col;
           break;
         }
       }
+
+      if (!droppedEnum) {
+        for (const col of [
+          "institution_nature",
+          "operational_model",
+          "legal_basis_type",
+          "funding_model",
+          "constitutional_status",
+          "institution_category",
+          "verification_status",
+          "status",
+        ]) {
+          if (col in working && badValMatch?.[2] === String(working[col])) {
+            delete working[col];
+            dropped.push(col);
+            droppedEnum = col;
+            break;
+          }
+        }
+      }
+
       if (droppedEnum) continue;
+
       return NextResponse.json(
         {
           error: enumHint,
           detail: error.message,
-          hint: "That value is not in the database enum yet. Use a suggested value, or add the new enum label in Supabase.",
+          hint: "Value not allowed in database enum.",
           dropped,
         },
         { status: 400 },
       );
     }
+
     const col = missingColumnFromError(error.message);
     if (col && col in working) {
       delete working[col];
       dropped.push(col);
       continue;
     }
+
     if (/schema cache|column|does not exist/i.test(error.message)) {
       const keys = Object.keys(working);
-      if (!keys.length) break;
-      const drop = keys[keys.length - 1];
-      delete working[drop];
-      dropped.push(drop);
-      continue;
+      if (keys.length) {
+        const drop = keys[keys.length - 1];
+        delete working[drop];
+        dropped.push(drop);
+        continue;
+      }
     }
+
     break;
   }
 
+  console.error("❌ Final update failure:", lastError);
+
   return NextResponse.json(
     {
-      error: lastError || "Update failed",
-      dropped,
+      error: lastError?.message || "Update failed",
+      code: lastError?.code,
+      detail: lastError?.details,
+      dropped: dropped.length ? dropped : undefined,
     },
     { status: 500 },
   );

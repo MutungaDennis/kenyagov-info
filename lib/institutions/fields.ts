@@ -831,10 +831,14 @@ export function buildInstitutionRow(
     }
 
     if (DATE_FIELDS.has(key)) {
-      const d = String(val).slice(0, 10);
-      row[key] = d || null;
-      continue;
-    }
+  if (val == null || val === "" || val === "null" || String(val).trim() === "") {
+    row[key] = null;
+  } else {
+    const d = String(val).slice(0, 10).trim();
+    row[key] = d || null;
+  }
+  continue;
+}
 
     if (NUMBER_FIELDS.has(key)) {
       const n = Number(val);

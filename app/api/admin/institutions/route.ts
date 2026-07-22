@@ -52,16 +52,7 @@ function collectFacet(
   }
 }
 
-/**
- * GET /api/admin/institutions
- * Query params:
- * - q: search name / short_name / official_name / description (min 1 char)
- * - arm: filter arm_of_government OR institution_category (exact)
- * - type: filter institution_type (exact)
- * - active: "1" = active only (is_active true or null); omit for all
- * - limit / offset: page size (max 100) and start index
- * - facets: "1" = return distinct option values from DB (grows as admins save new values)
- */
+/* ====================== GET (unchanged) ====================== */
 export async function GET(request: NextRequest) {
   const auth = await requireAdminApi();
   if (!auth.ok) return auth.response;
@@ -73,14 +64,12 @@ export async function GET(request: NextRequest) {
   const activeOnly = searchParams.get("active") === "1";
   const wantFacets = searchParams.get("facets") === "1";
 
-  // Facets: scan classification columns so free-text values reappear in dropdowns
   if (wantFacets) {
     const sets: Record<string, Set<string>> = {};
     for (const col of FACET_COLUMNS) sets[col] = new Set();
     const PAGE = 1000;
     let offset = 0;
-    // Static select string so supabase-js types resolve; cast rows via unknown
-    // (dynamic .select(string) is typed as GenericStringError[]).
+
     const FACET_SELECT = `
       arm_of_government, institution_category, institution_type, institution_subtype,
       institution_nature, government_level, constitutional_status, mtef_sector,
@@ -91,13 +80,14 @@ export async function GET(request: NextRequest) {
       arm_of_government, institution_category, institution_type,
       mtef_sector, institution_nature, status
     `;
+
     for (let i = 0; i < 50; i++) {
       const { data, error } = await auth.supabase
         .from("institutions")
         .select(FACET_SELECT)
         .range(offset, offset + PAGE - 1);
+
       if (error) {
-        // Fallback minimal facets if some columns missing
         const fb = await auth.supabase
           .from("institutions")
           .select(FACET_SELECT_MINIMAL)
@@ -113,6 +103,7 @@ export async function GET(request: NextRequest) {
         offset += fbRows.length;
         continue;
       }
+
       const rows = (data ?? []) as unknown as FacetRow[];
       for (const row of rows) {
         for (const col of FACET_COLUMNS) collectFacet(sets, row, col);
@@ -125,7 +116,6 @@ export async function GET(request: NextRequest) {
       Array.from(sets[key] || []).sort((a, b) => a.localeCompare(b));
 
     return NextResponse.json({
-      // list-page shortcuts
       arms: sorted("arm_of_government").length
         ? [
             ...new Set([
@@ -135,7 +125,6 @@ export async function GET(request: NextRequest) {
           ].sort((a, b) => a.localeCompare(b))
         : sorted("institution_category"),
       types: sorted("institution_type"),
-      // full facet map for admin form dropdowns (static + these = growing list)
       facets: {
         arm_of_government: sorted("arm_of_government"),
         institution_category: sorted("institution_category"),
@@ -168,7 +157,6 @@ export async function GET(request: NextRequest) {
     parseInt(searchParams.get("offset") || "0", 10) || 0,
   );
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const applyFilters = (query: any) => {
     let qy = query;
     if (q.length >= 1) {
@@ -181,7 +169,6 @@ export async function GET(request: NextRequest) {
     }
     if (arm.length >= 1) {
       const armQ = quoteFilterValue(arm);
-      // Match either arm_of_government or institution_category (same as previous UI)
       qy = qy.or(
         `arm_of_government.eq.${armQ},institution_category.eq.${armQ}`,
       );
@@ -190,7 +177,6 @@ export async function GET(request: NextRequest) {
       qy = qy.eq("institution_type", type);
     }
     if (activeOnly) {
-      // Treat null as active (legacy rows)
       qy = qy.or("is_active.eq.true,is_active.is.null");
     }
     return qy;
@@ -212,7 +198,6 @@ export async function GET(request: NextRequest) {
 
   const { data, error, count } = await query;
   if (error) {
-    // Fallback minimal columns (filters re-applied)
     let fallbackQ = auth.supabase
       .from("institutions")
       .select(
@@ -255,6 +240,7 @@ export async function GET(request: NextRequest) {
   });
 }
 
+/* ====================== POST Handler ====================== */
 export async function POST(request: NextRequest) {
   const auth = await requireAdminApi();
   if (!auth.ok) return auth.response;
@@ -266,27 +252,43 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
+  console.error("=== INSTITUTION CREATE PAYLOAD ===");
+  console.error(JSON.stringify(body, null, 2));
+
   const name = String(body.name || "").trim();
   if (!name) {
     return NextResponse.json({ error: "name is required" }, { status: 400 });
   }
 
-  const row = buildInstitutionRow(body, { defaults: true });
+  let row = buildInstitutionRow(body, { defaults: true });
   row.name = name;
   row.slug =
     String(body.slug || "").trim() ||
     slugify(name) ||
     `institution-${Date.now()}`;
+
   if (typeof row.slug === "string") {
     row.slug = slugify(String(row.slug)) || row.slug;
   }
 
-  // Never send known-bad legacy keys
+  // === CRITICAL FIX: Clean date fields that come as string "null" ===
+  const DATE_KEYS = [
+    "established_date",
+    "operational_date",
+    "status_effective_date",
+    "head_appointment_date",
+  ];
+  for (const key of DATE_KEYS) {
+    if (row[key] === "null" || row[key] === "" || row[key] == null) {
+      row[key] = null;
+    }
+  }
+
   delete row.board_type;
   delete row.has_board;
 
   let working = { ...row };
-  let lastError: string | null = null;
+  let lastError: any = null;
   const dropped: string[] = [];
 
   for (let attempt = 0; attempt < 25; attempt++) {
@@ -297,30 +299,38 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (!error) {
+      console.log("✅ Institution created successfully:", data);
       return NextResponse.json(
-        {
-          data,
-          dropped: dropped.length ? dropped : undefined,
-        },
+        { data, dropped: dropped.length ? dropped : undefined },
         { status: 201 },
       );
     }
 
-    lastError = error.message;
+    lastError = error;
+    console.error(`Attempt ${attempt + 1} failed:`, error);
+
+    if (error?.code === "23505") {
+      return NextResponse.json(
+        {
+          error: "Institution with this name or slug already exists",
+          detail: error.message,
+          hint: "Try a different name or provide a custom unique slug.",
+        },
+        { status: 409 },
+      );
+    }
+
     const enumHint = enumErrorFromMessage(error.message);
     if (enumHint) {
-      // Drop the offending enum field and retry so free-text fields that fail
-      // do not block the whole save when possible
       const badValMatch = error.message.match(
         /invalid input value for enum (\w+): "([^"]+)"/i,
       );
-      // Map postgres enum type names roughly to columns
+      const enumName = badValMatch?.[1]?.toLowerCase() || "";
+
       const enumToCol: Record<string, string> = {
         institution_nature: "institution_nature",
-        institution_nature_enum: "institution_nature",
         legal_basis_type: "legal_basis_type",
         operational_model: "operational_model",
-        operational_model_enum: "operational_model",
         institution_category: "institution_category",
         government_level: "government_level",
         arm_of_government: "arm_of_government",
@@ -329,7 +339,7 @@ export async function POST(request: NextRequest) {
         verification_status: "verification_status",
         institution_status: "status",
       };
-      const enumName = badValMatch?.[1]?.toLowerCase() || "";
+
       let droppedEnum: string | null = null;
       for (const [key, col] of Object.entries(enumToCol)) {
         if (enumName.includes(key.replace(/_enum$/, "")) && col in working) {
@@ -339,7 +349,7 @@ export async function POST(request: NextRequest) {
           break;
         }
       }
-      // Heuristic: try common free-text enum columns
+
       if (!droppedEnum) {
         for (const col of [
           "institution_nature",
@@ -357,44 +367,46 @@ export async function POST(request: NextRequest) {
           }
         }
       }
-      if (droppedEnum) {
-        continue; // retry without invalid enum value
-      }
+
+      if (droppedEnum) continue;
+
       return NextResponse.json(
-        {
-          error: enumHint,
-          detail: error.message,
-          hint: "That value is not in the database enum yet. Use a suggested value, or ask a DBA to add the new enum label in Supabase.",
-          dropped,
-        },
+        { error: enumHint, detail: error.message, dropped },
         { status: 400 },
       );
     }
+
     const col = missingColumnFromError(error.message);
     if (col && col in working) {
       delete working[col];
       dropped.push(col);
       continue;
     }
+
     if (/schema cache|column|does not exist/i.test(error.message)) {
-      // Drop one optional non-required field
       const optional = Object.keys(working).filter(
         (k) => !["name", "slug"].includes(k),
       );
-      if (!optional.length) break;
-      const drop = optional[optional.length - 1];
-      delete working[drop];
-      dropped.push(drop);
-      continue;
+      if (optional.length) {
+        const drop = optional[optional.length - 1];
+        delete working[drop];
+        dropped.push(drop);
+        continue;
+      }
     }
+
     break;
   }
 
+  console.error("❌ Final insert failure:", lastError);
+
   return NextResponse.json(
     {
-      error: lastError || "Failed to create institution",
+      error: lastError?.message || "Failed to create institution",
+      code: lastError?.code,
+      detail: lastError?.details,
       dropped,
-      hint: "Removed unknown columns and retried. Ensure name and slug are unique. Enum fields must match DB values.",
+      hint: "Check terminal for full payload.",
     },
     { status: 500 },
   );
