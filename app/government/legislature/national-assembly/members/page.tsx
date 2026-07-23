@@ -259,7 +259,7 @@ export default function NationalAssemblyMembersPage() {
                           <td className="govuk-table__cell govuk-body-s">{fromOffset + index + 1}</td>
                           <th scope="row" className="govuk-table__header govuk-body-s" style={{ fontWeight: 'normal' }}>
                             <Link 
-                              href={`/legislature/national-assembly/members/${member.slug}`} 
+                              href={`/government/people/${member.slug}`} 
                               className="govuk-link govuk-!-font-weight-bold"
                             >
                               {member.name}

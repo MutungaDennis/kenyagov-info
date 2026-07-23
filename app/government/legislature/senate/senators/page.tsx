@@ -218,7 +218,7 @@ export default function SenateSenatorsPage() {
                         <tr key={sen.id} className="govuk-table__row">
                           <td className="govuk-table__cell govuk-body-s">{fromOffset + index + 1}</td>
                           <th scope="row" className="govuk-table__header govuk-body-s" style={{ fontWeight: 'normal' }}>
-                            <Link href={`/legislature/senate/senators/${sen.slug}`} className="govuk-link govuk-!-font-weight-bold">
+                            <Link href={`/government/people/${sen.slug}`} className="govuk-link govuk-!-font-weight-bold">
                               {sen.name}
                             </Link>
                           </th>
