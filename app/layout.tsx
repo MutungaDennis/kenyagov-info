@@ -6,20 +6,12 @@ import "@/app/globals.css";
 
 import { ClientLayoutWrapper } from "./ClientLayoutWrapper";
 
-// Public Sans via stylesheet (not next/font) so fontkit / font metrics
-// are not file-traced into the Cloudflare Worker bundle.
-
 const SITE_URL = 'https://www.citizenguide.ke';
 const SITE_NAME = 'CitizenGuide.KE';
 const DEFAULT_TITLE = 'CitizenGuide.KE — Informational guide to Kenyan governance';
 const DEFAULT_DESCRIPTION =
   'Find clear, factual information about the Government of Kenya — institutions, leaders, counties, public services, elections, and the Constitution of Kenya 2010.';
 
-/**
- * Default social share image: branded card with site logo.
- * Absolute URL (via metadataBase) so WhatsApp, Facebook, LinkedIn, X can fetch it.
- * File is ~13KB — well under Vercel limits (previous assets exceeded 1MB).
- */
 const OG_IMAGE = {
   url: '/og-image.webp',
   width: 1200,
@@ -62,7 +54,6 @@ export const metadata: Metadata = {
 
   alternates: {
     canonical: '/',
-    // AI / LLM discovery file (also at /llms.txt)
     types: {
       'text/plain': [{ url: '/llms.txt', title: 'llms.txt' }],
     },
@@ -80,7 +71,6 @@ export const metadata: Metadata = {
     },
   },
 
-  // Open Graph — site-wide defaults
   openGraph: {
     type: 'website',
     locale: 'en_KE',
@@ -91,7 +81,6 @@ export const metadata: Metadata = {
     images: [OG_IMAGE],
   },
 
-  // X / Twitter
   twitter: {
     card: 'summary_large_image',
     title: SITE_NAME,
@@ -99,15 +88,15 @@ export const metadata: Metadata = {
     images: [OG_IMAGE.url],
   },
 
-  // Icons / favicon (logo)
   icons: {
     icon: [{ url: '/logo.webp', type: 'image/webp' }],
     apple: [{ url: '/logo.webp', type: 'image/webp' }],
   },
 
-  // Manifest-friendly
+  // Manifest-friendly & Origin Trial Token
   other: {
     'ai-content': 'index',
+    'origin-trial': 'A4osS6hE38l+I8HVoNIZUPu9CvgXN7Wk4+mu9gbnNgUlJpGPrpgjNNw+kHB/IPzh2AwL+sjPB5rnWBQMk1OGLw8AAAB2eyJvcmlnaW4iOiJodHRwczovL2NpdGl6ZW5ndWlkZS5rZTo0NDMiLCJmZWF0dXJlIjoiV2ViTUNQIiwiZXhwaXJ5IjoxNzk0ODczNjAwLCJpc1N1YmRvbWFpbiI6dHJ1ZSwiaXN0aGlyZFBhcnR5Ijp0cnVlfQ==',
   },
 };
 
@@ -116,7 +105,6 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Server-rendered JSON-LD for crawlers (not client-only)
   const websiteSchema = {
     '@context': 'https://schema.org',
     '@type': 'WebSite',

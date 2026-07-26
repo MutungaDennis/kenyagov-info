@@ -5,6 +5,9 @@ import Link from "next/link";
 import { adminPath } from "@/lib/admin-path";
 import DeleteModal from "@/components/govuk/DeleteModal";
 
+// 🚀 Import the IndexNow helper
+import { triggerIndexNow } from "@/lib/indexnow";
+
 type Leader = {
   id: string;
   slug: string;
@@ -176,6 +179,12 @@ export default function OfficialsAdminPage() {
       });
       setOffset(0);
       await fetchLeaders();
+
+      // 🚀 Trigger IndexNow to notify search engines of the new official
+      if (json.data?.slug) {
+        void triggerIndexNow(json.data.slug, "leaders");
+      }
+
       if (json.data?.id) {
         window.location.href = adminPath(`officials/${json.data.id}/edit`);
       }

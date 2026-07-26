@@ -53,6 +53,27 @@ const nextConfig: NextConfig = {
     },
   },
 
+  // ==========================================
+  // SECURITY HEADERS FOR WEBMCP ORIGIN ISOLATION
+  // ==========================================
+  async headers() {
+    return [
+      {
+        // Enforces isolation on all routes to unlock WebMCP capabilities safely
+        source: "/:path*",
+        headers: [
+          {
+            key: "Origin-Agent-Cluster",
+            value: "?1", // Expressly forces origin-keyed processes
+          },
+          {
+            key: "Permissions-Policy",
+            value: "tools=(self)", // Explicitly allows WebMCP tools in top-level/same-origin contexts
+          },
+        ],
+      },
+    ];
+  },
 
   // Secret admin path → internal app/admin (backup if middleware is skipped).
   // Keep in sync with DEFAULT_PRODUCTION_ADMIN_BASE in lib/admin-path.ts

@@ -37,6 +37,9 @@ import {
   type SocialLink,
 } from "@/lib/leaders/titles-social";
 
+// 🚀 Import the IndexNow helper
+import { triggerIndexNow } from "@/lib/indexnow";
+
 type FormState = {
   first_name: string;
   other_names: string;
@@ -769,6 +772,11 @@ export default function EditOfficialPage({
           ? "Personal details saved successfully (including organisation snapshot)."
           : "Personal details saved. Profile is inactive (not listed publicly).",
       );
+
+      // 🚀 Trigger IndexNow to notify search engines of the update
+      if (form.is_active && form.slug) {
+        void triggerIndexNow(form.slug, "leaders");
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Update failed");
       setSuccessMessage(null);
@@ -1185,6 +1193,11 @@ export default function EditOfficialPage({
           ? "Position updated successfully."
           : "Position saved successfully.",
       );
+
+      // 🚀 Trigger IndexNow to notify search engines of the role update
+      if (form.is_active && form.slug) {
+        void triggerIndexNow(form.slug, "leaders");
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save position");
       setSuccessMessage(null);
@@ -1210,6 +1223,11 @@ export default function EditOfficialPage({
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Delete failed");
       await loadLeader();
+      
+      // 🚀 Trigger IndexNow to notify search engines of the role deletion
+      if (form.is_active && form.slug) {
+        void triggerIndexNow(form.slug, "leaders");
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to delete position");
     }

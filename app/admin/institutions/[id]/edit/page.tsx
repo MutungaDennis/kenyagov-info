@@ -20,6 +20,9 @@ import InstitutionForm, {
 import type { LeaderPickResult } from "@/components/admin/LeaderLinkPicker";
 import type { SocialLink } from "@/lib/leaders/titles-social";
 
+// 🚀 Import the IndexNow helper
+import { triggerIndexNow } from "@/lib/indexnow";
+
 function leaderDisplayName(d: Record<string, unknown>): string {
   const parts = [d.first_name, d.other_names, d.surname]
     .filter(Boolean)
@@ -411,6 +414,12 @@ export default function EditInstitutionPage({
           ? "Changes saved. Institution is published on the public site."
           : "Changes saved. Institution is unpublished (hidden from the public site).",
       );
+
+      // 🚀 Trigger IndexNow to notify search engines of the update
+      // Only trigger if the institution is actively published and has a slug
+      if (nextForm.is_active && nextForm.slug) {
+        void triggerIndexNow(nextForm.slug, "institutions");
+      }
 
       void loadFacets();
 

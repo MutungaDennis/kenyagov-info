@@ -19,6 +19,9 @@ import InstitutionForm, {
 import type { LeaderPickResult } from "@/components/admin/LeaderLinkPicker";
 import type { SocialLink } from "@/lib/leaders/titles-social";
 
+// 🚀 Import the IndexNow helper
+import { triggerIndexNow } from "@/lib/indexnow";
+
 export default function NewInstitutionPage() {
   const router = useRouter();
   const [form, setForm] = useState<InstitutionFormState>(emptyInstitutionForm());
@@ -215,6 +218,12 @@ export default function NewInstitutionPage() {
           ? "Institution created and published. Opening editor…"
           : "Institution created as unpublished. Opening editor…",
       );
+
+      // 🚀 Trigger IndexNow to notify search engines of the new published institution
+      if (form.is_active && form.slug) {
+        void triggerIndexNow(form.slug, "institutions");
+      }
+
       if (json.data?.id) {
         router.push(adminPath(`institutions/${json.data.id}/edit`));
       } else {
