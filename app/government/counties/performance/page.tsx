@@ -225,11 +225,11 @@ export default function CountyPerformancePage() {
             <h3 className="govuk-heading-m govuk-!-margin-top-6 govuk-!-margin-bottom-2">Statutory Resources and Portals</h3>
             <ul className="govuk-list govuk-list--spaced">
               <li>
-                <Link href="https://crakenya.org" className="govuk-link">Commission on Revenue Allocation (CRA)</Link>
+                <Link href="https://cra.go.ke/" className="govuk-link">Commission on Revenue Allocation (CRA)</Link>
                 <span className="govuk-body-s govuk-!-margin-top-1 d-block">&mdash; Publishes vertical revenue allocation formulas and annual county financial reports.</span>
-              </li>
+              </li>76
               <li>
-                <Link href="https://auditorgeneral.go.ke" className="govuk-link">Office of the Auditor-General (OAG)</Link>
+                <Link href="https://www.oagkenya.go.ke/" className="govuk-link">Office of the Auditor-General (OAG)</Link>
                 <span className="govuk-body-s govuk-!-margin-top-1 d-block">&mdash; Issues formal administrative audit evaluations and compliance asset tracing folders.</span>
               </li>
             </ul>

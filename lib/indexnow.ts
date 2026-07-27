@@ -20,17 +20,20 @@ export async function triggerIndexNow(slug: string, type: 'leaders' | 'instituti
         return;
     }
 
+    // Always use the production URL for the payload, because IndexNow requires the real public URL
     const fullUrl = `https://www.citizenguide.ke${path}`;
 
-    // Fire-and-forget: We don't await this so it doesn't block the admin UI save process
-    fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'https://www.citizenguide.ke'}/api/indexnow`, {
+    // Use a relative URL for the fetch. 
+    // This guarantees it talks to localhost in dev, and production in live, without env vars.
+    fetch('/api/indexnow', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ url: fullUrl }),
     }).catch((err) => {
-      console.error('Failed to trigger IndexNow:', err);
+      // Silently fail in local dev without breaking the UI or showing red errors
+      console.warn('IndexNow trigger skipped (normal in local dev):', err);
     });
   } catch (error) {
     console.error('Error in triggerIndexNow:', error);
