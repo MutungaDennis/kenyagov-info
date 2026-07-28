@@ -169,15 +169,40 @@ export default function PersonProfilePage() {
   const primary = resolvePrimaryRole(person.leader_roles);
 
   const primaryRole = primary.role;
-  const roleTitle = primaryRole?.title || person.title || person.category || "Government official";
-  const orgName = primaryRole?.organization || person.current_organization || null;
   
-  // FIXED: Strictly pull constituency/county/ward from the CURRENT primary role only.
-  // This prevents former constituencies from showing up for Presidents, CSs, etc.
+  // 1. Enhanced Role Title: Automatically append seat details for elected reps to avoid redundancy
+  let displayRoleTitle = primaryRole?.title || person.title || person.category || "Government official";
+  const titleLower = (primaryRole?.title || "").toLowerCase();
+
+  if (titleLower === "member of parliament" && primaryRole?.constituency) {
+    const constName = primaryRole.constituency.toLowerCase().includes("constituency") 
+      ? primaryRole.constituency 
+      : `${primaryRole.constituency} Constituency`;
+    displayRoleTitle = `Member of Parliament for ${constName}`;
+  } else if (titleLower === "senator" && primaryRole?.county) {
+    const countyName = primaryRole.county.toLowerCase().includes("county") ? primaryRole.county : `${primaryRole.county} County`;
+    displayRoleTitle = `Senator for ${countyName}`;
+  } else if (titleLower === "member of county assembly" && primaryRole?.ward) {
+    const wardName = primaryRole.ward.toLowerCase().includes("ward") ? primaryRole.ward : `${primaryRole.ward} Ward`;
+    displayRoleTitle = `Member of County Assembly for ${wardName}`;
+  } else if (titleLower === "governor" && primaryRole?.county) {
+    const countyName = primaryRole.county.toLowerCase().includes("county") ? primaryRole.county : `${primaryRole.county} County`;
+    displayRoleTitle = `Governor of ${countyName}`;
+  } else if (titleLower === "woman representative" && primaryRole?.county) {
+    const countyName = primaryRole.county.toLowerCase().includes("county") ? primaryRole.county : `${primaryRole.county} County`;
+    displayRoleTitle = `Woman Representative for ${countyName}`;
+  }
+
+  const orgName = primaryRole?.organization || person.current_organization || null;
   const party = primaryRole?.party || person.current_party || null;
-  const constituency = primaryRole?.constituency || null;
-  const county = primaryRole?.county || null;
-  const ward = primaryRole?.ward || null;
+  
+  // 2. Hide redundant geographic details for elected representatives (since they are now in the title)
+  const electedTitles = ["member of parliament", "senator", "member of county assembly", "governor", "woman representative", "county woman representative"];
+  const isElectedRep = electedTitles.some(title => titleLower.includes(title));
+
+  const showConstituency = primaryRole?.constituency && !isElectedRep;
+  const showCounty = primaryRole?.county && !isElectedRep;
+  const showWard = primaryRole?.ward && !isElectedRep;
   
   const termLabel = primaryRole
     ? formatTermRange(primaryRole.term_start_date, primaryRole.term_end_date)
@@ -210,8 +235,8 @@ export default function PersonProfilePage() {
     return !r.term_end_date && String(r.status || "").toLowerCase() !== "ended";
   });
 
-  // Check if we actually need to show the summary list (only if there are extra details)
-  const hasExtraDetails = Boolean(party || constituency || county || ward || person.level);
+  // Check if we actually need to show the summary list (only if there are non-redundant extra details)
+  const hasExtraDetails = Boolean(party || showConstituency || showCounty || showWard || person.level);
 
   return (
     <>
@@ -238,19 +263,19 @@ export default function PersonProfilePage() {
                 />
               )}
 
-              {/* 1. Name and Prominent Role (No repetition) */}
+              {/* 1. Name and Prominent Role */}
               <h1 className="govuk-heading-xl govuk-!-margin-bottom-2">
                 {publicName}
               </h1>
 
               <p className="govuk-body-l govuk-!-font-weight-bold govuk-!-margin-bottom-1">
                 {primary.isCurrent ? (
-                  <>{roleTitle}</>
+                  <>{displayRoleTitle}</>
                 ) : (
                   <>
                     <span className="govuk-caption-l govuk-!-margin-bottom-1">Last position held</span>
                     <br />
-                    {roleTitle}
+                    {displayRoleTitle}
                   </>
                 )}
               </p>
@@ -268,7 +293,22 @@ export default function PersonProfilePage() {
 
               {!orgName && <div className="govuk-!-margin-bottom-6" />}
 
-              {/* 2. Key Details (Only shows if there are actual extra details to prevent empty/repetitive lists) */}
+              {/* 2. Biography (Moved up for immediate narrative context, GOV.UK style) */}
+              {person.bio && (
+                <>
+                  <h2 className="govuk-heading-m">Biography</h2>
+                  {person.bio.split(/\n\n+/).map((para, i) => (
+                    <p key={i} className="govuk-body">
+                      {para}
+                    </p>
+                  ))}
+                </>
+              )}
+
+              {/* Separator before Key Details and subsequent sections */}
+              <hr className="govuk-section-break govuk-section-break--l govuk-section-break--visible govuk-!-margin-top-6 govuk-!-margin-bottom-6" />
+
+              {/* 3. Key Details (Only shows non-redundant extra details) */}
               {hasExtraDetails && (
                 <dl className="govuk-summary-list govuk-!-margin-bottom-6">
                   {party && (
@@ -277,22 +317,22 @@ export default function PersonProfilePage() {
                       <dd className="govuk-summary-list__value">{party}</dd>
                     </div>
                   )}
-                  {constituency && (
+                  {showConstituency && (
                     <div className="govuk-summary-list__row">
                       <dt className="govuk-summary-list__key">Constituency</dt>
-                      <dd className="govuk-summary-list__value">{constituency}</dd>
+                      <dd className="govuk-summary-list__value">{primaryRole?.constituency}</dd>
                     </div>
                   )}
-                  {county && (
+                  {showCounty && (
                     <div className="govuk-summary-list__row">
                       <dt className="govuk-summary-list__key">County</dt>
-                      <dd className="govuk-summary-list__value">{county}</dd>
+                      <dd className="govuk-summary-list__value">{primaryRole?.county}</dd>
                     </div>
                   )}
-                  {ward && (
+                  {showWard && (
                     <div className="govuk-summary-list__row">
                       <dt className="govuk-summary-list__key">Ward</dt>
-                      <dd className="govuk-summary-list__value">{ward}</dd>
+                      <dd className="govuk-summary-list__value">{primaryRole?.ward}</dd>
                     </div>
                   )}
                   {person.level && (
@@ -304,7 +344,7 @@ export default function PersonProfilePage() {
                 </dl>
               )}
 
-              {/* 3. Other Current Roles */}
+              {/* 4. Other Current Roles */}
               {otherActiveRoles.length > 0 && (
                 <div className="govuk-inset-text govuk-!-margin-bottom-6">
                   <p className="govuk-body govuk-!-font-weight-bold govuk-!-margin-bottom-2">
@@ -321,20 +361,6 @@ export default function PersonProfilePage() {
                     ))}
                   </ul>
                 </div>
-              )}
-
-              <hr className="govuk-section-break govuk-section-break--l govuk-section-break--visible" />
-
-              {/* 4. Biography (Moved up for better narrative flow) */}
-              {person.bio && (
-                <>
-                  <h2 className="govuk-heading-m">Biography</h2>
-                  {person.bio.split(/\n\n+/).map((para, i) => (
-                    <p key={i} className="govuk-body">
-                      {para}
-                    </p>
-                  ))}
-                </>
               )}
 
               {/* 5. Positions Held (Table) */}
