@@ -1,4 +1,3 @@
-// components/votes/polling-station-filters.tsx
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -11,14 +10,14 @@ interface County {
 
 interface Constituency {
   name: string;
-  county_code: string | number;
-  constituency_code: string;
+  county_code: string | number | null; // ✅ Added | null
+  constituency_code: string | null;     // ✅ Added | null
 }
 
 interface Ward {
   name: string;
-  ward_code: string;
-  constituency_code: string;
+  ward_code: string | null;             // ✅ Added | null
+  constituency_code: string | null;     // ✅ Added | null
 }
 
 interface PollingStationFiltersProps {
@@ -57,11 +56,12 @@ export default function PollingStationFilters({
     if (!county) return constituencies;
     const countyObj = counties.find(co => co.name === county);
     if (!countyObj) return [];
-    return constituencies.filter(c => String(c.county_code) === String(countyObj.code));
+    
+    // ✅ Safe string comparison to handle potential nulls
+    return constituencies.filter(c => String(c.county_code || '') === String(countyObj.code));
   }, [county, counties, constituencies]);
 
   // Filter wards based on selected constituency or county
-  // Deduplicate by ward_code to prevent React key errors
   const filteredWards = useMemo(() => {
     let result: Ward[];
 
@@ -73,7 +73,7 @@ export default function PollingStationFilters({
       const countyObj = counties.find(co => co.name === county);
       if (!countyObj) return [];
       const constCodes = constituencies
-        .filter(c => String(c.county_code) === String(countyObj.code))
+        .filter(c => String(c.county_code || '') === String(countyObj.code))
         .map(c => c.constituency_code);
       result = wards.filter(w => constCodes.includes(w.constituency_code));
     } else {
@@ -81,7 +81,7 @@ export default function PollingStationFilters({
     }
 
     // Deduplicate by ward_code — keep the first occurrence of each
-    const seen = new Set<string>();
+    const seen = new Set<string | null>();
     return result.filter(w => {
       if (seen.has(w.ward_code)) return false;
       seen.add(w.ward_code);
@@ -165,7 +165,8 @@ export default function PollingStationFilters({
             >
               <option value="">All constituencies</option>
               {filteredConstituencies.map((c) => (
-                <option key={c.constituency_code} value={c.name}>
+                // ✅ Fallback key to prevent React warnings if constituency_code is null
+                <option key={c.constituency_code || c.name} value={c.name}>
                   {c.name}
                 </option>
               ))}
@@ -186,7 +187,8 @@ export default function PollingStationFilters({
             >
               <option value="">All wards</option>
               {filteredWards.map((w) => (
-                <option key={w.ward_code} value={w.name}>
+                // ✅ Fallback key to prevent React warnings if ward_code is null
+                <option key={w.ward_code || w.name} value={w.name}>
                   {w.name}
                 </option>
               ))}
