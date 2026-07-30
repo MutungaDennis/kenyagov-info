@@ -21,16 +21,19 @@ export default async function CoalitionsPage({
   // Await search params
   const params = await searchParams;
 
-  // Supabase client
-  const supabase = createPublicClient();
-
   const q = params.q?.toLowerCase() || "";
   const letter = params.letter?.toUpperCase();
 
-  // Fetch coalitions safely
-  const { data: coalitions, error } = await supabase
-    .from("coalitions")
-    .select(`
+  let coalitions: any[] | null = null;
+  let error: { message: string } | null = null;
+
+  try {
+    const supabase = createPublicClient();
+    // Small table — still cap and fail soft for Cloudflare
+    const res = await supabase
+      .from("coalitions")
+      .select(
+        `
       id,
       name,
       abbreviation,
@@ -43,8 +46,15 @@ export default async function CoalitionsPage({
         abbreviation,
         slug
       )
-    `)
-    .order("name", { ascending: true });
+    `,
+      )
+      .order("name", { ascending: true })
+      .limit(50);
+    coalitions = res.data;
+    if (res.error) error = res.error;
+  } catch (e) {
+    error = { message: e instanceof Error ? e.message : "Load failed" };
+  }
 
   // Error state
   if (error) {

@@ -3,7 +3,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
+import { createBrowserClientAsync } from "@/lib/supabase/client";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import LastUpdated from "@/components/govuk/LastUpdated";
 
@@ -51,11 +51,12 @@ export default function ReligionAndFaithPage() {
   useEffect(() => {
     async function fetchTimelineYears() {
       try {
-        const supabase = createClient();
+        const supabase = await createBrowserClientAsync();
         const { data, error: yearError } = await supabase
           .from("census_years")
           .select("id, census_year, is_active")
-          .order("census_year", { ascending: false });
+          .order("census_year", { ascending: false })
+          .limit(20);
 
         if (yearError) throw yearError;
         const yearRows = (data || []) as CensusYear[];
@@ -76,8 +77,9 @@ export default function ReligionAndFaithPage() {
     async function fetchReligionMetrics() {
       setIsLoading(true);
       try {
-        const supabase = createClient();
-        
+        const supabase = await createBrowserClientAsync();
+
+        // ~48 rows per census year (national + 47 counties) — browser-side, OK
         const { data, error: recError } = await supabase
           .from("knbs_religion_census")
           .select(`
@@ -86,7 +88,8 @@ export default function ReligionAndFaithPage() {
             traditionists, other_religion, no_religion_atheist, dont_know, not_stated,
             counties ( id, name, code, slug )
           `)
-          .eq("census_year_id", selectedYearId);
+          .eq("census_year_id", selectedYearId)
+          .limit(100);
 
         if (recError) throw recError;
         setRecords(data as any || []);

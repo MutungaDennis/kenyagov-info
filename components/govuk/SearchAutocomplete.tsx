@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useDebouncedCallback } from 'use-debounce';
-import { createClient } from '@/lib/supabase/client';
+import { createBrowserClientAsync } from '@/lib/supabase/client';
 import { searchSanityContent } from '@/lib/sanity/client';
 import { wordLikeSimilarity } from '@/lib/fuzzy';
 
@@ -35,8 +35,6 @@ export default function SearchAutocomplete({
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const supabase = createClient();
-
   const fetchSuggestions = useDebouncedCallback(async (term: string) => {
     if (!term || term.length < 2) {
       setSuggestions([]);
@@ -44,6 +42,8 @@ export default function SearchAutocomplete({
     }
     setLoading(true);
     try {
+      // Browser client (async) so Cloudflare runtime env is available
+      const supabase = await createBrowserClientAsync();
       // Use the hybrid rpc if available, else fallback
       const { data } = await supabase.rpc('search_public', {
         q: term,

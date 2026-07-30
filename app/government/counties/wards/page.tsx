@@ -21,8 +21,6 @@ export default async function WardsPage({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
-  const supabase = createPublicClient();
-
   // ============================================
   // PARSE SEARCH PARAMS Safely
   // ============================================
@@ -30,73 +28,73 @@ export default async function WardsPage({
   const county = parsedParams.county || "";
   const constituency = parsedParams.constituency || "";
   const q = parsedParams.q ? parsedParams.q.trim() : "";
-  
+
   const currentPage = Math.max(1, parseInt(parsedParams.page || "1", 10));
   const fromOffset = (currentPage - 1) * ITEMS_PER_PAGE;
   const toOffset = fromOffset + ITEMS_PER_PAGE - 1;
 
-  // ============================================
-  // FETCH REFERENCE COUNTIES FOR FILTERS
-  // ============================================
-  const { data: counties } = await supabase
-    .from("counties")
-    .select("name")
-    .order("name");
+  // Static 47 counties — no DB round-trip for dropdown
+  const { counties: staticCounties } = await import("@/data/counties");
+  const counties = staticCounties.map((c) => ({ name: c.name }));
 
-  // ============================================
-  // DETERMINE CONDITIONAL COUNTY FROM CONSTITUENCY
-  // ============================================
   let selectedCounty = county;
+  let constituencies: Array<{ name: string; county_code?: string | null }> = [];
+  let wards: any[] | null = null;
+  let count: number | null = 0;
+  let error: { message: string } | null = null;
 
-  if (constituency && !county) {
-    const { data: constituencyCounty } = await supabase
-      .from("constituencies")
-      .select(`
+  try {
+    const supabase = createPublicClient();
+
+    // Only resolve constituency→county when needed (one row)
+    if (constituency && !county) {
+      const { data: constituencyCounty } = await supabase
+        .from("constituencies")
+        .select(
+          `
         county_code,
         counties (
           name
         )
-      `)
-      .eq("name", constituency)
-      .single();
+      `,
+        )
+        .eq("name", constituency)
+        .maybeSingle();
 
-    if (constituencyCounty?.counties) {
-      if (Array.isArray(constituencyCounty.counties) && constituencyCounty.counties.length > 0) {
-        selectedCounty = constituencyCounty.counties[0].name;
-      } else if (!Array.isArray(constituencyCounty.counties)) {
-        selectedCounty = (constituencyCounty.counties as any).name;
+      if (constituencyCounty?.counties) {
+        if (
+          Array.isArray(constituencyCounty.counties) &&
+          constituencyCounty.counties.length > 0
+        ) {
+          selectedCounty = constituencyCounty.counties[0].name;
+        } else if (!Array.isArray(constituencyCounty.counties)) {
+          selectedCounty = (constituencyCounty.counties as any).name;
+        }
       }
     }
-  }
 
-  // ============================================
-  // FETCH CONSTITUENCIES FOR FILTER DROPDOWNS
-  // ============================================
-  let constituencyQuery = supabase
-    .from("constituencies")
-    .select("name, county_code")
-    .order("name");
-
-  if (selectedCounty) {
-    const { data: countyData } = await supabase
-      .from("counties")
-      .select("code")
-      .eq("name", selectedCounty)
-      .single();
-
-    if (countyData) {
-      constituencyQuery = constituencyQuery.eq("county_code", countyData.code);
+    // Constituencies only when a county is selected (never all ~290)
+    if (selectedCounty) {
+      const staticHit = staticCounties.find((c) => c.name === selectedCounty);
+      const code = staticHit?.code;
+      if (code) {
+        const { data } = await supabase
+          .from("constituencies")
+          .select("name, county_code")
+          .eq("county_code", code)
+          .order("name")
+          .limit(50);
+        constituencies = data || [];
+      }
     }
-  }
 
-  const { data: constituencies } = await constituencyQuery;
-
-  // ============================================
-  // BUILD CORE DATA AND TOTAL COUNT QUERIES
-  // ============================================
-  let baseQuery = supabase
-    .from("wards")
-    .select(`
+    // ============================================
+    // BUILD CORE DATA AND TOTAL COUNT QUERIES
+    // ============================================
+    let baseQuery = supabase
+      .from("wards")
+      .select(
+        `
       id,
       slug,
       name,
@@ -104,44 +102,47 @@ export default async function WardsPage({
       county_name,
       constituency_name,
       registered_voters_2022
-    `, { count: 'exact' })
-    .eq("is_active", true);
+    `,
+        { count: "exact" },
+      )
+      .eq("is_active", true);
 
-  // Apply strict conditional filters safely
-  if (selectedCounty) baseQuery = baseQuery.eq("county_name", selectedCounty);
-  if (constituency) baseQuery = baseQuery.eq("constituency_name", constituency);
-  
-  // FIX: Properly format and quote the PostgREST text matching statement
-  if (q) {
-    const formattedQuery = `%${q}%`;
-    baseQuery = baseQuery.or(
-      `name.ilike."${formattedQuery}",constituency_name.ilike."${formattedQuery}",county_name.ilike."${formattedQuery}"`
-    );
+    if (selectedCounty) baseQuery = baseQuery.eq("county_name", selectedCounty);
+    if (constituency)
+      baseQuery = baseQuery.eq("constituency_name", constituency);
+
+    if (q) {
+      const safe = q.replace(/[%_,]/g, " ").slice(0, 80);
+      baseQuery = baseQuery.or(
+        `name.ilike.%${safe}%,constituency_name.ilike.%${safe}%,county_name.ilike.%${safe}%`,
+      );
+    }
+
+    const res = await baseQuery
+      .order("county_name", { ascending: true })
+      .order("constituency_name", { ascending: true })
+      .order("name", { ascending: true })
+      .range(fromOffset, toOffset);
+
+    wards = res.data;
+    count = res.count;
+    if (res.error) error = res.error;
+  } catch (e) {
+    error = { message: e instanceof Error ? e.message : "Load failed" };
   }
-
-  // Execute database query with fixed ranges
-  const { data: wards, count, error } = await baseQuery
-    .order("county_name", { ascending: true })
-    .order("constituency_name", { ascending: true })
-    .order("name", { ascending: true })
-    .range(fromOffset, toOffset);
 
   // ============================================
   // EVALUATE ERRORS
   // ============================================
   if (error) {
     return (
-  <>
-      
-        
-          <h1 className="govuk-heading-l">System Error</h1>
-          <p className="govuk-body">Unable to process your request. Please check your data filters and try again.</p>
-          <pre className="govuk-!-background-grey govuk-!-padding-2 govuk-!-border-1">{error.message}</pre>
-        
-      
-    
-  </>
-);
+      <>
+        <h1 className="govuk-heading-l">Unable to load wards</h1>
+        <p className="govuk-body">
+          Please try again later or narrow your filters.
+        </p>
+      </>
+    );
   }
 
   const totalWards = count || 0;

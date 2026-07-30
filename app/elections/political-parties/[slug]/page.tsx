@@ -83,29 +83,29 @@ export default async function PoliticalPartyPage({
     ? party.coalitions[0] 
     : party.coalitions || null;
 
-  // Fetch related parties (same coalition if available, otherwise random)
+  // Related parties — one small query only (never unbounded)
   let relatedParties: any[] = [];
-
-  if (party.coalition_id) {
-    const { data } = await supabase
-      .from("political_parties")
-      .select("id, name, slug, abbreviation")
-      .eq("coalition_id", party.coalition_id)
-      .neq("id", party.id)
-      .limit(5)
-      .order("name");
-    relatedParties = data || [];
-  }
-
-  // If not enough related parties, fetch others
-  if (relatedParties.length < 3) {
-    const { data } = await supabase
-      .from("political_parties")
-      .select("id, name, slug, abbreviation")
-      .neq("id", party.id)
-      .limit(5 - relatedParties.length)
-      .order("name");
-    relatedParties = [...relatedParties, ...(data || [])];
+  try {
+    if (party.coalition_id) {
+      const { data } = await supabase
+        .from("political_parties")
+        .select("id, name, slug, abbreviation")
+        .eq("coalition_id", party.coalition_id)
+        .neq("id", party.id)
+        .limit(5)
+        .order("name");
+      relatedParties = data || [];
+    } else {
+      const { data } = await supabase
+        .from("political_parties")
+        .select("id, name, slug, abbreviation")
+        .neq("id", party.id)
+        .limit(5)
+        .order("name");
+      relatedParties = data || [];
+    }
+  } catch {
+    relatedParties = [];
   }
 
   // Date formatting helper

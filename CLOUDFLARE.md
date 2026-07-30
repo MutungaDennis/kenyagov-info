@@ -400,7 +400,22 @@ Localhost has no 10 ms Worker CPU cap, so heavy server pages “work” only i
 
 - Hansard “Find members”: one paginated query; static parties/counties (no full leaders scan)
 - Polling stations / registered voters: counties only; constituencies/wards only when filtered
+- IEBC offices: server-side `ilike` + `.range()` (not load-all-then-slice)
+- Political parties / coalitions: DB filter + row limits + fail soft
+- Wards list: static 47 counties; constituencies only after county chosen; paginated wards
+- County profiles: fail soft + limits on MCA/ward lists
+- Search: smaller RPC/Sanity limits
 - Root layout injects `window.__CG_PUBLIC_ENV` from runtime Worker vars for client pages
+
+**Public pages that do NOT need Worker→Supabase**
+
+| Route | Why OK on Free tier |
+|-------|---------------------|
+| `/elections`, `/constitution`, most guides | `force-static` / static content |
+| `/open-data/*` | Catalogue from local TS + Sanity, not full Supabase scans |
+| `/find-your-representatives` | Static links only |
+| `/government/people`, `/government/institutions` | **Browser** → Supabase (`createBrowserClientAsync`) |
+| `/government/legislature/national-assembly/members`, governors | Local `data/*` files |
 
 ---
 

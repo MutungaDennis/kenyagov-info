@@ -97,14 +97,19 @@ export default async function PollingStationPage({
   const ward = (station.wards as any) || {};
   const voters = (station as any)[VOTERS_COLUMN] || 0;
 
-  const { data: relatedStations } = await supabase
-    .from(POLLING_STATIONS_TABLE)
-    .select("id, slug, name, polling_station_code, stream_number, reg_centre_name")
-    .eq("ward_id", station.ward_id)
-    .eq("is_active", true)
-    .neq("id", station.id)
-    .order("polling_station_code", { ascending: true })
-    .limit(5);
+  // Related stations in same ward only (already limited)
+  const { data: relatedStations } = station.ward_id
+    ? await supabase
+        .from(POLLING_STATIONS_TABLE)
+        .select(
+          "id, slug, name, polling_station_code, stream_number, reg_centre_name",
+        )
+        .eq("ward_id", station.ward_id)
+        .eq("is_active", true)
+        .neq("id", station.id)
+        .order("polling_station_code", { ascending: true })
+        .limit(5)
+    : { data: [] as any[] };
 
   const hasCoordinates = station.latitude && station.longitude;
   const mapsUrl = hasCoordinates

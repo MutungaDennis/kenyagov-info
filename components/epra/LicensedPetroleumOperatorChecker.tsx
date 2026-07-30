@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { createClient } from "@/lib/supabase/client";
+import { createBrowserClientAsync } from "@/lib/supabase/client";
 
 interface EnforcementRecord {
   id: string;
@@ -22,8 +22,6 @@ export default function LicensedPetroleumOperatorChecker() {
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
 
-  const supabase = createClient();
-
   // Active county listings based on Kenya devolved structures
   const counties = [
     "All", "Nairobi", "Mombasa", "Kiambu", "Nakuru", "Kisumu", "Eldoret", "Uasin Gishu", "Machakos", "Kajiado", "Garissa", "Mandera", "Kilifi", "Kwale"
@@ -35,10 +33,12 @@ export default function LicensedPetroleumOperatorChecker() {
     setHasSearched(true);
 
     try {
+      const supabase = await createBrowserClientAsync();
       let query = supabase
         .from('epra_enforcement_log')
         .select('*')
-        .order('inspection_date', { ascending: false });
+        .order('inspection_date', { ascending: false })
+        .limit(50);
 
       if (searchQuery.trim() !== '') {
         query = query.ilike('facility_name', `%${searchQuery}%`);

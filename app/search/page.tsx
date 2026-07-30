@@ -10,6 +10,9 @@ interface SearchParams {
   type?: string;
 }
 
+/** Short revalidate — search is dynamic via searchParams but keep Worker light */
+export const revalidate = 60;
+
 export default async function SearchResultsPage({
   searchParams,
 }: {
@@ -31,10 +34,11 @@ export default async function SearchResultsPage({
   if (q) {
     try {
       // Preferred: use the hybrid search_public function for typo tolerance + ranking
+      // Keep lim modest for Cloudflare Worker CPU / response size
       const { data: rpcData, error: rpcError } = await supabase.rpc("search_public", {
         q,
         filter_type: selectedType || null,
-        lim: 50,
+        lim: 25,
       });
 
       if (rpcError) {
@@ -48,7 +52,7 @@ export default async function SearchResultsPage({
           queryBuilder = queryBuilder.eq("entity_type", selectedType);
         }
 
-        const { data, error } = await queryBuilder.limit(50);
+        const { data, error } = await queryBuilder.limit(25);
         if (error) throw error;
         results = data || [];
       } else {
@@ -73,7 +77,7 @@ export default async function SearchResultsPage({
           }
         } catch {}
 
-        const sanityHits = await searchSanityContent(searchTerm, 20);
+        const sanityHits = await searchSanityContent(searchTerm, 12);
 
         // Apply fuzzy/trigram-like tolerance (mimics Supabase pg_trgm word_similarity)
         // This makes Sanity rich content (constitution text, trips, guides, laws, descriptions) typo tolerant

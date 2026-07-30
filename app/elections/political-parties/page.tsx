@@ -16,55 +16,70 @@ export default async function PoliticalPartiesPage({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
-  const supabase = createPublicClient();
   const params = await searchParams;
 
   const q = params?.q?.toLowerCase().trim();
   const coalitionFilter = params?.coalition;
 
-  // Fetch all coalitions for the filter dropdown
-  const { data: coalitions } = await supabase
-    .from("coalitions")
-    .select("id, name, abbreviation")
-    .order("name");
+  let coalitions: Array<{ id: string; name: string; abbreviation: string | null }> = [];
+  let parties: any[] | null = null;
+  let error: string | null = null;
 
-  // Fetch all parties with their coalition info
-  let query = supabase.from("political_parties").select(`
+  try {
+    const supabase = createPublicClient();
+
+    // Small table (~handful of coalitions)
+    const { data: coalData } = await supabase
+      .from("coalitions")
+      .select("id, name, abbreviation")
+      .order("name")
+      .limit(50);
+    coalitions = coalData || [];
+
+    // Parties: filter in DB, cap rows (ORPP register is small but keep Worker light)
+    let query = supabase
+      .from("political_parties")
+      .select(
+        `
     id, slug, name, abbreviation, symbol, colors, slogan,
     coalition_id,
     coalitions (id, name, abbreviation)
-  `);
+  `,
+      )
+      .order("name")
+      .limit(200);
 
-  // Apply coalition filter if selected
-  if (coalitionFilter) {
-    query = query.eq("coalition_id", coalitionFilter);
+    if (coalitionFilter) {
+      query = query.eq("coalition_id", coalitionFilter);
+    }
+    if (q) {
+      const safe = q.replace(/[%_,]/g, " ").slice(0, 80);
+      query = query.or(
+        `name.ilike.%${safe}%,abbreviation.ilike.%${safe}%,slogan.ilike.%${safe}%`,
+      );
+    }
+
+    const { data, error: qErr } = await query;
+    if (qErr) error = qErr.message;
+    else parties = data;
+  } catch (e) {
+    error = e instanceof Error ? e.message : "Could not load political parties";
   }
-
-  const { data: parties, error } = await query.order("name");
 
   if (error) {
     return (
-      
-        <div className="govuk-error-summary" role="alert">
-          <h2 className="govuk-error-summary__title">There is a problem</h2>
-          <div className="govuk-error-summary__body">
-            <p className="govuk-body">Could not load political parties. Please try again later.</p>
-          </div>
+      <div className="govuk-error-summary" role="alert">
+        <h2 className="govuk-error-summary__title">There is a problem</h2>
+        <div className="govuk-error-summary__body">
+          <p className="govuk-body">
+            Could not load political parties. Please try again later.
+          </p>
         </div>
-      
+      </div>
     );
   }
 
-  // Apply search filter
-  let filtered = parties || [];
-
-  if (q) {
-    filtered = filtered.filter((p: any) =>
-      p.name?.toLowerCase().includes(q) ||
-      p.abbreviation?.toLowerCase().includes(q) ||
-      p.slogan?.toLowerCase().includes(q)
-    );
-  }
+  const filtered = parties || [];
 
   // Group by coalition
   const grouped = filtered.reduce((acc: any, party: any) => {

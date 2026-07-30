@@ -15,25 +15,56 @@ interface AboutPageProps {
 }
 
 export default async function WardAboutPage({ params }: AboutPageProps) {
-  const supabase = createPublicClient();
   const { slug } = await params;
   const decodedSlug = decodeURIComponent(slug);
 
-  const { data: ward, error } = await supabase
-    .from("wards")
-    .select("*")
-    .eq("slug", decodedSlug)
-    .single();
+  let ward: any = null;
+  let schools: any[] | null = [];
+  let health: any[] | null = [];
+  let projects: any[] | null = [];
 
-  if (error || !ward) {
+  try {
+    const supabase = createPublicClient();
+    const { data, error } = await supabase
+      .from("wards")
+      .select(
+        "id, slug, name, ward_code, county_name, constituency_name, registered_voters_2022",
+      )
+      .eq("slug", decodedSlug)
+      .maybeSingle();
+
+    if (error || !data) notFound();
+    ward = data;
+
+    // Cap related lists — avoid unbounded Worker payloads
+    const [s, h, p] = await Promise.all([
+      supabase
+        .from("ward_schools")
+        .select("*")
+        .eq("ward_id", ward.id)
+        .order("name")
+        .limit(50),
+      supabase
+        .from("ward_health_facilities")
+        .select("*")
+        .eq("ward_id", ward.id)
+        .order("name")
+        .limit(50),
+      supabase
+        .from("ward_projects")
+        .select("*")
+        .eq("ward_id", ward.id)
+        .order("created_at", { ascending: false })
+        .limit(30),
+    ]);
+    schools = s.data;
+    health = h.data;
+    projects = p.data;
+  } catch {
     notFound();
   }
 
-  const [ { data: schools }, { data: health }, { data: projects } ] = await Promise.all([
-    supabase.from("ward_schools").select("*").eq("ward_id", ward.id).order("name"),
-    supabase.from("ward_health_facilities").select("*").eq("ward_id", ward.id).order("name"),
-    supabase.from("ward_projects").select("*").eq("ward_id", ward.id).order("created_at", { ascending: false }),
-  ]);
+  if (!ward) notFound();
 
   return (
   <>
