@@ -364,6 +364,44 @@ Open the URL Wrangler prints and check:
 - Admin Hansard AI routes (xAI / OpenRouter) — need API keys as secrets
 - `force-dynamic` pages (open-data, admin) — always SSR on the Worker
 
+### Blank pages on production but OK on localhost (Supabase)
+
+**Root cause pattern**
+
+| Pattern | Where | Cloudflare Free impact |
+|---------|--------|-------------------------|
+| **Browser → Supabase** (`createBrowserClientAsync`) | `/government/people`, institutions list | Worker only serves HTML/JS; **does not** burn CPU talking to DB |
+| **Worker SSR → Supabase** (`createPublicClient`) | County profiles, Hansard members, polling stations | **Does** run on the Worker; heavy queries + full-table scans can **timeout / blank** under Free **~10 ms CPU** (and wall-clock limits) |
+
+Localhost has no 10 ms Worker CPU cap, so heavy server pages “work” only in dev.
+
+**Fix checklist (do all of these)**
+
+1. **Set public Supabase env in two places**
+   - **Build** env (Git integration / CI / shell before `pnpm run deploy`):  
+     `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (or `NEXT_PUBLIC_SUPABASE_ANON_KEY`)
+   - **Runtime** Worker vars (Dashboard → Workers → Settings → Variables) — same names  
+   Without runtime vars, SSR `createPublicClient()` uses a placeholder and data pages fail.
+
+2. **Prefer client-side Supabase for large directories** (people, institutions already do this).  
+   Avoid loading *all* leaders / *all* wards / *all* constituencies on the Worker just for filter dropdowns.
+
+3. **Paginate** server queries (page size 20–50). Never `select('*')` without `.range()`.
+
+4. **Cache** public pages with `export const revalidate = 300` (or higher) so not every visitor re-runs SSR.
+
+5. **Scale plan** if traffic grows: [Workers Paid](https://dash.cloudflare.com/?to=/:account/workers/plans) raises CPU budget; Free is fine for light SSR + browser DB, not for multi–full-table scans per request.
+
+6. After deploy, open DevTools → Network:  
+   - Client pages should call `*.supabase.co`  
+   - If they hit `placeholder.supabase.co`, env is still wrong.
+
+**What we already optimised**
+
+- Hansard “Find members”: one paginated query; static parties/counties (no full leaders scan)
+- Polling stations / registered voters: counties only; constituencies/wards only when filtered
+- Root layout injects `window.__CG_PUBLIC_ENV` from runtime Worker vars for client pages
+
 ---
 
 ## 8. DNS cutover from Vercel

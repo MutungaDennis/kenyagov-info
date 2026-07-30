@@ -105,6 +105,22 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // Inject Supabase public env for the browser when Worker runtime has vars
+  // but they were not inlined at `next build` (common Cloudflare misconfig).
+  // Client pages then skip a failing placeholder and avoid blank data UIs.
+  const runtimeSupabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() || "";
+  const runtimeSupabaseKey =
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim() ||
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.trim() ||
+    "";
+  const publicEnvBootstrap =
+    runtimeSupabaseUrl && runtimeSupabaseKey
+      ? `window.__CG_PUBLIC_ENV=${JSON.stringify({
+          supabaseUrl: runtimeSupabaseUrl,
+          supabaseAnonKey: runtimeSupabaseKey,
+        })};`
+      : "";
+
   const websiteSchema = {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
@@ -175,6 +191,14 @@ export default function RootLayout({
           }}
         />
         <link rel="alternate" type="text/plain" href="/llms.txt" title="llms.txt" />
+        {publicEnvBootstrap ? (
+          <script
+            dangerouslySetInnerHTML={{ __html: publicEnvBootstrap }}
+          />
+        ) : null}
+        {runtimeSupabaseUrl ? (
+          <link rel="preconnect" href={runtimeSupabaseUrl} crossOrigin="anonymous" />
+        ) : null}
       </head>
       <ClientLayoutWrapper>{children}</ClientLayoutWrapper>
     </html>

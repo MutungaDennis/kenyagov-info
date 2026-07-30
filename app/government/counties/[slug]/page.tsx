@@ -87,22 +87,31 @@ export async function generateMetadata({ params }: CountyProfileProps) {
 
 export default async function CountyProfilePage({ params }: CountyProfileProps) {
   const { slug } = await params;
-  const supabase = createPublicClient();
 
   const staticCounty = counties.find((c) => c.slug === slug);
   if (!staticCounty) notFound();
 
-  // 1. Fetch county metadata
-  const { data: county } = await supabase
-    .from("counties")
-    .select(`
-      id, slug, name, code, headquarters, region, former_province, area_km2,
-      population, population_density, governor_name, deputy_governor_name, 
-      senator_name, women_representative_name, equitable_share, own_source_revenue, 
-      gross_county_product, constituencies, wards
-    `)
-    .eq("slug", slug)
-    .single();
+  let county: {
+    id: string;
+    slug: string;
+    name: string;
+    code?: string | null;
+    headquarters?: string | null;
+    region?: string | null;
+    former_province?: string | null;
+    area_km2?: number | null;
+    population?: number | null;
+    population_density?: number | null;
+    governor_name?: string | null;
+    deputy_governor_name?: string | null;
+    senator_name?: string | null;
+    women_representative_name?: string | null;
+    equitable_share?: number | null;
+    own_source_revenue?: number | null;
+    gross_county_product?: number | null;
+    constituencies?: number | null;
+    wards?: number | null;
+  } | null = null;
 
   let wardList: WardListItem[] = [];
   let constituencyList: ConstituencyListItem[] = [];
@@ -116,43 +125,63 @@ export default async function CountyProfilePage({ params }: CountyProfileProps) 
   let wardCount = 0;
   let pollingStationsCount = 0;
 
-  if (county) {
-    // Parallel public reads — fewer wall-clock / CPU seconds on the Worker
-    const [
-      wardCountRes,
-      pollingCountRes,
-      constituenciesRes,
-      wardsRes,
-      mcasRes,
-    ] = await Promise.all([
-      supabase
-        .from("wards")
-        .select("id", { count: "exact", head: true })
-        .eq("county_id", county.id),
-      supabase
-        .from("polling_stations_2022")
-        .select("id", { count: "exact", head: true })
-        .eq("county_id", county.id),
-      supabase
-        .from("constituencies")
-        .select(
-          "id, name, constituency_code, number_of_wards, registered_voters_2022",
-        )
-        .eq("county_id", county.id)
-        .eq("is_active", true)
-        .order("name", { ascending: true }),
-      supabase
-        .from("wards")
-        .select(
-          "id, name, ward_code, constituency_name, registered_voters_2022",
-        )
-        .eq("county_id", county.id)
-        .eq("is_active", true)
-        .order("name", { ascending: true }),
-      supabase
-        .from("mcas")
-        .select(
-          `
+  // Fail soft: static county page still renders if Supabase is slow / misconfigured
+  try {
+    const supabase = createPublicClient();
+    const { data: countyRow } = await supabase
+      .from("counties")
+      .select(
+        `
+      id, slug, name, code, headquarters, region, former_province, area_km2,
+      population, population_density, governor_name, deputy_governor_name, 
+      senator_name, women_representative_name, equitable_share, own_source_revenue, 
+      gross_county_product, constituencies, wards
+    `,
+      )
+      .eq("slug", slug)
+      .maybeSingle();
+
+    county = countyRow;
+
+    if (county) {
+      // Parallel, count-only + limited lists — keep Worker CPU under Free tier
+      const [
+        wardCountRes,
+        pollingCountRes,
+        constituenciesRes,
+        wardsRes,
+        mcasRes,
+      ] = await Promise.all([
+        supabase
+          .from("wards")
+          .select("id", { count: "exact", head: true })
+          .eq("county_id", county.id),
+        supabase
+          .from("polling_stations_2022")
+          .select("id", { count: "exact", head: true })
+          .eq("county_id", county.id),
+        supabase
+          .from("constituencies")
+          .select(
+            "id, name, constituency_code, number_of_wards, registered_voters_2022",
+          )
+          .eq("county_id", county.id)
+          .eq("is_active", true)
+          .order("name", { ascending: true })
+          .limit(100),
+        supabase
+          .from("wards")
+          .select(
+            "id, name, ward_code, constituency_name, registered_voters_2022",
+          )
+          .eq("county_id", county.id)
+          .eq("is_active", true)
+          .order("name", { ascending: true })
+          .limit(200),
+        supabase
+          .from("mcas")
+          .select(
+            `
         id, 
         slug, 
         first_name, 
@@ -164,62 +193,72 @@ export default async function CountyProfilePage({ params }: CountyProfileProps) 
         term_count, 
         official_email,
         status,
-        political_parties!inner (name, abbreviation, slug),
-        wards!inner (name, ward_code)
+        political_parties (name, abbreviation, slug),
+        wards (name, ward_code)
       `,
-        )
-        .eq("county_id", county.id)
-        .in("status", ["active", "Active", "ACTIVE"])
-        .order("surname"),
-    ]);
+          )
+          .eq("county_id", county.id)
+          .in("status", ["active", "Active", "ACTIVE"])
+          .order("surname")
+          .limit(150),
+      ]);
 
-    wardCount = wardCountRes.count || 0;
-    pollingStationsCount = pollingCountRes.count || 0;
-    if (constituenciesRes.data) constituencyList = constituenciesRes.data;
-    if (wardsRes.data) wardList = wardsRes.data;
+      wardCount = wardCountRes.count || 0;
+      pollingStationsCount = pollingCountRes.count || 0;
+      if (constituenciesRes.data) constituencyList = constituenciesRes.data;
+      if (wardsRes.data) wardList = wardsRes.data;
 
-    const mcaRecords = mcasRes.data;
-    if (mcaRecords && mcaRecords.length > 0) {
-      mcaList = mcaRecords as unknown as McaRowItem[];
-      totalMcaSeats = mcaList.length;
-      magicNumberThreshold = Math.floor(totalMcaSeats / 2) + 1;
+      const mcaRecords = mcasRes.data;
+      if (mcaRecords && mcaRecords.length > 0) {
+        mcaList = mcaRecords as unknown as McaRowItem[];
+        totalMcaSeats = mcaList.length;
+        magicNumberThreshold = Math.floor(totalMcaSeats / 2) + 1;
 
-      activeElectedCount = mcaList.filter((m) => m.seat_type === "Elected").length;
-      activeNominatedCount = mcaList.filter((m) => m.seat_type === "Nominated").length;
+        activeElectedCount = mcaList.filter(
+          (m) => m.seat_type === "Elected",
+        ).length;
+        activeNominatedCount = mcaList.filter(
+          (m) => m.seat_type === "Nominated",
+        ).length;
 
-      const partyMap: Record<string, PartyMapItem> = {};
+        const partyMap: Record<string, PartyMapItem> = {};
 
-      mcaList.forEach((mca) => {
-        const partyData = mca.political_parties;
-        const partyKey = partyData?.abbreviation || "IND";
-        const partyName = partyData?.name || "Independent Candidates";
+        mcaList.forEach((mca) => {
+          const partyData = mca.political_parties;
+          const partyKey = partyData?.abbreviation || "IND";
+          const partyName = partyData?.name || "Independent Candidates";
 
-        if (!partyMap[partyKey]) {
-          partyMap[partyKey] = {
-            party_name: partyName,
-            abbrev: partyKey,
-            total: 0,
-            elected: 0,
-            nominated: 0,
-          };
-        }
+          if (!partyMap[partyKey]) {
+            partyMap[partyKey] = {
+              party_name: partyName,
+              abbrev: partyKey,
+              total: 0,
+              elected: 0,
+              nominated: 0,
+            };
+          }
 
-        partyMap[partyKey].total += 1;
-        if (mca.seat_type === "Elected") partyMap[partyKey].elected += 1;
-        if (mca.seat_type === "Nominated") partyMap[partyKey].nominated += 1;
-      });
+          partyMap[partyKey].total += 1;
+          if (mca.seat_type === "Elected") partyMap[partyKey].elected += 1;
+          if (mca.seat_type === "Nominated") partyMap[partyKey].nominated += 1;
+        });
 
-      partyBreakdown = Object.values(partyMap).sort((a, b) => b.total - a.total);
+        partyBreakdown = Object.values(partyMap).sort(
+          (a, b) => b.total - a.total,
+        );
 
-      if (partyBreakdown.length > 0) {
-        const largestParty = partyBreakdown[0];
-        if (largestParty.total >= magicNumberThreshold) {
-          majorityPartyString = `${largestParty.party_name} (${largestParty.abbrev}) holds an absolute working majority`;
-        } else {
-          majorityPartyString = `${largestParty.party_name} (${largestParty.abbrev}) maintains a relative plurality`;
+        if (partyBreakdown.length > 0) {
+          const largestParty = partyBreakdown[0];
+          if (largestParty.total >= magicNumberThreshold) {
+            majorityPartyString = `${largestParty.party_name} (${largestParty.abbrev}) holds an absolute working majority`;
+          } else {
+            majorityPartyString = `${largestParty.party_name} (${largestParty.abbrev}) maintains a relative plurality`;
+          }
         }
       }
     }
+  } catch (err) {
+    console.error("[county profile] Supabase load failed:", err);
   }
 
   const profileHeading = `${staticCounty.name} County`;

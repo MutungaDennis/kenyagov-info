@@ -67,21 +67,47 @@ export default async function PollingStationsPage({
   const fromOffset = (currentPage - 1) * ITEMS_PER_PAGE;
   const toOffset = fromOffset + ITEMS_PER_PAGE - 1;
 
-  // Fetch lookup data for filters
+  // Lookups: only counties always; constituencies only when a county is chosen
+  // (loading every constituency+ward on every request blows Cloudflare Free CPU)
   const { data: counties } = await supabase
     .from("counties")
     .select("name, code")
     .order("name");
 
-  const { data: constituencies } = await supabase
-    .from("constituencies")
-    .select("name, county_code, constituency_code")
-    .order("name");
+  let constituencies: Array<{
+    name: string;
+    county_code: string | null;
+    constituency_code: string | null;
+  }> | null = null;
+  if (county) {
+    const activeCountyObj = (counties || []).find((c) => c.name === county);
+    if (activeCountyObj?.code) {
+      const { data } = await supabase
+        .from("constituencies")
+        .select("name, county_code, constituency_code")
+        .eq("county_code", activeCountyObj.code)
+        .order("name");
+      constituencies = data;
+    }
+  }
 
-  const { data: allWardsList } = await supabase
-    .from("wards")
-    .select("name, ward_code, constituency_code")
-    .order("name");
+  // Wards only when a constituency is selected (never load all ~1.4k wards)
+  let allWardsList: Array<{
+    name: string;
+    ward_code: string | null;
+    constituency_code: string | null;
+  }> | null = null;
+  if (constituency && constituencies?.length) {
+    const activeConstObj = constituencies.find((c) => c.name === constituency);
+    if (activeConstObj?.constituency_code) {
+      const { data } = await supabase
+        .from("wards")
+        .select("name, ward_code, constituency_code")
+        .eq("constituency_code", activeConstObj.constituency_code)
+        .order("name");
+      allWardsList = data;
+    }
+  }
 
   // Build the main query
   let baseQuery = supabase
