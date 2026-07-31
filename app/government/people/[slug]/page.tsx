@@ -146,10 +146,15 @@ export default function PersonProfilePage() {
           .maybeSingle();
 
         if (mcaData) {
-          const rawCountyName = mcaData.counties?.name || "";
+          // ✅ Safely extract first element if Supabase returns an array, otherwise use the object
+          const countyObj = Array.isArray(mcaData.counties) ? mcaData.counties[0] : mcaData.counties;
+          const wardObj = Array.isArray(mcaData.wards) ? mcaData.wards[0] : mcaData.wards;
+          const partyObj = Array.isArray(mcaData.political_parties) ? mcaData.political_parties[0] : mcaData.political_parties;
+
+          const rawCountyName = countyObj?.name || "";
           const cleanCountyName = rawCountyName.replace(/\s+County$/i, "").trim();
-          const wardName = mcaData.wards?.name || (mcaData.seat_type === 'Nominated' ? 'County-wide' : "");
-          const partyName = mcaData.political_parties?.abbreviation || mcaData.political_parties?.name || "";
+          const wardName = wardObj?.name || (mcaData.seat_type === 'Nominated' ? 'County-wide' : "");
+          const partyName = partyObj?.abbreviation || partyObj?.name || "";
           const roleTitle = mcaData.assembly_role || "Member of County Assembly";
           const orgName = cleanCountyName ? `${cleanCountyName} County Assembly` : null;
 
@@ -188,7 +193,7 @@ export default function PersonProfilePage() {
               organization: orgName,
               constituency: wardName || null,
               county: rawCountyName || null,
-              ward: mcaData.wards?.name || null,
+              ward: wardObj?.name || null,
               party: partyName || null,
               term_start_date: mcaData.term_start_date,
               term_end_date: mcaData.term_end_date,
@@ -276,7 +281,7 @@ export default function PersonProfilePage() {
       const wardName = primaryRole.ward.toLowerCase().includes("ward") ? primaryRole.ward : `${primaryRole.ward} Ward`;
       displayRoleTitle = `Member of County Assembly for ${wardName}`;
     } else {
-      const countyName = primaryRole.county?.toLowerCase().includes("county") ? primaryRole.county : `${primaryRole.county} County`;
+      const countyName = primaryRole?.county?.toLowerCase().includes("county") ? primaryRole?.county : `${primaryRole?.county} County`;
       displayRoleTitle = `Nominated Member of County Assembly, ${countyName}`;
     }
   } else if (titleLower === "governor" && primaryRole?.county) {
@@ -294,13 +299,12 @@ export default function PersonProfilePage() {
   const electedTitles = ["member of parliament", "senator", "member of county assembly", "governor", "woman representative", "county woman representative"];
   const isElectedRep = electedTitles.some(title => titleLower.includes(title));
 
-  const showConstituency = primaryRole?.constituency && !isElectedRep;
-  const showCounty = primaryRole?.county && !isElectedRep;
-  const showWard = primaryRole?.ward && !isElectedRep;
+  const showConstituency = Boolean(primaryRole?.constituency && !isElectedRep);
+  const showCounty = Boolean(primaryRole?.county && !isElectedRep);
+  const showWard = Boolean(primaryRole?.ward && !isElectedRep);
   
-  const termLabel = primaryRole
-    ? formatTermRange(primaryRole.term_start_date, primaryRole.term_end_date)
-    : "";
+  // ✅ Use optional chaining to satisfy strict null checks
+  const termLabel = formatTermRange(primaryRole?.term_start_date ?? null, primaryRole?.term_end_date ?? null) || "";
 
   const socialLinks = parseSocialLinks(person.social_media);
   const committees = (primaryRole?.committees || []) as unknown[];
