@@ -84,7 +84,9 @@ export default function PersonProfilePage() {
 
       try {
         const supabase = await createBrowserClientAsync();
-        const { data, error: fetchError } = await supabase
+        
+        // 1. Try fetching from leaders table
+        const { data: leaderData, error: leaderError } = await supabase
           .from("leaders")
           .select(
             `
@@ -97,14 +99,17 @@ export default function PersonProfilePage() {
           `
           )
           .eq("slug", slug)
-          .single();
+          .maybeSingle();
 
-        if (fetchError) {
-          const fallback = await supabase
+        // Handle potential schema mismatches gracefully
+        if (leaderError && /name_titles|national_honours|column|schema/i.test(leaderError.message || "")) {
+          const { data: fallbackData } = await supabase
             .from("leaders")
             .select(
               `
-              *,
+              id, slug, first_name, other_names, surname, full_name, title,
+              category, bio, current_organization, current_constituency,
+              current_county, current_party, is_active, status,
               leader_roles (
                 id, title, organization, constituency, county, ward, party,
                 term_start_date, term_end_date, status, official_email,
@@ -113,12 +118,95 @@ export default function PersonProfilePage() {
             `
             )
             .eq("slug", slug)
-            .single();
-          if (fallback.error) throw fallback.error;
-          setPerson(fallback.data as Leader);
-        } else {
-          setPerson(data as Leader);
+            .maybeSingle();
+            
+          if (fallbackData) {
+            setPerson(fallbackData as Leader);
+            setIsLoading(false);
+            return;
+          }
+        } else if (leaderData) {
+          setPerson(leaderData as Leader);
+          setIsLoading(false);
+          return;
         }
+
+        // 2. If not found in leaders, try fetching from mcas table
+        const { data: mcaData, error: mcaError } = await supabase
+          .from("mcas")
+          .select(`
+            id, slug, first_name, other_names, surname, gender, education_level,
+            seat_type, nomination_category, assembly_role, status, term_start_date, term_end_date,
+            official_email, ward_office_location, committees, bio, image_url, phone, social_media,
+            counties (name),
+            wards (name),
+            political_parties (name, abbreviation)
+          `)
+          .eq("slug", slug)
+          .maybeSingle();
+
+        if (mcaData) {
+          const rawCountyName = mcaData.counties?.name || "";
+          const cleanCountyName = rawCountyName.replace(/\s+County$/i, "").trim();
+          const wardName = mcaData.wards?.name || (mcaData.seat_type === 'Nominated' ? 'County-wide' : "");
+          const partyName = mcaData.political_parties?.abbreviation || mcaData.political_parties?.name || "";
+          const roleTitle = mcaData.assembly_role || "Member of County Assembly";
+          const orgName = cleanCountyName ? `${cleanCountyName} County Assembly` : null;
+
+          const mappedMCA: Leader = {
+            id: mcaData.id,
+            slug: mcaData.slug,
+            first_name: mcaData.first_name,
+            other_names: mcaData.other_names || null,
+            surname: mcaData.surname,
+            full_name: `${mcaData.first_name} ${mcaData.surname}`.trim(),
+            title: roleTitle,
+            name_titles: null,
+            national_honours: null,
+            gender: mcaData.gender || null,
+            date_of_birth: null,
+            bio: mcaData.bio || null,
+            image_url: mcaData.image_url || null,
+            official_website: null,
+            social_media: mcaData.social_media || null,
+            contact_email: mcaData.official_email || null,
+            phone: mcaData.phone || null,
+            category: "Member of County Assembly",
+            sub_category: mcaData.nomination_category || (mcaData.seat_type === 'Nominated' ? 'Nominated' : null),
+            level: "county",
+            current_party: partyName || null,
+            current_organization: orgName,
+            current_county: rawCountyName || null,
+            current_constituency: wardName || null,
+            academic_qualifications: mcaData.education_level ? [{ degree: mcaData.education_level }] : null,
+            education: mcaData.education_level || null,
+            is_active: mcaData.status === 'Active',
+            status: mcaData.status || 'Active',
+            leader_roles: [{
+              id: mcaData.id,
+              title: roleTitle,
+              organization: orgName,
+              constituency: wardName || null,
+              county: rawCountyName || null,
+              ward: mcaData.wards?.name || null,
+              party: partyName || null,
+              term_start_date: mcaData.term_start_date,
+              term_end_date: mcaData.term_end_date,
+              status: mcaData.status || 'Active',
+              official_email: mcaData.official_email || null,
+              office_location: mcaData.ward_office_location || null,
+              committees: mcaData.committees || [],
+            }],
+          };
+
+          setPerson(mappedMCA);
+          setIsLoading(false);
+          return;
+        }
+
+        // If neither found
+        throw new Error("Not found");
+
       } catch (err: unknown) {
         console.error("Error fetching person:", err);
         setError("Failed to load profile.");
@@ -182,9 +270,15 @@ export default function PersonProfilePage() {
   } else if (titleLower === "senator" && primaryRole?.county) {
     const countyName = primaryRole.county.toLowerCase().includes("county") ? primaryRole.county : `${primaryRole.county} County`;
     displayRoleTitle = `Senator for ${countyName}`;
-  } else if (titleLower === "member of county assembly" && primaryRole?.ward) {
-    const wardName = primaryRole.ward.toLowerCase().includes("ward") ? primaryRole.ward : `${primaryRole.ward} Ward`;
-    displayRoleTitle = `Member of County Assembly for ${wardName}`;
+  } else if (titleLower.includes("member of county assembly")) {
+    // Graceful handling for Nominated MCAs who represent the whole county
+    if (primaryRole?.ward && primaryRole.ward !== "County-wide") {
+      const wardName = primaryRole.ward.toLowerCase().includes("ward") ? primaryRole.ward : `${primaryRole.ward} Ward`;
+      displayRoleTitle = `Member of County Assembly for ${wardName}`;
+    } else {
+      const countyName = primaryRole.county?.toLowerCase().includes("county") ? primaryRole.county : `${primaryRole.county} County`;
+      displayRoleTitle = `Nominated Member of County Assembly, ${countyName}`;
+    }
   } else if (titleLower === "governor" && primaryRole?.county) {
     const countyName = primaryRole.county.toLowerCase().includes("county") ? primaryRole.county : `${primaryRole.county} County`;
     displayRoleTitle = `Governor of ${countyName}`;
@@ -236,7 +330,7 @@ export default function PersonProfilePage() {
   });
 
   // Check if we actually need to show the summary list (only if there are non-redundant extra details)
-  const hasExtraDetails = Boolean(party || showConstituency || showCounty || showWard || person.level);
+  const hasExtraDetails = Boolean(party || showConstituency || showCounty || showWard || person.level || person.sub_category);
 
   return (
     <>
@@ -315,6 +409,12 @@ export default function PersonProfilePage() {
                     <div className="govuk-summary-list__row">
                       <dt className="govuk-summary-list__key">Political party</dt>
                       <dd className="govuk-summary-list__value">{party}</dd>
+                    </div>
+                  )}
+                  {person.sub_category && (
+                    <div className="govuk-summary-list__row">
+                      <dt className="govuk-summary-list__key">Category</dt>
+                      <dd className="govuk-summary-list__value">{person.sub_category}</dd>
                     </div>
                   )}
                   {showConstituency && (

@@ -145,10 +145,12 @@ function PeopleDirectoryContent() {
   useEffect(() => {
     let cancelled = false;
 
-    const fetchLeaders = async () => {
+    const fetchData = async () => {
       try {
         const supabase = await createBrowserClientAsync();
-        const { data, error: fetchError } = await supabase
+
+        // 1. Fetch Leaders
+        const { data: leadersData, error: leadersError } = await supabase
           .from("leaders")
           .select(
             `
@@ -164,59 +166,75 @@ function PeopleDirectoryContent() {
           .eq("is_active", true)
           .order("surname", { ascending: true });
 
-        if (fetchError) {
-          const fallback = await supabase
-            .from("leaders")
-            .select(
-              `
-              id, slug, first_name, other_names, surname, full_name, title,
-              name_titles, national_honours, category, bio, current_organization, current_constituency,
-              current_county, current_party,
-              leader_roles (
-                id, title, organization, constituency, county, party,
-                status, term_start_date, term_end_date
-              )
-            `
-            )
-            .order("surname", { ascending: true });
+        // 2. Fetch MCAs and map them to the Leader shape
+        const { data: mcasData, error: mcasError } = await supabase
+          .from("mcas")
+          .select(`
+            id, slug, first_name, other_names, surname, bio, image_url, 
+            assembly_role, status, term_start_date, term_end_date, seat_type,
+            counties (name),
+            wards (name),
+            political_parties (name, abbreviation)
+          `)
+          .order("surname", { ascending: true });
+
+        if (leadersError) throw leadersError;
+        if (mcasError) throw mcasError;
+
+        if (!cancelled) {
+          const mappedMCAs: Leader[] = (mcasData || []).map((mca: any) => {
+            // ✅ Clean county name to prevent "Mombasa County County Assembly"
+            const rawCountyName = mca.counties?.name || "";
+            const cleanCountyName = rawCountyName.replace(/\s+County$/i, "").trim();
             
-          if (
-            fallback.error &&
-            /name_titles|national_honours|column|schema/i.test(fallback.error.message || "")
-          ) {
-            const bare = await supabase
-              .from("leaders")
-              .select(
-                `
-                id, slug, first_name, other_names, surname, full_name, title,
-                category, bio, current_organization, current_constituency,
-                current_county, current_party,
-                leader_roles (
-                  id, title, organization, constituency, county, party,
-                  status, term_start_date, term_end_date
-                )
-              `
-              )
-              .order("surname", { ascending: true });
-            if (bare.error) throw bare.error;
-            if (!cancelled) setAllLeaders((bare.data as unknown as Leader[]) || []);
-          } else if (fallback.error) {
-            throw fallback.error;
-          } else if (!cancelled) {
-            setAllLeaders((fallback.data as unknown as Leader[]) || []);
-          }
-        } else if (!cancelled) {
-          setAllLeaders((data as unknown as Leader[]) || []);
+            const wardName = mca.wards?.name || (mca.seat_type === 'Nominated' ? 'County-wide' : "");
+            const partyName = mca.political_parties?.abbreviation || mca.political_parties?.name || "Independent";
+            const roleTitle = mca.assembly_role || "Member of County Assembly";
+            const orgName = cleanCountyName ? `${cleanCountyName} County Assembly` : null;
+
+            return {
+              id: mca.id,
+              slug: mca.slug,
+              first_name: mca.first_name,
+              other_names: mca.other_names || null,
+              surname: mca.surname,
+              full_name: `${mca.first_name} ${mca.surname}`.trim(),
+              title: roleTitle,
+              name_titles: null,
+              national_honours: null,
+              category: "Member of County Assembly",
+              bio: mca.bio || null,
+              current_organization: orgName,
+              current_constituency: wardName || null,
+              current_county: rawCountyName || null,
+              current_party: partyName || null,
+              leader_roles: [{
+                id: mca.id,
+                title: roleTitle,
+                organization: orgName,
+                constituency: wardName || null,
+                county: rawCountyName || null,
+                party: partyName || null,
+                status: mca.status || "Active",
+                term_start_date: mca.term_start_date,
+                term_end_date: mca.term_end_date,
+              }],
+            };
+          });
+
+          // Merge both arrays
+          const combined = [...(leadersData || []), ...mappedMCAs];
+          setAllLeaders(combined as Leader[]);
         }
       } catch (err: unknown) {
-        console.error("Error fetching leaders:", err);
+        console.error("Error fetching people:", err);
         if (!cancelled) setError("Failed to load government officials.");
       } finally {
         if (!cancelled) setIsLoading(false);
       }
     };
 
-    fetchLeaders();
+    fetchData();
     return () => {
       cancelled = true;
     };

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import PageIntro from "@/components/site/PageIntro";
-import RelatedNav from "@/components/site/RelatedNav";
 
 export const revalidate = 86400;
 export const dynamic = "force-static";
@@ -24,16 +23,20 @@ export default function FindYourRepresentativesPage() {
         caption="Democracy and participation"
         title="Find your representatives"
         lead="Kenyan citizens are represented at national and county levels. Use the directories below to look up current office holders. Confirm critical details with IEBC or official parliamentary and county sources."
-      
         showPrint
       />
 
       <div className="govuk-grid-row">
         <div className="govuk-grid-column-two-thirds">
+          
           <h2 className="govuk-heading-l">Who represents you</h2>
+          <p className="govuk-body govuk-!-margin-bottom-4">
+            Kenya’s government is structured to ensure representation at both the national and county levels. Use the directory links below to find your specific representatives.
+          </p>
+
           <table className="govuk-table">
             <caption className="govuk-table__caption govuk-table__caption--m">
-              Common elected roles
+              Elected and nominated representatives
             </caption>
             <thead className="govuk-table__head">
               <tr className="govuk-table__row">
@@ -41,25 +44,30 @@ export default function FindYourRepresentativesPage() {
                   Role
                 </th>
                 <th scope="col" className="govuk-table__header">
-                  Area
+                  Area represented
                 </th>
                 <th scope="col" className="govuk-table__header">
-                  Where to look
+                  Type
+                </th>
+                <th scope="col" className="govuk-table__header">
+                  Directory
                 </th>
               </tr>
             </thead>
             <tbody className="govuk-table__body">
+              
+              {/* National Assembly */}
               <tr className="govuk-table__row">
                 <th scope="row" className="govuk-table__header">
                   Member of Parliament (MP)
                 </th>
                 <td className="govuk-table__cell">Constituency</td>
                 <td className="govuk-table__cell">
-                  <Link
-                    href="/government/legislature/national-assembly/members"
-                    className="govuk-link"
-                  >
-                    National Assembly members
+                  <span className="govuk-tag govuk-tag--blue">Elected</span>
+                </td>
+                <td className="govuk-table__cell">
+                  <Link href="/government/legislature/national-assembly/members?type=Constituency" className="govuk-link">
+                    Constituency MPs
                   </Link>
                 </td>
               </tr>
@@ -69,69 +77,123 @@ export default function FindYourRepresentativesPage() {
                 </th>
                 <td className="govuk-table__cell">County</td>
                 <td className="govuk-table__cell">
-                  <Link
-                    href="/government/legislature/national-assembly/members"
-                    className="govuk-link"
-                  >
-                    National Assembly members
+                  <span className="govuk-tag govuk-tag--blue">Elected</span>
+                </td>
+                <td className="govuk-table__cell">
+                  <Link href="/government/legislature/national-assembly/members?type=Women%20Representative" className="govuk-link">
+                    Women Representatives
                   </Link>
                 </td>
               </tr>
+              <tr className="govuk-table__row">
+                <th scope="row" className="govuk-table__header">
+                  Nominated Member of Parliament
+                </th>
+                <td className="govuk-table__cell">National (Special interests)</td>
+                <td className="govuk-table__cell">
+                  <span className="govuk-tag govuk-tag--grey">Nominated</span>
+                </td>
+                <td className="govuk-table__cell">
+                  <Link href="/government/legislature/national-assembly/members?type=Nominated" className="govuk-link">
+                    Nominated MPs
+                  </Link>
+                </td>
+              </tr>
+
+              {/* Senate */}
               <tr className="govuk-table__row">
                 <th scope="row" className="govuk-table__header">
                   Senator
                 </th>
                 <td className="govuk-table__cell">County</td>
                 <td className="govuk-table__cell">
-                  <Link
-                    href="/government/legislature/senate/senators"
-                    className="govuk-link"
-                  >
+                  <span className="govuk-tag govuk-tag--blue">Elected</span>
+                </td>
+                <td className="govuk-table__cell">
+                  <Link href="/government/legislature/senate/senators" className="govuk-link">
                     Senators
                   </Link>
                 </td>
               </tr>
               <tr className="govuk-table__row">
                 <th scope="row" className="govuk-table__header">
+                  Nominated Senator
+                </th>
+                <td className="govuk-table__cell">National (Special interests)</td>
+                <td className="govuk-table__cell">
+                  <span className="govuk-tag govuk-tag--grey">Nominated</span>
+                </td>
+                <td className="govuk-table__cell">
+                  <Link href="/government/legislature/senate/senators" className="govuk-link">
+                    Senators directory
+                  </Link>
+                </td>
+              </tr>
+
+              {/* County Government */}
+              <tr className="govuk-table__row">
+                <th scope="row" className="govuk-table__header">
                   Governor
                 </th>
                 <td className="govuk-table__cell">County</td>
                 <td className="govuk-table__cell">
-                  <Link
-                    href="/government/counties/governors"
-                    className="govuk-link"
-                  >
-                    Governors
+                  <span className="govuk-tag govuk-tag--blue">Elected</span>
+                </td>
+                <td className="govuk-table__cell">
+                  <Link href="/government/counties/governors" className="govuk-link">
+                    County Governors
                   </Link>
                 </td>
               </tr>
               <tr className="govuk-table__row">
                 <th scope="row" className="govuk-table__header">
-                  MCA
+                  Member of County Assembly (MCA)
                 </th>
                 <td className="govuk-table__cell">Ward</td>
                 <td className="govuk-table__cell">
-                  <Link
-                    href="/government/counties/wards"
-                    className="govuk-link"
-                  >
-                    Wards
+                  <span className="govuk-tag govuk-tag--blue">Elected</span>
+                </td>
+                <td className="govuk-table__cell">
+                  <Link href="/government/counties/wards" className="govuk-link">
+                    Wards and MCAs
                   </Link>
                 </td>
               </tr>
               <tr className="govuk-table__row">
                 <th scope="row" className="govuk-table__header">
-                  President
+                  Nominated MCA
+                </th>
+                <td className="govuk-table__cell">County (Special interests)</td>
+                <td className="govuk-table__cell">
+                  <span className="govuk-tag govuk-tag--grey">Nominated</span>
+                </td>
+                <td className="govuk-table__cell">
+                  <Link href="/government/counties/wards" className="govuk-link">
+                    Wards and MCAs
+                  </Link>
+                </td>
+              </tr>
+
+              {/* Head of State */}
+              <tr className="govuk-table__row">
+                <th scope="row" className="govuk-table__header">
+                  The President
                 </th>
                 <td className="govuk-table__cell">National</td>
+                <td className="govuk-table__cell">
+                  <span className="govuk-tag govuk-tag--blue">Elected</span>
+                </td>
                 <td className="govuk-table__cell">
                   <Link href="/government/presidency" className="govuk-link">
                     The Presidency
                   </Link>
                 </td>
               </tr>
+
             </tbody>
           </table>
+
+          <hr className="govuk-section-break govuk-section-break--l govuk-section-break--visible govuk-!-margin-top-8" />
 
           <h2 className="govuk-heading-l">How to look someone up</h2>
           <ol className="govuk-list govuk-list--number">
@@ -166,6 +228,8 @@ export default function FindYourRepresentativesPage() {
             </li>
           </ol>
 
+          <hr className="govuk-section-break govuk-section-break--l govuk-section-break--visible" />
+
           <h2 className="govuk-heading-l">What representatives can help with</h2>
           <p className="govuk-body">
             Elected leaders can raise issues, advocate for communities and
@@ -183,6 +247,8 @@ export default function FindYourRepresentativesPage() {
             </Link>
             .
           </p>
+
+          <hr className="govuk-section-break govuk-section-break--l govuk-section-break--visible" />
 
           <h2 className="govuk-heading-l">Appointed officials</h2>
           <p className="govuk-body">
@@ -207,7 +273,7 @@ export default function FindYourRepresentativesPage() {
             </li>
           </ul>
 
-          <div className="govuk-inset-text">
+          <div className="govuk-inset-text govuk-!-margin-top-6">
             <p className="govuk-body govuk-!-margin-bottom-0">
               After elections or by-elections, updates can take time to appear
               everywhere. Prefer IEBC-declared results and official Gazette
@@ -215,16 +281,6 @@ export default function FindYourRepresentativesPage() {
             </p>
           </div>
         </div>
-
-        <RelatedNav
-          links={[
-            { text: "How government works", href: "/how-government-works" },
-            { text: "Elections", href: "/elections" },
-            { text: "Contact government", href: "/contact-government" },
-            { text: "All officials A–Z", href: "/government/people" },
-            { text: "County governments", href: "/government/counties" },
-          ]}
-        />
       </div>
     </>
   );

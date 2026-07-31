@@ -1,4 +1,3 @@
-// app/government/presidency/page.tsx
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 
@@ -7,8 +6,7 @@ export const dynamic = "force-static";
 
 export default function PresidencyPage() {
   return (
-  <>
-    
+    <>
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
@@ -17,7 +15,7 @@ export default function PresidencyPage() {
         ]}
       />
 
-      
+      <div className="govuk-width-container">
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-two-thirds">
             
@@ -48,7 +46,7 @@ export default function PresidencyPage() {
 
               <ul className="govuk-list govuk-list--spaced">
                 <li>
-                  <Link href="/government/institutions/chief-of-staff" className="govuk-link govuk-link--no-visited-state govuk-!-font-weight-bold">
+                  <Link href="/government/institutions/office-chief-staff-head-public-service" className="govuk-link govuk-link--no-visited-state govuk-!-font-weight-bold">
                     Chief of Staff and Head of the Public Service
                   </Link>
                   <p className="govuk-body-s govuk-!-margin-top-1 govuk-!-margin-bottom-0">
@@ -56,7 +54,7 @@ export default function PresidencyPage() {
                   </p>
                 </li>
                 <li>
-                  <Link href="/government/institutions/secretary-to-the-cabinet" className="govuk-link govuk-link--no-visited-state govuk-!-font-weight-bold">
+                  <Link href="/government/institutions/office-secretary-cabinet" className="govuk-link govuk-link--no-visited-state govuk-!-font-weight-bold">
                     Secretary to the Cabinet
                   </Link>
                   <p className="govuk-body-s govuk-!-margin-top-1 govuk-!-margin-bottom-0">
@@ -64,7 +62,7 @@ export default function PresidencyPage() {
                   </p>
                 </li>
                 <li>
-                  <Link href="/government/institutions/state-house-comptroller" className="govuk-link govuk-link--no-visited-state govuk-!-font-weight-bold">
+                  <Link href="/government/institutions/office-state-house-comptroller" className="govuk-link govuk-link--no-visited-state govuk-!-font-weight-bold">
                     State House Comptroller
                   </Link>
                   <p className="govuk-body-s govuk-!-margin-top-1 govuk-!-margin-bottom-0">
@@ -72,7 +70,7 @@ export default function PresidencyPage() {
                   </p>
                 </li>
                 <li>
-                  <Link href="/government/institutions/deputy-chief-of-staff" className="govuk-link govuk-link--no-visited-state govuk-!-font-weight-bold">
+                  <Link href="/government/institutions/office-deputy-chief-staff" className="govuk-link govuk-link--no-visited-state govuk-!-font-weight-bold">
                     Deputy Chief of Staff
                   </Link>
                   <p className="govuk-body-s govuk-!-margin-top-1 govuk-!-margin-bottom-0">
@@ -80,7 +78,7 @@ export default function PresidencyPage() {
                   </p>
                 </li>
                 <li>
-                  <Link href="/government/institutions/private-secretary-to-the-president" className="govuk-link govuk-link--no-visited-state govuk-!-font-weight-bold">
+                  <Link href="/government/institutions/office-private-secretary-president" className="govuk-link govuk-link--no-visited-state govuk-!-font-weight-bold">
                     Private Secretary to the President
                   </Link>
                   <p className="govuk-body-s govuk-!-margin-top-1 govuk-!-margin-bottom-0">
@@ -88,7 +86,7 @@ export default function PresidencyPage() {
                   </p>
                 </li>
                 <li>
-                  <Link href="/government/institutions/statehouse-spokesperson" className="govuk-link govuk-link--no-visited-state govuk-!-font-weight-bold">
+                  <Link href="/government/institutions/office-state-house-spokesperson" className="govuk-link govuk-link--no-visited-state govuk-!-font-weight-bold">
                     Statehouse Spokesperson
                   </Link>
                   <p className="govuk-body-s govuk-!-margin-top-1 govuk-!-margin-bottom-0">
@@ -113,7 +111,7 @@ export default function PresidencyPage() {
 
               <ul className="govuk-list govuk-list--spaced">
                 <li>
-                  <Link href="/government/institutions/office-of-the-national-security-advisor" className="govuk-link govuk-link--no-visited-state govuk-!-font-weight-bold">
+                  <Link href="/government/institutions/office-national-security-advisor" className="govuk-link govuk-link--no-visited-state govuk-!-font-weight-bold">
                     Office of the National Security Advisor
                   </Link>
                   <p className="govuk-body-s govuk-!-margin-top-1 govuk-!-margin-bottom-0">
@@ -121,7 +119,7 @@ export default function PresidencyPage() {
                   </p>
                 </li>
                 <li>
-                  <Link href="/government/institutions/presidential-council-of-economic-advisors" className="govuk-link govuk-link--no-visited-state govuk-!-font-weight-bold">
+                  <Link href="/government/institutions/presidential-council-economic-advisors" className="govuk-link govuk-link--no-visited-state govuk-!-font-weight-bold">
                     Presidential Council of Economic Advisors
                   </Link>
                   <p className="govuk-body-s govuk-!-margin-top-1 govuk-!-margin-bottom-0">
@@ -129,15 +127,15 @@ export default function PresidencyPage() {
                   </p>
                 </li>
                 <li>
-                  <Link href="/government/institutions/office-of-the-women-rights-advisor" className="govuk-link govuk-link--no-visited-state govuk-!-font-weight-bold">
-                    Office of the Women Rights Advisor
+                  <Link href="/government/institutions/office-womens-rights-advisor" className="govuk-link govuk-link--no-visited-state govuk-!-font-weight-bold">
+                    Office of the Women's Rights Advisor
                   </Link>
                   <p className="govuk-body-s govuk-!-margin-top-1 govuk-!-margin-bottom-0">
                     Advises on policies to promote gender equality and protect women's rights.
                   </p>
                 </li>
                 <li>
-                  <Link href="/government/institutions/office-of-the-climate-change-advisor" className="govuk-link govuk-link--no-visited-state govuk-!-font-weight-bold">
+                  <Link href="/government/institutions/office-climate-change-advisor" className="govuk-link govuk-link--no-visited-state govuk-!-font-weight-bold">
                     Office of the Climate Change Advisor
                   </Link>
                   <p className="govuk-body-s govuk-!-margin-top-1 govuk-!-margin-bottom-0">
@@ -178,7 +176,7 @@ export default function PresidencyPage() {
                   </p>
                 </li>
                 <li>
-                  <Link href="/government/institutions/kenya-national-intelligence-service" className="govuk-link govuk-link--no-visited-state govuk-!-font-weight-bold">
+                  <Link href="/government/institutions/national-intelligence-service" className="govuk-link govuk-link--no-visited-state govuk-!-font-weight-bold">
                     National Intelligence Service
                   </Link>
                   <p className="govuk-body-s govuk-!-margin-top-1 govuk-!-margin-bottom-0">
@@ -186,7 +184,7 @@ export default function PresidencyPage() {
                   </p>
                 </li>
                 <li>
-                  <Link href="/government/institutions/national-economic-and-social-council" className="govuk-link govuk-link--no-visited-state govuk-!-font-weight-bold">
+                  <Link href="/government/institutions/national-economic-social-council" className="govuk-link govuk-link--no-visited-state govuk-!-font-weight-bold">
                     National Economic and Social Council
                   </Link>
                   <p className="govuk-body-s govuk-!-margin-top-1 govuk-!-margin-bottom-0">
@@ -194,7 +192,7 @@ export default function PresidencyPage() {
                   </p>
                 </li>
                 <li>
-                  <Link href="/government/institutions/national-and-county-government-summit" className="govuk-link govuk-link--no-visited-state govuk-!-font-weight-bold">
+                  <Link href="/government/institutions/national-county-government-summit" className="govuk-link govuk-link--no-visited-state govuk-!-font-weight-bold">
                     National and County Government Summit
                   </Link>
                   <p className="govuk-body-s govuk-!-margin-top-1 govuk-!-margin-bottom-0">
@@ -202,7 +200,7 @@ export default function PresidencyPage() {
                   </p>
                 </li>
                 <li>
-                  <Link href="/government/institutions/power-of-mercy-advisory-committee" className="govuk-link govuk-link--no-visited-state govuk-!-font-weight-bold">
+                  <Link href="/government/institutions/power-mercy-advisory-committee" className="govuk-link govuk-link--no-visited-state govuk-!-font-weight-bold">
                     Power of Mercy Advisory Committee
                   </Link>
                   <p className="govuk-body-s govuk-!-margin-top-1 govuk-!-margin-bottom-0">
@@ -243,7 +241,7 @@ export default function PresidencyPage() {
                   </p>
                 </li>
                 <li>
-                  <Link href="/government/institutions/directorate-of-national-cohesion-and-values" className="govuk-link govuk-link--no-visited-state govuk-!-font-weight-bold">
+                  <Link href="/government/institutions/directorate-national-cohesion-values" className="govuk-link govuk-link--no-visited-state govuk-!-font-weight-bold">
                     Directorate of National Cohesion and Values
                   </Link>
                   <p className="govuk-body-s govuk-!-margin-top-1 govuk-!-margin-bottom-0">
@@ -251,7 +249,7 @@ export default function PresidencyPage() {
                   </p>
                 </li>
                 <li>
-                  <Link href="/government/institutions/directorate-of-resource-surveys-and-remote-sensing" className="govuk-link govuk-link--no-visited-state govuk-!-font-weight-bold">
+                  <Link href="/government/institutions/directorate-resource-surveys-remote-sensing" className="govuk-link govuk-link--no-visited-state govuk-!-font-weight-bold">
                     Directorate of Resource Surveys and Remote Sensing
                   </Link>
                   <p className="govuk-body-s govuk-!-margin-top-1 govuk-!-margin-bottom-0">
@@ -354,9 +352,7 @@ export default function PresidencyPage() {
             </aside>
           </div>
         </div>
-      
-    
-  
-  </>
-);
+      </div>
+    </>
+  );
 }

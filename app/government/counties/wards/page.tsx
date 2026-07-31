@@ -5,8 +5,6 @@ import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 
 export const revalidate = 3600;
 
-
-
 interface SearchParams {
   county?: string;
   constituency?: string;
@@ -56,7 +54,7 @@ export default async function WardsPage({
         counties (
           name
         )
-      `,
+      `
         )
         .eq("name", constituency)
         .maybeSingle();
@@ -103,7 +101,7 @@ export default async function WardsPage({
       constituency_name,
       registered_voters_2022
     `,
-        { count: "exact" },
+        { count: "exact" }
       )
       .eq("is_active", true);
 
@@ -114,7 +112,7 @@ export default async function WardsPage({
     if (q) {
       const safe = q.replace(/[%_,]/g, " ").slice(0, 80);
       baseQuery = baseQuery.or(
-        `name.ilike.%${safe}%,constituency_name.ilike.%${safe}%,county_name.ilike.%${safe}%`,
+        `name.ilike.%${safe}%,constituency_name.ilike.%${safe}%,county_name.ilike.%${safe}%`
       );
     }
 
@@ -136,12 +134,14 @@ export default async function WardsPage({
   // ============================================
   if (error) {
     return (
-      <>
-        <h1 className="govuk-heading-l">Unable to load wards</h1>
-        <p className="govuk-body">
-          Please try again later or narrow your filters.
-        </p>
-      </>
+      <div className="govuk-width-container">
+        <main className="govuk-main-wrapper">
+          <h1 className="govuk-heading-l">Unable to load wards</h1>
+          <p className="govuk-body">
+            Please try again later or narrow your filters.
+          </p>
+        </main>
+      </div>
     );
   }
 
@@ -155,7 +155,7 @@ export default async function WardsPage({
     if (constituency) params.set("constituency", constituency);
     if (q) params.set("q", q);
     params.set("page", pageNumber.toString());
-    return `/counties/wards?${params.toString()}`;
+    return `/government/counties/wards?${params.toString()}`;
   };
 
   const getFilterClearUrl = (removeKey: "county" | "constituency" | "q") => {
@@ -163,7 +163,7 @@ export default async function WardsPage({
     if (removeKey !== "county" && county) params.set("county", county);
     if (removeKey !== "constituency" && constituency) params.set("constituency", constituency);
     if (removeKey !== "q" && q) params.set("q", q);
-    return `/counties/wards?${params.toString()}`;
+    return `/government/counties/wards?${params.toString()}`;
   };
 
   // Compile active search parameters to craft an optimized endpoint track url for export route tracking
@@ -176,22 +176,22 @@ export default async function WardsPage({
   };
 
   return (
-  <>
-    
+    <div className="govuk-width-container">
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
-          { text: "Counties", href: "/counties" },
-          { text: "Wards", href: "" },
+          { text: "Government", href: "/government" },
+          { text: "County governments", href: "/government/counties" },
+          { text: "Wards" },
         ]}
       />
 
-      
+      <main className="govuk-main-wrapper" id="main-content" role="main">
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-full">
             
             <h1 className="govuk-heading-l govuk-!-margin-bottom-2">Wards in Kenya</h1>
-            <p className="govuk-body govuk-!-margin-bottom-4">
+            <p className="govuk-body govuk-!-margin-bottom-6">
               Browse electoral and administrative ward boundaries mapped across all 47 devolved counties and 290 constituencies.
             </p>
 
@@ -206,48 +206,64 @@ export default async function WardsPage({
 
             {/* GOV.UK Compliant Filter Removal Tags Display Panel */}
             {hasActiveFilters && (
-              <div className="govuk-!-margin-bottom-4 govuk-!-background-grey govuk-!-padding-2 govuk-!-border-1">
+              <div className="govuk-!-margin-bottom-6" style={{ background: '#f3f2f1', padding: '16px', borderLeft: '4px solid #1d70b8' }}>
                 <p className="govuk-body-s govuk-!-font-weight-bold govuk-!-margin-bottom-2">Active filters:</p>
-                <div className="govuk-!-display-flex govuk-!-flex-wrap-wrap govuk-!-gap-2 govuk-!-align-items-center">
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
                   {county && (
-                    <Link href={getFilterClearUrl("county")} className="govuk-link govuk-!-font-size-14" style={{ background: '#fff', border: '1px solid #1d70b8', padding: '4px 8px', cursor: 'pointer', textDecoration: 'none', color: '#1d70b8', display: 'inline-flex', alignItems: 'center', borderStyle: 'solid' }}>
+                    <Link 
+                      href={getFilterClearUrl("county")} 
+                      className="govuk-link"
+                      style={{ background: '#fff', border: '1px solid #1d70b8', padding: '4px 8px', textDecoration: 'none', color: '#1d70b8', display: 'inline-flex', alignItems: 'center', borderRadius: '4px', fontSize: '14px' }}
+                    >
                       County: {county} <span style={{ marginLeft: '8px', color: '#d4351c', fontWeight: 'bold' }}>&times;</span>
                     </Link>
                   )}
                   {constituency && (
-                    <Link href={getFilterClearUrl("constituency")} className="govuk-link govuk-!-font-size-14" style={{ background: '#fff', border: '1px solid #1d70b8', padding: '4px 8px', cursor: 'pointer', textDecoration: 'none', color: '#1d70b8', display: 'inline-flex', alignItems: 'center', borderStyle: 'solid' }}>
+                    <Link 
+                      href={getFilterClearUrl("constituency")} 
+                      className="govuk-link"
+                      style={{ background: '#fff', border: '1px solid #1d70b8', padding: '4px 8px', textDecoration: 'none', color: '#1d70b8', display: 'inline-flex', alignItems: 'center', borderRadius: '4px', fontSize: '14px' }}
+                    >
                       Constituency: {constituency} <span style={{ marginLeft: '8px', color: '#d4351c', fontWeight: 'bold' }}>&times;</span>
                     </Link>
                   )}
                   {q && (
-                    <Link href={getFilterClearUrl("q")} className="govuk-link govuk-!-font-size-14" style={{ background: '#fff', border: '1px solid #1d70b8', padding: '4px 8px', cursor: 'pointer', textDecoration: 'none', color: '#1d70b8', display: 'inline-flex', alignItems: 'center', borderStyle: 'solid' }}>
+                    <Link 
+                      href={getFilterClearUrl("q")} 
+                      className="govuk-link"
+                      style={{ background: '#fff', border: '1px solid #1d70b8', padding: '4px 8px', textDecoration: 'none', color: '#1d70b8', display: 'inline-flex', alignItems: 'center', borderRadius: '4px', fontSize: '14px' }}
+                    >
                       Search: &ldquo;{q}&rdquo; <span style={{ marginLeft: '8px', color: '#d4351c', fontWeight: 'bold' }}>&times;</span>
                     </Link>
                   )}
-                  <Link href="/counties/wards" className="govuk-link govuk-!-font-size-16" style={{ paddingLeft: '4px' }}>
+                  <Link 
+                    href="/government/counties/wards" 
+                    className="govuk-link govuk-!-font-size-16"
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', padding: '4px' }}
+                  >
                     Clear all filters
                   </Link>
                 </div>
               </div>
             )}
 
-            {/* Open Data Download Panel (GOV.UK Compliant Server Model) */}
-            <div className="govuk-!-margin-bottom-4" style={{ background: '#f3f2f1', padding: '12px 15px', border: '1px solid #bfc1c3', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-              <span className="govuk-body-s govuk-!-margin-0">
-                Machine-readable open data access framework complying with national transparency disclosure guidelines.
-              </span>
+            {/* Open Data Download Panel (GOV.UK Compliant) */}
+            <div className="govuk-inset-text govuk-!-margin-bottom-6">
+              <p className="govuk-body govuk-!-margin-bottom-2">
+                <strong>Open Data:</strong> Machine-readable data access aligned with national open information disclosure guidelines. The download reflects your current search and filter criteria.
+              </p>
               <a 
                 href={getExportUrl()}
-                className="govuk-link govuk-!-font-size-16 govuk-!-font-weight-bold"
-                style={{ textDecoration: 'underline' }}
+                className="govuk-button govuk-button--secondary govuk-!-margin-bottom-0"
+                download
               >
-                Download filtered matching wards list as CSV text spreadsheet
+                Download filtered list as CSV
               </a>
             </div>
 
             {/* METADATA RESULT HOOK COUNTER */}
             <h2 className="govuk-heading-s govuk-!-margin-bottom-3" aria-live="polite">
-              Showing {totalWards > 0 ? fromOffset + 1 : 0} to {Math.min(toOffset + ITEMS_PER_PAGE, totalWards)} of {totalWards.toLocaleString()} electoral wards
+              Showing {totalWards > 0 ? fromOffset + 1 : 0} to {Math.min(toOffset + 1, totalWards)} of {totalWards.toLocaleString()} electoral wards
             </h2>
 
             {totalWards > 0 ? (
@@ -272,7 +288,7 @@ export default async function WardsPage({
                         <tr key={ward.id} className="govuk-table__row">
                           <td className="govuk-table__cell govuk-body-s">{fromOffset + index + 1}</td>
                           <th scope="row" className="govuk-table__header govuk-body-s" style={{ fontWeight: 'normal' }}>
-                            <Link href={`/counties/wards/${ward.slug}`} className="govuk-link govuk-!-font-weight-bold">
+                            <Link href={`/government/counties/wards/${ward.slug}`} className="govuk-link govuk-!-font-weight-bold">
                               {ward.name}
                             </Link>
                           </th>
@@ -289,11 +305,11 @@ export default async function WardsPage({
 
                 {/* GOV.UK Design System Pagination Component */}
                 {totalPages > 1 && (
-                  <nav className="govuk-pagination" role="navigation" aria-label="Pagination Navigation Menu">
+                  <nav className="govuk-pagination" role="navigation" aria-label="Pagination">
                     {currentPage > 1 && (
                       <div className="govuk-pagination__prev">
                         <Link className="govuk-link govuk-pagination__link" href={createPageUrl(currentPage - 1)} rel="prev">
-                          <svg className="govuk-pagination__icon govuk-pagination__icon--prev" xmlns="http://w3.org" height="13" width="15" viewBox="0 0 17 13">
+                          <svg className="govuk-pagination__icon govuk-pagination__icon--prev" xmlns="http://www.w3.org/2000/svg" height="13" width="15" viewBox="0 0 17 13">
                             <path d="m3.3 7 4.1 4.1-1.4 1.4L0 6.5 6 0l1.4 1.4L3.3 5.5H17v2H3.3z"></path>
                           </svg>
                           <span className="govuk-pagination__link-title">Previous</span>
@@ -332,7 +348,7 @@ export default async function WardsPage({
                       <div className="govuk-pagination__next">
                         <Link className="govuk-link govuk-pagination__link" href={createPageUrl(currentPage + 1)} rel="next">
                           <span className="govuk-pagination__link-title">Next</span>
-                          <svg className="govuk-pagination__icon govuk-pagination__icon--next" xmlns="http://w3.org" height="13" width="15" viewBox="0 0 17 13">
+                          <svg className="govuk-pagination__icon govuk-pagination__icon--next" xmlns="http://www.w3.org/2000/svg" height="13" width="15" viewBox="0 0 17 13">
                             <path d="m13.7 5.5-4.1-4.1 1.4-1.4L17 6.5 11 13l-1.4-1.4 4.1-4.1H0v-2h13.7z"></path>
                           </svg>
                         </Link>
@@ -342,20 +358,16 @@ export default async function WardsPage({
                 )}
               </>
             ) : (
-              <div style={{ marginTop: 25 }} className="govuk-body">
-                <p>No results match your selected county, constituency, or keyword search parameter configurations.</p>
-                <Link href="/counties/wards" className="govuk-link govuk-!-font-weight-bold">
+              <div className="govuk-body govuk-!-margin-top-4">
+                <p>No results match your selected county, constituency, or keyword search.</p>
+                <Link href="/government/counties/wards" className="govuk-link govuk-!-font-weight-bold">
                   Reset view and display all records
                 </Link>
               </div>
             )}
-
-            
           </div>
         </div>
-      
-    
-  
-  </>
-);
+      </main>
+    </div>
+  );
 }
