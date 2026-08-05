@@ -364,7 +364,28 @@ Open the URL Wrangler prints and check:
 - Admin Hansard AI routes (xAI / OpenRouter) — need API keys as secrets
 - `force-dynamic` pages (open-data, admin) — always SSR on the Worker
 
-### Blank pages on production but OK on localhost (Supabase)
+### Internal Server Error on static pages (not Supabase)
+
+**Live pattern observed (2026):**
+
+| Works | 500 Internal Server Error |
+|-------|---------------------------|
+| `/`, `/services`, `/contact`, `/search`, `/government/people`, `/government/institutions` | `/about`, `/privacy`, `/elections`, `/government`, `/find-your-representatives`, `/constitution`, `/open-data`, most content hubs |
+
+`/about` and `/privacy` do **not** call Supabase — so this is **not** “too many users / Supabase overload”.
+
+**Cause:** `export const dynamic = "force-static"` combined with long `revalidate` and OpenNext’s **read-only** `staticAssetsIncrementalCache` (no R2). Cache interception tried to treat those routes as ISR static assets and failed with 500. Client-rendered routes still worked.
+
+**Fix applied in repo:**
+
+1. Remove `force-static` from stamped public pages (keep optional `revalidate` only).
+2. `enableCacheInterception: false` in `open-next.config.ts`.
+3. Fail-soft data helpers for `/open-data` counts and `/constitution` Sanity.
+4. Stop stamping `force-static` in `scripts/stamp-static-pages.mjs`.
+
+**After pull:** run a full `pnpm run deploy` (must rebuild OpenNext, not `wrangler deploy` alone).
+
+### Blank / empty data pages (Supabase env) — separate issue
 
 **Root cause pattern**
 

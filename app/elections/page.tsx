@@ -3,7 +3,6 @@ import PageIntro from "@/components/site/PageIntro";
 import ChevronLinkList from "@/components/site/ChevronLinkList";
 
 export const revalidate = 86400;
-export const dynamic = "force-static";
 
 export const metadata = {
   title: "Elections and voting",

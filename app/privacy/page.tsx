@@ -4,7 +4,6 @@ import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import PrintPageButton from "@/components/govuk/PrintPageButton";
 
 export const revalidate = 86400;
-export const dynamic = "force-static";
 
 export default function PrivacyPage() {
   return (

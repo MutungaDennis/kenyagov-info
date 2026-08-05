@@ -264,7 +264,8 @@ export async function getConstitutionChapter(chapter: number) {
 
 /** TOC listing only — full text loads on chapter/article detail pages. */
 export async function getAllConstitutionArticles() {
-  return sanityClient.fetch(`
+  try {
+    return await sanityClient.fetch(`
     *[_type == "constitutionArticle"] 
     | order(chapter asc, articleNumber asc) {
         _id,
@@ -274,10 +275,15 @@ export async function getAllConstitutionArticles() {
         articleTitle
       }
   `);
+  } catch (err) {
+    console.error("[sanity] getAllConstitutionArticles failed:", err);
+    return [];
+  }
 }
 
 export async function getChapters() {
-  const data = await sanityClient.fetch(`
+  try {
+    const data = await sanityClient.fetch(`
     *[_type == "constitutionArticle"] 
     | order(chapter asc) 
     { 
@@ -286,12 +292,18 @@ export async function getChapters() {
     }
   `);
 
-  // Remove duplicate chapters (client-side deduplication)
-  const uniqueChapters = Array.from(
-    new Map(data.map((item: any) => [item.chapter, item])).values()
-  );
+    // Remove duplicate chapters (client-side deduplication)
+    const uniqueChapters = Array.from(
+      new Map(
+        (data || []).map((item: any) => [item.chapter, item]),
+      ).values(),
+    );
 
-  return uniqueChapters;
+    return uniqueChapters;
+  } catch (err) {
+    console.error("[sanity] getChapters failed:", err);
+    return [];
+  }
 }
 
 export async function getChapterArticles(chapter: number) {

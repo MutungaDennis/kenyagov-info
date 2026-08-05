@@ -5,7 +5,6 @@ import ChevronLinkList from "@/components/site/ChevronLinkList";
 import { topics } from "@/lib/topics";
 
 export const revalidate = 86400;
-export const dynamic = "force-static";
 
 export const metadata: Metadata = {
   title: "Browse topics",

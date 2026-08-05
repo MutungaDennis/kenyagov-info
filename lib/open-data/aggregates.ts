@@ -73,51 +73,66 @@ async function countTable(
   return res.count ?? 0;
 }
 
+const EMPTY_HUB_COUNTS: Record<string, number> = {
+  counties: 0,
+  wards: 0,
+  constituencies: 0,
+  institutions: 0,
+  leaders: 0,
+  polling: 0,
+  parties: 0,
+  coalitions: 0,
+  mcas: 0,
+  hansard: 0,
+};
+
+/**
+ * Hub counts for open-data landing. Never throws — empty counts if Supabase
+ * misconfigured or slow (prevents Cloudflare 500 on /open-data).
+ */
 export async function getHubCounts(): Promise<Record<string, number>> {
-  const [
-    counties,
-    wards,
-    constituencies,
-    institutions,
-    leaders,
-    polling,
-    parties,
-    coalitions,
-    mcas,
-  ] = await Promise.all([
-    countTable("counties"),
-    countTable("wards"),
-    countTable("constituencies"),
-    countTable("institutions"),
-    countTable("leaders", false),
-    countTable("polling_stations_2022"),
-    countTable("political_parties", false),
-    countTable("coalitions", false),
-    countTable("mcas", false),
-  ]);
-
-  let hansard = 0;
   try {
-    const sanity = createSanityClient({ useCdn: true, token: null });
-    hansard = await sanity.fetch(
-      `count(*[_type == "hansardSitting" && isActive != false])`,
-    );
-  } catch {
-    hansard = 0;
-  }
+    const results = await Promise.allSettled([
+      countTable("counties"),
+      countTable("wards"),
+      countTable("constituencies"),
+      countTable("institutions"),
+      countTable("leaders", false),
+      countTable("polling_stations_2022"),
+      countTable("political_parties", false),
+      countTable("coalitions", false),
+      countTable("mcas", false),
+    ]);
 
-  return {
-    counties,
-    wards,
-    constituencies,
-    institutions,
-    leaders,
-    polling,
-    parties,
-    coalitions,
-    mcas,
-    hansard,
-  };
+    const num = (i: number) =>
+      results[i].status === "fulfilled" ? results[i].value : 0;
+
+    let hansard = 0;
+    try {
+      const sanity = createSanityClient({ useCdn: true, token: null });
+      hansard = await sanity.fetch(
+        `count(*[_type == "hansardSitting" && isActive != false])`,
+      );
+    } catch {
+      hansard = 0;
+    }
+
+    return {
+      counties: num(0),
+      wards: num(1),
+      constituencies: num(2),
+      institutions: num(3),
+      leaders: num(4),
+      polling: num(5),
+      parties: num(6),
+      coalitions: num(7),
+      mcas: num(8),
+      hansard,
+    };
+  } catch (err) {
+    console.error("[open-data] getHubCounts failed:", err);
+    return { ...EMPTY_HUB_COUNTS };
+  }
 }
 
 export async function getDatasetSummary(

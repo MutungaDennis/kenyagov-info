@@ -5,7 +5,6 @@ import RelatedNav from "@/components/site/RelatedNav";
 import { constitutionRefs } from "@/lib/constitution-links";
 
 export const revalidate = 86400;
-export const dynamic = "force-static";
 
 export const metadata: Metadata = {
   title: "County vs national government",

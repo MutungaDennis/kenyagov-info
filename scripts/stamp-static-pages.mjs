@@ -1,7 +1,10 @@
 import fs from "fs";
 
+// Do NOT stamp `dynamic = "force-static"` for OpenNext on Cloudflare.
+// With static-assets incremental cache (no R2), force-static + revalidate
+// has been observed to 500 many public routes while client/dynamic routes work.
+// revalidate alone is enough for CDN-friendly caching hints.
 const staticStamp = `export const revalidate = 86400;
-export const dynamic = "force-static";
 `;
 
 const dataStamp = `export const revalidate = 3600;

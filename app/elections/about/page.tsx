@@ -5,7 +5,6 @@ import LastUpdated from "@/components/govuk/LastUpdated";
 import ChevronLinkList from "@/components/site/ChevronLinkList";
 
 export const revalidate = 86400;
-export const dynamic = "force-static";
 
 const electionSections = [
   {

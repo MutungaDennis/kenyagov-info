@@ -4,7 +4,6 @@ import HomeMasthead from "@/components/site/HomeMasthead";
 import ChevronLinkList from "@/components/site/ChevronLinkList";
 
 export const revalidate = 86400;
-export const dynamic = "force-static";
 
 const SITE_URL = "https://www.citizenguide.ke";
 

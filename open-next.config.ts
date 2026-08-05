@@ -18,7 +18,10 @@ import staticAssetsIncrementalCache from "@opennextjs/cloudflare/overrides/incre
 export default {
   ...defineCloudflareConfig({
     incrementalCache: staticAssetsIncrementalCache,
-    enableCacheInterception: true,
+    // Read-only static assets cache cannot write ISR revalidations.
+    // Cache interception + force-static caused widespread 500s on public
+    // routes (about, elections, constitution, etc.) while client pages worked.
+    enableCacheInterception: false,
   }),
   // Avoid recursive `pnpm run build` → opennext → build → …
   buildCommand: "pnpm run build:next",

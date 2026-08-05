@@ -10,7 +10,6 @@ import {
 } from "@/lib/data/national-events";
 
 export const revalidate = 86400;
-export const dynamic = "force-static";
 
 export const metadata: Metadata = {
   title: "National events",

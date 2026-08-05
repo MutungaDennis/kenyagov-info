@@ -6,7 +6,6 @@ import PageContents from "@/components/site/PageContents";
 import { constitutionRefs } from "@/lib/constitution-links";
 
 export const revalidate = 86400;
-export const dynamic = "force-static";
 
 export const metadata: Metadata = {
   title: "Having a baby — government steps",

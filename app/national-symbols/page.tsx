@@ -5,7 +5,6 @@ import LastUpdated from "@/components/govuk/LastUpdated";
 import PrintPageButton from "@/components/govuk/PrintPageButton";
 
 export const revalidate = 86400;
-export const dynamic = "force-static";
 
 export default function NationalSymbolsPage() {
   return (

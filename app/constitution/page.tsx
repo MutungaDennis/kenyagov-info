@@ -3,21 +3,26 @@ import ConstitutionTableOfContents from "./ConstitutionTableOfContents";
 
 /** Constitution text rarely changes — long cache for Cloudflare Free tier. */
 export const revalidate = 86400;
-export const dynamic = "force-static";
 
 export default async function ConstitutionServerPage() {
-  // 1. Fetch live content from Sanity datasets on the server
-  const articles = await getAllConstitutionArticles();
-  const chapters = await getChapters();
-
-  // 2. Fallback diagnostic to catch empty server values during builds
-  const safeArticles = Array.isArray(articles) ? articles : [];
-  const safeChapters = Array.isArray(chapters) ? chapters : [];
+  // Fail soft: never 500 the whole route if Sanity is down or slow on Cloudflare
+  let safeArticles: unknown[] = [];
+  let safeChapters: unknown[] = [];
+  try {
+    const [articles, chapters] = await Promise.all([
+      getAllConstitutionArticles(),
+      getChapters(),
+    ]);
+    safeArticles = Array.isArray(articles) ? articles : [];
+    safeChapters = Array.isArray(chapters) ? chapters : [];
+  } catch (err) {
+    console.error("[constitution] Sanity fetch failed:", err);
+  }
 
   return (
-    <ConstitutionTableOfContents 
-      initialArticles={safeArticles} 
-      initialChapters={safeChapters} 
+    <ConstitutionTableOfContents
+      initialArticles={safeArticles as never[]}
+      initialChapters={safeChapters as never[]}
     />
   );
 }

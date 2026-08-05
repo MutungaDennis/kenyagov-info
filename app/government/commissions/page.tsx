@@ -3,7 +3,6 @@ import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 
 export const revalidate = 86400;
-export const dynamic = "force-static";
 
 export default function CommissionsPage() {
   return (
