@@ -60,75 +60,100 @@ export async function PUT(
     const supabase = await createClient();
     const body = await request.json();
 
-    // ✅ Sanitize and validate all UUID fields
-    const uuidFields = ['ward_id', 'party_id', 'successor_mca_id'];
+    // Partial updates (e.g. { status: "Unpublished" }) must NOT wipe other columns
+    const patch: Record<string, unknown> = { ...body };
+    delete patch.id;
+    delete patch.created_at;
+
+    // Sanitize UUID fields only when present
+    const uuidFields = ["ward_id", "party_id", "successor_mca_id", "county_id"];
     for (const field of uuidFields) {
-      body[field] = sanitizeUUID(body[field]);
-      if (body[field] && !isValidUUID(body[field])) {
+      if (!(field in patch)) continue;
+      patch[field] = sanitizeUUID(patch[field]);
+      if (patch[field] && !isValidUUID(patch[field])) {
         return NextResponse.json(
-          { error: `Invalid UUID format for ${field}: ${body[field]}` },
-          { status: 400 }
+          { error: `Invalid UUID format for ${field}: ${patch[field]}` },
+          { status: 400 },
         );
       }
     }
 
-    // ✅ Handle slug: use provided slug if valid, otherwise auto-generate
-    let slug = body.slug;
-    if (!slug || slug === "undefined" || slug.length < 3) {
-      // Auto-generate from name
-      slug = `${body.first_name}-${body.surname}`
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/(^-|-$)/g, "");
-    } else {
-      // Validate and sanitize manual slug
-      slug = slug.toLowerCase().replace(/[^a-z0-9-]/g, "").replace(/-+/g, "-").replace(/(^-|-$)/g, "");
-      
-      // Ensure minimum length after sanitization
-      if (slug.length < 3) {
-        slug = `${body.first_name}-${body.surname}`
+    // Slug only when name fields or slug are being updated
+    if ("slug" in patch || "first_name" in patch || "surname" in patch) {
+      let slug =
+        typeof patch.slug === "string" ? patch.slug : undefined;
+
+      if (!slug || slug === "undefined" || slug.length < 3) {
+        if (patch.first_name || patch.surname) {
+          slug = `${patch.first_name || ""}-${patch.surname || ""}`
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/(^-|-$)/g, "");
+        } else {
+          // Status-only / partial update: leave existing slug alone
+          delete patch.slug;
+          slug = undefined;
+        }
+      }
+
+      if (slug) {
+        slug = slug
           .toLowerCase()
-          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/[^a-z0-9-]/g, "")
+          .replace(/-+/g, "-")
           .replace(/(^-|-$)/g, "");
+
+        if (slug.length >= 3) {
+          const { data: existingSlug } = await supabase
+            .from("mcas")
+            .select("id")
+            .eq("slug", slug)
+            .neq("id", id)
+            .maybeSingle();
+
+          if (existingSlug) {
+            let counter = 1;
+            let uniqueSlug = `${slug}-${counter}`;
+            while (true) {
+              const { data: check } = await supabase
+                .from("mcas")
+                .select("id")
+                .eq("slug", uniqueSlug)
+                .neq("id", id)
+                .maybeSingle();
+              if (!check) break;
+              counter++;
+              uniqueSlug = `${slug}-${counter}`;
+            }
+            slug = uniqueSlug;
+          }
+          patch.slug = slug;
+        } else {
+          delete patch.slug;
+        }
       }
     }
 
-    // ✅ Check if slug already exists (but not for the current MCA)
-    const { data: existingSlug } = await supabase
-      .from("mcas")
-      .select("id")
-      .eq("slug", slug)
-      .neq("id", id)
-      .maybeSingle();
-
-    if (existingSlug) {
-      // Append a number to make it unique
-      let counter = 1;
-      let uniqueSlug = `${slug}-${counter}`;
-      while (true) {
-        const { data: check } = await supabase
-          .from("mcas")
-          .select("id")
-          .eq("slug", uniqueSlug)
-          .neq("id", id)
-          .maybeSingle();
-        if (!check) break;
-        counter++;
-        uniqueSlug = `${slug}-${counter}`;
-      }
-      slug = uniqueSlug;
+    if (Object.keys(patch).length === 0) {
+      return NextResponse.json(
+        { error: "No fields to update" },
+        { status: 400 },
+      );
     }
 
     const { data, error } = await supabase
       .from("mcas")
-      .update({ ...body, slug })
+      .update(patch)
       .eq("id", id)
       .select()
       .single();
 
     if (error) {
       console.error("Supabase PUT error:", error);
-      return NextResponse.json({ error: error.message, hint: error.hint }, { status: 400 });
+      return NextResponse.json(
+        { error: error.message, hint: error.hint },
+        { status: 400 },
+      );
     }
 
     return NextResponse.json({ data });

@@ -131,7 +131,7 @@ export default function PersonProfilePage() {
           return;
         }
 
-        // 2. If not found in leaders, try fetching from mcas table
+        // 2. If not found in leaders, try fetching from mcas table (published only)
         const { data: mcaData, error: mcaError } = await supabase
           .from("mcas")
           .select(`
@@ -143,6 +143,7 @@ export default function PersonProfilePage() {
             political_parties (name, abbreviation)
           `)
           .eq("slug", slug)
+          .neq("status", "Unpublished")
           .maybeSingle();
 
         if (mcaData) {

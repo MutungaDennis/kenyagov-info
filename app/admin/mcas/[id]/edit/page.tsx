@@ -225,14 +225,28 @@ export default function EditMCAPage() {
   // ============================================
   // TERMS MANAGEMENT
   // ============================================
+  /** type="date" needs YYYY-MM-DD only */
+  const toDateInput = (v: unknown): string => {
+    if (v == null || v === "" || v === "null") return "";
+    return String(v).slice(0, 10);
+  };
+
   const loadTerms = async () => {
     setLoadingTerms(true);
     try {
       const res = await fetch(`/api/admin/mcas/${mcaId}/terms`);
       const json = await res.json();
       if (res.ok) {
-        setTerms(json.data || []);
-        const maxTerm = json.data?.reduce(
+        const normalized: Term[] = (json.data || []).map((t: Term) => ({
+          ...t,
+          start_date: toDateInput(t.start_date),
+          end_date: toDateInput(t.end_date),
+          party_id: t.party_id || "",
+          ward_id: t.ward_id || "",
+          successor_mca_id: t.successor_mca_id || "",
+        }));
+        setTerms(normalized);
+        const maxTerm = normalized.reduce(
           (max: number, t: Term) => Math.max(max, t.term_number),
           0
         );
@@ -249,9 +263,18 @@ export default function EditMCAPage() {
     setSaving(true);
     setError(null);
 
+    if (!termData.start_date) {
+      setError("Start date is required for each term.");
+      setSaving(false);
+      window.scrollTo(0, 0);
+      return;
+    }
+
     try {
       const payload = {
         ...termData,
+        start_date: toDateInput(termData.start_date),
+        end_date: toDateInput(termData.end_date) || null,
         party_id: sanitizeUUID(termData.party_id),
         ward_id: sanitizeUUID(termData.ward_id),
         votes_garnered: termData.votes_garnered ? Number(termData.votes_garnered) : null,
@@ -294,12 +317,19 @@ export default function EditMCAPage() {
     setSaving(true);
     setError(null);
 
+    if (!term.start_date) {
+      setError("Start date is required for each term.");
+      setSaving(false);
+      window.scrollTo(0, 0);
+      return;
+    }
+
     try {
       const payload = {
         termId: term.id,
         term_number: term.term_number,
-        start_date: term.start_date,
-        end_date: term.end_date || null,
+        start_date: toDateInput(term.start_date),
+        end_date: toDateInput(term.end_date) || null,
         party_id: sanitizeUUID(term.party_id),
         ward_id: sanitizeUUID(term.ward_id),
         votes_garnered: term.votes_garnered ? Number(term.votes_garnered) : null,
@@ -900,8 +930,11 @@ export default function EditMCAPage() {
             <span className="govuk-tag govuk-!-margin-left-2">{terms.length} recorded</span>
           </h2>
           <p className="govuk-body">
-            Record each term this MCA has served. For example, if they were elected in 2013, lost
-            in 2017, and returned in 2022, add all three terms.
+            Record each term this MCA has served (start and end dates). Use{" "}
+            <strong>Edit</strong> on a term to change dates, party, ward, or exit reason.
+            Leave <strong>End date</strong> blank for the current term. Saving a term also updates
+            the public profile dates on{" "}
+            <code>/government/people</code>.
           </p>
 
           {loadingTerms ? (
@@ -958,8 +991,13 @@ export default function EditMCAPage() {
                             </h3>
                             <p className="govuk-body-s govuk-!-margin-bottom-1">
                               <strong>
-                                {term.start_date} → {term.end_date || "Present"}
+                                {term.start_date || "—"} → {term.end_date || "Present"}
                               </strong>
+                              {!term.start_date && (
+                                <span className="govuk-error-message govuk-!-display-inline govuk-!-margin-left-2">
+                                  Add a start date
+                                </span>
+                              )}
                             </p>
                           </div>
                           <div style={{ display: "flex", gap: "8px" }}>

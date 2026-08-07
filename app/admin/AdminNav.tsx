@@ -26,17 +26,16 @@ const NAV_SECTIONS: NavSection[] = [
     items: [{ segment: "", label: "Dashboard", exact: true }],
   },
   {
-    heading: "Content",
+    heading: "Government directory",
     items: [
       { segment: "institutions", label: "Institutions" },
-      { segment: "officials", label: "Officials" },
+      { segment: "officials", label: "National officials" },
+      { segment: "mcas", label: "County MCAs" },
     ],
   },
   {
-    heading: "Parliament",
-    items: [
-      { segment: "hansard", label: "Hansard", exact: false },
-    ],
+    heading: "Parliament & Hansard",
+    items: [{ segment: "hansard", label: "Hansard sittings" }],
   },
   {
     heading: "Elections data",

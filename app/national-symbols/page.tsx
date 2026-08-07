@@ -76,6 +76,12 @@ export default function NationalSymbolsPage() {
               </p>
 
               <h3 className="govuk-heading-s">Meaning of the flag elements</h3>
+              <div
+                className="app-table-scroll"
+                role="region"
+                aria-label="Meaning of flag elements"
+                tabIndex={0}
+              >
               <table className="govuk-table">
                 <caption className="govuk-table__caption govuk-visually-hidden">
                   The meaning of each element on the national flag
@@ -109,6 +115,7 @@ export default function NationalSymbolsPage() {
                   </tr>
                 </tbody>
               </table>
+              </div>
 
               <div className="govuk-warning-text">
                 <span className="govuk-warning-text__icon" aria-hidden="true">!</span>

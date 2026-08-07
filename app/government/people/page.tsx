@@ -166,7 +166,7 @@ function PeopleDirectoryContent() {
           .eq("is_active", true)
           .order("surname", { ascending: true });
 
-        // 2. Fetch MCAs and map them to the Leader shape
+        // 2. Fetch published MCAs only (admin "Unpublish" hides them here and on MCA directory)
         const { data: mcasData, error: mcasError } = await supabase
           .from("mcas")
           .select(`
@@ -176,6 +176,7 @@ function PeopleDirectoryContent() {
             wards (name),
             political_parties (name, abbreviation)
           `)
+          .neq("status", "Unpublished")
           .order("surname", { ascending: true });
 
         if (leadersError) throw leadersError;

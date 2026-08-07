@@ -69,7 +69,12 @@ export default function ReferendumsPage() {
           Kenya adopted its current Constitution on 4 August 2010 after a national referendum.
         </p>
 
-        <div className="govuk-table__wrapper">
+        <div
+          className="app-table-scroll"
+          role="region"
+          aria-label="2010 referendum results"
+          tabIndex={0}
+        >
           <table className="govuk-table">
             <thead>
               <tr>

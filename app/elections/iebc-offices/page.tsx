@@ -190,7 +190,12 @@ export default async function IebcOfficesPage({ searchParams }: PageProps) {
           </p>
         </div>
       ) : paginatedData.length > 0 ? (
-        <div className="app-table-responsive">
+        <div
+          className="app-table-scroll"
+          role="region"
+          aria-label="IEBC constituency offices — scroll sideways on small screens"
+          tabIndex={0}
+        >
           <table className="govuk-table">
             <caption className="govuk-table__caption govuk-visually-hidden">
               IEBC constituency offices directory

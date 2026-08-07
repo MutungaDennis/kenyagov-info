@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import PageIntro from "@/components/site/PageIntro";
+import TableScroll from "@/components/govuk/TableScroll";
 
 export const revalidate = 86400;
 
@@ -33,6 +34,7 @@ export default function FindYourRepresentativesPage() {
             Kenya’s government is structured to ensure representation at both the national and county levels. Use the directory links below to find your specific representatives.
           </p>
 
+          <TableScroll caption="Elected and nominated representatives — scroll sideways on small screens">
           <table className="govuk-table">
             <caption className="govuk-table__caption govuk-table__caption--m">
               Elected and nominated representatives
@@ -191,6 +193,7 @@ export default function FindYourRepresentativesPage() {
 
             </tbody>
           </table>
+          </TableScroll>
 
           <hr className="govuk-section-break govuk-section-break--l govuk-section-break--visible govuk-!-margin-top-8" />
 

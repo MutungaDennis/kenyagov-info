@@ -854,41 +854,75 @@ iframe {
   height: auto;
 }
 
-/* Scroll region for wide tables (use TableScroll or auto via rule below) */
-.app-table-scroll {
+/* Scroll region for wide tables (use TableScroll wrapper) */
+.app-table-scroll,
+.app-table-responsive,
+.govuk-table-wrapper {
   display: block;
   width: 100%;
   max-width: 100%;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   margin-bottom: 20px;
-  /* Room for focus ring */
   padding-bottom: 2px;
+  /* Subtle edge cue that more content is off-screen */
+  background:
+    linear-gradient(to right, #fff 30%, rgba(255, 255, 255, 0)) left center / 24px 100% no-repeat,
+    linear-gradient(to left, #fff 30%, rgba(255, 255, 255, 0)) right center / 24px 100% no-repeat;
+  background-attachment: local, local;
 }
 
-.app-table-scroll:focus {
+.app-table-scroll:focus,
+.app-table-responsive:focus,
+.govuk-table-wrapper:focus {
   outline: 3px solid #ffdd00;
   outline-offset: 0;
   box-shadow: inset 0 0 0 2px #0b0c0c;
 }
 
-.app-table-scroll .govuk-table {
+.app-table-scroll .govuk-table,
+.app-table-responsive .govuk-table,
+.govuk-table-wrapper .govuk-table {
   margin-bottom: 0;
-  /* Prefer natural table width so columns stay readable while scrolling */
+  /* Natural column widths — do not squeeze titles on mobile */
   width: max-content;
   min-width: 100%;
   max-width: none;
+  border-collapse: collapse;
 }
 
-/* Standalone govuk tables on small screens: scroll container without layout blowout */
-@media (max-width: 40.05em) {
-  .govuk-main-wrapper table.govuk-table {
+.app-table-scroll .govuk-table th,
+.app-table-scroll .govuk-table td,
+.app-table-responsive .govuk-table th,
+.app-table-responsive .govuk-table td,
+.govuk-table-wrapper .govuk-table th,
+.govuk-table-wrapper .govuk-table td {
+  white-space: nowrap;
+  word-break: normal;
+  hyphens: none;
+  vertical-align: top;
+}
+
+/* Multi-column public tables: auto-wrap in scroll behaviour on small screens */
+@media (max-width: 48.0525em) {
+  /*
+   * Prefer real table layout + horizontal scroll (not stacked/squeezed cells).
+   * Pages should wrap tables in .app-table-scroll / TableScroll; this is a safety net
+   * for bare .govuk-table in main content.
+   */
+  .govuk-main-wrapper > .govuk-grid-row table.govuk-table,
+  .govuk-main-wrapper .govuk-grid-column-two-thirds > table.govuk-table,
+  .govuk-main-wrapper .govuk-grid-column-full > table.govuk-table,
+  .govuk-main-wrapper .govuk-grid-column-one-half > table.govuk-table {
     display: block;
     width: 100%;
     max-width: 100%;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     margin-bottom: 20px;
+  }
+
+  .govuk-main-wrapper table.govuk-table {
     font-size: 16px;
   }
 
@@ -900,40 +934,43 @@ iframe {
     display: table-row-group;
   }
 
-  .govuk-main-wrapper table.govuk-table > thead,
-  .govuk-main-wrapper table.govuk-table > tbody,
   .govuk-main-wrapper table.govuk-table > tr {
-    width: max-content;
-    min-width: 100%;
+    display: table-row;
   }
 
-  /* When already inside TableScroll, keep real table layout; parent scrolls */
-  .app-table-scroll table.govuk-table {
+  /* Inside dedicated scroll wrappers: keep table geometry intact */
+  .app-table-scroll table.govuk-table,
+  .app-table-responsive table.govuk-table,
+  .govuk-table-wrapper table.govuk-table {
     display: table;
     overflow: visible;
     width: max-content;
-    min-width: 100%;
+    min-width: 36rem; /* force scroll on phones instead of crushing columns */
     margin-bottom: 0;
   }
 
-  .app-table-scroll table.govuk-table > thead {
+  .app-table-scroll table.govuk-table > thead,
+  .app-table-responsive table.govuk-table > thead,
+  .govuk-table-wrapper table.govuk-table > thead {
     display: table-header-group;
   }
 
-  .app-table-scroll table.govuk-table > tbody {
+  .app-table-scroll table.govuk-table > tbody,
+  .app-table-responsive table.govuk-table > tbody,
+  .govuk-table-wrapper table.govuk-table > tbody {
     display: table-row-group;
   }
 
-  .govuk-main-wrapper table.govuk-table th,
-  .govuk-main-wrapper table.govuk-table td {
-    white-space: normal;
-    word-break: break-word;
-    hyphens: auto;
-  }
-
-  .govuk-main-wrapper table.govuk-table .govuk-table__header,
-  .govuk-main-wrapper table.govuk-table .govuk-table__cell {
-    padding: 10px 12px;
+  .app-table-scroll table.govuk-table th,
+  .app-table-scroll table.govuk-table td,
+  .app-table-responsive table.govuk-table th,
+  .app-table-responsive table.govuk-table td,
+  .govuk-table-wrapper table.govuk-table th,
+  .govuk-table-wrapper table.govuk-table td {
+    white-space: nowrap;
+    word-break: normal;
+    hyphens: none;
+    padding: 10px 14px;
   }
 
   /* Chevron lists: stack cleanly, avoid overflow */

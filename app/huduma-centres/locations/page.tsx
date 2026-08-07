@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import PageIntro from "@/components/site/PageIntro";
+import TableScroll from "@/components/govuk/TableScroll";
 import { countiesWithHuduma, hudumaCentres } from "@/lib/huduma-centres";
 
 export const revalidate = 86400;
@@ -72,6 +73,7 @@ export default function HudumaLocationsPage() {
             return (
               <section key={county} id={id} className="govuk-!-margin-bottom-6">
                 <h2 className="govuk-heading-m">{county}</h2>
+                <TableScroll caption={`Huduma Centres in ${county}`}>
                 <table className="govuk-table">
                   <thead className="govuk-table__head">
                     <tr className="govuk-table__row">
@@ -102,6 +104,7 @@ export default function HudumaLocationsPage() {
                     ))}
                   </tbody>
                 </table>
+                </TableScroll>
               </section>
             );
           })}

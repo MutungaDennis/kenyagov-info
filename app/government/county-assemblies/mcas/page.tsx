@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createPublicClient } from "@/lib/supabase/public";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
+import TableScroll from "@/components/govuk/TableScroll";
 
 export const revalidate = 3600;
 
@@ -67,7 +68,9 @@ export default async function MCAsPage({
         political_parties (name, abbreviation)
       `,
         { count: "exact" }
-      );
+      )
+      // Align with /government/people: unpublished MCAs are hidden from the public
+      .neq("status", "Unpublished");
 
     if (county) baseQuery = baseQuery.eq("counties.name", county);
     if (party) baseQuery = baseQuery.eq("political_parties.name", party);
@@ -271,8 +274,8 @@ export default async function MCAsPage({
 
             {totalMCAs > 0 ? (
               <>
-                <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', marginBottom: '25px' }}>
-                  <table className="govuk-table" style={{ minWidth: '800px' }}>
+                <TableScroll caption="List of Members of County Assembly — scroll sideways on small screens">
+                  <table className="govuk-table">
                     <caption className="govuk-table__caption govuk-visually-hidden">List of Members of County Assembly detailing their ward, county, and party affiliation.</caption>
                     <thead className="govuk-table__head">
                       <tr className="govuk-table__row">
@@ -317,7 +320,7 @@ export default async function MCAsPage({
                       })}
                     </tbody>
                   </table>
-                </div>
+                </TableScroll>
 
                 {/* Pagination */}
                 {totalPages > 1 && (

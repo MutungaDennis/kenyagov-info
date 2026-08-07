@@ -1,6 +1,7 @@
 // app/cookies/page.tsx
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
+import TableScroll from "@/components/govuk/TableScroll";
 
 export const revalidate = 86400;
 
@@ -59,6 +60,7 @@ export default function CookiesPage() {
               These cookies are necessary for the website to work. They cannot be turned off.
             </p>
 
+            <TableScroll caption="Essential cookies">
             <table className="govuk-table">
               <caption className="govuk-table__caption govuk-visually-hidden">
                 Essential cookies used by CitizenGuide.KE
@@ -91,6 +93,7 @@ export default function CookiesPage() {
                 </tr>
               </tbody>
             </table>
+            </TableScroll>
 
             <h3 className="govuk-heading-m">Analytics cookies (optional)</h3>
             <p className="govuk-body">
@@ -109,6 +112,7 @@ export default function CookiesPage() {
               Google Analytics does not collect or store your personal information. The information produced is anonymous and cannot be used to identify you.
             </p>
 
+            <TableScroll caption="Analytics cookies">
             <table className="govuk-table">
               <caption className="govuk-table__caption govuk-visually-hidden">
                 Analytics cookies used by CitizenGuide.KE
@@ -141,6 +145,7 @@ export default function CookiesPage() {
                 </tr>
               </tbody>
             </table>
+            </TableScroll>
 
             <hr className="govuk-section-break govuk-section-break--l govuk-section-break--visible" />
 

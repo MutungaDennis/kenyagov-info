@@ -6,20 +6,26 @@ const TASKS = [
     segment: "institutions",
     title: "Institutions",
     body: "Manage ministries, departments, agencies and public bodies in Supabase.",
-    group: "Content",
+    group: "Government directory",
   },
   {
     segment: "officials",
-    title: "Officials",
-    body: "Add and update government officials and leadership data.",
-    group: "Content",
+    title: "National officials",
+    body: "Add and update national government leaders (appear on /government/people).",
+    group: "Government directory",
+  },
+  {
+    segment: "mcas",
+    title: "County MCAs",
+    body: "Manage Members of County Assembly, terms (start/end dates), publish status, and profiles.",
+    group: "Government directory",
+    accent: true,
   },
   {
     segment: "hansard",
     title: "Hansard",
     body: "Browse sittings, enter contributions manually, or upload a PDF for Grok extraction — all on one page.",
-    group: "Parliament",
-    accent: true,
+    group: "Parliament & Hansard",
   },
   {
     segment: "polling-stations/upload",
@@ -60,8 +66,8 @@ const TASKS = [
 ] as const;
 
 const GROUPS = [
-  "Content",
-  "Parliament",
+  "Government directory",
+  "Parliament & Hansard",
   "Elections data",
   "Citizen responses",
   "System",
