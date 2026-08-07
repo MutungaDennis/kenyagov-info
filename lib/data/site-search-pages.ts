@@ -223,7 +223,22 @@ export const SITE_SEARCH_PAGES: SiteSearchPage[] = [
     title: "Huduma Centres",
     path: "/huduma-centres",
     snippet: "One-stop service centres for government services.",
-    keywords: ["huduma", "huduma centre", "service centre"],
+    keywords: ["huduma", "huduma centre", "service centre", "huduma kenya"],
+    type: "Page",
+  },
+  {
+    title: "Huduma Centre locations",
+    path: "/huduma-centres/locations",
+    snippet:
+      "Find Huduma Service Centres by region or county — addresses and opening hours.",
+    keywords: [
+      "huduma locations",
+      "huduma near me",
+      "find huduma",
+      "extended hours",
+      "gpo huduma",
+      "eldoret huduma",
+    ],
     type: "Page",
   },
   {
