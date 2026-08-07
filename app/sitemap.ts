@@ -279,15 +279,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/government/consultations`, changeFrequency: 'weekly', priority: 0.7 },
     
     // Elections (was /politics)
-    { url: `${BASE_URL}/elections`, changeFrequency: 'weekly', priority: 0.8 },
-    { url: `${BASE_URL}/elections/general-elections`, changeFrequency: 'yearly', priority: 0.7 },
-    { url: `${BASE_URL}/elections/by-elections`, changeFrequency: 'monthly', priority: 0.7 },
+    { url: `${BASE_URL}/elections`, changeFrequency: 'weekly', priority: 0.9 },
+    { url: `${BASE_URL}/elections/general-elections`, changeFrequency: 'weekly', priority: 0.85 },
+    { url: `${BASE_URL}/elections/general-elections/timeline`, changeFrequency: 'weekly', priority: 0.9 },
+    { url: `${BASE_URL}/elections/general-elections/operation-plan`, changeFrequency: 'weekly', priority: 0.85 },
+    { url: `${BASE_URL}/elections/by-elections`, changeFrequency: 'weekly', priority: 0.75 },
     { url: `${BASE_URL}/elections/referendums`, changeFrequency: 'yearly', priority: 0.7 },
-    { url: `${BASE_URL}/elections/voter-registration`, changeFrequency: 'monthly', priority: 0.7 },
-    { url: `${BASE_URL}/elections/political-parties`, changeFrequency: 'monthly', priority: 0.7 },
+    { url: `${BASE_URL}/elections/voter-registration`, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${BASE_URL}/elections/political-parties`, changeFrequency: 'monthly', priority: 0.75 },
     { url: `${BASE_URL}/elections/coalitions`, changeFrequency: 'monthly', priority: 0.6 },
-    { url: `${BASE_URL}/elections/polling-stations`, changeFrequency: 'monthly', priority: 0.7 },
-    { url: `${BASE_URL}/elections/registered-voters`, changeFrequency: 'monthly', priority: 0.6 },
+    { url: `${BASE_URL}/elections/polling-stations`, changeFrequency: 'monthly', priority: 0.75 },
+    { url: `${BASE_URL}/elections/registered-voters`, changeFrequency: 'monthly', priority: 0.65 },
     { url: `${BASE_URL}/elections/iebc-offices`, changeFrequency: 'monthly', priority: 0.6 },
     { url: `${BASE_URL}/elections/about`, changeFrequency: 'yearly', priority: 0.6 },
     
@@ -302,8 +304,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/documents/sessional-papers/1986-no-1`, changeFrequency: 'yearly', priority: 0.5 },
     { url: `${BASE_URL}/documents/sessional-papers/2012-no-1`, changeFrequency: 'yearly', priority: 0.5 },
     
-    // Search & Data
-    { url: `${BASE_URL}/search/all`, changeFrequency: 'daily', priority: 0.9 },
+    // Search & Data (canonical site search — enables sitelinks search box)
+    { url: `${BASE_URL}/search`, changeFrequency: 'weekly', priority: 0.85 },
     { url: `${BASE_URL}/open-data`, changeFrequency: 'monthly', priority: 0.8 },
     
     // Guides & Society

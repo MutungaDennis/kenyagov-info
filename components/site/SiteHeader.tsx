@@ -59,10 +59,18 @@ const MENU_SECTIONS: {
     heading: "Elections, data & help",
     links: [
       { href: "/elections", label: "Elections and voting", bold: true },
-      { href: "/society-and-culture", label: "Society and culture" },
+      {
+        href: "/elections/general-elections/timeline",
+        label: "2027 election timeline",
+      },
+      {
+        href: "/elections/general-elections/operation-plan",
+        label: "2027 operation plan",
+      },
+      { href: "/search", label: "Search this website" },
+      { href: "/open-data", label: "Open data" },
       { href: "/contact-government", label: "Contact government" },
       { href: "/scams", label: "Scams and fake websites" },
-      { href: "/open-data", label: "Open data" },
       { href: "/help", label: "Help" },
       { href: "/about", label: "About this site" },
     ],

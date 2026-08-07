@@ -194,12 +194,22 @@ export default function Home() {
 
               <div className="govuk-!-margin-bottom-3">
                 <h3 className="govuk-heading-s govuk-!-margin-bottom-1">
-                  <Link href="/elections" className="govuk-link">
+                  <Link
+                    href="/elections/general-elections/timeline"
+                    className="govuk-link"
+                  >
                     2027 General Election timeline
                   </Link>
                 </h3>
                 <p className="govuk-body govuk-!-margin-0">
-                  IEBC voter registration, updates and nomination information.
+                  Key IEBC milestones and the full{" "}
+                  <Link
+                    href="/elections/general-elections/operation-plan"
+                    className="govuk-link"
+                  >
+                    Election Operation Plan
+                  </Link>{" "}
+                  toward the 10 August 2027 poll.
                 </p>
               </div>
 

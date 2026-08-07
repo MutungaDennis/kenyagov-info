@@ -21,7 +21,7 @@ export default function HomeSearch({ variant = "default" }: HomeSearchProps) {
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (query.trim()) {
-      router.push(`/search/all?q=${encodeURIComponent(query.trim())}`);
+      router.push(`/search?q=${encodeURIComponent(query.trim())}`);
     }
   };
 

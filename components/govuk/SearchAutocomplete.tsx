@@ -5,12 +5,15 @@ import { useDebouncedCallback } from 'use-debounce';
 import { createBrowserClientAsync } from '@/lib/supabase/client';
 import { searchSanityContent } from '@/lib/sanity/client';
 import { wordLikeSimilarity } from '@/lib/fuzzy';
+import { suggestStaticPages } from '@/lib/data/site-search-pages.utils';
 
 interface Suggestion {
   name: string;
   entity_type: string;
   slug: string;
   base_route: string;
+  /** When set, navigate here directly (static pages) */
+  path?: string;
 }
 
 interface Props {
@@ -20,6 +23,17 @@ interface Props {
   className?: string;
   compact?: boolean; // for header use - smaller size
   autoFocus?: boolean;
+  /** Optional id for the search input (label association) */
+  inputId?: string;
+}
+
+function suggestionHref(s: Suggestion): string {
+  if (s.path) return s.path;
+  const base = (s.base_route || '/').replace(/\/$/, '') || '';
+  const slug = (s.slug || '').replace(/^\//, '');
+  if (!slug) return base || '/';
+  if (!base || base === '/') return `/${slug}`;
+  return `${base}/${slug}`;
 }
 
 export default function SearchAutocomplete({
@@ -29,6 +43,7 @@ export default function SearchAutocomplete({
   className,
   compact = false,
   autoFocus = false,
+  inputId,
 }: Props) {
   const [query, setQuery] = useState(initialQuery);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
@@ -41,97 +56,88 @@ export default function SearchAutocomplete({
       return;
     }
     setLoading(true);
+
+    // Static pages always available (no network) — resilient under concurrent load
+    const staticMapped: Suggestion[] = suggestStaticPages(term, 4).map((h) => ({
+      name: h.name,
+      entity_type: h.entity_type,
+      slug: h.slug,
+      base_route: h.base_route,
+      path: h.path,
+    }));
+
     try {
       // Browser client (async) so Cloudflare runtime env is available
       const supabase = await createBrowserClientAsync();
-      // Use the hybrid rpc if available, else fallback
-      const { data } = await supabase.rpc('search_public', {
-        q: term,
-        filter_type: null,
-        lim: 6,
-      });
+      let mapped: Suggestion[] = [];
 
-      if (data && data.length) {
-        let mapped = data.map((r: any) => ({
-          name: r.name,
-          entity_type: r.entity_type,
-          slug: r.slug,
-          base_route: r.base_route,
-        }));
-
-        // Fetch Sanity suggestions (rich content) with fuzzy tolerance
-        try {
-          const sanitySugs = await searchSanityContent(term, 6);
-          const fuzzyNorm = (sanitySugs || [])
-            .map((r: any) => {
-              const text = `${r.title || r.name || ''} ${r.snippet || ''}`;
-              const sim = wordLikeSimilarity(term, text);
-              if (sim < 0.12) return null;
-              return {
-                name: r.title || r.name || 'Untitled',
-                entity_type: r._type === 'constitutionArticle' ? 'Constitutional Article' : 
-                             r._type === 'presidentialTrip' ? 'Presidential Trip' :
-                             r._type === 'actOfParliament' ? 'Act of Parliament' : 'Content',
-                slug: r.slug || '',
-                base_route: r.base_route || '/',
-              };
-            })
-            .filter(Boolean) as any[];
-
-          // For content-oriented queries (constitution, article, part, preamble, etc.), put Sanity first so it displays well
-          const contentKeywords = ['constitution', 'article', 'part ', 'preamble', 'chapter', 'bill of rights', 'supremacy'];
-          const isContentQuery = contentKeywords.some(k => term.toLowerCase().includes(k));
-          if (isContentQuery && fuzzyNorm.length) {
-            mapped = [...fuzzyNorm, ...mapped].slice(0, 8);
-          } else {
-            mapped = [...mapped, ...fuzzyNorm].slice(0, 8);
-          }
-        } catch {}
-
-        setSuggestions(mapped);
-        setShowSuggestions(true);
-      } else {
-        // Fallback ilike + fuzzy Sanity for typos
-        const { data: fb } = await supabase
-          .from('global_search_view')
-          .select('name, entity_type, slug, base_route')
-          .or(`name.ilike.%${term}%,match_text.ilike.%${term}%`)
-          .limit(6);
-        let combined = fb || [];
-
-        try {
-          const sanitySugs = await searchSanityContent(term, 5);
-          const fuzzyNorm = (sanitySugs || [])
-            .map((r: any) => {
-              const text = `${r.title || r.name || ''} ${r.snippet || ''}`;
-              const sim = wordLikeSimilarity(term, text);
-              if (sim < 0.12) return null;
-              return {
-                name: r.title || r.name || 'Untitled',
-                entity_type: r._type === 'constitutionArticle' ? 'Constitutional Article' : 
-                             r._type === 'presidentialTrip' ? 'Presidential Trip' :
-                             r._type === 'actOfParliament' ? 'Act of Parliament' : 'Content',
-                slug: r.slug || '',
-                base_route: r.base_route || '/',
-              };
-            })
-            .filter(Boolean) as any[];
-
-          // Prioritize Sanity for content queries
-          const contentKeywords = ['constitution', 'article', 'part ', 'preamble', 'chapter', 'bill of rights', 'supremacy'];
-          const isContentQuery = contentKeywords.some(k => term.toLowerCase().includes(k));
-          if (isContentQuery && fuzzyNorm.length) {
-            combined = [...fuzzyNorm, ...combined].slice(0, 8);
-          } else {
-            combined = [...combined, ...fuzzyNorm].slice(0, 8);
-          }
-        } catch {}
-
-        setSuggestions(combined);
-        setShowSuggestions(combined.length > 0);
+      try {
+        const { data } = await supabase.rpc('search_public', {
+          q: term,
+          filter_type: null,
+          lim: 5,
+        });
+        if (data && data.length) {
+          mapped = data.map((r: any) => ({
+            name: r.name,
+            entity_type: r.entity_type,
+            slug: r.slug,
+            base_route: r.base_route,
+          }));
+        } else {
+          const { data: fb } = await supabase
+            .from('global_search_view')
+            .select('name, entity_type, slug, base_route')
+            .or(`name.ilike.%${term}%,match_text.ilike.%${term}%`)
+            .limit(5);
+          mapped = (fb || []).map((r: any) => ({
+            name: r.name,
+            entity_type: r.entity_type,
+            slug: r.slug,
+            base_route: r.base_route,
+          }));
+        }
+      } catch {
+        mapped = [];
       }
-    } catch (e) {
-      setSuggestions([]);
+
+      try {
+        const sanitySugs = await searchSanityContent(term, 4);
+        const fuzzyNorm = (sanitySugs || [])
+          .map((r: any) => {
+            const text = `${r.title || r.name || ''} ${r.snippet || ''}`;
+            const sim = wordLikeSimilarity(term, text);
+            if (sim < 0.12) return null;
+            return {
+              name: r.title || r.name || 'Untitled',
+              entity_type: r._type === 'constitutionArticle' ? 'Constitutional Article' :
+                           r._type === 'presidentialTrip' ? 'Presidential Trip' :
+                           r._type === 'actOfParliament' ? 'Act of Parliament' : 'Content',
+              slug: r.slug || '',
+              base_route: r.base_route || '/',
+            } as Suggestion;
+          })
+          .filter(Boolean) as Suggestion[];
+
+        const contentKeywords = ['constitution', 'article', 'part ', 'preamble', 'chapter', 'bill of rights', 'supremacy'];
+        const isContentQuery = contentKeywords.some(k => term.toLowerCase().includes(k));
+        if (isContentQuery && fuzzyNorm.length) {
+          mapped = [...fuzzyNorm, ...mapped];
+        } else {
+          mapped = [...mapped, ...fuzzyNorm];
+        }
+      } catch {
+        /* Sanity optional */
+      }
+
+      // Static pages first for brand/section queries, then remote
+      const combined = [...staticMapped, ...mapped].slice(0, 8);
+      setSuggestions(combined);
+      setShowSuggestions(combined.length > 0);
+    } catch {
+      // Network failure: still show static page matches
+      setSuggestions(staticMapped);
+      setShowSuggestions(staticMapped.length > 0);
     } finally {
       setLoading(false);
     }
@@ -148,8 +154,7 @@ export default function SearchAutocomplete({
     if (onSelect) {
       onSelect(s);
     } else {
-      // Default: navigate
-      window.location.href = `${s.base_route}/${s.slug}`;
+      window.location.href = suggestionHref(s);
     }
   };
 
@@ -162,10 +167,12 @@ export default function SearchAutocomplete({
   };
 
   return (
-    <div className={`${className} autocomplete-wrapper`}>
+    <div className={`${className || ''} autocomplete-wrapper`.trim()}>
       <form onSubmit={handleSubmit} role="search" className="autocomplete-form">
         <input
+          id={inputId}
           type="search"
+          name="q"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => suggestions.length && setShowSuggestions(true)}
@@ -173,6 +180,8 @@ export default function SearchAutocomplete({
           className={`govuk-input autocomplete-input ${compact ? 'autocomplete-input-compact' : ''}`}
           aria-label="Search"
           autoFocus={autoFocus}
+          autoComplete="off"
+          enterKeyHint="search"
           style={{ 
             flex: 1, 
             borderRight: 'none', 

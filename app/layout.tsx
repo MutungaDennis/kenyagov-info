@@ -121,30 +121,23 @@ export default function RootLayout({
         })};`
       : "";
 
+  // WebSite + SearchAction enables Google’s sitelinks search box when eligible.
+  // Target must match the real site search that returns institutions, laws, pages, etc.
   const websiteSchema = {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
+    '@id': `${SITE_URL}/#website`,
     name: SITE_NAME,
-    alternateName: ['Citizen Guide Kenya', 'citizenguide.ke'],
+    alternateName: ['Citizen Guide Kenya', 'CitizenGuide', 'citizenguide.ke'],
     url: SITE_URL,
     description: DEFAULT_DESCRIPTION,
     inLanguage: 'en-KE',
-    publisher: {
-      '@type': 'Organization',
-      name: SITE_NAME,
-      url: SITE_URL,
-      logo: {
-        '@type': 'ImageObject',
-        url: `${SITE_URL}/logo.webp`,
-        width: 512,
-        height: 512,
-      },
-    },
+    publisher: { '@id': `${SITE_URL}/#organization` },
     potentialAction: {
       '@type': 'SearchAction',
       target: {
         '@type': 'EntryPoint',
-        urlTemplate: `${SITE_URL}/search/all?q={search_term_string}`,
+        urlTemplate: `${SITE_URL}/search?q={search_term_string}`,
       },
       'query-input': 'required name=search_term_string',
     },
@@ -153,15 +146,22 @@ export default function RootLayout({
   const organizationSchema = {
     '@context': 'https://schema.org',
     '@type': 'Organization',
+    '@id': `${SITE_URL}/#organization`,
     name: SITE_NAME,
     url: SITE_URL,
-    logo: `${SITE_URL}/logo.webp`,
+    logo: {
+      '@type': 'ImageObject',
+      url: `${SITE_URL}/logo.webp`,
+      width: 512,
+      height: 512,
+    },
     description:
       'Independent civic technology platform providing structured information on Kenya’s Constitution, government institutions, counties, and public services. Not an official government website.',
     areaServed: {
       '@type': 'Country',
       name: 'Kenya',
     },
+    // Not an official government body — do not claim GovernmentOrganization.
     sameAs: [],
   };
 

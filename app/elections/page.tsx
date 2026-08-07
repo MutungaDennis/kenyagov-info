@@ -14,13 +14,25 @@ const electionTopics = [
   {
     title: "General elections",
     description:
-      "National election timeline, presidential and parliamentary contests, and key dates.",
+      "National election process, presidential and parliamentary contests, and key dates.",
     href: "/elections/general-elections",
+  },
+  {
+    title: "2027 election timeline",
+    description:
+      "Key IEBC milestones for the 10 August 2027 poll — campaign, nominations and deadlines.",
+    href: "/elections/general-elections/timeline",
+  },
+  {
+    title: "2027 operation plan",
+    description:
+      "Full Election Operation Plan calendar — voter registration, nominations, finance, results and petitions.",
+    href: "/elections/general-elections/operation-plan",
   },
   {
     title: "By-elections",
     description:
-      "Scheduled and recent by-elections for parliamentary and county seats.",
+      "Upcoming, happening now and past by-elections for parliamentary and county seats.",
     href: "/elections/by-elections",
   },
   {

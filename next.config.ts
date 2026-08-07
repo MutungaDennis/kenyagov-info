@@ -107,6 +107,13 @@ const nextConfig: NextConfig = {
   // ==========================================
   async redirects() {
     return [
+      // Unified site search (legacy /search/all → GOV.UK-style /search; query string preserved)
+      {
+        source: '/search/all',
+        destination: '/search',
+        permanent: true,
+      },
+
       // ==========================================
       // GOVERNMENT STRUCTURE REORGANIZATION
       // ==========================================

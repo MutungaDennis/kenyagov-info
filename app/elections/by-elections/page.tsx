@@ -1,180 +1,260 @@
+import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import LastUpdated from "@/components/govuk/LastUpdated";
+import TableScroll from "@/components/govuk/TableScroll";
+import type { ByElection } from "@/lib/data/by-elections";
+import {
+  byElectionTitle,
+  daysUntilByElection,
+  formatByElectionDate,
+  getByElectionHighlight,
+  getByElectionStatus,
+  getHappeningByElections,
+  getPastByElections,
+  getUpcomingByElections,
+  type ByElectionStatus,
+} from "@/lib/data/by-elections.utils";
 
-export const revalidate = 86400;
+export const revalidate = 3600;
 
 export const metadata = {
   title: "By-Elections in Kenya",
   description:
-    "Information on upcoming, ongoing, and past by-elections in Kenya including parliamentary and county ward seats.",
+    "Upcoming, happening now, and past by-elections in Kenya — parliamentary and county ward seats. Status updates automatically from poll dates.",
 };
 
+function statusLabel(s: ByElectionStatus): string {
+  if (s === "happening") return "Happening now";
+  if (s === "upcoming") return "Upcoming";
+  return "Past";
+}
+
+function statusTag(s: ByElectionStatus): string {
+  if (s === "happening") return "govuk-tag--green";
+  if (s === "upcoming") return "govuk-tag--blue";
+  return "govuk-tag--grey";
+}
+
+function ByElectionTable({
+  elections,
+  caption,
+}: {
+  elections: ByElection[];
+  caption: string;
+}) {
+  if (elections.length === 0) {
+    return <p className="govuk-body">No by-elections in this list.</p>;
+  }
+
+  return (
+    <TableScroll caption={caption}>
+      <table className="govuk-table">
+        <caption className="govuk-table__caption govuk-visually-hidden">
+          {caption}
+        </caption>
+        <thead className="govuk-table__head">
+          <tr className="govuk-table__row">
+            <th scope="col" className="govuk-table__header">
+              Poll date
+            </th>
+            <th scope="col" className="govuk-table__header">
+              Area
+            </th>
+            <th scope="col" className="govuk-table__header">
+              Seat
+            </th>
+            <th scope="col" className="govuk-table__header">
+              Status
+            </th>
+          </tr>
+        </thead>
+        <tbody className="govuk-table__body">
+          {elections.map((e) => {
+            const st = getByElectionStatus(e);
+            return (
+              <tr key={e.id} className="govuk-table__row">
+                <td className="govuk-table__cell">
+                  {formatByElectionDate(e.date)}
+                </td>
+                <td className="govuk-table__cell">
+                  <strong>{e.area}</strong>
+                  <span className="govuk-body-s govuk-!-display-block">
+                    {e.county} County
+                  </span>
+                </td>
+                <td className="govuk-table__cell">{e.seat}</td>
+                <td className="govuk-table__cell">
+                  <strong className={`govuk-tag ${statusTag(st)}`}>
+                    {statusLabel(st)}
+                  </strong>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </TableScroll>
+  );
+}
+
 export default function ByElectionsPage() {
+  const highlight = getByElectionHighlight();
+  const happening = getHappeningByElections();
+  const upcoming = getUpcomingByElections();
+  const past = getPastByElections();
+  const days =
+    highlight?.status === "upcoming"
+      ? daysUntilByElection(highlight.election)
+      : null;
+
+  const panelTitle =
+    highlight?.status === "happening"
+      ? "By-election happening now"
+      : highlight?.status === "upcoming"
+        ? "Next by-election"
+        : "Most recent by-election";
+
   return (
     <>
-    
-
-      {/* BREADCRUMBS */}
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
-          { text: "Elections", href: "/elections" },
           { text: "Elections", href: "/elections" },
           { text: "By-elections" },
         ]}
       />
 
-      {/* TITLE */}
-      <h1 className="govuk-heading-xl">By-Elections in Kenya</h1>
+      <h1 className="govuk-heading-xl">By-elections in Kenya</h1>
 
       <p className="govuk-body-l">
-        By-elections are held when a seat in Parliament or County Assembly becomes vacant due to
-        death, resignation, appointment, or court nullification.
+        By-elections are held when a seat in Parliament or a County Assembly
+        becomes vacant due to death, resignation, appointment, or court
+        nullification. IEBC is generally required to hold a by-election within
+        90 days of a vacancy being declared.
       </p>
 
-      {/* UPCOMING BY-ELECTION */}
-      <div className="govuk-panel govuk-panel--confirmation govuk-!-margin-bottom-6">
-        <h2 className="govuk-panel__title">Upcoming By-Election</h2>
-        <div className="govuk-panel__body">
-          Ol Kalou Constituency, Nyandarua County
-          <br />
-          <strong>Thursday, 16 July 2026</strong>
-          <br />
-          Member of National Assembly
+      <p className="govuk-body">
+        Lists below update automatically: once a poll date has passed, the seat
+        moves from <strong>Upcoming</strong> to <strong>Past</strong>. Confirm
+        critical details with{" "}
+        <Link href="/government/institutions/iebc" className="govuk-link">
+          IEBC
+        </Link>{" "}
+        and the Kenya Gazette.
+      </p>
+
+      {/* Highlight — same idea as ASK shows / national events */}
+      {highlight && (
+        <div
+          className={
+            highlight.status === "happening"
+              ? "govuk-panel govuk-panel--confirmation govuk-!-margin-bottom-6"
+              : highlight.status === "upcoming"
+                ? "app-next-holiday-panel govuk-!-margin-bottom-6"
+                : "govuk-inset-text govuk-!-margin-bottom-6"
+          }
+        >
+          <h2
+            className={
+              highlight.status === "happening"
+                ? "govuk-panel__title"
+                : "govuk-heading-m govuk-!-margin-bottom-2"
+            }
+          >
+            {panelTitle}
+          </h2>
+          <div
+            className={
+              highlight.status === "happening"
+                ? "govuk-panel__body"
+                : "govuk-body govuk-!-margin-bottom-0"
+            }
+          >
+            <strong>{byElectionTitle(highlight.election)}</strong>
+            <br />
+            {highlight.election.seat}
+            <br />
+            <strong>{formatByElectionDate(highlight.election.date)}</strong>
+            {days != null && days > 0 && (
+              <>
+                <br />
+                <span className="govuk-body-s">
+                  {days === 1 ? "1 day" : `${days} days`} until polling day
+                </span>
+              </>
+            )}
+            {highlight.election.reason && (
+              <>
+                <br />
+                <span className="govuk-body-s">
+                  {highlight.election.reason}
+                </span>
+              </>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* RECENTLY CONCLUDED */}
-      <section className="govuk-!-margin-top-6">
-        <h2 className="govuk-heading-l">Recently Concluded By-Elections</h2>
+      {happening.length > 0 && (
+        <section className="govuk-!-margin-bottom-8">
+          <h2 className="govuk-heading-l">Happening now</h2>
+          <ByElectionTable
+            elections={happening}
+            caption="By-elections on polling day"
+          />
+        </section>
+      )}
 
+      <section className="govuk-!-margin-bottom-8">
+        <h2 className="govuk-heading-l">Upcoming by-elections</h2>
+        {upcoming.length === 0 ? (
+          <p className="govuk-body">
+            No upcoming by-elections are listed in our calendar. When IEBC
+            gazettes new polls, they will appear here automatically once added
+            to the site data.
+          </p>
+        ) : (
+          <ByElectionTable
+            elections={upcoming}
+            caption="Upcoming by-elections"
+          />
+        )}
+      </section>
+
+      <section className="govuk-!-margin-bottom-8">
+        <h2 className="govuk-heading-l">Past by-elections</h2>
         <p className="govuk-body">
-          Multiple by-elections were held on <strong>14 May 2026</strong> to fill vacancies
-          resulting from deaths of elected leaders.
+          Most recent first. Includes parliamentary and county assembly (MCA)
+          seats after their poll date has passed.
         </p>
+        <ByElectionTable elections={past} caption="Past by-elections" />
+      </section>
 
+      <section className="govuk-!-margin-bottom-8">
+        <h2 className="govuk-heading-m">Related</h2>
         <ul className="govuk-list govuk-list--bullet">
           <li>
-            <strong>Emurua Dikirr Constituency (Narok County)</strong> — Member of National Assembly seat
+            <Link href="/elections/general-elections" className="govuk-link">
+              General elections
+            </Link>
           </li>
           <li>
-            <strong>Porro Ward (Samburu County)</strong> — Member of County Assembly (MCA)
+            <Link
+              href="/elections/general-elections/timeline"
+              className="govuk-link"
+            >
+              2027 general election timeline (IEBC)
+            </Link>
           </li>
           <li>
-            <strong>Endo Ward (Elgeyo Marakwet County)</strong> — Member of County Assembly (MCA)
+            <Link href="/government/people" className="govuk-link">
+              Government people directory
+            </Link>
           </li>
         </ul>
       </section>
 
-      {/* PARLIAMENTARY BY-ELECTIONS */}
-      <section className="govuk-!-margin-top-9">
-        <h2 className="govuk-heading-l">
-          Parliamentary By-Elections (National Assembly & Senate)
-        </h2>
-
-        <p className="govuk-body">
-          These by-elections occur when a Member of Parliament or Senator vacates office due to
-          death, appointment, resignation, or court ruling.
-        </p>
-
-        <details className="govuk-details" open>
-          <summary className="govuk-details__summary">
-            <span className="govuk-details__summary-text">2025–2026 Parliamentary By-Elections</span>
-          </summary>
-
-          <div className="govuk-details__text">
-            <ul className="govuk-list govuk-list--bullet">
-              <li>Kasipul Constituency (2025) — triggered by death of MP Charles Ong’ondo Were</li>
-              <li>Baringo North Constituency (2025) — death of MP William Cheptumo</li>
-              <li>Malava Constituency (2025) — death of MP Malulu Injendi</li>
-              <li>Banissa Constituency (2023) — death of MP Kulow Maalim Hassan</li>
-              <li>Isiolo South Constituency (2026) — death of MP Tubi Bidu Mohamed</li>
-              <li>Ol Kalou Constituency (2026) — vacancy following death of MP David Njuguna Kiaraho</li>
-            </ul>
-          </div>
-        </details>
-      </section>
-
-      {/* COUNTY WARD BY-ELECTIONS */}
-      <section className="govuk-!-margin-top-9">
-        <h2 className="govuk-heading-l">
-          County Assembly (MCA) By-Elections
-        </h2>
-
-        <p className="govuk-body">
-          Ward-level by-elections are common and occur due to vacancies in County Assemblies.
-        </p>
-
-        <details className="govuk-details" open>
-          <summary className="govuk-details__summary">
-            <span className="govuk-details__summary-text">Recent Ward By-Elections</span>
-          </summary>
-
-          <div className="govuk-details__text">
-            <ul className="govuk-list govuk-list--bullet">
-              <li>Kariobangi North Ward (2025) — Nairobi County</li>
-              <li>Chewani Ward (2025) — Tana River County</li>
-              <li>Kabuchai Ward (2025) — Bungoma County</li>
-              <li>Porro Ward (2026) — Samburu County</li>
-              <li>Endo Ward (2026) — Elgeyo Marakwet County</li>
-              <li>West Kabras Ward (2026) — Kakamega County</li>
-            </ul>
-          </div>
-        </details>
-      </section>
-
-      {/* HISTORICAL OVERVIEW */}
-      <section className="govuk-!-margin-top-9">
-        <h2 className="govuk-heading-l">Historical By-Elections (2022–2025)</h2>
-
-        <p className="govuk-body">
-          Following the 2022 General Election, Kenya held multiple by-elections across Parliament
-          and County Assemblies due to vacancies, resignations, and court rulings.
-        </p>
-
-        <details className="govuk-details">
-          <summary className="govuk-details__summary">
-            <span className="govuk-details__summary-text">Key National By-Elections</span>
-          </summary>
-
-          <div className="govuk-details__text">
-            <ul className="govuk-list govuk-list--bullet">
-              <li>8 Dec 2022 — Bungoma Senatorial race</li>
-              <li>5 Jan 2023 — Elgeyo Marakwet Senatorial by-election</li>
-              <li>27 Nov 2025 — Major consolidated by-election exercise (24+ seats)</li>
-              <li>Magarini Constituency (2025) — court nullification case</li>
-            </ul>
-          </div>
-        </details>
-      </section>
-
-      {/* LEGAL BASIS */}
-      <section className="govuk-!-margin-top-9">
-        <h2 className="govuk-heading-l">Legal Basis for By-Elections</h2>
-
-        <ul className="govuk-list govuk-list--bullet">
-          <li>Constitution of Kenya (2010) — Articles 101, 103, 180</li>
-          <li>Elections Act (2011)</li>
-          <li>IEBC Act</li>
-          <li>Political Parties Act (Cap. 7D)</li>
-          <li>Electoral Code of Conduct Regulations</li>
-        </ul>
-
-        <p className="govuk-body-s govuk-hint">
-          IEBC is required to hold a by-election within 90 days of a vacancy being declared.
-        </p>
-      </section>
-
-      {/* LAST UPDATED */}
-      <LastUpdated
-        lastUpdated={new Date().toISOString()}
-        published={new Date("2026-01-01").toISOString()}
-      />
-
-      {/* FEEDBACK */}
-
-    
-  
+      <LastUpdated published="2026-05-01" lastUpdated="2026-08-07" />
     </>
-);
+  );
 }

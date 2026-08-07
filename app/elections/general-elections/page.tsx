@@ -2,9 +2,17 @@
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import LastUpdated from "@/components/govuk/LastUpdated";
+import ExternalLink from "@/components/site/ExternalLink";
 import { Metadata } from "next";
+import { GENERAL_ELECTION_2027 } from "@/lib/data/election-timeline";
+import {
+  formatTimelineDate,
+  getMilestoneStatus,
+  getNextGeneralElectionDay,
+  getTimelineHighlight,
+} from "@/lib/data/election-timeline.utils";
 
-export const revalidate = 86400;
+export const revalidate = 3600;
 
 
 export const metadata: Metadata = {
@@ -14,6 +22,12 @@ export const metadata: Metadata = {
 };
 
 export default function GeneralElectionsPage() {
+  const electionDay = getNextGeneralElectionDay();
+  const nextMilestone = getTimelineHighlight(GENERAL_ELECTION_2027.year);
+  const electionStatus = electionDay
+    ? getMilestoneStatus(electionDay)
+    : "upcoming";
+
   return (
     <>
     
@@ -31,13 +45,37 @@ export default function GeneralElectionsPage() {
             
             <h1 className="govuk-heading-xl">General elections in Kenya</h1>
 
-            {/* Next election panel */}
+            {/* Next election panel — date-aware */}
             <div className="app-next-election-panel govuk-!-margin-bottom-6">
-              <h2 className="govuk-heading-m govuk-!-margin-bottom-2">Next general election</h2>
-              <p className="govuk-heading-l govuk-!-margin-bottom-1">August 2027</p>
-              <p className="govuk-body govuk-!-margin-bottom-0">
-                Held on the second Tuesday of August every 5 years, as required by the Constitution of Kenya.
+              <h2 className="govuk-heading-m govuk-!-margin-bottom-2">
+                {electionStatus === "past"
+                  ? "Most recent general election"
+                  : electionStatus === "happening"
+                    ? "General election happening now"
+                    : "Next general election"}
+              </h2>
+              <p className="govuk-heading-l govuk-!-margin-bottom-1">
+                {electionDay
+                  ? formatTimelineDate(electionDay.date)
+                  : "10 August 2027"}
               </p>
+              <p className="govuk-body govuk-!-margin-bottom-2">
+                Held on the second Tuesday of August every 5 years, as required
+                by the Constitution of Kenya.
+              </p>
+              {nextMilestone && nextMilestone.milestone.kind !== "election-day" && (
+                <p className="govuk-body-s govuk-!-margin-bottom-0 app-next-election-panel__meta">
+                  Next calendar milestone:{" "}
+                  <strong>{nextMilestone.milestone.title}</strong>
+                  {" — "}
+                  <Link
+                    href="/elections/general-elections/timeline"
+                    className="govuk-link app-next-election-panel__link"
+                  >
+                    full IEBC timeline
+                  </Link>
+                </p>
+              )}
             </div>
 
             <p className="govuk-body-l">
@@ -161,7 +199,27 @@ export default function GeneralElectionsPage() {
             <section id="election-timelines" className="govuk-!-margin-bottom-8">
               <h2 className="govuk-heading-l">Election timelines</h2>
               <p className="govuk-body">
-                Key milestones in the general election process:
+                For the {GENERAL_ELECTION_2027.label}, IEBC has published official
+                milestones — public officer resignation, party primaries,
+                nominations, campaign period (29 May–7 August 2027), election
+                agents, and polling day — plus a full Election Operation Plan
+                with every activity from voter registration through petitions.
+              </p>
+              <p className="govuk-body">
+                <Link
+                  href="/elections/general-elections/timeline"
+                  className="govuk-button govuk-!-margin-bottom-2"
+                >
+                  View key 2027 IEBC milestones
+                </Link>
+              </p>
+              <p className="govuk-body">
+                <Link
+                  href="/elections/general-elections/operation-plan"
+                  className="govuk-button govuk-button--secondary govuk-!-margin-bottom-2"
+                >
+                  Full Election Operation Plan timelines
+                </Link>
               </p>
               <ul className="govuk-list govuk-list--bullet">
                 <li>voter registration updates and verification</li>
@@ -172,7 +230,12 @@ export default function GeneralElectionsPage() {
                 <li>announcement of results</li>
               </ul>
               <p className="govuk-body-s govuk-!-margin-top-4">
-                Election laws must be enacted or reviewed at least one year before a general election.
+                Election laws must be enacted or reviewed at least one year before
+                a general election. Source:{" "}
+                <ExternalLink href={GENERAL_ELECTION_2027.sourceUrl}>
+                  IEBC official timeline PDF
+                </ExternalLink>
+                .
               </p>
             </section>
 
@@ -428,6 +491,22 @@ export default function GeneralElectionsPage() {
               <nav role="navigation">
                 <ul className="govuk-list govuk-list--spaced">
                   <li>
+                    <Link
+                      href="/elections/general-elections/timeline"
+                      className="govuk-link"
+                    >
+                      2027 key election milestones
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href="/elections/general-elections/operation-plan"
+                      className="govuk-link"
+                    >
+                      2027 Election Operation Plan
+                    </Link>
+                  </li>
+                  <li>
                     <Link href="/elections/political-parties" className="govuk-link">
                       Political parties
                     </Link>
@@ -501,7 +580,38 @@ export default function GeneralElectionsPage() {
           line-height: 1.2;
         }
 
+        @media (max-width: 40.05em) {
+          .app-next-election-panel {
+            padding: 16px;
+          }
+          .app-next-election-panel .govuk-heading-l {
+            font-size: 1.5rem;
+          }
+        }
+
         .app-next-election-panel .govuk-body {
+          color: #ffffff;
+        }
+
+        /* Links on green: yellow for WCAG contrast on #00703c (dark green) */
+        .app-next-election-panel__link {
+          color: #ffe066 !important;
+          text-decoration: underline;
+          text-underline-offset: 0.15em;
+          font-weight: 700;
+        }
+        .app-next-election-panel__link:hover,
+        .app-next-election-panel__link:active {
+          color: #ffffff !important;
+        }
+        .app-next-election-panel__link:focus {
+          color: #0b0c0c !important;
+          background-color: #ffdd00;
+          box-shadow: 0 -2px #ffdd00, 0 4px #0b0c0c;
+          outline: 3px solid transparent;
+          text-decoration: none;
+        }
+        .app-next-election-panel__meta {
           color: #ffffff;
         }
       `}</style>

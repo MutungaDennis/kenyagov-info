@@ -1,0 +1,320 @@
+/**
+ * Static high-value pages for site search (GOV.UK-style).
+ * Pure data — safe for concurrent Cloudflare Workers (no shared mutable state).
+ * Complements Supabase/Sanity so brand and section queries always hit real pages.
+ */
+
+export type SiteSearchPage = {
+  /** Page title (shown in results) */
+  title: string;
+  /** Absolute path on this site */
+  path: string;
+  /** Short description */
+  snippet: string;
+  /** Extra match tokens (acronyms, aliases) */
+  keywords: string[];
+  /** Facet label */
+  type: string;
+};
+
+/**
+ * Curated index of key public pages — sitelink-friendly destinations first.
+ * Keep titles concise and descriptive (good for Google sitelinks eligibility).
+ */
+export const SITE_SEARCH_PAGES: SiteSearchPage[] = [
+  // Core hubs (sitelink candidates)
+  {
+    title: "Services",
+    path: "/services",
+    snippet: "Find public services and how to use them.",
+    keywords: ["service", "public services", "government services"],
+    type: "Page",
+  },
+  {
+    title: "Popular services",
+    path: "/services/popular",
+    snippet: "Most-used government services and informational guides.",
+    keywords: ["popular", "common services", "passport", "id", "kra"],
+    type: "Page",
+  },
+  {
+    title: "Services A to Z",
+    path: "/services/a-z",
+    snippet: "Alphabetical list of services and guides.",
+    keywords: ["a-z", "directory", "index"],
+    type: "Page",
+  },
+  {
+    title: "Topics",
+    path: "/topics",
+    snippet: "Browse government information by topic.",
+    keywords: ["topics", "browse"],
+    type: "Page",
+  },
+  {
+    title: "Government of Kenya",
+    path: "/government",
+    snippet: "Presidency, Cabinet, Parliament, Judiciary, counties and public institutions.",
+    keywords: ["government hub", "executive", "state"],
+    type: "Page",
+  },
+  {
+    title: "How government works",
+    path: "/how-government-works",
+    snippet: "Plain-language overview of Kenya’s system of government.",
+    keywords: ["how government works", "structure", "arms of government"],
+    type: "Page",
+  },
+  {
+    title: "Constitution of Kenya",
+    path: "/constitution",
+    snippet: "The Constitution of Kenya, 2010 — chapters and articles.",
+    keywords: ["constitution", "2010", "bill of rights", "katiba"],
+    type: "Page",
+  },
+  {
+    title: "Elections and voting",
+    path: "/elections",
+    snippet: "General elections, by-elections, voter registration, parties and IEBC.",
+    keywords: ["elections", "voting", "poll", "iebc"],
+    type: "Page",
+  },
+  {
+    title: "General elections",
+    path: "/elections/general-elections",
+    snippet: "How general elections work and key dates for the next poll.",
+    keywords: ["general election", "2027", "presidential", "august"],
+    type: "Page",
+  },
+  {
+    title: "2027 General Election timeline",
+    path: "/elections/general-elections/timeline",
+    snippet: "Key IEBC legal milestones for the Tuesday 10 August 2027 General Election.",
+    keywords: [
+      "2027",
+      "timeline",
+      "milestones",
+      "campaign period",
+      "nominations",
+      "election day",
+    ],
+    type: "Page",
+  },
+  {
+    title: "2027 Election Operation Plan timelines",
+    path: "/elections/general-elections/operation-plan",
+    snippet:
+      "Full IEBC Election Operation Plan 2025–2027 — voter registration, nominations, results and more.",
+    keywords: [
+      "eop",
+      "operation plan",
+      "implementation timelines",
+      "voter registration",
+      "campaign finance",
+    ],
+    type: "Page",
+  },
+  {
+    title: "By-elections",
+    path: "/elections/by-elections",
+    snippet: "Upcoming, happening now and past by-elections.",
+    keywords: ["by-election", "by election", "byelection"],
+    type: "Page",
+  },
+  {
+    title: "Voter registration",
+    path: "/elections/voter-registration",
+    snippet: "How to register or check your voter registration with IEBC.",
+    keywords: ["register to vote", "cvr", "ecvr", "voter card"],
+    type: "Page",
+  },
+  {
+    title: "Polling stations",
+    path: "/elections/polling-stations",
+    snippet: "Find polling stations by county, constituency and ward.",
+    keywords: ["polling station", "polling centre", "where to vote"],
+    type: "Page",
+  },
+  {
+    title: "Political parties",
+    path: "/elections/political-parties",
+    snippet: "Registered political parties in Kenya.",
+    keywords: ["parties", "orpp", "party membership"],
+    type: "Page",
+  },
+  {
+    title: "County governments",
+    path: "/government/counties",
+    snippet: "The 47 county governments, governors and devolution.",
+    keywords: ["counties", "devolution", "county"],
+    type: "Page",
+  },
+  {
+    title: "Find your representatives",
+    path: "/find-your-representatives",
+    snippet: "Who represents you — MPs, senators, governors and MCAs.",
+    keywords: ["mp", "senator", "mca", "representative", "my mp"],
+    type: "Page",
+  },
+  {
+    title: "Government officials",
+    path: "/government/people",
+    snippet: "Leaders and public officers across national and county government.",
+    keywords: ["people", "leaders", "officials", "public officers"],
+    type: "Page",
+  },
+  {
+    title: "Public institutions",
+    path: "/government/institutions",
+    snippet: "Ministries, commissions, state corporations and agencies.",
+    keywords: ["institutions", "ministry", "commission", "agency", "parastatal"],
+    type: "Page",
+  },
+  {
+    title: "The Cabinet",
+    path: "/government/cabinet",
+    snippet: "Cabinet Secretaries and the National Executive.",
+    keywords: ["cabinet", "minister", "cabinet secretary"],
+    type: "Page",
+  },
+  {
+    title: "Presidency",
+    path: "/government/presidency",
+    snippet: "Office of the President of the Republic of Kenya.",
+    keywords: ["president", "state house", "executive"],
+    type: "Page",
+  },
+  {
+    title: "Parliament",
+    path: "/government/legislature",
+    snippet: "National Assembly, Senate, Hansard and parliamentary business.",
+    keywords: ["parliament", "national assembly", "senate", "legislature"],
+    type: "Page",
+  },
+  {
+    title: "The Judiciary",
+    path: "/government/judiciary",
+    snippet: "Courts and judicial administration in Kenya.",
+    keywords: ["judiciary", "courts", "supreme court", "judge"],
+    type: "Page",
+  },
+  {
+    title: "Acts of Parliament",
+    path: "/acts/parliament",
+    snippet: "Browse Acts passed by the Parliament of Kenya.",
+    keywords: ["acts", "laws", "legislation", "statute"],
+    type: "Page",
+  },
+  {
+    title: "Guides",
+    path: "/guides",
+    snippet: "Step-by-step life-event guides.",
+    keywords: ["guide", "how to", "life event"],
+    type: "Page",
+  },
+  {
+    title: "eCitizen explained",
+    path: "/ecitizen",
+    snippet: "What eCitizen is and how digital government services work.",
+    keywords: ["ecitizen", "e-citizen", "online services"],
+    type: "Page",
+  },
+  {
+    title: "Huduma Centres",
+    path: "/huduma-centres",
+    snippet: "One-stop service centres for government services.",
+    keywords: ["huduma", "huduma centre", "service centre"],
+    type: "Page",
+  },
+  {
+    title: "Open data",
+    path: "/open-data",
+    snippet: "Datasets and downloads about government, counties and elections.",
+    keywords: ["open data", "dataset", "download", "csv"],
+    type: "Page",
+  },
+  {
+    title: "Contact government",
+    path: "/contact-government",
+    snippet: "How to contact public offices and use official channels.",
+    keywords: ["contact", "complain", "write to"],
+    type: "Page",
+  },
+  {
+    title: "Scams and fake websites",
+    path: "/scams",
+    snippet: "How to spot government impersonation and fake sites.",
+    keywords: ["scam", "fraud", "fake", "phishing"],
+    type: "Page",
+  },
+  {
+    title: "Search this website",
+    path: "/search",
+    snippet: "Search institutions, leaders, counties, laws, guides and pages.",
+    keywords: ["search", "find", "lookup"],
+    type: "Page",
+  },
+  {
+    title: "About this website",
+    path: "/about",
+    snippet: "About CitizenGuide.KE — independent civic information, not an official government website.",
+    keywords: ["about", "citizenguide", "who we are"],
+    type: "Page",
+  },
+  {
+    title: "Help",
+    path: "/help",
+    snippet: "Help using CitizenGuide.KE.",
+    keywords: ["help", "support", "faq"],
+    type: "Page",
+  },
+  {
+    title: "Society and culture",
+    path: "/society-and-culture",
+    snippet: "Holidays, heritage, languages and national symbols.",
+    keywords: ["culture", "holidays", "heritage", "languages"],
+    type: "Page",
+  },
+  {
+    title: "National events",
+    path: "/national-events",
+    snippet: "ASK shows, festivals and national civic events.",
+    keywords: ["events", "ask", "festival"],
+    type: "Page",
+  },
+  {
+    title: "Documents",
+    path: "/documents",
+    snippet: "Vision 2030, sessional papers and key public documents.",
+    keywords: ["documents", "vision 2030", "sessional paper"],
+    type: "Page",
+  },
+  {
+    title: "Kenya Gazette",
+    path: "/kenya-gazette",
+    snippet: "What the Kenya Gazette is and how to use it.",
+    keywords: ["gazette", "kenya gazette", "legal notice"],
+    type: "Page",
+  },
+  {
+    title: "Access to information",
+    path: "/access-to-information",
+    snippet: "Your rights under the Access to Information Act.",
+    keywords: ["ati", "access to information", "foia"],
+    type: "Page",
+  },
+  {
+    title: "IEBC offices",
+    path: "/elections/iebc-offices",
+    snippet: "Independent Electoral and Boundaries Commission constituency offices.",
+    keywords: ["iebc office", "constituency office"],
+    type: "Page",
+  },
+  {
+    title: "Registered voters data",
+    path: "/elections/registered-voters",
+    snippet: "Registered voter statistics by area.",
+    keywords: ["registered voters", "voter roll", "register of voters"],
+    type: "Page",
+  },
+];

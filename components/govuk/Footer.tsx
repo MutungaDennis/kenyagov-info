@@ -52,6 +52,14 @@ export default function GovUKFooter() {
                 </Link>
               </li>
               <li className="govuk-footer__list-item">
+                <Link
+                  href="/elections/general-elections/timeline"
+                  className="govuk-footer__link"
+                >
+                  2027 election timeline
+                </Link>
+              </li>
+              <li className="govuk-footer__list-item">
                 <Link href="/guides" className="govuk-footer__link">
                   Guides
                 </Link>
@@ -166,6 +174,11 @@ export default function GovUKFooter() {
               Help
             </h2>
             <ul className="govuk-footer__list">
+              <li className="govuk-footer__list-item">
+                <Link href="/search" className="govuk-footer__link">
+                  Search this website
+                </Link>
+              </li>
               <li className="govuk-footer__list-item">
                 <Link href="/help" className="govuk-footer__link">
                   Help and support

@@ -313,6 +313,16 @@ export default function SitemapPage() {
                 <Link href="/elections/general-elections" className="govuk-link">General Elections</Link>
               </li>
               <li>
+                <Link href="/elections/general-elections/timeline" className="govuk-link">
+                  2027 General Election timeline
+                </Link>
+              </li>
+              <li>
+                <Link href="/elections/general-elections/operation-plan" className="govuk-link">
+                  2027 Election Operation Plan timelines
+                </Link>
+              </li>
+              <li>
                 <Link href="/elections/by-elections" className="govuk-link">By-Elections</Link>
               </li>
               <li>
@@ -392,8 +402,8 @@ export default function SitemapPage() {
             <h2 className="govuk-heading-m govuk-!-margin-top-6 govuk-!-margin-bottom-3">Search and Data</h2>
             <ul className="govuk-list govuk-list--spaced">
               <li>
-                <Link href="/search/all" className="govuk-link govuk-!-font-weight-bold govuk-!-font-size-19">Search All Government Content</Link>
-                <p className="govuk-body-s govuk-!-margin-top-1 govuk-text-secondary">Search across all government documents, institutions, and officials.</p>
+                <Link href="/search" className="govuk-link govuk-!-font-weight-bold govuk-!-font-size-19">Search this website</Link>
+                <p className="govuk-body-s govuk-!-margin-top-1 govuk-text-secondary">Search pages, institutions, leaders, counties, laws, elections and guides.</p>
               </li>
               <li>
                 <Link href="/open-data" className="govuk-link govuk-!-font-weight-bold govuk-!-font-size-19">Open Data</Link>
