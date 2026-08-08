@@ -331,13 +331,14 @@ export const INSTITUTION_STATUS_OPTIONS = [
 /** Still operating, but a rename/merge/restructure is planned or announced */
 export const INSTITUTION_STATUS_EARMARKED = "Earmarked for change";
 
-/** Default for new records: Unverified until an admin marks Verified */
-export const VERIFICATION_STATUS_OPTIONS = [
-  "Unverified",
-  "Verified",
-  "Pending",
-  "Needs review",
-] as const;
+/** Shared with leaders / MCAs — see lib/verification.ts */
+export {
+  VERIFICATION_STATUS_OPTIONS,
+  DEFAULT_VERIFICATION_STATUS,
+  normalizeVerificationStatus,
+  verificationTagClass,
+  VERIFICATION_FIELD_HINT,
+} from "@/lib/verification";
 
 /**
  * Statuses that mean the organisation no longer operates under this identity.

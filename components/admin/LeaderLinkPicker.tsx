@@ -129,10 +129,10 @@ export default function LeaderLinkPicker({
             padding: 0,
           }}
         >
-          {results.map((r) => {
+          {results.map((r, idx) => {
             const name = leaderDisplayName(r);
             return (
-              <li key={r.id} style={{ margin: 0 }}>
+              <li key={`${r.id}-${idx}`} style={{ margin: 0 }}>
                 <button
                   type="button"
                   style={{

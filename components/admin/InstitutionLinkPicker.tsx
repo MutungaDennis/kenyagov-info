@@ -118,8 +118,8 @@ export default function InstitutionLinkPicker({
             padding: 0,
           }}
         >
-          {results.map((r) => (
-            <li key={r.id} style={{ margin: 0 }}>
+          {results.map((r, idx) => (
+            <li key={`${r.id}-${idx}`} style={{ margin: 0 }}>
               <button
                 type="button"
                 style={{

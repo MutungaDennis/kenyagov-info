@@ -41,6 +41,7 @@ function buildFullHierarchy(
   searchTerm: string
 ): InstitutionNode[] {
   const term = searchTerm.toLowerCase();
+  const byId = new Map(all.map((i) => [i.id, i]));
 
   const matchesSearch = (inst: Institution): boolean => {
     if (!term) return true;
@@ -55,6 +56,20 @@ function buildFullHierarchy(
     
     const children = all.filter(c => c.parent_institution_id === inst.id);
     return children.some(matchesSearch);
+  };
+
+  /** How deep an institution sits in the parent chain (ancestors first when sorting). */
+  const ancestryDepth = (inst: Institution): number => {
+    let d = 0;
+    let cur: Institution | undefined = inst;
+    const seen = new Set<string>();
+    while (cur?.parent_institution_id && !seen.has(cur.id)) {
+      seen.add(cur.id);
+      cur = byId.get(cur.parent_institution_id);
+      d += 1;
+      if (d > 40) break;
+    }
+    return d;
   };
 
   const getDescendants = (parentId: string): InstitutionNode[] => {
@@ -74,20 +89,24 @@ function buildFullHierarchy(
       });
   };
 
-  return all
+  // Ancestors first so uniqueRoots can mark descendants before they become duplicate roots
+  const candidates = all
     .filter((inst) => rootFilter(inst))
     .filter((inst) => !term || matchesSearch(inst))
-    .map((inst) => ({
-      ...inst,
-      children: getDescendants(inst.id),
-    }))
     .sort((a, b) => {
-      const aActive = !a.status || a.status.toLowerCase() === 'active';
-      const bActive = !b.status || b.status.toLowerCase() === 'active';
+      const depthDiff = ancestryDepth(a) - ancestryDepth(b);
+      if (depthDiff !== 0) return depthDiff;
+      const aActive = !a.status || a.status.toLowerCase() === "active";
+      const bActive = !b.status || b.status.toLowerCase() === "active";
       if (aActive && !bActive) return -1;
       if (!aActive && bActive) return 1;
       return a.name.localeCompare(b.name);
     });
+
+  return candidates.map((inst) => ({
+    ...inst,
+    children: getDescendants(inst.id),
+  }));
 }
 
 function flattenTree(nodes: InstitutionNode[], depth = 0): (InstitutionNode & { depth: number })[] {
@@ -591,10 +610,13 @@ export default function GovernmentInstitutionsPage() {
                           </h3>
                         </td>
                       </tr>
-                      {group.institutions.flatMap((inst) => {
+                      {group.institutions.flatMap((inst, rootIndex) => {
                         const flat = flattenTree([inst]);
-                        return flat.map((node) => (
-                          <tr key={node.id} className="govuk-table__row">
+                        return flat.map((node, rowIndex) => (
+                          <tr
+                            key={`${group.slug}-${rootIndex}-${node.id}-${node.depth}-${rowIndex}`}
+                            className="govuk-table__row"
+                          >
                             <td className="govuk-table__cell">
                               {node.depth > 0 && (
                                 <span className="govuk-!-margin-right-1 govuk-text-secondary">

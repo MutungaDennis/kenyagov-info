@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { normalizeVerificationStatus } from "@/lib/verification";
 
 // ✅ UUID validation helper
 const isValidUUID = (value: any): boolean => {
@@ -64,6 +65,15 @@ export async function PUT(
     const patch: Record<string, unknown> = { ...body };
     delete patch.id;
     delete patch.created_at;
+
+    if ("verification_status" in patch) {
+      patch.verification_status = normalizeVerificationStatus(
+        patch.verification_status,
+      );
+      if (patch.verification_status === "Verified") {
+        patch.verified_at = new Date().toISOString();
+      }
+    }
 
     // Sanitize UUID fields only when present
     const uuidFields = ["ward_id", "party_id", "successor_mca_id", "county_id"];
@@ -141,12 +151,29 @@ export async function PUT(
       );
     }
 
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from("mcas")
       .update(patch)
       .eq("id", id)
       .select()
       .single();
+
+    // Migration not applied yet — drop verification columns and retry
+    if (
+      error &&
+      /verification_status|verified_at/i.test(error.message)
+    ) {
+      delete patch.verification_status;
+      delete patch.verified_at;
+      const retry = await supabase
+        .from("mcas")
+        .update(patch)
+        .eq("id", id)
+        .select()
+        .single();
+      data = retry.data;
+      error = retry.error;
+    }
 
     if (error) {
       console.error("Supabase PUT error:", error);

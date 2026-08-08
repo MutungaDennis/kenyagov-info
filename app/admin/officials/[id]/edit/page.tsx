@@ -36,6 +36,12 @@ import {
   parseSocialLinks,
   type SocialLink,
 } from "@/lib/leaders/titles-social";
+import {
+  DEFAULT_VERIFICATION_STATUS,
+  VERIFICATION_FIELD_HINT,
+  VERIFICATION_STATUS_OPTIONS,
+  normalizeVerificationStatus,
+} from "@/lib/verification";
 
 // 🚀 Import the IndexNow helper
 import { triggerIndexNow } from "@/lib/indexnow";
@@ -57,6 +63,8 @@ type FormState = {
   phone: string;
   official_website: string;
   is_active: boolean;
+  /** Editorial double-check — default Unverified */
+  verification_status: string;
 };
 
 type RoleForm = {
@@ -130,6 +138,7 @@ const emptyForm: FormState = {
   phone: "",
   official_website: "",
   is_active: true,
+  verification_status: "Unverified",
 };
 
 const emptyRole: RoleForm = {
@@ -327,8 +336,16 @@ export default function EditOfficialPage({
         if (batch.length < PAGE || all.length >= total) break;
         offset += batch.length;
       }
-      setSnapOrgCatalogue(all);
-      return all;
+      // Dedupe by id (overlapping pages / API quirks must not break React keys)
+      const seen = new Set<string>();
+      const unique = all.filter((row) => {
+        const id = String(row.id ?? "");
+        if (!id || seen.has(id)) return false;
+        seen.add(id);
+        return true;
+      });
+      setSnapOrgCatalogue(unique);
+      return unique;
     } catch {
       return snapOrgCatalogue || [];
     } finally {
@@ -466,6 +483,9 @@ export default function EditOfficialPage({
         phone: d.phone || "",
         official_website: d.official_website || "",
         is_active: d.is_active !== false,
+        verification_status: normalizeVerificationStatus(
+          d.verification_status ?? DEFAULT_VERIFICATION_STATUS,
+        ),
       });
       setDisplayFullName(d.full_name || "");
       setNameTitles(parseNameTitles(d.name_titles ?? d.honorifics));
@@ -709,6 +729,9 @@ export default function EditOfficialPage({
         phone: form.phone.trim() || null,
         official_website: form.official_website.trim() || null,
         is_active: form.is_active,
+        verification_status: normalizeVerificationStatus(
+          form.verification_status,
+        ),
         name_titles: nameTitles,
         national_honours: nationalHonours,
         social_media: socialLinks.filter((l) => l.platform && l.url.trim()),
@@ -1773,8 +1796,8 @@ export default function EditOfficialPage({
                   {snapOrgResults.length === 1 ? "" : "s"}
                   {snapOrgSearch.trim() ? " matching your search" : ""}
                 </li>
-                {snapOrgResults.map((i) => (
-                  <li key={String(i.id)} style={{ margin: 0 }}>
+                {snapOrgResults.map((i, idx) => (
+                  <li key={`${String(i.id)}-${idx}`} style={{ margin: 0 }}>
                     <button
                       type="button"
                       style={{
@@ -2121,6 +2144,29 @@ export default function EditOfficialPage({
                 Active in directory
               </label>
             </div>
+          </div>
+
+          <div className="govuk-form-group">
+            <label className="govuk-label" htmlFor="verification_status">
+              Verification
+            </label>
+            <div id="verification-hint" className="govuk-hint">
+              {VERIFICATION_FIELD_HINT}
+            </div>
+            <select
+              className="govuk-select"
+              id="verification_status"
+              name="verification_status"
+              aria-describedby="verification-hint"
+              value={form.verification_status}
+              onChange={(e) => setField("verification_status", e.target.value)}
+            >
+              {VERIFICATION_STATUS_OPTIONS.map((opt) => (
+                <option key={opt} value={opt}>
+                  {opt}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="govuk-button-group">
@@ -2555,8 +2601,8 @@ export default function EditOfficialPage({
                     }}
                     role="listbox"
                   >
-                    {orgResults.map((i) => (
-                      <li key={String(i.id)} style={{ margin: 0 }}>
+                    {orgResults.map((i, idx) => (
+                      <li key={`${String(i.id)}-${idx}`} style={{ margin: 0 }}>
                         <button
                           type="button"
                           className="govuk-link"
@@ -3151,8 +3197,15 @@ export default function EditOfficialPage({
                 </tr>
               </thead>
               <tbody className="govuk-table__body">
-                {roles.map((role) => (
-                  <tr key={role.id} className="govuk-table__row">
+                {roles.map((role, roleIndex) => (
+                  <tr
+                    key={
+                      role.id
+                        ? `${String(role.id)}-${roleIndex}`
+                        : `role-${roleIndex}`
+                    }
+                    className="govuk-table__row"
+                  >
                     <td className="govuk-table__cell">
                       <strong>{role.title || "—"}</strong>
                       {role.party && (

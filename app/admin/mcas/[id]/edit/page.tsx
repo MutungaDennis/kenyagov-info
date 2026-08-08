@@ -4,6 +4,12 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { adminPath } from "@/lib/admin-path";
+import {
+  DEFAULT_VERIFICATION_STATUS,
+  VERIFICATION_FIELD_HINT,
+  VERIFICATION_STATUS_OPTIONS,
+  normalizeVerificationStatus,
+} from "@/lib/verification";
 
 // ============================================
 // TYPES
@@ -85,6 +91,7 @@ export default function EditMCAPage() {
     nomination_category: "N/A",
     county_id: "",
     status: "Active",
+    verification_status: "Unverified",
     official_email: "",
     ward_office_location: "",
     committees: "",
@@ -190,6 +197,9 @@ export default function EditMCAPage() {
             nomination_category: normalizeField(mcaData.data.nomination_category) || "N/A",
             county_id: normalizeField(mcaData.data.county_id),
             status: normalizeField(mcaData.data.status) || "Active",
+            verification_status: normalizeVerificationStatus(
+              mcaData.data.verification_status ?? DEFAULT_VERIFICATION_STATUS,
+            ),
             official_email: normalizeField(mcaData.data.official_email),
             ward_office_location: normalizeField(mcaData.data.ward_office_location),
             committees: Array.isArray(mcaData.data.committees)
@@ -878,6 +888,34 @@ export default function EditMCAPage() {
                   <option value="Active">Active (Visible to public)</option>
                   <option value="Vacated">Vacated (Left office, still visible)</option>
                   <option value="Unpublished">Unpublished (Hidden from public)</option>
+                </select>
+              </div>
+            </div>
+            <div className="govuk-grid-column-one-third">
+              <div className="govuk-form-group">
+                <label className="govuk-label" htmlFor="verification_status">
+                  Verification
+                </label>
+                <div id="mca-verification-hint" className="govuk-hint">
+                  {VERIFICATION_FIELD_HINT}
+                </div>
+                <select
+                  id="verification_status"
+                  className="govuk-select govuk-!-width-full"
+                  aria-describedby="mca-verification-hint"
+                  value={formData.verification_status || DEFAULT_VERIFICATION_STATUS}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      verification_status: e.target.value,
+                    })
+                  }
+                >
+                  {VERIFICATION_STATUS_OPTIONS.map((opt) => (
+                    <option key={opt} value={opt}>
+                      {opt}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>

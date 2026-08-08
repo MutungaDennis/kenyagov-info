@@ -4,6 +4,11 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { adminPath } from "@/lib/admin-path";
+import {
+  DEFAULT_VERIFICATION_STATUS,
+  VERIFICATION_FIELD_HINT,
+  VERIFICATION_STATUS_OPTIONS,
+} from "@/lib/verification";
 
 export default function NewMCAPage() {
   const router = useRouter();
@@ -19,6 +24,7 @@ export default function NewMCAPage() {
     nomination_category: "N/A",
     county_id: "",
     status: "Active",
+    verification_status: DEFAULT_VERIFICATION_STATUS,
     slug: "",
   });
 

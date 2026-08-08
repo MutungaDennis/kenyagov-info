@@ -7,6 +7,11 @@ import DeleteModal from "@/components/govuk/DeleteModal";
 
 // 🚀 Import the IndexNow helper
 import { triggerIndexNow } from "@/lib/indexnow";
+import {
+  DEFAULT_VERIFICATION_STATUS,
+  normalizeVerificationStatus,
+  verificationTagClass,
+} from "@/lib/verification";
 
 type Leader = {
   id: string;
@@ -22,6 +27,7 @@ type Leader = {
   current_organization?: string | null;
   level?: string | null;
   is_active?: boolean | null;
+  verification_status?: string | null;
   leader_roles?: Array<{
     title?: string | null;
     organization?: string | null;
@@ -91,8 +97,16 @@ export default function OfficialsAdminPage() {
       if (!res.ok) {
         throw new Error(json.error || `Failed to fetch (${res.status})`);
       }
-      setLeaders(json.data || []);
-      setTotal(typeof json.total === "number" ? json.total : 0);
+      const rows = (json.data || []) as Leader[];
+      // Dedupe by id — prevents React key collisions if API returns duplicates
+      const seen = new Set<string>();
+      const unique = rows.filter((row) => {
+        if (!row?.id || seen.has(row.id)) return false;
+        seen.add(row.id);
+        return true;
+      });
+      setLeaders(unique);
+      setTotal(typeof json.total === "number" ? json.total : unique.length);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error loading officials");
       setLeaders([]);
@@ -578,6 +592,9 @@ export default function OfficialsAdminPage() {
                     Party / seat
                   </th>
                   <th className="govuk-table__header" scope="col">
+                    Verification
+                  </th>
+                  <th className="govuk-table__header" scope="col">
                     Actions
                   </th>
                 </tr>
@@ -594,6 +611,9 @@ export default function OfficialsAdminPage() {
                     activeRole?.organization ||
                     row.current_organization ||
                     "—";
+                  const verification = normalizeVerificationStatus(
+                    row.verification_status ?? DEFAULT_VERIFICATION_STATUS,
+                  );
                   return (
                   <tr key={row.id} className="govuk-table__row">
                     <td className="govuk-table__cell">
@@ -617,6 +637,13 @@ export default function OfficialsAdminPage() {
                       {[row.current_party, row.current_constituency, row.current_county]
                         .filter(Boolean)
                         .join(" · ") || "—"}
+                    </td>
+                    <td className="govuk-table__cell">
+                      <strong
+                        className={`govuk-tag ${verificationTagClass(verification)}`}
+                      >
+                        {verification}
+                      </strong>
                     </td>
                     <td className="govuk-table__cell">
                       <Link

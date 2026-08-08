@@ -11,6 +11,7 @@ import {
   sortNameTitles,
   sortNationalHonours,
 } from "@/lib/leaders/titles-social";
+import { normalizeVerificationStatus } from "@/lib/verification";
 
 export const dynamic = "force-dynamic";
 
@@ -35,6 +36,8 @@ const OPTIONAL_LEADER_COLUMNS = new Set([
   "official_website",
   "image_url",
   "bio",
+  "verification_status",
+  "verified_at",
 ]);
 
 function missingColumnFromError(message: string): string | null {
@@ -125,7 +128,13 @@ async function updateLeadersWithFallback(
       }
       // Common enum columns if we couldn't match the value
       if (!droppedEnum) {
-        for (const key of ["level", "status", "category", "sub_category"]) {
+        for (const key of [
+          "level",
+          "status",
+          "category",
+          "sub_category",
+          "verification_status",
+        ]) {
           if (key in working) {
             delete working[key];
             dropped.push(key);
@@ -298,6 +307,8 @@ export async function PATCH(request: NextRequest, context: Ctx) {
     "official_website",
     "is_active",
     "status",
+    "verification_status",
+    "verified_at",
     "gender",
     "date_of_birth",
     "academic_qualifications",
@@ -312,6 +323,13 @@ export async function PATCH(request: NextRequest, context: Ctx) {
     if (key in body) {
       if (key === "is_active") {
         patch[key] = body[key] !== false && body[key] !== "false";
+      } else if (key === "verification_status") {
+        patch.verification_status = normalizeVerificationStatus(
+          body.verification_status,
+        );
+        if (patch.verification_status === "Verified") {
+          patch.verified_at = new Date().toISOString();
+        }
       } else if (key === "academic_qualifications") {
         patch[key] = body[key];
       } else if (key === "name_titles") {

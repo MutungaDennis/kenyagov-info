@@ -10,6 +10,10 @@ import {
   sortNameTitles,
   sortNationalHonours,
 } from "@/lib/leaders/titles-social";
+import {
+  DEFAULT_VERIFICATION_STATUS,
+  normalizeVerificationStatus,
+} from "@/lib/verification";
 
 export const dynamic = "force-dynamic";
 
@@ -20,9 +24,10 @@ const LEADER_ROLES_EMBED = `leader_roles!leader_roles_leader_id_fkey (
 
 const LEADER_LIST_SELECT = `id, slug, full_name, first_name, other_names, surname, title,
        current_party, current_constituency, current_county, current_organization,
-       level, image_url, is_active, status, updated_at,
+       level, image_url, is_active, status, verification_status, verified_at, updated_at,
        ${LEADER_ROLES_EMBED}`;
 
+/** Without verification columns — works before migration is applied */
 const LEADER_LIST_SELECT_BASIC = `id, slug, full_name, first_name, other_names, surname, title,
          current_party, current_constituency, current_county, current_organization,
          level, image_url, is_active, status, updated_at`;
@@ -185,8 +190,13 @@ export async function GET(request: NextRequest) {
 
   let { data, error, count } = await query;
 
-  // If ambiguous embed or other select issue, retry with explicit FK embed variants
-  if (error && /relationship|embed|leader_roles/i.test(error.message)) {
+  // If ambiguous embed, missing verification columns, or other select issue — retry
+  if (
+    error &&
+    /relationship|embed|leader_roles|verification_status|verified_at|schema cache|PGRST204|column/i.test(
+      error.message,
+    )
+  ) {
     const retrySelect = `id, slug, full_name, first_name, other_names, surname, title,
        current_party, current_constituency, current_county, current_organization,
        level, image_url, is_active, status, updated_at,
@@ -367,7 +377,13 @@ export async function POST(request: NextRequest) {
       : null,
     is_active: body.is_active !== false,
     status: body.status ? String(body.status) : "Active",
+    verification_status: body.verification_status
+      ? normalizeVerificationStatus(body.verification_status)
+      : DEFAULT_VERIFICATION_STATUS,
   };
+  if (row.verification_status === "Verified") {
+    row.verified_at = new Date().toISOString();
+  }
 
   if (body.name_titles != null) {
     row.name_titles = sortNameTitles(parseNameTitles(body.name_titles));
@@ -401,6 +417,8 @@ export async function POST(request: NextRequest) {
     delete row.social_media;
     delete row.is_active;
     delete row.status;
+    delete row.verification_status;
+    delete row.verified_at;
     const res2 = await auth.supabase
       .from("leaders")
       .insert(row)

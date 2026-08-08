@@ -223,9 +223,16 @@ function PeopleDirectoryContent() {
             };
           });
 
-          // Merge both arrays
-          const combined = [...(leadersData || []), ...mappedMCAs];
-          setAllLeaders(combined as Leader[]);
+          // Merge leaders + MCAs; dedupe by id (same UUID must not appear twice in the list)
+          const combined = [...(leadersData || []), ...mappedMCAs] as Leader[];
+          const seen = new Set<string>();
+          const unique: Leader[] = [];
+          for (const person of combined) {
+            if (!person?.id || seen.has(person.id)) continue;
+            seen.add(person.id);
+            unique.push(person);
+          }
+          setAllLeaders(unique);
         }
       } catch (err: unknown) {
         console.error("Error fetching people:", err);
@@ -553,7 +560,10 @@ function PeopleDirectoryContent() {
                     const term = primary.role && formatTermRange(primary.role.term_start_date, primary.role.term_end_date);
 
                     return (
-                      <li key={leader.id} className="govuk-!-margin-bottom-6 govuk-!-padding-bottom-6 govuk-!-border-bottom-1">
+                      <li
+                        key={`${leader.id}-${leader.slug || "person"}`}
+                        className="govuk-!-margin-bottom-6 govuk-!-padding-bottom-6 govuk-!-border-bottom-1"
+                      >
                         <h2 className="govuk-heading-m govuk-!-margin-bottom-1">
                           <Link href={`/government/people/${leader.slug}`} className="govuk-link govuk-link--no-visited-state">
                             {name}

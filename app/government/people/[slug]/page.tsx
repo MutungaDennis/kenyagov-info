@@ -456,8 +456,8 @@ export default function PersonProfilePage() {
                     Other current roles
                   </p>
                   <ul className="govuk-list govuk-list--bullet">
-                    {otherActiveRoles.map((r) => (
-                      <li key={r.id}>
+                    {otherActiveRoles.map((r, i) => (
+                      <li key={r.id ? `${r.id}-${i}` : `active-role-${i}`}>
                         {formatRoleHeadline(r)}
                         {formatTermRange(r.term_start_date, r.term_end_date)
                           ? ` (${formatTermRange(r.term_start_date, r.term_end_date)})`
@@ -497,8 +497,11 @@ export default function PersonProfilePage() {
                         </tr>
                       </thead>
                       <tbody className="govuk-table__body">
-                        {roles.map((role) => (
-                          <tr key={role.id} className="govuk-table__row">
+                        {roles.map((role, i) => (
+                          <tr
+                            key={role.id ? `${role.id}-${i}` : `role-row-${i}`}
+                            className="govuk-table__row"
+                          >
                             <td className="govuk-table__cell">
                               <strong>{role.title || "—"}</strong>
                               {role.party && (
