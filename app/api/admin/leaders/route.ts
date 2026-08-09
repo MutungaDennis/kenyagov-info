@@ -188,7 +188,11 @@ export async function GET(request: NextRequest) {
     query = query.or(leaderText.join(","));
   }
 
-  let { data, error, count } = await query;
+  // ✅ FIX: Use explicit types to allow fallback reassignment without TS errors
+  const initialRes = await query;
+  let data: any = initialRes.data;
+  let error: any = initialRes.error;
+  let count: number | null = initialRes.count;
 
   // If ambiguous embed, missing verification columns, or other select issue — retry
   if (
