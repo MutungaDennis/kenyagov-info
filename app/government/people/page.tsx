@@ -594,12 +594,6 @@ function PeopleDirectoryContent() {
                             {truncateBio(leader.bio)}
                           </p>
                         )}
-
-                        <p className="govuk-body-s">
-                          <Link href={`/government/people/${leader.slug}`} className="govuk-link">
-                            Full biography and career history
-                          </Link>
-                        </p>
                       </li>
                     );
                   })}
