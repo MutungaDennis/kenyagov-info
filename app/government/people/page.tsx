@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, useEffect, useMemo, Suspense } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { usePathname, useSearchParams, useRouter } from "next/navigation";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import { createBrowserClientAsync } from "@/lib/supabase/client";
 import {
@@ -117,6 +117,7 @@ export default function GovernmentPeoplePage() {
 }
 
 function PeopleDirectoryContent() {
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -131,6 +132,17 @@ function PeopleDirectoryContent() {
   const itemsPerPage = 20;
   const currentPage = Number(searchParams.get("page")) || 1;
 
+  // ✅ Helper to clear the page parameter from the URL when filters change
+  const clearPageParam = () => {
+    if (searchParams.has("page")) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete("page");
+      const queryString = params.toString();
+      const newUrl = queryString ? `${pathname}?${queryString}` : pathname;
+      router.replace(newUrl, { scroll: false });
+    }
+  };
+
   const handlePageChange = (page: number) => {
     const params = new URLSearchParams(searchParams.toString());
     if (page === 1) {
@@ -138,8 +150,12 @@ function PeopleDirectoryContent() {
     } else {
       params.set("page", page.toString());
     }
-    router.push(`?${params.toString()}`);
-    window.scrollTo(0, 0);
+    
+    const queryString = params.toString();
+    const newUrl = queryString ? `${pathname}?${queryString}` : pathname;
+    
+    router.replace(newUrl, { scroll: false });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   useEffect(() => {
@@ -166,7 +182,7 @@ function PeopleDirectoryContent() {
           .eq("is_active", true)
           .order("surname", { ascending: true });
 
-        // 2. Fetch published MCAs only (admin "Unpublish" hides them here and on MCA directory)
+        // 2. Fetch published MCAs only
         const { data: mcasData, error: mcasError } = await supabase
           .from("mcas")
           .select(`
@@ -184,7 +200,6 @@ function PeopleDirectoryContent() {
 
         if (!cancelled) {
           const mappedMCAs: Leader[] = (mcasData || []).map((mca: any) => {
-            // ✅ Clean county name to prevent "Mombasa County County Assembly"
             const rawCountyName = mca.counties?.name || "";
             const cleanCountyName = rawCountyName.replace(/\s+County$/i, "").trim();
             
@@ -223,7 +238,6 @@ function PeopleDirectoryContent() {
             };
           });
 
-          // Merge leaders + MCAs; dedupe by id (same UUID must not appear twice in the list)
           const combined = [...(leadersData || []), ...mappedMCAs] as Leader[];
           const seen = new Set<string>();
           const unique: Leader[] = [];
@@ -349,14 +363,6 @@ function PeopleDirectoryContent() {
     const endIndex = startIndex + itemsPerPage;
     return filteredAndSortedLeaders.slice(startIndex, endIndex);
   }, [filteredAndSortedLeaders, currentPage]);
-
-  useEffect(() => {
-    const params = new URLSearchParams(searchParams.toString());
-    if (params.has("page")) {
-      params.delete("page");
-      router.replace(`?${params.toString()}`);
-    }
-  }, [searchTerm, selectedDepartment, sortOrder, router, searchParams]);
 
   const truncateBio = (bio: string | null) => {
     if (!bio) return null;
@@ -487,7 +493,10 @@ function PeopleDirectoryContent() {
                   type="search"
                   placeholder="e.g. Ruto, Ministry of Health…"
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    clearPageParam(); // ✅ Reset page when searching
+                  }}
                 />
               </div>
 
@@ -502,7 +511,10 @@ function PeopleDirectoryContent() {
                   className="govuk-select govuk-!-width-full"
                   id="filter-department"
                   value={selectedDepartment}
-                  onChange={(e) => setSelectedDepartment(e.target.value)}
+                  onChange={(e) => {
+                    setSelectedDepartment(e.target.value);
+                    clearPageParam(); // ✅ Reset page when filtering
+                  }}
                 >
                   {departments.map((dept) => (
                     <option key={dept} value={dept}>
@@ -520,7 +532,10 @@ function PeopleDirectoryContent() {
                   className="govuk-select govuk-!-width-full"
                   id="sort-order"
                   value={sortOrder}
-                  onChange={(e) => setSortOrder(e.target.value as "az" | "za" | "newest" | "oldest")}
+                  onChange={(e) => {
+                    setSortOrder(e.target.value as "az" | "za" | "newest" | "oldest");
+                    clearPageParam(); // ✅ Reset page when sorting
+                  }}
                 >
                   <option value="az">A to Z</option>
                   <option value="za">Z to A</option>
