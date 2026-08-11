@@ -796,23 +796,23 @@ export default function PersonProfilePage() {
       </div>
 
       <style jsx>{`
-        /* GOV.UK-inspired minister portrait: modest width, light frame */
+        /* Phone: full-width portrait on top, Contents below (natural stack).
+           Tablet/desktop: compact portrait in the left column. */
         .app-person-portrait {
           margin-bottom: 15px;
-          max-width: 200px;
+          max-width: 100%;
         }
         .app-person-portrait__img {
           display: block;
           width: 100%;
-          max-width: 200px;
+          max-width: 100%;
           height: auto;
-          max-height: 260px;
           object-fit: cover;
           object-position: center top;
           border: 1px solid #b1b4b6;
           background-color: #f3f2f1;
         }
-        /* Smooth jump targets under sticky headers if any */
+        /* Smooth jump targets */
         :global(#biography),
         :global(#key-details),
         :global(#other-current-roles),
@@ -823,13 +823,14 @@ export default function PersonProfilePage() {
         :global(#parliamentary-contributions) {
           scroll-margin-top: 1rem;
         }
-        @media (max-width: 40.0625em) {
+        /* Tablet and up (GOV.UK tablet breakpoint ~40.0625em): side column size */
+        @media (min-width: 40.0625em) {
           .app-person-portrait {
-            max-width: 140px;
+            max-width: 200px;
           }
           .app-person-portrait__img {
-            max-width: 140px;
-            max-height: 180px;
+            max-width: 200px;
+            max-height: 260px;
           }
         }
       `}</style>
