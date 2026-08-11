@@ -6,7 +6,6 @@ import { adminPath } from "@/lib/admin-path";
 import DeleteModal from "@/components/govuk/DeleteModal";
 
 // 🚀 Import the IndexNow helper
-import { triggerIndexNow } from "@/lib/indexnow";
 import {
   DEFAULT_VERIFICATION_STATUS,
   normalizeVerificationStatus,
@@ -58,22 +57,12 @@ export default function OfficialsAdminPage() {
   const [organization, setOrganization] = useState("");
   const [orgOptions, setOrgOptions] = useState<string[]>([]);
   const [sort, setSort] = useState<"default" | "az" | "za">("default");
-  const [activeOnly, setActiveOnly] = useState(false);
+  /** all | active | inactive */
+  const [activeFilter, setActiveFilter] = useState<"all" | "active" | "inactive">(
+    "all",
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showForm, setShowForm] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [formData, setFormData] = useState({
-    first_name: "",
-    other_names: "",
-    surname: "",
-    title: "",
-    current_party: "",
-    current_constituency: "",
-    current_county: "",
-    current_organization: "",
-    level: "",
-  });
   const [deleteTarget, setDeleteTarget] = useState<Leader | null>(null);
 
   const fetchLeaders = useCallback(async () => {
@@ -87,7 +76,8 @@ export default function OfficialsAdminPage() {
       if (organization.trim()) params.set("organization", organization.trim());
       if (sort && sort !== "default") params.set("sort", sort);
       else params.set("sort", "default");
-      if (activeOnly) params.set("active", "1");
+      if (activeFilter === "active") params.set("active", "1");
+      if (activeFilter === "inactive") params.set("active", "0");
 
       const res = await fetch(`/api/admin/leaders?${params}`, {
         credentials: "include",
@@ -113,7 +103,7 @@ export default function OfficialsAdminPage() {
     } finally {
       setLoading(false);
     }
-  }, [offset, q, organization, sort, activeOnly]);
+  }, [offset, q, organization, sort, activeFilter]);
 
   useEffect(() => {
     fetchLeaders();
@@ -157,56 +147,8 @@ export default function OfficialsAdminPage() {
     setQ("");
     setOrganization("");
     setSort("default");
-    setActiveOnly(false);
+    setActiveFilter("all");
     setOffset(0);
-  };
-
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/admin/leaders", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-      const json = await res.json();
-      if (!res.ok) {
-        throw new Error(
-          [json.error, json.hint].filter(Boolean).join(" — ") ||
-            "Failed to create",
-        );
-      }
-      setShowForm(false);
-      setFormData({
-        first_name: "",
-        other_names: "",
-        surname: "",
-        title: "",
-        current_party: "",
-        current_constituency: "",
-        current_county: "",
-        current_organization: "",
-        level: "",
-      });
-      setOffset(0);
-      await fetchLeaders();
-
-      // 🚀 Trigger IndexNow to notify search engines of the new official
-      if (json.data?.slug) {
-        void triggerIndexNow(json.data.slug, "leaders");
-      }
-
-      if (json.data?.id) {
-        window.location.href = adminPath(`officials/${json.data.id}/edit`);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Error creating official");
-    } finally {
-      setSaving(false);
-    }
   };
 
   const confirmDelete = async () => {
@@ -262,195 +204,10 @@ export default function OfficialsAdminPage() {
         )}
 
         <div className="govuk-button-group">
-          <button
-            type="button"
-            className="govuk-button"
-            onClick={() => setShowForm((v) => !v)}
-          >
-            {showForm ? "Cancel" : "Add official"}
-          </button>
+          <Link href={adminPath("officials/new")} className="govuk-button">
+            Add official
+          </Link>
         </div>
-
-        {showForm && (
-          <form
-            onSubmit={handleCreate}
-            className="govuk-!-margin-bottom-6"
-            style={{
-              border: "1px solid #b1b4b6",
-              padding: 16,
-              background: "#f3f2f1",
-            }}
-          >
-            <h2 className="govuk-heading-m">New official</h2>
-            <p className="govuk-hint">
-              Full name is generated in the database from first name, other
-              names and surname. After create, add positions with dates on the
-              edit page for career history.
-            </p>
-            <div className="govuk-grid-row">
-              <div className="govuk-grid-column-one-third">
-                <div className="govuk-form-group">
-                  <label className="govuk-label" htmlFor="first_name">
-                    First name *
-                  </label>
-                  <input
-                    id="first_name"
-                    className="govuk-input"
-                    value={formData.first_name}
-                    onChange={(e) =>
-                      setFormData({ ...formData, first_name: e.target.value })
-                    }
-                    required
-                  />
-                </div>
-              </div>
-              <div className="govuk-grid-column-one-third">
-                <div className="govuk-form-group">
-                  <label className="govuk-label" htmlFor="other_names">
-                    Other names
-                  </label>
-                  <input
-                    id="other_names"
-                    className="govuk-input"
-                    value={formData.other_names}
-                    onChange={(e) =>
-                      setFormData({ ...formData, other_names: e.target.value })
-                    }
-                  />
-                </div>
-              </div>
-              <div className="govuk-grid-column-one-third">
-                <div className="govuk-form-group">
-                  <label className="govuk-label" htmlFor="surname">
-                    Surname *
-                  </label>
-                  <input
-                    id="surname"
-                    className="govuk-input"
-                    value={formData.surname}
-                    onChange={(e) =>
-                      setFormData({ ...formData, surname: e.target.value })
-                    }
-                    required
-                  />
-                </div>
-              </div>
-            </div>
-            <div className="govuk-grid-row">
-              <div className="govuk-grid-column-one-half">
-                <div className="govuk-form-group">
-                  <label className="govuk-label" htmlFor="title">
-                    Title / office
-                  </label>
-                  <input
-                    id="title"
-                    className="govuk-input"
-                    value={formData.title}
-                    onChange={(e) =>
-                      setFormData({ ...formData, title: e.target.value })
-                    }
-                    placeholder="e.g. Member of Parliament"
-                  />
-                </div>
-              </div>
-              <div className="govuk-grid-column-one-half">
-                <div className="govuk-form-group">
-                  <label className="govuk-label" htmlFor="level">
-                    Level
-                  </label>
-                  <input
-                    id="level"
-                    className="govuk-input"
-                    value={formData.level}
-                    onChange={(e) =>
-                      setFormData({ ...formData, level: e.target.value })
-                    }
-                    placeholder="e.g. National Assembly, Senate"
-                  />
-                </div>
-              </div>
-            </div>
-            <div className="govuk-grid-row">
-              <div className="govuk-grid-column-one-third">
-                <div className="govuk-form-group">
-                  <label className="govuk-label" htmlFor="party">
-                    Party
-                  </label>
-                  <input
-                    id="party"
-                    className="govuk-input"
-                    value={formData.current_party}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        current_party: e.target.value,
-                      })
-                    }
-                  />
-                </div>
-              </div>
-              <div className="govuk-grid-column-one-third">
-                <div className="govuk-form-group">
-                  <label className="govuk-label" htmlFor="const">
-                    Constituency
-                  </label>
-                  <input
-                    id="const"
-                    className="govuk-input"
-                    value={formData.current_constituency}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        current_constituency: e.target.value,
-                      })
-                    }
-                  />
-                </div>
-              </div>
-              <div className="govuk-grid-column-one-third">
-                <div className="govuk-form-group">
-                  <label className="govuk-label" htmlFor="county">
-                    County
-                  </label>
-                  <input
-                    id="county"
-                    className="govuk-input"
-                    value={formData.current_county}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        current_county: e.target.value,
-                      })
-                    }
-                  />
-                </div>
-              </div>
-            </div>
-            <div className="govuk-form-group">
-              <label className="govuk-label" htmlFor="org">
-                Organisation
-              </label>
-              <input
-                id="org"
-                className="govuk-input"
-                value={formData.current_organization}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    current_organization: e.target.value,
-                  })
-                }
-              />
-            </div>
-            <button
-              type="submit"
-              className="govuk-button"
-              disabled={saving}
-            >
-              {saving ? "Saving…" : "Create official"}
-            </button>
-          </form>
-        )}
 
         <form onSubmit={applyFilters} className="govuk-!-margin-bottom-4">
           <div className="govuk-grid-row">
@@ -522,34 +279,52 @@ export default function OfficialsAdminPage() {
                 </select>
               </div>
             </div>
-            <div className="govuk-grid-column-one-quarter">
-              <div className="govuk-checkboxes govuk-!-margin-top-6">
-                <div className="govuk-checkboxes__item">
-                  <input
-                    className="govuk-checkboxes__input"
-                    id="active_only"
-                    type="checkbox"
-                    checked={activeOnly}
-                    onChange={(e) => {
-                      setActiveOnly(e.target.checked);
-                      setOffset(0);
-                    }}
-                  />
-                  <label
-                    className="govuk-label govuk-checkboxes__label"
-                    htmlFor="active_only"
-                  >
-                    Active only
-                  </label>
+            <div className="govuk-grid-column-one-half">
+              <fieldset className="govuk-fieldset govuk-!-margin-top-4">
+                <legend className="govuk-fieldset__legend govuk-fieldset__legend--s">
+                  Directory status
+                </legend>
+                <div className="govuk-radios govuk-radios--inline govuk-radios--small">
+                  {(
+                    [
+                      ["all", "All"],
+                      ["active", "Active only"],
+                      ["inactive", "Inactive only"],
+                    ] as const
+                  ).map(([value, label]) => (
+                    <div key={value} className="govuk-radios__item">
+                      <input
+                        className="govuk-radios__input"
+                        id={`active-filter-${value}`}
+                        name="active-filter"
+                        type="radio"
+                        value={value}
+                        checked={activeFilter === value}
+                        onChange={() => {
+                          setActiveFilter(value);
+                          setOffset(0);
+                        }}
+                      />
+                      <label
+                        className="govuk-label govuk-radios__label"
+                        htmlFor={`active-filter-${value}`}
+                      >
+                        {label}
+                      </label>
+                    </div>
+                  ))}
                 </div>
-              </div>
+              </fieldset>
             </div>
           </div>
           <div className="govuk-button-group">
             <button type="submit" className="govuk-button govuk-button--secondary">
               Search
             </button>
-            {(q || organization || sort !== "default" || activeOnly) && (
+            {(q ||
+              organization ||
+              sort !== "default" ||
+              activeFilter !== "all") && (
               <button
                 type="button"
                 className="govuk-button govuk-button--secondary"

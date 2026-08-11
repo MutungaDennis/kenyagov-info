@@ -316,6 +316,58 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  if (need("name_titles") || need("name_title_options")) {
+    tasks.push(
+      (async () => {
+        const { data, error } = await sb
+          .from("leader_name_title_options")
+          .select("value, label, sort_order")
+          .eq("is_active", true)
+          .order("sort_order", { ascending: true });
+        if (error) {
+          result.name_title_options = [];
+          if (!/does not exist|schema cache|PGRST/i.test(error.message)) {
+            result.name_title_options_error = error.message;
+          }
+        } else {
+          result.name_title_options = (data || []).map(
+            (r: { value: string; label: string; sort_order?: number }) => ({
+              value: r.value,
+              label: r.label,
+              order: r.sort_order,
+            }),
+          );
+        }
+      })(),
+    );
+  }
+
+  if (need("national_honours") || need("national_honour_options")) {
+    tasks.push(
+      (async () => {
+        const { data, error } = await sb
+          .from("leader_national_honour_options")
+          .select("value, label, sort_order")
+          .eq("is_active", true)
+          .order("sort_order", { ascending: true });
+        if (error) {
+          result.national_honour_options = [];
+          if (!/does not exist|schema cache|PGRST/i.test(error.message)) {
+            result.national_honour_options_error = error.message;
+          }
+        } else {
+          result.national_honour_options = (data || []).map(
+            (r: { value: string; label: string; sort_order?: number }) => ({
+              value: r.value,
+              label: r.label,
+              order: r.sort_order,
+            }),
+          );
+        }
+      })(),
+    );
+  }
+
   await Promise.all(tasks);
 
   return NextResponse.json(result);

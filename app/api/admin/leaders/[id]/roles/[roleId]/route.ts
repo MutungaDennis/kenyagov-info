@@ -11,6 +11,7 @@ import {
   normalizeSeatType,
   uuidOrOmit,
 } from "@/lib/leaders/role-normalize";
+import { syncLeaderSnapshotFromActiveRoles } from "@/lib/leaders/sync-current";
 
 export const dynamic = "force-dynamic";
 
@@ -164,19 +165,8 @@ export async function PATCH(request: NextRequest, context: Ctx) {
     );
   }
 
-  if (body.set_as_current === true || data?.status === "Active") {
-    await auth.supabase
-      .from("leaders")
-      .update({
-        title: data?.title || null,
-        current_party: data?.party || null,
-        current_constituency: data?.constituency || null,
-        current_county: data?.county || null,
-        current_organization: data?.organization || null,
-        level: data?.level || null,
-      })
-      .eq("id", leaderId);
-  }
+  // Refresh snapshot from all Active concurrent roles (not only this one)
+  await syncLeaderSnapshotFromActiveRoles(auth.supabase, leaderId);
 
   return NextResponse.json({
     data,
@@ -198,5 +188,6 @@ export async function DELETE(_request: NextRequest, context: Ctx) {
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+  await syncLeaderSnapshotFromActiveRoles(auth.supabase, leaderId);
   return NextResponse.json({ success: true });
 }

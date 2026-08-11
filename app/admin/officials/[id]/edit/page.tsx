@@ -31,9 +31,12 @@ import {
   NATIONAL_HONOUR_OPTIONS,
   SOCIAL_PLATFORM_OPTIONS,
   formatNationalHonoursSuffix,
+  mergeNameTitleOptions,
+  mergeNationalHonourOptions,
   parseNameTitles,
   parseNationalHonours,
   parseSocialLinks,
+  type CatalogOption,
   type SocialLink,
 } from "@/lib/leaders/titles-social";
 import {
@@ -42,6 +45,7 @@ import {
   VERIFICATION_STATUS_OPTIONS,
   normalizeVerificationStatus,
 } from "@/lib/verification";
+import LeaderImageField from "@/components/admin/LeaderImageField";
 
 // 🚀 Import the IndexNow helper
 import { triggerIndexNow } from "@/lib/indexnow";
@@ -216,6 +220,17 @@ export default function EditOfficialPage({
   );
   const [nameTitles, setNameTitles] = useState<string[]>([]);
   const [nationalHonours, setNationalHonours] = useState<string[]>([]);
+  const [titleOptions, setTitleOptions] = useState<CatalogOption[]>([
+    ...NAME_TITLE_OPTIONS,
+  ]);
+  const [honourOptions, setHonourOptions] = useState<CatalogOption[]>([
+    ...NATIONAL_HONOUR_OPTIONS,
+  ]);
+  const [newTitleValue, setNewTitleValue] = useState("");
+  const [newTitleLabel, setNewTitleLabel] = useState("");
+  const [newHonourValue, setNewHonourValue] = useState("");
+  const [newHonourLabel, setNewHonourLabel] = useState("");
+  const [catalogSaving, setCatalogSaving] = useState(false);
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
   const [roleForm, setRoleForm] = useState<RoleForm>(emptyRole);
   const [editingRoleId, setEditingRoleId] = useState<string | null>(null);
@@ -282,6 +297,13 @@ export default function EditOfficialPage({
       const params = new URLSearchParams();
       if (countyId) params.set("county_id", countyId);
       if (constituencyId) params.set("constituency_id", constituencyId);
+      // Always include title/honour catalogues when loading full lookups
+      if (!countyId && !constituencyId) {
+        params.set(
+          "only",
+          "parties,counties,constituencies,wards,institutions,levels,positions,name_titles,national_honours",
+        );
+      }
       const res = await fetch(
         `/api/admin/leaders/lookups?${params.toString()}`,
         { credentials: "include", cache: "no-store" },
@@ -297,6 +319,23 @@ export default function EditOfficialPage({
         levels: json.levels || prev.levels,
         positions: json.positions || prev.positions,
       }));
+      if (Array.isArray(json.name_title_options) || Array.isArray(json.name_titles)) {
+        setTitleOptions(
+          mergeNameTitleOptions(
+            json.name_title_options || json.name_titles || [],
+          ),
+        );
+      }
+      if (
+        Array.isArray(json.national_honour_options) ||
+        Array.isArray(json.national_honours)
+      ) {
+        setHonourOptions(
+          mergeNationalHonourOptions(
+            json.national_honour_options || json.national_honours || [],
+          ),
+        );
+      }
       setLookupsError(null);
     } catch (e) {
       setLookupsError(
@@ -304,6 +343,73 @@ export default function EditOfficialPage({
       );
     }
   }, []);
+
+  const createCatalogOption = async (
+    kind: "name_title" | "national_honour",
+    value: string,
+    label: string,
+  ) => {
+    const v = value.trim();
+    if (!v) {
+      setError(
+        kind === "name_title"
+          ? "Enter a title value (e.g. Justice or SC)."
+          : "Enter an honour code (e.g. E.G.H. or a custom award).",
+      );
+      return;
+    }
+    setCatalogSaving(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/admin/leaders/catalog-options", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          kind,
+          value: v,
+          label: label.trim() || v,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        throw new Error(
+          [json.error, json.hint].filter(Boolean).join(" — ") ||
+            "Could not save option",
+        );
+      }
+      const opt: CatalogOption = {
+        value: json.data?.value || v,
+        label: json.data?.label || label.trim() || v,
+        order: json.data?.sort_order,
+      };
+      if (kind === "name_title") {
+        setTitleOptions((prev) => mergeNameTitleOptions([...prev, opt]));
+        setNameTitles((prev) =>
+          prev.includes(opt.value) ? prev : [...prev, opt.value],
+        );
+        setNewTitleValue("");
+        setNewTitleLabel("");
+      } else {
+        setHonourOptions((prev) => mergeNationalHonourOptions([...prev, opt]));
+        setNationalHonours((prev) =>
+          prev.includes(opt.value) ? prev : [...prev, opt.value],
+        );
+        setNewHonourValue("");
+        setNewHonourLabel("");
+      }
+      setPersonalDirty(true);
+      setSuccessMessage(
+        kind === "name_title"
+          ? `Title “${opt.value}” saved and selected.`
+          : `Honour “${opt.value}” saved and selected.`,
+      );
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not save option");
+    } finally {
+      setCatalogSaving(false);
+    }
+  };
 
   /** Load every institution (paged) for Current snapshot browse */
   const loadSnapOrgCatalogue = useCallback(async () => {
@@ -1414,13 +1520,14 @@ export default function EditOfficialPage({
                   gap: "0.25rem 1rem",
                 }}
               >
-                {NAME_TITLE_OPTIONS.map((opt) => {
+                {titleOptions.map((opt) => {
                   const checked = nameTitles.includes(opt.value);
+                  const idSafe = opt.value.replace(/[^a-zA-Z0-9_-]/g, "_");
                   return (
                     <div className="govuk-checkboxes__item" key={opt.value}>
                       <input
                         className="govuk-checkboxes__input"
-                        id={`title-${opt.value}`}
+                        id={`title-${idSafe}`}
                         type="checkbox"
                         checked={checked}
                         onChange={() => {
@@ -1434,13 +1541,75 @@ export default function EditOfficialPage({
                       />
                       <label
                         className="govuk-label govuk-checkboxes__label"
-                        htmlFor={`title-${opt.value}`}
+                        htmlFor={`title-${idSafe}`}
                       >
                         {opt.label}
                       </label>
                     </div>
                   );
                 })}
+              </div>
+            </div>
+            <div
+              className="govuk-!-margin-top-4"
+              style={{
+                borderTop: "1px solid #b1b4b6",
+                paddingTop: 12,
+              }}
+            >
+              <p className="govuk-body-s govuk-!-font-weight-bold">
+                Add a new title for reuse
+              </p>
+              <div className="govuk-hint">
+                e.g. Justice, Wakili, SC (Senior Counsel). Saved to the catalogue
+                for all officials.
+              </div>
+              <div className="govuk-grid-row">
+                <div className="govuk-grid-column-one-third">
+                  <div className="govuk-form-group">
+                    <label className="govuk-label" htmlFor="new_title_value">
+                      Short form *
+                    </label>
+                    <input
+                      id="new_title_value"
+                      className="govuk-input"
+                      value={newTitleValue}
+                      onChange={(e) => setNewTitleValue(e.target.value)}
+                      placeholder="e.g. Justice"
+                    />
+                  </div>
+                </div>
+                <div className="govuk-grid-column-one-half">
+                  <div className="govuk-form-group">
+                    <label className="govuk-label" htmlFor="new_title_label">
+                      Full label (optional)
+                    </label>
+                    <input
+                      id="new_title_label"
+                      className="govuk-input"
+                      value={newTitleLabel}
+                      onChange={(e) => setNewTitleLabel(e.target.value)}
+                      placeholder="e.g. Justice of the High Court"
+                    />
+                  </div>
+                </div>
+                <div className="govuk-grid-column-one-sixth">
+                  <button
+                    type="button"
+                    className="govuk-button govuk-button--secondary"
+                    style={{ marginTop: 30 }}
+                    disabled={catalogSaving}
+                    onClick={() =>
+                      void createCatalogOption(
+                        "name_title",
+                        newTitleValue,
+                        newTitleLabel,
+                      )
+                    }
+                  >
+                    {catalogSaving ? "Saving…" : "Add title"}
+                  </button>
+                </div>
               </div>
             </div>
             {nameTitles.length > 0 && (
@@ -1460,7 +1629,8 @@ export default function EditOfficialPage({
             <div className="govuk-hint">
               Kenyan orders and decorations appear{" "}
               <strong>after</strong> the name (e.g. Hon. Jane Doe, E.G.H.,
-              O.G.W.). Select all that apply, highest first is automatic.
+              O.G.W.). Select all that apply, highest first is automatic. You can
+              add custom awards below.
             </div>
             <div
               className="govuk-checkboxes govuk-checkboxes--small"
@@ -1470,13 +1640,14 @@ export default function EditOfficialPage({
                 gap: "0.25rem 1rem",
               }}
             >
-              {NATIONAL_HONOUR_OPTIONS.map((opt) => {
+              {honourOptions.map((opt) => {
                 const checked = nationalHonours.includes(opt.value);
+                const idSafe = opt.value.replace(/[^a-zA-Z0-9_-]/g, "_");
                 return (
                   <div className="govuk-checkboxes__item" key={opt.value}>
                     <input
                       className="govuk-checkboxes__input"
-                      id={`honour-${opt.value}`}
+                      id={`honour-${idSafe}`}
                       type="checkbox"
                       checked={checked}
                       onChange={() => {
@@ -1490,13 +1661,71 @@ export default function EditOfficialPage({
                     />
                     <label
                       className="govuk-label govuk-checkboxes__label"
-                      htmlFor={`honour-${opt.value}`}
+                      htmlFor={`honour-${idSafe}`}
                     >
                       {opt.label}
                     </label>
                   </div>
                 );
               })}
+            </div>
+            <div
+              className="govuk-!-margin-top-4"
+              style={{
+                borderTop: "1px solid #b1b4b6",
+                paddingTop: 12,
+              }}
+            >
+              <p className="govuk-body-s govuk-!-font-weight-bold">
+                Add a new honour or award for reuse
+              </p>
+              <div className="govuk-grid-row">
+                <div className="govuk-grid-column-one-third">
+                  <div className="govuk-form-group">
+                    <label className="govuk-label" htmlFor="new_honour_value">
+                      Post-nominal / short form *
+                    </label>
+                    <input
+                      id="new_honour_value"
+                      className="govuk-input"
+                      value={newHonourValue}
+                      onChange={(e) => setNewHonourValue(e.target.value)}
+                      placeholder="e.g. E.G.H. or custom"
+                    />
+                  </div>
+                </div>
+                <div className="govuk-grid-column-one-half">
+                  <div className="govuk-form-group">
+                    <label className="govuk-label" htmlFor="new_honour_label">
+                      Full name (optional)
+                    </label>
+                    <input
+                      id="new_honour_label"
+                      className="govuk-input"
+                      value={newHonourLabel}
+                      onChange={(e) => setNewHonourLabel(e.target.value)}
+                      placeholder="e.g. Elder of the Order of the Golden Heart"
+                    />
+                  </div>
+                </div>
+                <div className="govuk-grid-column-one-sixth">
+                  <button
+                    type="button"
+                    className="govuk-button govuk-button--secondary"
+                    style={{ marginTop: 30 }}
+                    disabled={catalogSaving}
+                    onClick={() =>
+                      void createCatalogOption(
+                        "national_honour",
+                        newHonourValue,
+                        newHonourLabel,
+                      )
+                    }
+                  >
+                    {catalogSaving ? "Saving…" : "Add honour"}
+                  </button>
+                </div>
+              </div>
             </div>
             {nationalHonours.length > 0 && (
               <p className="govuk-body-s govuk-!-margin-top-2">
@@ -1572,315 +1801,43 @@ export default function EditOfficialPage({
             />
           </div>
 
-          <h2 className="govuk-heading-m">Current snapshot</h2>
+          <h2 className="govuk-heading-m">Current positions</h2>
           <p className="govuk-hint">
-            Quick fields for list pages. Prefer saving an Active position below
-            with dates — that can refresh these automatically. Values come from
-            the same reference tables.
+            Current offices are managed under <strong>Positions held</strong> below.
+            Mark each concurrent role as <strong>Active</strong> (and tick “current
+            concurrent position” when saving). Multiple current positions are allowed.
+            List pages use the primary Active role as a summary snapshot only.
           </p>
-
-          <div className="govuk-form-group">
-            <label className="govuk-label" htmlFor="snap_position">
-              Current title / position
-            </label>
-            <select
-              id="snap_position"
-              className="govuk-select"
-              value={snapshotPositionId}
-              onChange={(e) => {
-                const pos = lookups.positions.find(
-                  (p) => String(p.id) === e.target.value,
-                );
-                setField("title", pos ? positionLabel(pos) : "");
-                if (pos?.level) setField("level", String(pos.level));
-              }}
-            >
-              <option value="">— Select position —</option>
-              {lookups.positions.map((p) => (
-                <option key={String(p.id)} value={String(p.id)}>
-                  {positionLabel(p)}
-                  {p.level ? ` (${p.level})` : ""}
-                </option>
-              ))}
-            </select>
-            {form.title && !snapshotPositionId && (
-              <p className="govuk-hint">
-                Current text (not in list): {form.title}
-              </p>
-            )}
-          </div>
-
-          <div className="govuk-grid-row">
-            <div className="govuk-grid-column-one-half">
-              <div className="govuk-form-group">
-                <label className="govuk-label" htmlFor="snap_party">
-                  Party
-                </label>
-                <select
-                  id="snap_party"
-                  className="govuk-select"
-                  value={snapshotPartyId}
-                  onChange={(e) => {
-                    const p = lookups.parties.find(
-                      (x) => String(x.id) === e.target.value,
-                    );
-                    setField(
-                      "current_party",
-                      p
-                        ? p.abbreviation || p.name || ""
-                        : "",
-                    );
-                  }}
-                >
-                  <option value="">— Not applicable / none —</option>
-                  {lookups.parties.map((p) => (
-                    <option key={String(p.id)} value={String(p.id)}>
-                      {partyLabel(p)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            <div className="govuk-grid-column-one-half">
-              <div className="govuk-form-group">
-                <label className="govuk-label" htmlFor="snap_level">
-                  Level
-                </label>
-                <select
-                  id="snap_level"
-                  className="govuk-select"
-                  value={
-                    form.level
-                      ? normalizeLeaderLevel(form.level, form.title)
-                      : ""
-                  }
-                  onChange={(e) => {
-                    // DB enum is lowercase national|county|ward only
-                    setField("level", e.target.value);
-                  }}
-                >
-                  <option value="">— Select level —</option>
-                  {LEADER_LEVELS.map((lv) => (
-                    <option key={lv} value={lv}>
-                      {lv.charAt(0).toUpperCase() + lv.slice(1)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <div className="govuk-grid-row">
-            <div className="govuk-grid-column-one-half">
-              <div className="govuk-form-group">
-                <label className="govuk-label" htmlFor="snap_county">
-                  County
-                </label>
-                <select
-                  id="snap_county"
-                  className="govuk-select"
-                  value={snapshotCountyId}
-                  onChange={(e) => {
-                    const c = lookups.counties.find(
-                      (x) => String(x.id) === e.target.value,
-                    );
-                    setField("current_county", c?.name || "");
-                    // Reload constituencies for that county
-                    if (e.target.value) loadLookups(e.target.value);
-                  }}
-                >
-                  <option value="">— Not applicable / none —</option>
-                  {lookups.counties.map((c) => (
-                    <option key={String(c.id)} value={String(c.id)}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            <div className="govuk-grid-column-one-half">
-              <div className="govuk-form-group">
-                <label className="govuk-label" htmlFor="snap_const">
-                  Constituency
-                </label>
-                <select
-                  id="snap_const"
-                  className="govuk-select"
-                  value={snapshotConstId}
-                  onChange={(e) => {
-                    const c = lookups.constituencies.find(
-                      (x) => String(x.id) === e.target.value,
-                    );
-                    setField("current_constituency", c?.name || "");
-                    if (c?.county_id) {
-                      const county = lookups.counties.find(
-                        (x) => String(x.id) === String(c.county_id),
-                      );
-                      if (county?.name) setField("current_county", county.name);
-                    }
-                  }}
-                >
-                  <option value="">— Not applicable / none —</option>
-                  {lookups.constituencies
-                    .filter(
-                      (c) =>
-                        !snapshotCountyId ||
-                        String(c.county_id) === snapshotCountyId,
-                    )
-                    .map((c) => (
-                      <option key={String(c.id)} value={String(c.id)}>
-                        {c.name}
-                      </option>
-                    ))}
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <div className="govuk-form-group">
-            <label className="govuk-label" htmlFor="snap_org_search">
-              Organisation
-            </label>
-            <div className="govuk-hint">
-              Focus the field to load every institution, or type to filter. All
-              bodies in the catalogue are available (not a short dropdown).
-            </div>
-            <input
-              id="snap_org_search"
-              className="govuk-input"
-              type="search"
-              autoComplete="off"
-              placeholder="Click or type to list all organisations…"
-              value={snapOrgSearch}
-              onChange={(e) => {
-                const v = e.target.value;
-                setSnapOrgSearch(v);
-                setSnapOrgSearchOpen(true);
-                setSnapOrgSelectedId("");
-                setField("current_organization", v);
-              }}
-              onFocus={() => {
-                setSnapOrgSearchOpen(true);
-                void loadSnapOrgCatalogue().then((all) => {
-                  if (!snapOrgSearch.trim()) setSnapOrgResults(all);
-                });
-              }}
-            />
-            {snapOrgSearching && (
-              <p className="govuk-hint govuk-!-margin-top-1">
-                Loading institutions…
-              </p>
-            )}
-            {snapOrgSearchOpen && snapOrgResults.length > 0 && (
-              <ul
-                className="govuk-list"
-                style={{
-                  maxHeight: 320,
-                  overflowY: "auto",
-                  border: "1px solid #b1b4b6",
-                  background: "#fff",
-                  marginTop: 4,
-                  padding: 0,
-                }}
-                role="listbox"
-              >
-                <li
-                  className="govuk-hint"
-                  style={{ padding: "6px 12px", margin: 0 }}
-                >
-                  Showing {snapOrgResults.length.toLocaleString()}
-                  {snapOrgCatalogue
-                    ? ` of ${snapOrgCatalogue.length.toLocaleString()}`
-                    : ""}{" "}
-                  institution
-                  {snapOrgResults.length === 1 ? "" : "s"}
-                  {snapOrgSearch.trim() ? " matching your search" : ""}
-                </li>
-                {snapOrgResults.map((i, idx) => (
-                  <li key={`${String(i.id)}-${idx}`} style={{ margin: 0 }}>
-                    <button
-                      type="button"
-                      style={{
-                        display: "block",
-                        width: "100%",
-                        textAlign: "left",
-                        padding: "8px 12px",
-                        border: "none",
-                        borderBottom: "1px solid #f3f2f1",
-                        background: "transparent",
-                        cursor: "pointer",
-                        font: "inherit",
-                      }}
-                      onClick={() => {
-                        const name = i.name || i.short_name || "";
-                        setSnapOrgSelectedId(String(i.id));
-                        setSnapOrgSearch(name);
-                        setSnapOrgSearchOpen(false);
-                        setSnapOrgResults([]);
-                        setField("current_organization", name);
-                        if (i.government_level) {
-                          setField(
-                            "level",
-                            normalizeLeaderLevel(
-                              String(i.government_level),
-                              form.title,
-                            ),
-                          );
-                        }
-                      }}
-                    >
-                      <strong>{i.name}</strong>
-                      {i.short_name ? (
-                        <span className="govuk-hint"> ({i.short_name})</span>
-                      ) : null}
-                      {i.institution_type ? (
-                        <div className="govuk-hint govuk-!-margin-bottom-0">
-                          {i.institution_type}
-                          {i.is_active === false ? " · unpublished" : ""}
-                        </div>
-                      ) : null}
-                    </button>
+          {roles.filter(
+            (r) =>
+              String(r.status || "").toLowerCase() === "active" ||
+              !r.term_end_date,
+          ).length > 0 ? (
+            <ul className="govuk-list govuk-list--bullet govuk-!-margin-bottom-6">
+              {roles
+                .filter(
+                  (r) =>
+                    String(r.status || "").toLowerCase() === "active" ||
+                    !r.term_end_date,
+                )
+                .map((r, i) => (
+                  <li key={r.id ? String(r.id) : `cur-${i}`}>
+                    <strong>{String(r.title || "Position")}</strong>
+                    {[r.organization, r.constituency, r.county, r.party]
+                      .filter(Boolean)
+                      .join(" · ")
+                      ? ` — ${[r.organization, r.constituency, r.county, r.party]
+                          .filter(Boolean)
+                          .join(" · ")}`
+                      : ""}
                   </li>
                 ))}
-              </ul>
-            )}
-            {snapOrgSearchOpen &&
-              !snapOrgSearching &&
-              snapOrgResults.length === 0 &&
-              !snapOrgSelectedId && (
-                <p className="govuk-hint govuk-!-margin-top-1">
-                  {snapOrgSearch.trim()
-                    ? "No catalogue match. Free text is still saved — create the institution under Admin → Institutions to link it later."
-                    : "No institutions loaded. Check admin API access or refresh the page."}
-                </p>
-              )}
-            {(form.current_organization || snapOrgSelectedId) && (
-              <p className="govuk-body-s govuk-!-margin-top-2">
-                <strong>Selected:</strong>{" "}
-                {form.current_organization || snapOrgSearch || "—"}{" "}
-                <button
-                  type="button"
-                  className="govuk-link"
-                  style={{
-                    background: "none",
-                    border: "none",
-                    padding: 0,
-                    font: "inherit",
-                    cursor: "pointer",
-                    textDecoration: "underline",
-                  }}
-                  onClick={() => {
-                    setSnapOrgSelectedId("");
-                    setSnapOrgSearch("");
-                    setSnapOrgResults([]);
-                    setField("current_organization", "");
-                  }}
-                >
-                  Clear
-                </button>
-              </p>
-            )}
-          </div>
+            </ul>
+          ) : (
+            <p className="govuk-inset-text">
+              No Active positions yet. Add one under Positions held.
+            </p>
+          )}
 
           <h2 className="govuk-heading-m">Biography</h2>
           <div className="govuk-form-group">
@@ -1988,17 +1945,11 @@ export default function EditOfficialPage({
             Add qualification
           </button>
 
-          <div className="govuk-form-group">
-            <label className="govuk-label" htmlFor="image">
-              Image URL
-            </label>
-            <input
-              id="image"
-              className="govuk-input"
-              value={form.image_url}
-              onChange={(e) => setField("image_url", e.target.value)}
-            />
-          </div>
+          <LeaderImageField
+            value={form.image_url}
+            leaderId={id}
+            onChange={(url) => setField("image_url", url)}
+          />
           <div className="govuk-grid-row">
             <div className="govuk-grid-column-one-third">
               <div className="govuk-form-group">
@@ -3141,8 +3092,9 @@ export default function EditOfficialPage({
                   className="govuk-label govuk-checkboxes__label"
                   htmlFor="set_current"
                 >
-                  Use as current public position (updates snapshot title, party,
-                  seat, organisation, level)
+                  Mark as a current concurrent position (status Active). Multiple
+                  current positions are allowed; the public list uses the primary
+                  Active role as a summary
                 </label>
               </div>
             </div>

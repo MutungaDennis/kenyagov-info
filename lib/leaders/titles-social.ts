@@ -3,7 +3,9 @@
  * Job office (MP, CS) is separate — stored on leaders.title / leader_roles.title.
  */
 
-export const NAME_TITLE_OPTIONS = [
+export type CatalogOption = { value: string; label: string; order?: number };
+
+export const NAME_TITLE_OPTIONS: readonly CatalogOption[] = [
   { value: "H.E.", label: "H.E. (His/Her Excellency)" },
   { value: "Rt. Hon.", label: "Rt. Hon." },
   { value: "Hon.", label: "Hon." },
@@ -25,17 +27,52 @@ export const NAME_TITLE_OPTIONS = [
   { value: "Ms.", label: "Ms." },
   { value: "Miss", label: "Miss" },
   { value: "Madam", label: "Madam" },
+  { value: "Justice", label: "Justice" },
+  { value: "Lady Justice", label: "Lady Justice" },
+  { value: "C.J.", label: "C.J. (Chief Justice)" },
+  { value: "SC", label: "SC (Senior Counsel)" },
+  { value: "Wakili", label: "Wakili" },
+  { value: "Capt.", label: "Capt." },
 ] as const;
 
 /** Display order when multiple titles selected (e.g. Hon. Prof. Dr.) */
 const TITLE_ORDER = NAME_TITLE_OPTIONS.map((t) => t.value);
+
+/** Merge built-in titles with DB catalogue (customs win on same value for label). */
+export function mergeNameTitleOptions(
+  custom: CatalogOption[] | null | undefined,
+): CatalogOption[] {
+  const map = new Map<string, CatalogOption>();
+  for (const o of NAME_TITLE_OPTIONS) {
+    map.set(o.value.toLowerCase(), { value: o.value, label: o.label });
+  }
+  for (const o of custom || []) {
+    if (!o?.value?.trim()) continue;
+    const value = o.value.trim();
+    map.set(value.toLowerCase(), {
+      value,
+      label: (o.label || value).trim(),
+      order: o.order,
+    });
+  }
+  return Array.from(map.values()).sort((a, b) => {
+    const ia = TITLE_ORDER.indexOf(a.value as (typeof TITLE_ORDER)[number]);
+    const ib = TITLE_ORDER.indexOf(b.value as (typeof TITLE_ORDER)[number]);
+    const ra = ia === -1 ? 500 + (a.order ?? 100) : ia;
+    const rb = ib === -1 ? 500 + (b.order ?? 100) : ib;
+    if (ra !== rb) return ra - rb;
+    return a.label.localeCompare(b.label);
+  });
+}
 
 /**
  * Kenyan national honours — post-nominals AFTER the name
  * (e.g. Hon. Jane Doe, E.G.H., O.G.W.).
  * Order follows customary precedence (highest first).
  */
-export const NATIONAL_HONOUR_OPTIONS = [
+export const NATIONAL_HONOUR_OPTIONS: readonly (CatalogOption & {
+  order: number;
+})[] = [
   {
     value: "C.G.H.",
     label: "C.G.H. — Chief of the Order of the Golden Heart",
@@ -116,6 +153,35 @@ export const NATIONAL_HONOUR_OPTIONS = [
 const HONOUR_ORDER = new Map(
   NATIONAL_HONOUR_OPTIONS.map((h) => [h.value, h.order]),
 );
+
+/** Merge built-in national honours with DB catalogue. */
+export function mergeNationalHonourOptions(
+  custom: CatalogOption[] | null | undefined,
+): CatalogOption[] {
+  const map = new Map<string, CatalogOption>();
+  for (const o of NATIONAL_HONOUR_OPTIONS) {
+    map.set(o.value.toLowerCase(), {
+      value: o.value,
+      label: o.label,
+      order: o.order,
+    });
+  }
+  for (const o of custom || []) {
+    if (!o?.value?.trim()) continue;
+    const value = o.value.trim();
+    map.set(value.toLowerCase(), {
+      value,
+      label: (o.label || value).trim(),
+      order: o.order ?? 100,
+    });
+  }
+  return Array.from(map.values()).sort((a, b) => {
+    const ra = a.order ?? HONOUR_ORDER.get(a.value) ?? 999;
+    const rb = b.order ?? HONOUR_ORDER.get(b.value) ?? 999;
+    if (ra !== rb) return ra - rb;
+    return a.label.localeCompare(b.label);
+  });
+}
 
 /** Aliases people type → canonical post-nominal */
 const HONOUR_ALIASES: Record<string, string> = {

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
+import PageContents from "@/components/site/PageContents";
 import { createBrowserClientAsync } from "@/lib/supabase/client";
 import {
   displayName,
@@ -77,6 +78,8 @@ export default function PersonProfilePage() {
   const [person, setPerson] = useState<Leader | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  /** Hide portrait if URL is missing/moved (broken image). */
+  const [portraitFailed, setPortraitFailed] = useState(false);
 
   useEffect(() => {
     const fetchPerson = async () => {
@@ -122,11 +125,13 @@ export default function PersonProfilePage() {
             
           if (fallbackData) {
             setPerson(fallbackData as Leader);
+            setPortraitFailed(false);
             setIsLoading(false);
             return;
           }
         } else if (leaderData) {
           setPerson(leaderData as Leader);
+          setPortraitFailed(false);
           setIsLoading(false);
           return;
         }
@@ -206,6 +211,7 @@ export default function PersonProfilePage() {
           };
 
           setPerson(mappedMCA);
+          setPortraitFailed(false);
           setIsLoading(false);
           return;
         }
@@ -337,6 +343,51 @@ export default function PersonProfilePage() {
   // Check if we actually need to show the summary list (only if there are non-redundant extra details)
   const hasExtraDetails = Boolean(party || showConstituency || showCounty || showWard || person.level || person.sub_category);
 
+  const hasContact = Boolean(
+    person.contact_email ||
+      person.phone ||
+      person.official_website ||
+      primaryRole?.official_email ||
+      primaryRole?.office_location ||
+      socialLinks.length > 0,
+  );
+
+  const contentsItems: { href: string; text: string }[] = [];
+  if (person.bio) contentsItems.push({ href: "#biography", text: "Biography" });
+  if (hasExtraDetails) {
+    contentsItems.push({ href: "#key-details", text: "Key details" });
+  }
+  if (otherActiveRoles.length > 0) {
+    contentsItems.push({
+      href: "#other-current-roles",
+      text: "Other current roles",
+    });
+  }
+  if (roles.length > 0) {
+    contentsItems.push({ href: "#positions-held", text: "Positions held" });
+  }
+  if (qualifications.length > 0) {
+    contentsItems.push({
+      href: "#academic-qualifications",
+      text: "Academic qualifications",
+    });
+  }
+  if (committees.length > 0) {
+    contentsItems.push({
+      href: "#committee-memberships",
+      text: "Committee memberships",
+    });
+  }
+  if (hasContact) contentsItems.push({ href: "#contact", text: "Contact" });
+  if (showHansard) {
+    contentsItems.push({
+      href: "#parliamentary-contributions",
+      text: "Parliamentary contributions",
+    });
+  }
+
+  const showPortrait = Boolean(person.image_url?.trim() && !portraitFailed);
+
   return (
     <>
       <GovUKBreadcrumbs
@@ -351,17 +402,25 @@ export default function PersonProfilePage() {
       <div className="govuk-width-container">
         <main className="govuk-main-wrapper" id="main-content" role="main">
           <div className="govuk-grid-row">
-            <div className="govuk-grid-column-two-thirds">
-              
-              {person.image_url && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={person.image_url}
-                  alt={`Portrait of ${publicName}`}
-                  className="govuk-!-margin-bottom-6 person-profile-image"
-                />
+            {/* Portrait + Contents (left on desktop; stacks above main content on mobile) */}
+            <div className="govuk-grid-column-one-third">
+              {showPortrait && (
+                <div className="app-person-portrait">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={person.image_url!.trim()}
+                    alt={`Portrait of ${publicName}`}
+                    className="app-person-portrait__img"
+                    loading="lazy"
+                    decoding="async"
+                    onError={() => setPortraitFailed(true)}
+                  />
+                </div>
               )}
+              <PageContents items={contentsItems} title="Contents" />
+            </div>
 
+            <div className="govuk-grid-column-two-thirds">
               {/* 1. Name and Prominent Role */}
               <h1 className="govuk-heading-xl govuk-!-margin-bottom-2">
                 {publicName}
@@ -392,86 +451,116 @@ export default function PersonProfilePage() {
 
               {!orgName && <div className="govuk-!-margin-bottom-6" />}
 
-              {/* 2. Biography (Moved up for immediate narrative context, GOV.UK style) */}
+              {/* 2. Biography */}
               {person.bio && (
-                <>
-                  <h2 className="govuk-heading-m">Biography</h2>
+                <section id="biography" aria-labelledby="biography-heading">
+                  <h2 id="biography-heading" className="govuk-heading-m">
+                    Biography
+                  </h2>
                   {person.bio.split(/\n\n+/).map((para, i) => (
                     <p key={i} className="govuk-body">
                       {para}
                     </p>
                   ))}
-                </>
+                </section>
               )}
 
               {/* Separator before Key Details and subsequent sections */}
-              <hr className="govuk-section-break govuk-section-break--l govuk-section-break--visible govuk-!-margin-top-6 govuk-!-margin-bottom-6" />
+              {(hasExtraDetails ||
+                otherActiveRoles.length > 0 ||
+                roles.length > 0) && (
+                <hr className="govuk-section-break govuk-section-break--l govuk-section-break--visible govuk-!-margin-top-6 govuk-!-margin-bottom-6" />
+              )}
 
-              {/* 3. Key Details (Only shows non-redundant extra details) */}
+              {/* 3. Key Details */}
               {hasExtraDetails && (
-                <dl className="govuk-summary-list govuk-!-margin-bottom-6">
-                  {party && (
-                    <div className="govuk-summary-list__row">
-                      <dt className="govuk-summary-list__key">Political party</dt>
-                      <dd className="govuk-summary-list__value">{party}</dd>
-                    </div>
-                  )}
-                  {person.sub_category && (
-                    <div className="govuk-summary-list__row">
-                      <dt className="govuk-summary-list__key">Category</dt>
-                      <dd className="govuk-summary-list__value">{person.sub_category}</dd>
-                    </div>
-                  )}
-                  {showConstituency && (
-                    <div className="govuk-summary-list__row">
-                      <dt className="govuk-summary-list__key">Constituency</dt>
-                      <dd className="govuk-summary-list__value">{primaryRole?.constituency}</dd>
-                    </div>
-                  )}
-                  {showCounty && (
-                    <div className="govuk-summary-list__row">
-                      <dt className="govuk-summary-list__key">County</dt>
-                      <dd className="govuk-summary-list__value">{primaryRole?.county}</dd>
-                    </div>
-                  )}
-                  {showWard && (
-                    <div className="govuk-summary-list__row">
-                      <dt className="govuk-summary-list__key">Ward</dt>
-                      <dd className="govuk-summary-list__value">{primaryRole?.ward}</dd>
-                    </div>
-                  )}
-                  {person.level && (
-                    <div className="govuk-summary-list__row">
-                      <dt className="govuk-summary-list__key">Level</dt>
-                      <dd className="govuk-summary-list__value">{person.level}</dd>
-                    </div>
-                  )}
-                </dl>
+                <section
+                  id="key-details"
+                  className="govuk-!-margin-bottom-6"
+                  aria-labelledby="key-details-heading"
+                >
+                  <h2 id="key-details-heading" className="govuk-heading-m">
+                    Key details
+                  </h2>
+                  <dl className="govuk-summary-list">
+                    {party && (
+                      <div className="govuk-summary-list__row">
+                        <dt className="govuk-summary-list__key">Political party</dt>
+                        <dd className="govuk-summary-list__value">{party}</dd>
+                      </div>
+                    )}
+                    {person.sub_category && (
+                      <div className="govuk-summary-list__row">
+                        <dt className="govuk-summary-list__key">Category</dt>
+                        <dd className="govuk-summary-list__value">{person.sub_category}</dd>
+                      </div>
+                    )}
+                    {showConstituency && (
+                      <div className="govuk-summary-list__row">
+                        <dt className="govuk-summary-list__key">Constituency</dt>
+                        <dd className="govuk-summary-list__value">{primaryRole?.constituency}</dd>
+                      </div>
+                    )}
+                    {showCounty && (
+                      <div className="govuk-summary-list__row">
+                        <dt className="govuk-summary-list__key">County</dt>
+                        <dd className="govuk-summary-list__value">{primaryRole?.county}</dd>
+                      </div>
+                    )}
+                    {showWard && (
+                      <div className="govuk-summary-list__row">
+                        <dt className="govuk-summary-list__key">Ward</dt>
+                        <dd className="govuk-summary-list__value">{primaryRole?.ward}</dd>
+                      </div>
+                    )}
+                    {person.level && (
+                      <div className="govuk-summary-list__row">
+                        <dt className="govuk-summary-list__key">Level</dt>
+                        <dd className="govuk-summary-list__value">{person.level}</dd>
+                      </div>
+                    )}
+                  </dl>
+                </section>
               )}
 
               {/* 4. Other Current Roles */}
               {otherActiveRoles.length > 0 && (
-                <div className="govuk-inset-text govuk-!-margin-bottom-6">
-                  <p className="govuk-body govuk-!-font-weight-bold govuk-!-margin-bottom-2">
+                <section
+                  id="other-current-roles"
+                  className="govuk-!-margin-bottom-6"
+                  aria-labelledby="other-current-roles-heading"
+                >
+                  <h2
+                    id="other-current-roles-heading"
+                    className="govuk-heading-m"
+                  >
                     Other current roles
-                  </p>
-                  <ul className="govuk-list govuk-list--bullet">
-                    {otherActiveRoles.map((r, i) => (
-                      <li key={r.id ? `${r.id}-${i}` : `active-role-${i}`}>
-                        {formatRoleHeadline(r)}
-                        {formatTermRange(r.term_start_date, r.term_end_date)
-                          ? ` (${formatTermRange(r.term_start_date, r.term_end_date)})`
-                          : ""}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                  </h2>
+                  <div className="govuk-inset-text govuk-!-margin-top-0">
+                    <ul className="govuk-list govuk-list--bullet govuk-!-margin-bottom-0">
+                      {otherActiveRoles.map((r, i) => (
+                        <li key={r.id ? `${r.id}-${i}` : `active-role-${i}`}>
+                          {formatRoleHeadline(r)}
+                          {formatTermRange(r.term_start_date, r.term_end_date)
+                            ? ` (${formatTermRange(r.term_start_date, r.term_end_date)})`
+                            : ""}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </section>
               )}
 
               {/* 5. Positions Held (Table) */}
               {roles.length > 0 && (
-                <>
-                  <h2 className="govuk-heading-m govuk-!-margin-top-8">
+                <section
+                  id="positions-held"
+                  aria-labelledby="positions-held-heading"
+                >
+                  <h2
+                    id="positions-held-heading"
+                    className="govuk-heading-m govuk-!-margin-top-8"
+                  >
                     Positions held
                   </h2>
                   <p className="govuk-body">
@@ -543,13 +632,19 @@ export default function PersonProfilePage() {
                       </tbody>
                     </table>
                   </div>
-                </>
+                </section>
               )}
 
               {/* 6. Academic Qualifications */}
               {qualifications.length > 0 && (
-                <>
-                  <h2 className="govuk-heading-m govuk-!-margin-top-8">
+                <section
+                  id="academic-qualifications"
+                  aria-labelledby="academic-qualifications-heading"
+                >
+                  <h2
+                    id="academic-qualifications-heading"
+                    className="govuk-heading-m govuk-!-margin-top-8"
+                  >
                     Academic qualifications
                   </h2>
                   <ul className="govuk-list govuk-list--bullet">
@@ -557,13 +652,19 @@ export default function PersonProfilePage() {
                       <li key={index}>{formatQualification(q)}</li>
                     ))}
                   </ul>
-                </>
+                </section>
               )}
 
               {/* 7. Committee Memberships */}
               {committees.length > 0 && (
-                <>
-                  <h2 className="govuk-heading-m govuk-!-margin-top-8">
+                <section
+                  id="committee-memberships"
+                  aria-labelledby="committee-memberships-heading"
+                >
+                  <h2
+                    id="committee-memberships-heading"
+                    className="govuk-heading-m govuk-!-margin-top-8"
+                  >
                     Committee memberships
                   </h2>
                   <ul className="govuk-list govuk-list--bullet">
@@ -584,18 +685,16 @@ export default function PersonProfilePage() {
                       </li>
                     ))}
                   </ul>
-                </>
+                </section>
               )}
 
               {/* 8. Contact */}
-              {(person.contact_email ||
-                person.phone ||
-                person.official_website ||
-                primaryRole?.official_email ||
-                primaryRole?.office_location ||
-                socialLinks.length > 0) && (
-                <>
-                  <h2 className="govuk-heading-m govuk-!-margin-top-8">
+              {hasContact && (
+                <section id="contact" aria-labelledby="contact-heading">
+                  <h2
+                    id="contact-heading"
+                    className="govuk-heading-m govuk-!-margin-top-8"
+                  >
                     Contact
                   </h2>
                   <dl className="govuk-summary-list">
@@ -666,18 +765,30 @@ export default function PersonProfilePage() {
                       </div>
                     ))}
                   </dl>
-                </>
+                </section>
               )}
 
               {showHansard && (
-                <p className="govuk-body govuk-!-margin-top-8">
-                  <Link
-                    href={`/government/legislature/hansard/member/${person.slug}`}
-                    className="govuk-link"
+                <section
+                  id="parliamentary-contributions"
+                  className="govuk-!-margin-top-8"
+                  aria-labelledby="parliamentary-contributions-heading"
+                >
+                  <h2
+                    id="parliamentary-contributions-heading"
+                    className="govuk-heading-m"
                   >
-                    Parliamentary contributions (Hansard)
-                  </Link>
-                </p>
+                    Parliamentary contributions
+                  </h2>
+                  <p className="govuk-body">
+                    <Link
+                      href={`/government/legislature/hansard/member/${person.slug}`}
+                      className="govuk-link"
+                    >
+                      View Hansard contributions
+                    </Link>
+                  </p>
+                </section>
               )}
             </div>
           </div>
@@ -685,10 +796,41 @@ export default function PersonProfilePage() {
       </div>
 
       <style jsx>{`
-        .person-profile-image {
-          max-width: 100%;
+        /* GOV.UK-inspired minister portrait: modest width, light frame */
+        .app-person-portrait {
+          margin-bottom: 15px;
+          max-width: 200px;
+        }
+        .app-person-portrait__img {
+          display: block;
+          width: 100%;
+          max-width: 200px;
           height: auto;
+          max-height: 260px;
+          object-fit: cover;
+          object-position: center top;
           border: 1px solid #b1b4b6;
+          background-color: #f3f2f1;
+        }
+        /* Smooth jump targets under sticky headers if any */
+        :global(#biography),
+        :global(#key-details),
+        :global(#other-current-roles),
+        :global(#positions-held),
+        :global(#academic-qualifications),
+        :global(#committee-memberships),
+        :global(#contact),
+        :global(#parliamentary-contributions) {
+          scroll-margin-top: 1rem;
+        }
+        @media (max-width: 40.0625em) {
+          .app-person-portrait {
+            max-width: 140px;
+          }
+          .app-person-portrait__img {
+            max-width: 140px;
+            max-height: 180px;
+          }
         }
       `}</style>
     </>

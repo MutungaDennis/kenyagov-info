@@ -40,7 +40,7 @@ const LEADER_LIST_SELECT_BASIC = `id, slug, full_name, first_name, other_names, 
  * - q: search name, org, seat, party, role title (via roles)
  * - organization: filter by organisation (current_organization or any leader_roles.organization)
  * - sort: default | az | za
- * - active: 1 = active only
+ * - active: 1 = active only; 0 = inactive only; omit = all
  */
 export async function GET(request: NextRequest) {
   const auth = await requireAdminApi();
@@ -55,7 +55,18 @@ export async function GET(request: NextRequest) {
     Math.max(1, parseInt(searchParams.get("limit") || "50", 10)),
   );
   const offset = Math.max(0, parseInt(searchParams.get("offset") || "0", 10));
-  const activeOnly = searchParams.get("active") === "1";
+  const activeParam = searchParams.get("active");
+  const applyActiveFilter = <T extends { eq: (c: string, v: boolean) => T }>(
+    query: T,
+  ): T => {
+    if (activeParam === "1" || activeParam === "true") {
+      return query.eq("is_active", true);
+    }
+    if (activeParam === "0" || activeParam === "false") {
+      return query.eq("is_active", false);
+    }
+    return query;
+  };
 
   // --- Organisation FILTER (value from dropdown) ---
   // Collect leader IDs that hold/held this organisation via leader_roles
@@ -143,9 +154,7 @@ export async function GET(request: NextRequest) {
     .order("first_name", { ascending: orderAsc })
     .range(offset, offset + limit - 1);
 
-  if (activeOnly) {
-    query = query.eq("is_active", true);
-  }
+  query = applyActiveFilter(query);
 
   // Organisation filter: restrict to leaders in orgLeaderIds (or none)
   if (organization.length >= 1) {
@@ -211,7 +220,7 @@ export async function GET(request: NextRequest) {
       .order("surname", { ascending: orderAsc })
       .order("first_name", { ascending: orderAsc })
       .range(offset, offset + limit - 1);
-    if (activeOnly) qRetry = qRetry.eq("is_active", true);
+    qRetry = applyActiveFilter(qRetry);
     if (organization.length >= 1 && orgLeaderIds?.length) {
       qRetry = qRetry.in("id", orgLeaderIds.slice(0, 500));
     }
@@ -243,7 +252,7 @@ export async function GET(request: NextRequest) {
       .select(LEADER_LIST_SELECT_BASIC, { count: "exact" })
       .order("surname", { ascending: orderAsc })
       .range(offset, offset + limit - 1);
-    if (activeOnly) q2 = q2.eq("is_active", true);
+    q2 = applyActiveFilter(q2);
     if (organization.length >= 1) {
       if (!orgLeaderIds || orgLeaderIds.length === 0) {
         return NextResponse.json({

@@ -4,6 +4,7 @@ import {
   insertRoleWithFallback,
   prepareRoleInsert,
 } from "@/lib/leaders/resolve-refs";
+import { syncLeaderSnapshotFromActiveRoles } from "@/lib/leaders/sync-current";
 
 export const dynamic = "force-dynamic";
 
@@ -71,48 +72,12 @@ export async function POST(request: NextRequest, context: Ctx) {
     );
   }
 
-  const status = String(data.status || "");
-  const term_end_date = data.term_end_date;
-  const isCurrent =
-    body.set_as_current === true ||
-    (status === "Active" && !term_end_date);
-
-  if (isCurrent && body.set_as_current !== false) {
-    await syncLeaderCurrentFields(auth.supabase, leaderId, data);
-  }
+  // Always refresh list snapshot from all Active concurrent roles
+  // (multiple current positions are allowed)
+  await syncLeaderSnapshotFromActiveRoles(auth.supabase, leaderId);
 
   return NextResponse.json(
     { data, dropped: dropped?.length ? dropped : undefined },
     { status: 201 },
   );
-}
-
-async function syncLeaderCurrentFields(
-  supabase: {
-    from: (t: string) => {
-      update: (v: Record<string, unknown>) => {
-        eq: (
-          col: string,
-          val: string,
-        ) => PromiseLike<{ error: { message: string } | null }>;
-      };
-    };
-  },
-  leaderId: string,
-  role: Record<string, unknown> | null,
-) {
-  if (!role) return;
-  // Do not overwrite honorific-style leaders.title if role title is job office —
-  // still sync job snapshot fields used on list pages
-  await supabase
-    .from("leaders")
-    .update({
-      title: role.title || null,
-      current_party: role.party || null,
-      current_constituency: role.constituency || null,
-      current_county: role.county || null,
-      current_organization: role.organization || null,
-      level: role.level || null,
-    })
-    .eq("id", leaderId);
 }
