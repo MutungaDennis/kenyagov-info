@@ -1,7 +1,16 @@
 'use client';
 
 import React, { useState } from 'react';
-import { FileText, Edit2, CheckCircle, AlertCircle, Loader2, X, Link as LinkIcon, HelpCircle } from 'lucide-react';
+import {
+  IconAlert,
+  IconCheck,
+  IconEdit,
+  IconFile,
+  IconHelp,
+  IconLink,
+  IconSpinner,
+  IconX,
+} from "@/components/admin/AdminIcons";
 
 // Types matching our backend + new supabaseLeaderId
 interface Contribution {
@@ -438,7 +447,7 @@ export default function HansardUploadPanel({ embedded = false }: UploadPanelProp
           <div className="mb-8 rounded-xl border border-emerald-200 bg-emerald-50 p-6">
             <div className="flex items-start gap-4">
               <div className="p-1 bg-emerald-100 rounded-full">
-                <CheckCircle className="w-6 h-6 text-emerald-600" />
+                <IconCheck className="w-6 h-6 text-emerald-600" />
               </div>
               <div className="flex-1">
                 <h3 className="font-semibold text-emerald-800 text-lg">Hansard Published Successfully!</h3>
@@ -471,10 +480,10 @@ export default function HansardUploadPanel({ embedded = false }: UploadPanelProp
         {/* Error Banner */}
         {error && (
           <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
+            <IconAlert className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
             <div className="flex-1 text-red-700 text-sm">{error}</div>
             <button onClick={() => setError(null)} className="text-red-400 hover:text-red-600">
-              <X className="w-4 h-4" />
+              <IconX className="w-4 h-4" />
             </button>
           </div>
         )}
@@ -571,12 +580,12 @@ Hon. Members: Put the question!
                 >
                   {isProcessing ? (
                     <>
-                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <IconSpinner className="w-5 h-5 animate-spin" />
                       {processingStep || 'Processing...'}
                     </>
                   ) : (
                     <>
-                      <FileText className="w-5 h-5" /> Extract with Grok
+                      <IconFile className="w-5 h-5" /> Extract with Grok
                     </>
                   )}
                 </button>
@@ -594,7 +603,7 @@ Hon. Members: Put the question!
           <div id="match-resolve-section" className="mt-8">
             <div className="bg-amber-50 rounded-2xl shadow-sm border border-amber-200 overflow-hidden">
               <div className="px-8 py-5 border-b border-amber-200 flex items-start gap-3">
-                <HelpCircle className="w-6 h-6 text-amber-600 flex-shrink-0 mt-0.5" />
+                <IconHelp className="w-6 h-6 text-amber-600 flex-shrink-0 mt-0.5" />
                 <div>
                   <h2 className="text-lg font-semibold text-amber-900">
                     Help match these speakers
@@ -695,7 +704,7 @@ Hon. Members: Put the question!
                         />
                         {issueSearching[key] && (
                           <div className="text-xs text-emerald-600 mt-1 flex items-center gap-1">
-                            <Loader2 className="w-3 h-3 animate-spin" /> Searching…
+                            <IconSpinner className="w-3 h-3 animate-spin" /> Searching…
                           </div>
                         )}
                         {(issueSearchResults[key] || []).length > 0 && (
@@ -783,7 +792,7 @@ Hon. Members: Put the question!
 
                           {contrib.supabaseLeaderId && (
                             <span className="inline-flex items-center gap-1 text-[10px] font-medium bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">
-                              <LinkIcon className="w-3 h-3" /> LINKED
+                              <IconLink className="w-3 h-3" /> LINKED
                             </span>
                           )}
                           {!contrib.supabaseLeaderId && contrib.matchStatus === 'ambiguous' && (
@@ -821,7 +830,7 @@ Hon. Members: Put the question!
                         onClick={() => openEditModal(contrib, index)}
                         className="opacity-60 group-hover:opacity-100 flex items-center gap-1.5 text-sm font-medium text-emerald-600 hover:text-emerald-700 px-3 py-1.5 rounded-lg hover:bg-emerald-50 transition-all"
                       >
-                        <Edit2 className="w-4 h-4" />
+                        <IconEdit className="w-4 h-4" />
                         Edit
                       </button>
                     </div>
@@ -834,7 +843,7 @@ Hon. Members: Put the question!
                   onClick={handleStartOver}
                   className="text-sm font-medium text-gray-600 hover:text-gray-800 flex items-center gap-2"
                 >
-                  <X className="w-4 h-4" /> Start over
+                  <IconX className="w-4 h-4" /> Start over
                 </button>
 
                 <button
@@ -844,11 +853,11 @@ Hon. Members: Put the question!
                 >
                   {isSaving ? (
                     <>
-                      <Loader2 className="w-5 h-5 animate-spin" /> Publishing to Sanity...
+                      <IconSpinner className="w-5 h-5 animate-spin" /> Publishing to Sanity...
                     </>
                   ) : (
                     <>
-                      <CheckCircle className="w-5 h-5" /> Publish {structuredData.contributions.length} Contributions to Sanity
+                      <IconCheck className="w-5 h-5" /> Publish {structuredData.contributions.length} Contributions to Sanity
                     </>
                   )}
                 </button>
@@ -873,7 +882,7 @@ Hon. Members: Put the question!
                 <div className="text-sm text-gray-500">Correct details or link to official leader record</div>
               </div>
               <button onClick={closeEditModal} className="text-gray-400 hover:text-gray-600">
-                <X className="w-5 h-5" />
+                <IconX className="w-5 h-5" />
               </button>
             </div>
 
@@ -882,7 +891,7 @@ Hon. Members: Put the question!
               <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
                 <div className="flex items-center justify-between mb-2">
                   <label className="text-xs font-semibold text-emerald-700 flex items-center gap-1.5">
-                    <LinkIcon className="w-3.5 h-3.5" /> LINK TO LEADER (from Supabase leaders table)
+                    <IconLink className="w-3.5 h-3.5" /> LINK TO LEADER (from Supabase leaders table)
                   </label>
                   {editingContribution.supabaseLeaderId && (
                     <button
@@ -933,7 +942,7 @@ Hon. Members: Put the question!
 
                     {isSearchingLeaders && (
                       <div className="text-xs text-emerald-600 mt-1.5 flex items-center gap-1.5">
-                        <Loader2 className="w-3 h-3 animate-spin" /> Searching leaders table...
+                        <IconSpinner className="w-3 h-3 animate-spin" /> Searching leaders table...
                       </div>
                     )}
                   </>

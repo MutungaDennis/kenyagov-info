@@ -1,4 +1,13 @@
-import { format } from 'date-fns';
+/** Native date format — avoids date-fns in the Worker bundle (CF Free size). */
+function formatDayMonthYear(value: string | Date): string {
+  const d = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(d.getTime())) return String(value);
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(d);
+}
 
 type LastUpdatedProps = {
   lastUpdated: string | Date;     // ISO string or Date object
@@ -11,10 +20,10 @@ export default function LastUpdated({
   published, 
   className = "" 
 }: LastUpdatedProps) {
-  const formattedLastUpdated = format(new Date(lastUpdated), "d MMMM yyyy");
+  const formattedLastUpdated = formatDayMonthYear(lastUpdated);
   
   const formattedPublished = published 
-    ? format(new Date(published), "d MMMM yyyy") 
+    ? formatDayMonthYear(published) 
     : null;
 
   return (

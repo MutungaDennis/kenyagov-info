@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Loader2 } from "lucide-react";
+import { IconSpinner } from "@/components/admin/AdminIcons";
 import { adminPath } from "@/lib/admin-path";
 import {
   deleteAtSortedIndex,
@@ -1109,7 +1109,7 @@ export default function ManualHansardEntry({
             >
               {isLoadingExisting ? (
                 <>
-                  <Loader2 className="inline w-4 h-4 animate-spin" /> Loading…
+                  <IconSpinner className="inline w-4 h-4" /> Loading…
                 </>
               ) : (
                 "Load sitting"

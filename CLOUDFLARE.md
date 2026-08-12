@@ -237,9 +237,12 @@ from the production dependency graph. `pnpm run build` runs a size gate
 
 **Not installed in production** (removed from `package.json` so they cannot bloat
 the Worker): `sanity`, `@sanity/vision`, `next-sanity`, `pdf-parse*`, `ai` / AI
-SDKs, `next-auth`, `styled-components`, `sass`.
+SDKs, `next-auth`, `styled-components`, `sass`, `lucide-react`, `date-fns`.
+(`zod` is **devDependency** only — local Hansard scripts, not the Worker.)
 
 Content still uses `@sanity/client` + `@portabletext/react` only.
+Admin Hansard UI uses tiny inline SVG icons (`components/admin/AdminIcons.tsx`)
+instead of `lucide-react`. Dates use `Intl.DateTimeFormat` instead of `date-fns`.
 
 | Feature | On Cloudflare | Alternative |
 |---------|---------------|-------------|

@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ["pdfjs-dist"],
 
   // Keep compile-only / unused packages out of the OpenNext Worker (gzip limit).
-  // Without this, sass.dart.js (~5MB) and other tooling get file-traced into the deploy.
+  // Free plan = 3 MiB gzip; every extra traced module risks deploy failure.
   outputFileTracingExcludes: {
     "*": [
       "**/node_modules/sass/**/*",
@@ -22,6 +22,14 @@ const nextConfig: NextConfig = {
       "**/node_modules/**/next/dist/compiled/next-server/app-page-experimental.runtime.prod.js",
       "**/node_modules/**/next/dist/compiled/next-server/app-page-turbo-experimental.runtime.prod.js",
       "**/node_modules/**/next/dist/compiled/next-server/app-page-turbo.runtime.prod.js",
+      "**/node_modules/**/next/dist/compiled/react-dom-experimental/**/*",
+      "**/node_modules/**/next/dist/compiled/react-server-dom-webpack-experimental/**/*",
+      "**/node_modules/**/next/dist/compiled/react-server-dom-turbopack-experimental/**/*",
+      "**/node_modules/**/next/dist/compiled/react-server-dom-turbopack/**/*",
+      "**/node_modules/**/next/dist/compiled/babel/**/*",
+      "**/node_modules/**/next/dist/compiled/babel-packages/**/*",
+      "**/node_modules/**/next/dist/compiled/webpack/**/*",
+      "**/node_modules/**/next/dist/compiled/@vercel/og/**/*",
       "**/node_modules/pdf-parse/**/*",
       "**/node_modules/pdf-parse-fork/**/*",
       "**/node_modules/pdfjs-dist/**/*",
@@ -35,7 +43,19 @@ const nextConfig: NextConfig = {
       "**/node_modules/esbuild/**/*",
       "**/node_modules/webpack/**/*",
       "**/node_modules/typescript/**/*",
+      // Replaced / unused in Worker (local scripts only)
+      "**/node_modules/lucide-react/**/*",
+      "**/node_modules/date-fns/**/*",
+      "**/node_modules/zod/**/*",
+      // Never ship local tooling / seed scripts into the Worker
+      "**/scripts/**/*",
+      "**/app/_archive/**/*",
     ],
+  },
+
+  // Tree-shake barrel packages (keeps Worker under CF Free 3 MiB gzip)
+  experimental: {
+    optimizePackageImports: ["@portabletext/react"],
   },
 
   webpack: (config) => {
