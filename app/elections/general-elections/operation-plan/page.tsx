@@ -7,7 +7,7 @@ import ExternalLink from "@/components/site/ExternalLink";
 import {
   EOP_META,
   EOP_SUBSECTION_LABELS,
-  eopActivities2027,
+  loadEopActivities,
   type EopActivity,
   type EopSection,
 } from "@/lib/data/election-eop";
@@ -120,9 +120,15 @@ function ActivityTable({
   );
 }
 
-function SectionBlock({ section }: { section: EopSection }) {
-  const items = getActivitiesForSection(section.id);
-  const counts = sectionStatusCounts(section.id);
+function SectionBlock({
+  section,
+  activities,
+}: {
+  section: EopSection;
+  activities: EopActivity[];
+}) {
+  const items = getActivitiesForSection(activities, section.id);
+  const counts = sectionStatusCounts(activities, section.id);
 
   // Group by subsection when present
   const subsections = new Map<string | null, EopActivity[]>();
@@ -186,11 +192,12 @@ function SectionBlock({ section }: { section: EopSection }) {
   );
 }
 
-export default function ElectionOperationPlanPage() {
+export default async function ElectionOperationPlanPage() {
+  const activities = await loadEopActivities();
   const sections = getEopSections();
-  const next = getNextPublicActivity();
-  const happening = getHappeningPublicActivities();
-  const upcomingPublic = getUpcomingPublicActivities(new Date(), 15);
+  const next = getNextPublicActivity(activities);
+  const happening = getHappeningPublicActivities(activities);
+  const upcomingPublic = getUpcomingPublicActivities(activities, new Date(), 15);
   const days = next ? daysUntilEopActivity(next) : null;
   const nextStatus = next ? getEopActivityStatus(next) : null;
 
@@ -228,7 +235,7 @@ export default function ElectionOperationPlanPage() {
 
       <div className="govuk-inset-text">
         <p className="govuk-body">
-          This is the detailed operational plan ({eopActivities2027.length}{" "}
+          This is the detailed operational plan ({activities.length}{" "}
           activities). For the shorter legal milestones — public officer
           resignation, campaign period, nominations and Election Day — see the{" "}
           <Link
@@ -349,7 +356,7 @@ export default function ElectionOperationPlanPage() {
           .
         </p>
         {publicSections.map((s) => (
-          <SectionBlock key={s.id} section={s} />
+          <SectionBlock key={s.id} section={s} activities={activities} />
         ))}
       </section>
 
@@ -363,7 +370,7 @@ export default function ElectionOperationPlanPage() {
           readiness.
         </p>
         {operationalSections.map((s) => (
-          <SectionBlock key={s.id} section={s} />
+          <SectionBlock key={s.id} section={s} activities={activities} />
         ))}
       </section>
 

@@ -2,8 +2,8 @@
 // Date-aware status for IEBC Election Operation Plan activities
 
 import {
-  eopActivities2027,
   EOP_SECTIONS,
+  loadEopActivities,
   type EopActivity,
   type EopSection,
 } from "./election-eop";
@@ -43,31 +43,35 @@ export function getEopActivityStatus(
   return "past";
 }
 
-export function getAllEopActivities(): EopActivity[] {
-  return eopActivities2027;
+export async function getAllEopActivities(): Promise<EopActivity[]> {
+  return loadEopActivities();
 }
 
 export function getEopSections(): EopSection[] {
   return EOP_SECTIONS;
 }
 
-export function getActivitiesForSection(sectionId: string): EopActivity[] {
-  return eopActivities2027.filter((a) => a.sectionId === sectionId);
+export function getActivitiesForSection(
+  activities: EopActivity[],
+  sectionId: string,
+): EopActivity[] {
+  return activities.filter((a) => a.sectionId === sectionId);
 }
 
 export function getPublicInterestActivities(
+  activities: EopActivity[],
   today: Date = new Date(),
 ): EopActivity[] {
-  return eopActivities2027
-    .filter((a) => a.publicInterest)
-    .sort(compareByStart);
+  void today;
+  return activities.filter((a) => a.publicInterest).sort(compareByStart);
 }
 
 export function getUpcomingPublicActivities(
+  activities: EopActivity[],
   today: Date = new Date(),
   limit = 12,
 ): EopActivity[] {
-  return getPublicInterestActivities(today)
+  return getPublicInterestActivities(activities, today)
     .filter((a) => {
       const st = getEopActivityStatus(a, today);
       return st === "upcoming" || st === "happening";
@@ -76,20 +80,22 @@ export function getUpcomingPublicActivities(
 }
 
 export function getHappeningPublicActivities(
+  activities: EopActivity[],
   today: Date = new Date(),
 ): EopActivity[] {
-  return getPublicInterestActivities(today).filter(
+  return getPublicInterestActivities(activities, today).filter(
     (a) => getEopActivityStatus(a, today) === "happening",
   );
 }
 
 export function getNextPublicActivity(
+  activities: EopActivity[],
   today: Date = new Date(),
 ): EopActivity | null {
-  const happening = getHappeningPublicActivities(today)[0];
+  const happening = getHappeningPublicActivities(activities, today)[0];
   if (happening) return happening;
   return (
-    getPublicInterestActivities(today).find(
+    getPublicInterestActivities(activities, today).find(
       (a) => getEopActivityStatus(a, today) === "upcoming",
     ) ?? null
   );
@@ -149,10 +155,11 @@ export function eopStatusTagClass(status: EopStatus): string {
 
 /** Count activities by status within a section */
 export function sectionStatusCounts(
+  activities: EopActivity[],
   sectionId: string,
   today: Date = new Date(),
 ): { happening: number; upcoming: number; past: number } {
-  const items = getActivitiesForSection(sectionId);
+  const items = getActivitiesForSection(activities, sectionId);
   let happening = 0;
   let upcoming = 0;
   let past = 0;

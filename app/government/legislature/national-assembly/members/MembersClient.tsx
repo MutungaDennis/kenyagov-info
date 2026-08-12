@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { nationalAssemblyMembers, type Member } from "@/data/national-assembly-members";
+import type { Member } from "@/data/national-assembly-members";
 
 const ITEMS_PER_PAGE = 50;
 
@@ -24,19 +24,40 @@ export default function MembersClient() {
   const initialParty = searchParams.get('party') || "";
   const initialSearch = searchParams.get('q') || "";
 
+  const [members, setMembers] = useState<Member[] | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState(initialSearch);
   const [selectedParty, setSelectedParty] = useState(initialParty);
   const [selectedType, setSelectedType] = useState(initialType);
   const [currentPage, setCurrentPage] = useState(1);
 
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/data/national-assembly-members.json")
+      .then((r) => {
+        if (!r.ok) throw new Error(`Failed to load members (${r.status})`);
+        return r.json();
+      })
+      .then((data: Member[]) => {
+        if (!cancelled) setMembers(Array.isArray(data) ? data : []);
+      })
+      .catch((err: Error) => {
+        if (!cancelled) setLoadError(err.message || "Failed to load members");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   // Sort members alphabetically by formatted name (First Last) for better UX
   const sortedMembers = useMemo(() => {
-    return [...nationalAssemblyMembers].sort((a, b) => {
+    if (!members) return [];
+    return [...members].sort((a, b) => {
       const nameA = formatName(a.name).toLowerCase();
       const nameB = formatName(b.name).toLowerCase();
       return nameA.localeCompare(nameB);
     });
-  }, []);
+  }, [members]);
 
   // Filter full array based on user interactions
   const filteredMembers = useMemo(() => {
@@ -98,6 +119,22 @@ export default function MembersClient() {
     link.click();
     document.body.removeChild(link);
   };
+
+  if (loadError) {
+    return (
+      <main className="govuk-main-wrapper" id="main-content" role="main">
+        <p className="govuk-body">Could not load the members list. {loadError}</p>
+      </main>
+    );
+  }
+
+  if (!members) {
+    return (
+      <main className="govuk-main-wrapper" id="main-content" role="main">
+        <p className="govuk-body">Loading members of the National Assembly…</p>
+      </main>
+    );
+  }
 
   return (
     <main className="govuk-main-wrapper" id="main-content" role="main">

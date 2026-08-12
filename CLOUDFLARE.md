@@ -244,6 +244,13 @@ Content still uses `@sanity/client` + `@portabletext/react` only.
 Admin Hansard UI uses tiny inline SVG icons (`components/admin/AdminIcons.tsx`)
 instead of `lucide-react`. Dates use `Intl.DateTimeFormat` instead of `date-fns`.
 
+**Large static datasets** (EOP timelines, MPs list, cabinet bios, etc.) live under
+`public/data/*.json` and are loaded at runtime via `lib/data/load-static-json.ts`
+(or client `fetch`). Do **not** re-import those arrays into TypeScript modules —
+that embeds them in `handler.mjs` and will re-break the Free 3 MiB limit.
+Regenerate JSON with `pnpm exec tsx scripts/extract-public-data.mjs` only when
+editing the source of truth (keep a temporary full `.ts` or edit the JSON).
+
 | Feature | On Cloudflare | Alternative |
 |---------|---------------|-------------|
 | Sanity Studio | **Not in Worker** — `/studio` redirects to managed Studio | `npx sanity@latest deploy` → `*.sanity.studio` |
