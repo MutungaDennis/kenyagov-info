@@ -1,13 +1,17 @@
 import { MetadataRoute } from 'next';
 import { createPublicClient } from '@/lib/supabase/public';
+import {
+  hasRealSupabasePublicEnv,
+  resolveSupabasePublicEnv,
+} from '@/lib/supabase/env';
 import { sanityClient } from '@/lib/sanity/client';
 import { getAllTopicSlugs } from '@/lib/topics';
 import { getAllNationalEventSlugs } from '@/lib/data/national-events';
 import { getAllAskProfileSlugs } from '@/lib/data/ask-shows';
+import { counties } from '@/data/counties';
 
-export const revalidate = 86400;
-
-/** Rebuild at most daily — crawlers must not force heavy Worker work each hit. */
+/** Rebuild periodically — crawlers must not force heavy Worker work each hit. */
+export const revalidate = 3600;
 
 const BASE_URL = 'https://www.citizenguide.ke';
 
@@ -18,115 +22,222 @@ interface SitemapEntry {
   priority?: number;
 }
 
+type SlugRow = { slug: string; updated_at?: string | null };
+
+/** Paginate Supabase so we stay under default max-rows and Worker time limits. */
+async function fetchAllSlugs(
+  table: string,
+  options: {
+    /** Extra PostgREST filters applied after select (eq/neq). */
+    apply?: (q: any) => any;
+    pageSize?: number;
+    maxRows?: number;
+  } = {},
+): Promise<SlugRow[]> {
+  const pageSize = options.pageSize ?? 500;
+  const maxRows = options.maxRows ?? 5000;
+  const rows: SlugRow[] = [];
+
+  try {
+    const supabase = createPublicClient();
+    for (let from = 0; from < maxRows; from += pageSize) {
+      const to = from + pageSize - 1;
+      let q: any = supabase.from(table).select('slug, updated_at').range(from, to);
+      if (options.apply) {
+        q = options.apply(q);
+      }
+      const { data, error } = await q;
+      if (error) {
+        console.error(`[sitemap] ${table} page ${from}-${to}:`, error.message);
+        break;
+      }
+      if (!data?.length) break;
+      for (const row of data as { slug?: string; updated_at?: string | null }[]) {
+        if (row.slug) rows.push({ slug: row.slug, updated_at: row.updated_at });
+      }
+      if (data.length < pageSize) break;
+    }
+  } catch (e) {
+    console.error(`[sitemap] ${table} failed:`, e);
+  }
+
+  return rows;
+}
+
+/**
+ * Fallback when Supabase client fails on the Worker: direct PostgREST.
+ * Uses runtime env (Cloudflare Worker vars), not build-time placeholders alone.
+ */
+async function fetchSlugsViaRest(
+  table: string,
+  queryExtra = '',
+  maxRows = 2000,
+): Promise<{ slug: string; updated_at?: string | null }[]> {
+  const env = resolveSupabasePublicEnv(false);
+  if (!hasRealSupabasePublicEnv(env)) {
+    console.error('[sitemap] Supabase env missing at runtime — dynamic URLs skipped');
+    return [];
+  }
+
+  const rows: { slug: string; updated_at?: string | null }[] = [];
+  const pageSize = 500;
+
+  try {
+    for (let from = 0; from < maxRows; from += pageSize) {
+      const to = from + pageSize - 1;
+      const qs = new URLSearchParams();
+      qs.set('select', 'slug,updated_at');
+      const url = `${env.url}/rest/v1/${table}?${qs.toString()}${queryExtra ? `&${queryExtra}` : ''}`;
+      const res = await fetch(url, {
+        headers: {
+          apikey: env.key,
+          Authorization: `Bearer ${env.key}`,
+          Range: `${from}-${to}`,
+          Prefer: 'count=exact',
+        },
+        // Cache at the edge for the route revalidate window
+        next: { revalidate: 3600 },
+      });
+      if (!res.ok) {
+        console.error(`[sitemap] REST ${table} ${res.status}:`, await res.text().catch(() => ''));
+        break;
+      }
+      const data = (await res.json()) as { slug?: string; updated_at?: string | null }[];
+      if (!Array.isArray(data) || data.length === 0) break;
+      for (const row of data) {
+        if (row.slug) rows.push({ slug: row.slug, updated_at: row.updated_at });
+      }
+      if (data.length < pageSize) break;
+    }
+  } catch (e) {
+    console.error(`[sitemap] REST ${table} failed:`, e);
+  }
+
+  return rows;
+}
+
 async function getSupabaseUrls(): Promise<SitemapEntry[]> {
-  const supabase = createPublicClient();
   const urls: SitemapEntry[] = [];
+  const envOk = hasRealSupabasePublicEnv(resolveSupabasePublicEnv(false));
 
-  // 1. LEADERS (Now at /government/people/[slug])
-  try {
-    const { data: leaders } = await supabase
-      .from('leaders')
-      .select('slug, updated_at')
-      .eq('is_active', true)
-      .limit(1000);
-    
-    leaders?.forEach((leader: any) => {
-      if (leader.slug) {
-        urls.push({
-          url: `${BASE_URL}/government/people/${leader.slug}`,
-          lastModified: leader.updated_at ? new Date(leader.updated_at) : undefined,
-          changeFrequency: 'monthly',
-          priority: 0.7,
-        });
-      }
+  // 1. LEADERS → /government/people/[slug]
+  let leaders = envOk
+    ? await fetchAllSlugs('leaders', {
+        apply: (q) => q.eq('is_active', true),
+        maxRows: 2000,
+      })
+    : [];
+  if (leaders.length === 0) {
+    leaders = await fetchSlugsViaRest('leaders', 'is_active=eq.true', 2000);
+  }
+  for (const leader of leaders) {
+    urls.push({
+      url: `${BASE_URL}/government/people/${leader.slug}`,
+      lastModified: leader.updated_at ? new Date(leader.updated_at) : undefined,
+      changeFrequency: 'monthly',
+      priority: 0.7,
     });
-  } catch (e) { /* ignore */ }
+  }
 
-  // 2. INSTITUTIONS (Now at /government/institutions/[slug])
-  try {
-    const { data: institutions } = await supabase
-      .from('institutions')
-      .select('slug, updated_at')
-      .eq('is_active', true)
-      .limit(1000);
-    
-    institutions?.forEach((inst: any) => {
-      if (inst.slug) {
-        urls.push({
-          url: `${BASE_URL}/government/institutions/${inst.slug}`,
-          lastModified: inst.updated_at ? new Date(inst.updated_at) : undefined,
-          changeFrequency: 'weekly',
-          priority: 0.8,
-        });
-      }
+  // 2. MCAs (published) → same people path
+  let mcas = envOk
+    ? await fetchAllSlugs('mcas', {
+        apply: (q) => q.neq('status', 'Unpublished'),
+        maxRows: 3000,
+      })
+    : [];
+  if (mcas.length === 0) {
+    mcas = await fetchSlugsViaRest('mcas', 'status=neq.Unpublished', 3000);
+  }
+  const peopleSlugs = new Set(urls.map((u) => u.url));
+  for (const mca of mcas) {
+    const url = `${BASE_URL}/government/people/${mca.slug}`;
+    if (peopleSlugs.has(url)) continue;
+    urls.push({
+      url,
+      lastModified: mca.updated_at ? new Date(mca.updated_at) : undefined,
+      changeFrequency: 'monthly',
+      priority: 0.55,
     });
-  } catch (e) { /* ignore */ }
+  }
 
-  // 3. COUNTIES (Now at /government/counties/[slug])
-  try {
-    const { data: counties } = await supabase
-      .from('counties')
-      .select('slug, updated_at')
-      .eq('is_active', true);
-    
-    counties?.forEach((c: any) => {
-      if (c.slug) {
-        urls.push({
-          url: `${BASE_URL}/government/counties/${c.slug}`,
-          lastModified: c.updated_at ? new Date(c.updated_at) : undefined,
-          changeFrequency: 'monthly',
-          priority: 0.7,
-        });
-      }
+  // 3. INSTITUTIONS
+  let institutions = envOk
+    ? await fetchAllSlugs('institutions', {
+        apply: (q) => q.eq('is_active', true),
+        maxRows: 2000,
+      })
+    : [];
+  if (institutions.length === 0) {
+    // Include inactive/historical if active filter returns empty (or use all)
+    institutions = await fetchSlugsViaRest('institutions', 'is_active=eq.true', 2000);
+    if (institutions.length === 0) {
+      institutions = await fetchSlugsViaRest('institutions', '', 2000);
+    }
+  }
+  for (const inst of institutions) {
+    urls.push({
+      url: `${BASE_URL}/government/institutions/${inst.slug}`,
+      lastModified: inst.updated_at ? new Date(inst.updated_at) : undefined,
+      changeFrequency: 'weekly',
+      priority: 0.8,
     });
-  } catch (e) { /* ignore */ }
+  }
 
-  // 4. WARDS (Now at /government/counties/wards/[slug]/about)
-  try {
-    const { data: wards } = await supabase
-      .from('wards')
-      .select('slug, updated_at')
-      .limit(2000);
-    
-    wards?.forEach((w: any) => {
-      if (w.slug) {
-        urls.push({
-          url: `${BASE_URL}/government/counties/wards/${w.slug}/about`,
-          lastModified: w.updated_at ? new Date(w.updated_at) : undefined,
-          changeFrequency: 'monthly',
-          priority: 0.5,
-        });
-      }
+  // 4. COUNTIES — always include static 47 (DB slug format may differ)
+  const staticCountySlugs = counties.map((c) => c.slug);
+  for (const slug of staticCountySlugs) {
+    urls.push({
+      url: `${BASE_URL}/government/counties/${slug}`,
+      changeFrequency: 'monthly',
+      priority: 0.7,
     });
-  } catch (e) { /* ignore */ }
-
-  // 5. LEGISLATURE MEMBERS (National Assembly & Senate)
-  try {
-    const { data: naMembers } = await supabase
-      .from('leaders')
-      .select('slug, updated_at')
-      .eq('is_active', true)
-      .in('category', ['Member of Parliament', 'Senator'])
-      .limit(500);
-    
-    naMembers?.forEach((m: any) => {
-      if (m.slug) {
-        urls.push({
-          url: `${BASE_URL}/government/legislature/national-assembly/members/${m.slug}`,
-          lastModified: m.updated_at ? new Date(m.updated_at) : undefined,
-          changeFrequency: 'monthly',
-          priority: 0.6,
-        });
-      }
+  }
+  // Also DB counties if different slugs exist
+  let dbCounties = envOk ? await fetchAllSlugs('counties', { maxRows: 100 }) : [];
+  if (dbCounties.length === 0) {
+    dbCounties = await fetchSlugsViaRest('counties', '', 100);
+  }
+  const countyUrlSet = new Set(staticCountySlugs.map((s) => `${BASE_URL}/government/counties/${s}`));
+  for (const c of dbCounties) {
+    const url = `${BASE_URL}/government/counties/${c.slug}`;
+    if (countyUrlSet.has(url)) continue;
+    urls.push({
+      url,
+      lastModified: c.updated_at ? new Date(c.updated_at) : undefined,
+      changeFrequency: 'monthly',
+      priority: 0.65,
     });
-  } catch (e) { /* ignore */ }
+  }
 
-  // Root index pages
-  urls.push({ url: `${BASE_URL}/government`, changeFrequency: 'weekly', priority: 0.9 });
-  urls.push({ url: `${BASE_URL}/government/people`, changeFrequency: 'weekly', priority: 0.8 });
-  urls.push({ url: `${BASE_URL}/government/institutions`, changeFrequency: 'weekly', priority: 0.8 });
-  urls.push({ url: `${BASE_URL}/government/counties`, changeFrequency: 'weekly', priority: 0.8 });
-  urls.push({ url: `${BASE_URL}/government/legislature`, changeFrequency: 'weekly', priority: 0.8 });
+  // 5. WARDS (cap — large table)
+  let wards = envOk
+    ? await fetchAllSlugs('wards', { maxRows: 2000, pageSize: 500 })
+    : [];
+  if (wards.length === 0) {
+    wards = await fetchSlugsViaRest('wards', '', 2000);
+  }
+  for (const w of wards) {
+    urls.push({
+      url: `${BASE_URL}/government/counties/wards/${w.slug}/about`,
+      lastModified: w.updated_at ? new Date(w.updated_at) : undefined,
+      changeFrequency: 'monthly',
+      priority: 0.5,
+    });
+  }
+
+  // Index pages (canonical destinations only — no redirect sources)
+  urls.push(
+    { url: `${BASE_URL}/government`, changeFrequency: 'weekly', priority: 0.9 },
+    { url: `${BASE_URL}/government/people`, changeFrequency: 'weekly', priority: 0.8 },
+    { url: `${BASE_URL}/government/institutions`, changeFrequency: 'weekly', priority: 0.8 },
+    { url: `${BASE_URL}/government/counties`, changeFrequency: 'weekly', priority: 0.8 },
+    { url: `${BASE_URL}/government/legislature`, changeFrequency: 'weekly', priority: 0.8 },
+  );
+
+  console.info(
+    `[sitemap] supabase urls: leaders=${leaders.length} mcas=${mcas.length} institutions=${institutions.length} wards=${wards.length} total_dynamic=${urls.length}`,
+  );
 
   return urls;
 }
@@ -134,14 +245,12 @@ async function getSupabaseUrls(): Promise<SitemapEntry[]> {
 async function getSanityUrls(): Promise<SitemapEntry[]> {
   const urls: SitemapEntry[] = [];
 
-  // ==========================================
-  // GUIDES
-  // ==========================================
   try {
     const guides = await sanityClient.fetch(
-      `*[_type == "guide" && defined(slug.current)]{ "slug": slug.current, _updatedAt }`
+      `*[_type == "guide" && defined(slug.current)]{ "slug": slug.current, _updatedAt }`,
     );
-    guides?.forEach((g: any) => {
+    guides?.forEach((g: { slug?: string; _updatedAt?: string }) => {
+      if (!g.slug) return;
       urls.push({
         url: `${BASE_URL}/guides/${g.slug}`,
         lastModified: g._updatedAt ? new Date(g._updatedAt) : undefined,
@@ -149,32 +258,28 @@ async function getSanityUrls(): Promise<SitemapEntry[]> {
         priority: 0.7,
       });
     });
-  } catch (e) { /* ignore */ }
+  } catch (e) {
+    console.error('[sitemap] guides:', e);
+  }
 
-  // ==========================================
-  // CONSTITUTION - Chapters + Articles
-  // ==========================================
   try {
     const articles = await sanityClient.fetch(
       `*[_type == "constitutionArticle" && defined(chapter) && defined(articleNumber)]{ 
         chapter, 
         articleNumber, 
-        _updatedAt,
-        chapterTitle 
-      }`
+        _updatedAt
+      }`,
     );
 
     if (articles && articles.length > 0) {
-      // 1. Generate unique Chapter pages
-      const uniqueChapters = new Map<number, any>();
-      
-      articles.forEach((a: any) => {
+      const uniqueChapters = new Map<number, { _updatedAt?: string }>();
+
+      articles.forEach((a: { chapter: number; _updatedAt?: string }) => {
         if (!uniqueChapters.has(a.chapter)) {
           uniqueChapters.set(a.chapter, a);
         }
       });
 
-      // Add Chapter pages (e.g. /constitution/chapter/1)
       uniqueChapters.forEach((chapterData, chapterNum) => {
         urls.push({
           url: `${BASE_URL}/constitution/chapter/${chapterNum}`,
@@ -184,28 +289,27 @@ async function getSanityUrls(): Promise<SitemapEntry[]> {
         });
       });
 
-      // 2. Add individual Article pages
-      articles.forEach((a: any) => {
-        urls.push({
-          url: `${BASE_URL}/constitution/chapter/${a.chapter}/article/${a.articleNumber}`,
-          lastModified: a._updatedAt ? new Date(a._updatedAt) : undefined,
-          changeFrequency: 'monthly',
-          priority: 0.8,
-        });
-      });
+      articles.forEach(
+        (a: { chapter: number; articleNumber: number; _updatedAt?: string }) => {
+          urls.push({
+            url: `${BASE_URL}/constitution/chapter/${a.chapter}/article/${a.articleNumber}`,
+            lastModified: a._updatedAt ? new Date(a._updatedAt) : undefined,
+            changeFrequency: 'monthly',
+            priority: 0.8,
+          });
+        },
+      );
     }
   } catch (e) {
-    console.error("Error generating Constitution sitemap entries:", e);
+    console.error('[sitemap] constitution:', e);
   }
 
-  // ==========================================
-  // ACTS OF PARLIAMENT
-  // ==========================================
   try {
     const acts = await sanityClient.fetch(
-      `*[_type == "actOfParliament" && defined(slug.current)]{ "slug": slug.current, _updatedAt }`
+      `*[_type == "actOfParliament" && defined(slug.current)]{ "slug": slug.current, _updatedAt }`,
     );
-    acts?.forEach((a: any) => {
+    acts?.forEach((a: { slug?: string; _updatedAt?: string }) => {
+      if (!a.slug) return;
       urls.push({
         url: `${BASE_URL}/acts/parliament/${a.slug}`,
         lastModified: a._updatedAt ? new Date(a._updatedAt) : undefined,
@@ -213,16 +317,16 @@ async function getSanityUrls(): Promise<SitemapEntry[]> {
         priority: 0.7,
       });
     });
-  } catch (e) { /* ignore */ }
+  } catch (e) {
+    console.error('[sitemap] acts:', e);
+  }
 
-  // ==========================================
-  // PRESIDENTIAL INTERNATIONAL VISITS (Now at /government/presidential-visits/[slug])
-  // ==========================================
   try {
     const trips = await sanityClient.fetch(
-      `*[_type == "presidentialTrip" && defined(slug.current)]{ "slug": slug.current, _updatedAt }`
+      `*[_type == "presidentialTrip" && defined(slug.current)]{ "slug": slug.current, _updatedAt }`,
     );
-    trips?.forEach((t: any) => {
+    trips?.forEach((t: { slug?: string; _updatedAt?: string }) => {
+      if (!t.slug) return;
       urls.push({
         url: `${BASE_URL}/government/presidential-visits/${t.slug}`,
         lastModified: t._updatedAt ? new Date(t._updatedAt) : undefined,
@@ -230,16 +334,16 @@ async function getSanityUrls(): Promise<SitemapEntry[]> {
         priority: 0.6,
       });
     });
-  } catch (e) { /* ignore */ }
+  } catch (e) {
+    console.error('[sitemap] trips:', e);
+  }
 
-  // ==========================================
-  // POLITICAL PARTIES (Now at /elections/political-parties/[slug])
-  // ==========================================
   try {
     const parties = await sanityClient.fetch(
-      `*[_type == "politicalParty" && defined(slug.current)]{ "slug": slug.current, _updatedAt }`
+      `*[_type == "politicalParty" && defined(slug.current)]{ "slug": slug.current, _updatedAt }`,
     );
-    parties?.forEach((p: any) => {
+    parties?.forEach((p: { slug?: string; _updatedAt?: string }) => {
+      if (!p.slug) return;
       urls.push({
         url: `${BASE_URL}/elections/political-parties/${p.slug}`,
         lastModified: p._updatedAt ? new Date(p._updatedAt) : undefined,
@@ -247,17 +351,18 @@ async function getSanityUrls(): Promise<SitemapEntry[]> {
         priority: 0.6,
       });
     });
-  } catch (e) { /* ignore */ }
+  } catch (e) {
+    console.error('[sitemap] parties:', e);
+  }
 
   return urls;
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  // Only final canonical destinations — never redirect sources (those inflate GSC "Page with redirect")
   const staticUrls: SitemapEntry[] = [
-    // Homepage
     { url: BASE_URL, changeFrequency: 'daily', priority: 1.0 },
-    
-    // Government Hub
+
     { url: `${BASE_URL}/government`, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${BASE_URL}/government/cabinet`, changeFrequency: 'weekly', priority: 0.8 },
     { url: `${BASE_URL}/government/commissions`, changeFrequency: 'weekly', priority: 0.8 },
@@ -269,16 +374,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/government/judiciary`, changeFrequency: 'weekly', priority: 0.8 },
     { url: `${BASE_URL}/government/legislature`, changeFrequency: 'weekly', priority: 0.8 },
     { url: `${BASE_URL}/government/counties`, changeFrequency: 'weekly', priority: 0.8 },
-    
-    // Transparency Registers (Redirects to Search)
-    { url: `${BASE_URL}/government/cabinet-decisions`, changeFrequency: 'daily', priority: 0.7 },
-    { url: `${BASE_URL}/government/executive-orders`, changeFrequency: 'daily', priority: 0.7 },
     { url: `${BASE_URL}/government/presidential-visits`, changeFrequency: 'weekly', priority: 0.7 },
-    { url: `${BASE_URL}/government/publications`, changeFrequency: 'weekly', priority: 0.7 },
-    { url: `${BASE_URL}/government/speeches`, changeFrequency: 'weekly', priority: 0.7 },
-    { url: `${BASE_URL}/government/consultations`, changeFrequency: 'weekly', priority: 0.7 },
-    
-    // Elections (was /politics)
+
     { url: `${BASE_URL}/elections`, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${BASE_URL}/elections/general-elections`, changeFrequency: 'weekly', priority: 0.85 },
     { url: `${BASE_URL}/elections/general-elections/timeline`, changeFrequency: 'weekly', priority: 0.9 },
@@ -292,23 +389,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/elections/registered-voters`, changeFrequency: 'monthly', priority: 0.65 },
     { url: `${BASE_URL}/elections/iebc-offices`, changeFrequency: 'monthly', priority: 0.6 },
     { url: `${BASE_URL}/elections/about`, changeFrequency: 'yearly', priority: 0.6 },
-    
-    // Constitution & Laws
+
     { url: `${BASE_URL}/constitution`, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${BASE_URL}/acts/parliament`, changeFrequency: 'weekly', priority: 0.8 },
-    
-    // Documents & Resources
+
     { url: `${BASE_URL}/documents`, changeFrequency: 'weekly', priority: 0.7 },
     { url: `${BASE_URL}/documents/vision-2030`, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${BASE_URL}/documents/sessional-papers/1965-no-10`, changeFrequency: 'yearly', priority: 0.5 },
     { url: `${BASE_URL}/documents/sessional-papers/1986-no-1`, changeFrequency: 'yearly', priority: 0.5 },
     { url: `${BASE_URL}/documents/sessional-papers/2012-no-1`, changeFrequency: 'yearly', priority: 0.5 },
-    
-    // Search & Data (canonical site search — enables sitelinks search box)
+
     { url: `${BASE_URL}/search`, changeFrequency: 'weekly', priority: 0.85 },
     { url: `${BASE_URL}/open-data`, changeFrequency: 'monthly', priority: 0.8 },
-    
-    // Guides & Society
+
     { url: `${BASE_URL}/guides`, changeFrequency: 'weekly', priority: 0.7 },
     { url: `${BASE_URL}/society-and-culture`, changeFrequency: 'monthly', priority: 0.6 },
     { url: `${BASE_URL}/national-events`, changeFrequency: 'monthly', priority: 0.7 },
@@ -323,9 +416,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/services/a-z`, changeFrequency: 'weekly', priority: 0.8 },
     { url: `${BASE_URL}/services/popular`, changeFrequency: 'weekly', priority: 0.85 },
     { url: `${BASE_URL}/topics`, changeFrequency: 'weekly', priority: 0.9 },
-    { url: `${BASE_URL}/browse`, changeFrequency: 'weekly', priority: 0.7 },
 
-    // Civic explainers
     { url: `${BASE_URL}/how-government-works`, changeFrequency: 'monthly', priority: 0.8 },
     { url: `${BASE_URL}/county-vs-national`, changeFrequency: 'monthly', priority: 0.8 },
     { url: `${BASE_URL}/how-public-money-works`, changeFrequency: 'monthly', priority: 0.7 },
@@ -342,8 +433,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/guides/having-a-baby`, changeFrequency: 'monthly', priority: 0.75 },
     { url: `${BASE_URL}/guides/registering-a-death`, changeFrequency: 'monthly', priority: 0.75 },
     { url: `${BASE_URL}/guides/starting-a-business`, changeFrequency: 'monthly', priority: 0.75 },
-    
-    // Static Pages
+
     { url: `${BASE_URL}/about`, changeFrequency: 'monthly', priority: 0.5 },
     { url: `${BASE_URL}/help`, changeFrequency: 'monthly', priority: 0.5 },
     { url: `${BASE_URL}/contact`, changeFrequency: 'monthly', priority: 0.5 },
@@ -361,20 +451,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/sitemap`, changeFrequency: 'monthly', priority: 0.4 },
   ];
 
-  // Topic hub pages — single source of truth: lib/topics.ts
   const topicUrls: SitemapEntry[] = getAllTopicSlugs().map((slug) => ({
     url: `${BASE_URL}/topics/${slug}`,
     changeFrequency: 'monthly' as const,
     priority: 0.75,
   }));
 
-  const nationalEventUrls: SitemapEntry[] = getAllNationalEventSlugs().map(
-    (slug) => ({
-      url: `${BASE_URL}/national-events/${slug}`,
-      changeFrequency: 'monthly' as const,
-      priority: 0.65,
-    }),
-  );
+  const nationalEventUrls: SitemapEntry[] = getAllNationalEventSlugs().map((slug) => ({
+    url: `${BASE_URL}/national-events/${slug}`,
+    changeFrequency: 'monthly' as const,
+    priority: 0.65,
+  }));
 
   const askProfileUrls: SitemapEntry[] = getAllAskProfileSlugs().map((slug) => ({
     url: `${BASE_URL}/national-events/ask-shows/${slug}`,
@@ -396,10 +483,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...sanityUrls,
   ];
 
-  // Deduplicate
-  const unique = Array.from(new Map(allUrls.map(u => [u.url, u])).values());
+  const unique = Array.from(new Map(allUrls.map((u) => [u.url, u])).values());
 
-  return unique.map(entry => ({
+  return unique.map((entry) => ({
     url: entry.url,
     lastModified: entry.lastModified,
     changeFrequency: entry.changeFrequency,

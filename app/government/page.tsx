@@ -1,14 +1,16 @@
 // app/government/page.tsx
 import Link from "next/link";
 import PageIntro from "@/components/site/PageIntro";
+import { buildPageMetadata } from "@/lib/seo";
 
 export const revalidate = 86400;
 
-export const metadata = {
+export const metadata = buildPageMetadata({
   title: "Government",
   description:
     "How the government of Kenya works, who holds office, and the institutions that deliver public services.",
-};
+  path: "/government",
+});
 
 export default function GovernmentHomePage() {
   return (

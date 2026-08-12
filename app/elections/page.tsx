@@ -1,14 +1,16 @@
 import Link from "next/link";
 import PageIntro from "@/components/site/PageIntro";
 import ChevronLinkList from "@/components/site/ChevronLinkList";
+import { buildPageMetadata } from "@/lib/seo";
 
 export const revalidate = 86400;
 
-export const metadata = {
+export const metadata = buildPageMetadata({
   title: "Elections and voting",
   description:
     "General elections, by-elections, voter registration, political parties, polling stations and IEBC information.",
-};
+  path: "/elections",
+});
 
 const electionTopics = [
   {

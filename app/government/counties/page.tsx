@@ -11,7 +11,8 @@ export default function CountiesPage() {
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
-          { text: "Counties", href: "/counties" },
+          { text: "Government", href: "/government" },
+          { text: "Counties", href: "/government/counties" },
         ]}
       />
 
@@ -31,7 +32,7 @@ export default function CountiesPage() {
             <h2 className="govuk-heading-m govuk-!-margin-top-4 govuk-!-margin-bottom-2">Find county services and leadership</h2>
             <ul className="govuk-list govuk-list--spaced govuk-!-margin-bottom-6">
               <li>
-                <Link href="/counties/all" className="govuk-link govuk-!-font-weight-bold govuk-!-font-size-19">
+                <Link href="/government/counties/all" className="govuk-link govuk-!-font-weight-bold govuk-!-font-size-19">
                   View all 47 counties
                 </Link>
                 <p className="govuk-body-s govuk-!-margin-top-1 govuk-!-margin-bottom-0 govuk-text-secondary">
@@ -39,7 +40,7 @@ export default function CountiesPage() {
                 </p>
               </li>
               <li>
-                <Link href="/counties/governors" className="govuk-link govuk-!-font-weight-bold govuk-!-font-size-19">
+                <Link href="/government/counties/governors" className="govuk-link govuk-!-font-weight-bold govuk-!-font-size-19">
                   Find current County Governors and Deputies
                 </Link>
                 <p className="govuk-body-s govuk-!-margin-top-1 govuk-!-margin-bottom-0 govuk-text-secondary">
@@ -86,12 +87,12 @@ export default function CountiesPage() {
             <h2 className="govuk-heading-m govuk-!-margin-top-6 govuk-!-margin-bottom-2">Devolution Information Guides</h2>
             <ul className="govuk-list govuk-list--spaced">
               <li>
-                <Link href="/counties/devolution" className="govuk-link">
+                <Link href="/government/counties/devolution" className="govuk-link">
                   Understanding Devolution in Kenya
                 </Link>
               </li>
               <li>
-                <Link href="/counties/performance" className="govuk-link">
+                <Link href="/government/counties/performance" className="govuk-link">
                   County Performance and Budget Rankings
                 </Link>
               </li>

@@ -5,27 +5,25 @@ import "govuk-frontend/govuk-frontend.min.css";
 import "@/app/globals.css";
 
 import { ClientLayoutWrapper } from "./ClientLayoutWrapper";
-
-const SITE_URL = 'https://www.citizenguide.ke';
-const SITE_NAME = 'CitizenGuide.KE';
-const DEFAULT_TITLE = 'CitizenGuide.KE — Informational guide to Kenyan governance';
-const DEFAULT_DESCRIPTION =
-  'Find clear, factual information about the Government of Kenya — institutions, leaders, counties, public services, elections, and the Constitution of Kenya 2010.';
-
-const OG_IMAGE = {
-  url: '/og-image.webp',
-  width: 1200,
-  height: 630,
-  alt: 'CitizenGuide.KE — Your guide to Kenyan governance',
-  type: 'image/webp' as const,
-};
+import {
+  DEFAULT_DESCRIPTION,
+  DEFAULT_OG_IMAGE,
+  DEFAULT_TITLE,
+  SITE_NAME,
+  SITE_URL,
+} from "@/lib/seo";
 
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: '#047857',
+  themeColor: '#00703c',
 };
 
+/**
+ * Root metadata for social previews (WhatsApp, X, Facebook, Telegram, iMessage).
+ * Per-page routes should override title/description/canonical via generateMetadata
+ * or page `metadata` — do NOT set a sitewide canonical to "/" here.
+ */
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
 
@@ -53,7 +51,6 @@ export const metadata: Metadata = {
   ],
 
   alternates: {
-    canonical: '/',
     types: {
       'text/plain': [{ url: '/llms.txt', title: 'llms.txt' }],
     },
@@ -71,31 +68,38 @@ export const metadata: Metadata = {
     },
   },
 
+  // Do NOT set openGraph.url or alternates.canonical to the homepage here.
+  // A sitewide homepage canonical makes Google treat every URL as a duplicate
+  // of "/" (GSC: "Alternate page with proper canonical tag").
+  // Each route must set its own canonical via buildPageMetadata / generateMetadata.
   openGraph: {
     type: 'website',
     locale: 'en_KE',
-    url: SITE_URL,
     siteName: SITE_NAME,
     title: DEFAULT_TITLE,
     description: DEFAULT_DESCRIPTION,
-    images: [OG_IMAGE],
+    images: [DEFAULT_OG_IMAGE],
   },
 
   twitter: {
     card: 'summary_large_image',
-    title: SITE_NAME,
+    title: DEFAULT_TITLE,
     description: DEFAULT_DESCRIPTION,
-    images: [OG_IMAGE.url],
+    images: [DEFAULT_OG_IMAGE.url],
   },
 
   icons: {
-    icon: [{ url: '/logo.webp', type: 'image/webp' }],
+    icon: [
+      { url: '/logo.webp', type: 'image/webp' },
+      { url: '/favicon.ico', sizes: 'any' },
+    ],
     apple: [{ url: '/logo.webp', type: 'image/webp' }],
   },
 
-  // Manifest-friendly & Origin Trial Token
   other: {
     'ai-content': 'index',
+    // WhatsApp / some scrapers also look at these loosely
+    'og:logo': `${SITE_URL}/logo.webp`,
     'origin-trial': 'A4osS6hE38l+I8HVoNIZUPu9CvgXN7Wk4+mu9gbnNgUlJpGPrpgjNNw+kHB/IPzh2AwL+sjPB5rnWBQMk1OGLw8AAAB2eyJvcmlnaW4iOiJodHRwczovL2NpdGl6ZW5ndWlkZS5rZTo0NDMiLCJmZWF0dXJlIjoiV2ViTUNQIiwiZXhwaXJ5IjoxNzk0ODczNjAwLCJpc1N1YmRvbWFpbiI6dHJ1ZSwiaXN0aGlyZFBhcnR5Ijp0cnVlfQ==',
   },
 };

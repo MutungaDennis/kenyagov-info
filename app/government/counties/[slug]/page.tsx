@@ -5,6 +5,7 @@ import PrintPageButton from "@/components/govuk/PrintPageButton";
 import { createPublicClient } from "@/lib/supabase/public";
 import { counties } from "@/data/counties";
 import { JsonLd } from "@/components/JsonLd";
+import { buildPageMetadata } from "@/lib/seo";
 
 /** Public county profiles — ISR, no cookies (Cloudflare Free tier). */
 export const revalidate = 3600;
@@ -72,9 +73,10 @@ export async function generateMetadata({ params }: CountyProfileProps) {
     };
   }
 
-  return {
-    title: `${staticCounty.name} County Profile | CitizenGuide.KE`,
+  return buildPageMetadata({
+    title: `${staticCounty.name} County profile`,
     description: `Comprehensive profile for ${staticCounty.name} County. View executive leadership, county assembly composition, constituencies, wards, and key statistics.`,
+    path: `/government/counties/${slug}`,
     keywords: [
       `${staticCounty.name} County`,
       "Kenya County Government",
@@ -82,8 +84,9 @@ export async function generateMetadata({ params }: CountyProfileProps) {
       "MCAs",
       "Devolution Kenya",
     ],
-  };
+  });
 }
+
 
 export default async function CountyProfilePage({ params }: CountyProfileProps) {
   const { slug } = await params;
@@ -271,7 +274,7 @@ export default async function CountyProfilePage({ params }: CountyProfileProps) 
     "@type": "AdministrativeArea",
     "name": `${staticCounty.name} County`,
     "description": `Administrative and open information directory for ${staticCounty.name} County Government, Kenya.`,
-    "url": `https://www.citizenguide.ke/counties/${slug}`,
+    "url": `https://www.citizenguide.ke/government/counties/${slug}`,
     "containedInPlace": {
       "@type": "Country",
       "name": "Kenya",
@@ -284,7 +287,7 @@ export default async function CountyProfilePage({ params }: CountyProfileProps) 
     "@type": "GovernmentOrganization",
     "name": `${staticCounty.name} County Government`,
     "description": `The devolved county government responsible for local administration and service delivery in ${staticCounty.name} County.`,
-    "url": `https://www.citizenguide.ke/counties/${slug}`,
+    "url": `https://www.citizenguide.ke/government/counties/${slug}`,
     "areaServed": {
       "@type": "AdministrativeArea",
       "name": `${staticCounty.name} County`,
@@ -296,8 +299,9 @@ export default async function CountyProfilePage({ params }: CountyProfileProps) 
     "@type": "BreadcrumbList",
     "itemListElement": [
       { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.citizenguide.ke" },
-      { "@type": "ListItem", "position": 2, "name": "Counties", "item": "https://www.citizenguide.ke/counties" },
-      { "@type": "ListItem", "position": 3, "name": profileHeading, "item": `https://www.citizenguide.ke/counties/${slug}` },
+      { "@type": "ListItem", "position": 2, "name": "Government", "item": "https://www.citizenguide.ke/government" },
+      { "@type": "ListItem", "position": 3, "name": "Counties", "item": "https://www.citizenguide.ke/government/counties" },
+      { "@type": "ListItem", "position": 4, "name": profileHeading, "item": `https://www.citizenguide.ke/government/counties/${slug}` },
     ],
   };
 
@@ -307,7 +311,8 @@ export default async function CountyProfilePage({ params }: CountyProfileProps) 
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
-          { text: "Counties", href: "/counties" },
+          { text: "Government", href: "/government" },
+          { text: "Counties", href: "/government/counties" },
           { text: staticCounty.name, href: "" },
         ]}
       />

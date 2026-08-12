@@ -8,12 +8,25 @@ import {
 
 /**
  * Edge middleware (keep CPU minimal for Cloudflare Free 10ms budget):
+ * - Apex → www host redirect (single canonical host for Google)
  * - Secret admin rewrite / hide /admin
  * - /services?category= consolidation redirect
  * - Early no-op path avoids header cloning on ordinary public pages
  */
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const host = request.headers.get("host")?.toLowerCase() ?? "";
+
+  // SEO: force https://www.citizenguide.ke (avoid apex/www duplicate indexing).
+  // Prefer also setting this as a Cloudflare Redirect Rule (0 Worker CPU).
+  const hostname = host.split(":")[0];
+  if (hostname === "citizenguide.ke") {
+    const url = request.nextUrl.clone();
+    url.protocol = "https:";
+    url.hostname = "www.citizenguide.ke";
+    url.port = "";
+    return NextResponse.redirect(url, 308);
+  }
 
   // SEO: /services?category=money-tax → /services/categories/money-tax
   if (pathname === "/services") {
