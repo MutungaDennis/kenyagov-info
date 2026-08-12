@@ -451,7 +451,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/sitemap`, changeFrequency: 'monthly', priority: 0.4 },
   ];
 
-  const topicUrls: SitemapEntry[] = getAllTopicSlugs().map((slug) => ({
+  const topicSlugs = await getAllTopicSlugs();
+  const topicUrls: SitemapEntry[] = topicSlugs.map((slug) => ({
     url: `${BASE_URL}/topics/${slug}`,
     changeFrequency: 'monthly' as const,
     priority: 0.75,

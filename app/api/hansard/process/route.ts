@@ -47,71 +47,38 @@ export type SpeakerMatchIssue = {
   candidates: LeaderCandidate[];
 };
 
-const SYSTEM_PROMPT = `You are an expert Kenyan Parliamentary Hansard analyst.
+let SYSTEM_PROMPT_CACHE: string | null = null;
 
-Your job: read pasted Hansard text and extract EVERY real speech/contribution into clean structured JSON.
-
-IGNORE completely (do not extract as contributions, and strip them out of speech text):
-- The repeated line: "Disclaimer: The electronic version of the Official Hansard Report is for information purposes only..."
-- Page headers/footers such as "1st July 2026 National Assembly Debates 3", "Vol. V No. 61", page numbers
-- Cover lines: "THIRTEENTH PARLIAMENT", "NATIONAL ASSEMBLY", bare "THE HANSARD" titles
-- Publisher metadata, watermarks, blank lines, OCR noise
-
-IMPORTANT — text is often SPLIT by disclaimers mid-speech. When a speaker's words continue after a disclaimer/page header, JOIN them into ONE contribution. Do not invent a new speaker for the continuation.
-
-EXTRACT:
-- Every individual spoken turn (MP, Senator, Speaker, Temporary/Deputy Speaker when they speak)
-- Order-of-business titles as type "header" or "mini-header" (e.g. PAPERS, QUORUM, QUESTIONS AND STATEMENTS, STATE OF LEATHER INDUSTRY)
-- Pure stage directions with no spoken words as type "procedural" (e.g. "(The Quorum Bell was rung)", "(Papers deferred)", "(Hon. Joyce Kamene entered the Chamber)")
-- Do NOT invent speeches for members who were only mentioned as absent/deferred (e.g. "Request for Statement by Hon. X deferred")
-
-SPEAKER PATTERNS (Kenyan National Assembly Hansard — very common):
-1. "Hon. Full Name (Constituency, Party):"  ← PRIMARY floor pattern
-   Example: "Hon. Owen Baya (Kilifi North, UDA):" → speakerName=Owen Baya, constituency=Kilifi North, party=UDA
-   Example: "Hon. Gitonga Mukunji (Manyatta, UDA):"
-   Example: "Hon. Bernard Shinali (Ikolomani, ODM):"
-2. Chair forms:
-   - "Hon. Deputy Speaker:" / "The Deputy Speaker:" / "The Deputy Speaker (Hon. Gladys Boss):"
-   - "Hon. Temporary Speaker:" / "The Temporary Speaker (Hon. Name):"
-   - "The Speaker (Hon. Name):"
-   For chair: set speakerTitle/role to Deputy Speaker / Temporary Speaker / Speaker; put personal name in speakerName when given (e.g. Gladys Boss). Prefer one consistent personal name for all of that person's chair turns when the name is known from "[The Deputy Speaker (Hon. Gladys Boss) in the Chair]".
-3. Other: "The Leader of the Majority Party", "Hon. Members", etc.
-
-RULES:
-1. ACCURACY FIRST — Only extract what appears. Never invent names, parties, or constituencies.
-2. Capture the FULL spoken text including numbered paper lists and motion text. Preserve paragraphs.
-3. Keep parenthetical stage notes that sit inside a speech; standalone stage directions alone → type "procedural".
-4. Same person speaking multiple times → separate chronological entries (each time they take the floor).
-5. Number contributions sequentially starting from 1 (within this chunk).
-6. type: "spoken" | "members" | "procedural" | "header" | "mini-header"
-7. Always fill constituency and party when the Hansard gives "(Constituency, Party)" — critical for member matching.
-8. startTime only if stated (e.g. House met at 2.30 p.m. is sitting metadata, not every speech's startTime).
-
-Return ONLY valid JSON:
-{
-  "contributions": [
-    {
-      "order": 1,
-      "type": "spoken",
-      "speakerName": "Gladys Boss",
-      "speakerTitle": "The Deputy Speaker",
-      "role": "Deputy Speaker",
-      "speech": "Hon. Members, there being no quorum...",
-      "sectionHeader": "QUORUM"
-    },
-    {
-      "order": 2,
-      "type": "spoken",
-      "speakerName": "Owen Baya",
-      "constituency": "Kilifi North",
-      "party": "UDA",
-      "speech": "Hon. Deputy Speaker, I beg to lay the following Papers on the Table: ...",
-      "sectionHeader": "PAPERS"
+async function getSystemPrompt(): Promise<string> {
+  if (SYSTEM_PROMPT_CACHE) return SYSTEM_PROMPT_CACHE;
+  try {
+    const fs = await import(/* webpackIgnore: true */ "node:fs/promises");
+    const path = await import(/* webpackIgnore: true */ "node:path");
+    SYSTEM_PROMPT_CACHE = await fs.readFile(
+      path.join(process.cwd(), "public/data/hansard-system-prompt.txt"),
+      "utf8",
+    );
+    return SYSTEM_PROMPT_CACHE;
+  } catch {
+    /* CF Worker: no disk */
+  }
+  try {
+    const origin = (
+      process.env.NEXT_PUBLIC_SITE_URL || "https://www.citizenguide.ke"
+    ).replace(/\/$/, "");
+    const res = await fetch(`${origin}/data/hansard-system-prompt.txt`);
+    if (res.ok) {
+      SYSTEM_PROMPT_CACHE = await res.text();
+      return SYSTEM_PROMPT_CACHE;
     }
-  ],
-  "suggestedTopics": ["..."],
-  "editorialSummary": "One short paragraph of what this sitting covered"
-}`;
+  } catch {
+    /* ignore */
+  }
+  SYSTEM_PROMPT_CACHE =
+    "You are an expert Kenyan Parliamentary Hansard analyst. Extract speeches as JSON contributions with speakerName, speech, order, type.";
+  return SYSTEM_PROMPT_CACHE;
+}
+
 
 function cleanSpeakerName(name: string): string {
   return name
@@ -317,7 +284,7 @@ async function structureChunkWithGrok(
       max_tokens: 32000,
       response_format: { type: "json_object" },
       messages: [
-        { role: "system", content: SYSTEM_PROMPT },
+        { role: "system", content: (await getSystemPrompt()) },
         {
           role: "user",
           content: `House: ${houseType}${chunkNote}\n\nHansard content (pasted text — ignore disclaimers and boilerplate):\n\n${text}`,

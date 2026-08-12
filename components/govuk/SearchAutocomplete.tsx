@@ -57,8 +57,9 @@ export default function SearchAutocomplete({
     }
     setLoading(true);
 
-    // Static pages always available (no network) — resilient under concurrent load
-    const staticMapped: Suggestion[] = suggestStaticPages(term, 4).map((h) => ({
+    // Static pages from /data JSON (not bundled into Worker)
+    const staticHits = await suggestStaticPages(term, 4);
+    const staticMapped: Suggestion[] = staticHits.map((h) => ({
       name: h.name,
       entity_type: h.entity_type,
       slug: h.slug,

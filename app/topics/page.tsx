@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import PageIntro from "@/components/site/PageIntro";
 import ChevronLinkList from "@/components/site/ChevronLinkList";
-import { topics } from "@/lib/topics";
+import { loadTopics } from "@/lib/topics";
 
 export const revalidate = 86400;
 
@@ -12,7 +12,8 @@ export const metadata: Metadata = {
     "Browse Kenyan public services and civic information by topic — identity, tax, health, counties, elections and more.",
 };
 
-export default function TopicsIndexPage() {
+export default async function TopicsIndexPage() {
+  const topics = await loadTopics();
   return (
     <>
       <PageIntro

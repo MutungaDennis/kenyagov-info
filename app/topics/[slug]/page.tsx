@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import PageIntro from "@/components/site/PageIntro";
 import ExternalLink from "@/components/site/ExternalLink";
 import ChevronLinkList from "@/components/site/ChevronLinkList";
-import { getAllTopicSlugs, getTopicBySlug, topics } from "@/lib/topics";
+import { getAllTopicSlugs, getTopicBySlug, loadTopics } from "@/lib/topics";
 
 export const revalidate = 3600;
 
@@ -13,12 +13,13 @@ type Props = {
 };
 
 export async function generateStaticParams() {
-  return getAllTopicSlugs().map((slug) => ({ slug }));
+  const slugs = await getAllTopicSlugs();
+  return slugs.map((slug) => ({ slug }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const topic = getTopicBySlug(slug);
+  const topic = await getTopicBySlug(slug);
   if (!topic) return { title: "Topic not found" };
   return {
     title: topic.title,
@@ -28,10 +29,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function TopicPage({ params }: Props) {
   const { slug } = await params;
-  const topic = getTopicBySlug(slug);
+  const topic = await getTopicBySlug(slug);
   if (!topic) notFound();
 
-  const otherTopics = topics
+  const allTopics = await loadTopics();
+  const otherTopics = allTopics
     .filter((t) => t.slug !== topic.slug)
     .slice(0, 8)
     .map((t) => ({

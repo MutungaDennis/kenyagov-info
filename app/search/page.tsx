@@ -75,7 +75,7 @@ export default async function SearchResultsPage({
   // ============================================
   if (q) {
     // Static pages first — works even if Supabase/Sanity are slow or down
-    const staticHits = searchStaticPages(q, 8).map((h) => ({
+    const staticHits = (await searchStaticPages(q, 8)).map((h) => ({
       ...h,
       // Prefer path for linking
       path: h.path,

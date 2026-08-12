@@ -237,7 +237,18 @@ and **removing Next middleware** (the middleware runtime alone was ~90 KiB gzi
 www both serve content (duplicate host for SEO).
 
 **If deploy still fails with code 10027:** enable
-[Workers Paid](https://dash.cloudflare.com/?to=/:account/workers/plans) (10 MiB).
+[Workers Paid](https://dash.cloudflare.com/?to=/:account/workers/plans)
+(**recommended**, ~$5/mo, **10 MiB** limit).
+
+### Free plan reality check (OpenNext + Next.js 16)
+
+A full App Router site (admin + public + APIs) often lands **just over 3 MiB gzip**
+even after aggressive stripping. OpenNext **always** ships a middleware runtime
+(~200 KiB raw) for asset routing even when you delete `middleware.ts`.
+
+If you are within ~50 KiB of the limit after every cut, **Workers Paid is the
+sustainable fix** — further Free-tier squeezing risks breaking admin/search features
+for diminishing returns.
 
 ### Production dependency policy (size)
 
