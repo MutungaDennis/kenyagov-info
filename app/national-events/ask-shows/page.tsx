@@ -6,6 +6,7 @@ import TableScroll from "@/components/govuk/TableScroll";
 import {
 
 askTheme2026,
+  ensureAskShowsLoaded,
   getProfilesByTier,
   type AskCalendarEvent,
 } from "@/lib/data/ask-shows";
@@ -104,17 +105,18 @@ function EventTable({
   );
 }
 
-export default function AskShowsPage() {
+export default async function AskShowsPage() {
+  await ensureAskShowsLoaded();
   const currentYear = getCurrentYear();
   const calendarYear = askTheme2026.year;
   const highlight = getAskHighlight();
   const highlightEvent = highlight?.event ?? null;
   const upcoming = getUpcomingAskEvents(calendarYear);
   const past = getPastAskEvents(calendarYear);
-  const international = getProfilesByTier("international");
-  const national = getProfilesByTier("national");
-  const regional = getProfilesByTier("regional");
-  const satellite = getProfilesByTier("satellite");
+  const international = await getProfilesByTier("international");
+  const national = await getProfilesByTier("national");
+  const regional = await getProfilesByTier("regional");
+  const satellite = await getProfilesByTier("satellite");
   const days =
     highlightEvent && highlight?.status === "upcoming"
       ? daysUntilStart(highlightEvent)

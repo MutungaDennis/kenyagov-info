@@ -95,8 +95,9 @@ const nextConfig: NextConfig = {
     ];
   },
 
-  // Secret admin path → internal app/admin (backup if middleware is skipped).
-  // Keep in sync with DEFAULT_PRODUCTION_ADMIN_BASE in lib/admin-path.ts
+  // Secret admin path → internal app/admin.
+  // Middleware was removed (CF Free Worker gzip limit); these rewrites are the
+  // primary way /cg-… maps to app/admin. Keep in sync with lib/admin-path.ts.
   async rewrites() {
     const fromEnv = process.env.NEXT_PUBLIC_ADMIN_BASE_PATH?.trim();
     const secret =

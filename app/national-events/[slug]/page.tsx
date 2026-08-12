@@ -21,12 +21,13 @@ type Props = {
 };
 
 export async function generateStaticParams() {
-  return getAllNationalEventSlugs().map((slug) => ({ slug }));
+  const slugs = await getAllNationalEventSlugs();
+  return slugs.map((slug) => ({ slug }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const event = getNationalEventBySlug(slug);
+  const event = await getNationalEventBySlug(slug);
   if (!event) return { title: "Event not found" };
   return {
     title: event.title,
@@ -36,12 +37,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function NationalEventDetailPage({ params }: Props) {
   const { slug } = await params;
-  const event = getNationalEventBySlug(slug);
+  const event = await getNationalEventBySlug(slug);
   if (!event) notFound();
 
-  const category = getCategoryBySlug(event.categorySlug);
+  const category = await getCategoryBySlug(event.categorySlug);
   const isCategoryOverview = event.slug === event.categorySlug;
-  const siblings = getEventsForCategory(event.categorySlug).filter(
+  const siblings = (await getEventsForCategory(event.categorySlug)).filter(
     (e) => e.slug !== event.slug,
   );
 

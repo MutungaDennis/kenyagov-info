@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { IconSpinner } from "@/components/admin/AdminIcons";
 import { adminPath } from "@/lib/admin-path";
 import {
   deleteAtSortedIndex,
@@ -1109,7 +1108,7 @@ export default function ManualHansardEntry({
             >
               {isLoadingExisting ? (
                 <>
-                  <IconSpinner className="inline w-4 h-4" /> Loading…
+                  <span className="govuk-visually-hidden">Loading</span> Loading…
                 </>
               ) : (
                 "Load sitting"

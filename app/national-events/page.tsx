@@ -17,8 +17,14 @@ export const metadata: Metadata = {
     "Official national days, agricultural and trade expositions, governance conferences, cultural festivals and major sporting gatherings in Kenya.",
 };
 
-export default function NationalEventsHubPage() {
-  const categories = getSortedCategories();
+export default async function NationalEventsHubPage() {
+  const categories = await getSortedCategories();
+  const categoryItems = await Promise.all(
+    categories.map(async (cat) => ({
+      cat,
+      items: await getHubCategoryItems(cat.slug),
+    })),
+  );
 
   return (
     <>
@@ -66,8 +72,7 @@ export default function NationalEventsHubPage() {
         </ol>
       </nav>
 
-      {categories.map((cat, index) => {
-        const items = getHubCategoryItems(cat.slug);
+      {categoryItems.map(({ cat, items }, index) => {
         return (
           <section
             key={cat.slug}

@@ -20,11 +20,11 @@ export const metadata: Metadata = {
     "Find Huduma Service Centres across Kenya by region or county — addresses, opening hours and extended-hours centres. Compiled from the official Huduma Kenya list.",
 };
 
-export default function HudumaLocationsPage() {
-  const centres = getAllHudumaCentres();
-  const stats = hudumaStats();
-  const extended = getExtendedHoursCentres();
-  const regions = regionsWithHuduma();
+export default async function HudumaLocationsPage() {
+  const centres = await getAllHudumaCentres();
+  const stats = await hudumaStats();
+  const extended = await getExtendedHoursCentres();
+  const regions = await regionsWithHuduma();
 
   return (
     <>

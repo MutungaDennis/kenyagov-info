@@ -8,6 +8,7 @@ export {
   HUDUMA_REGIONS,
   HUDUMA_SOURCE,
   hudumaCentres,
+  loadHudumaCentres,
 } from "@/lib/data/huduma-centres";
 export {
   countiesWithHuduma,

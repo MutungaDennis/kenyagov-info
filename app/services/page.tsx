@@ -1,6 +1,7 @@
 // app/services/page.tsx
 import React, { Suspense } from "react";
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { client } from "@/sanity/lib/client";
 import ServicesClientView from "./ServicesClientView";
 
@@ -74,7 +75,14 @@ export async function generateMetadata({
   };
 }
 
-export default async function ServicesHubPage() {
+export default async function ServicesHubPage({ searchParams }: PageProps) {
+  // Replaces middleware redirect (middleware removed to stay under CF Free 3 MiB Worker limit)
+  const params = await searchParams;
+  const category = params.category?.trim();
+  if (category && category !== "all") {
+    redirect(`/services/categories/${encodeURIComponent(category)}`);
+  }
+
   const [services, categories] = await Promise.all([
     client.fetch<GovernmentServiceSummary[]>(ALL_SERVICES_QUERY),
     client.fetch<GovernmentCategoryFilter[]>(ALL_CATEGORIES_QUERY),

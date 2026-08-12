@@ -1,11 +1,9 @@
 /**
- * National events — hub categories and detail pages.
- * Expand items and body sections as more verified data arrives
- * (e.g. trade expositions calendars, regional festival dates).
- *
- * URLs: /national-events
- *       /national-events/[slug]
+ * National events — types + helpers.
+ * Catalogues: public/data/national-events.json (not embedded in Worker).
  */
+
+import { loadStaticJson } from "@/lib/data/load-static-json";
 
 export type NationalEventLink = {
   text: string;
@@ -23,784 +21,39 @@ export type NationalEventSection = {
 export type NationalEvent = {
   slug: string;
   title: string;
-  /** Short line for chevron list on hub */
   summary: string;
-  /** Optional meta under title on hub, e.g. "1 June" */
-  meta?: string;
-  /** Category slug this event belongs to */
   categorySlug: string;
-  lead: string;
+  meta?: string;
+  lead?: string;
   sections: NationalEventSection[];
   relatedLinks?: NationalEventLink[];
+  lastUpdated?: string;
 };
 
 export type NationalEventCategory = {
   slug: string;
   title: string;
   description: string;
-  /** Order on hub page */
   order: number;
 };
 
-export const nationalEventCategories: NationalEventCategory[] = [
-  {
-    slug: "official-national-days",
-    title: "Official national days",
-    description:
-      "The three national days recognised in the Constitution of Kenya, with state ceremonies and public observance.",
-    order: 1,
-  },
-  {
-    slug: "agricultural-and-trade-expositions",
-    title: "Agricultural and trade expositions",
-    description:
-      "Major shows and trade fairs that promote farming, industry, investment and public exhibition of goods and services.",
-    order: 2,
-  },
-  {
-    slug: "governance-and-civic-events",
-    title: "Governance and civic events",
-    description:
-      "Recurring national gatherings about devolution, accountability and how government works with citizens and counties.",
-    order: 3,
-  },
-  {
-    slug: "education-arts-and-youth",
-    title: "Education, arts and youth festivals",
-    description:
-      "National competitive and creative festivals for schools, colleges and young people.",
-    order: 4,
-  },
-  {
-    slug: "cultural-and-heritage-festivals",
-    title: "Cultural and heritage festivals",
-    description:
-      "Widely recognised cultural festivals and heritage celebrations across Kenya’s regions.",
-    order: 5,
-  },
-  {
-    slug: "sports-and-national-gatherings",
-    title: "Sports and national gatherings",
-    description:
-      "Sporting events and mass gatherings that form part of Kenya’s public and international identity.",
-    order: 6,
-  },
-];
+type Bundle = {
+  categories: NationalEventCategory[];
+  events: NationalEvent[];
+};
 
-export const nationalEvents: NationalEvent[] = [
-  // —— Official national days ——
-  {
-    slug: "madaraka-day",
-    title: "Madaraka Day",
-    summary:
-      "Commemorates internal self-government on 1 June 1963. Observed with state ceremonies.",
-    meta: "1 June · National day",
-    categorySlug: "official-national-days",
-    lead: "Madaraka Day is one of Kenya’s three constitutional national days. It marks the attainment of internal self-government on 1 June 1963, before full independence later that year.",
-    sections: [
-      {
-        heading: "What it commemorates",
-        paragraphs: [
-          "On Madaraka Day, Kenya remembers the transfer of self-governing powers under colonial transition arrangements. It is distinct from Jamhuri Day, which marks independence and the republic.",
-        ],
-      },
-      {
-        heading: "How it is observed",
-        paragraphs: [
-          "Typical public features of national day celebrations can include a presidential address, ceremonies involving the Kenya Defence Forces and security services, cultural performances, and public broadcasts. The main national ceremony is often hosted in a designated venue, which in recent years has sometimes been rotated among counties to promote national cohesion. Exact programmes are announced each year.",
-        ],
-      },
-      {
-        heading: "Legal basis",
-        paragraphs: [
-          "National days are set out in the Constitution of Kenya. Public holiday observance for the day is also reflected in public holiday practice — see the national holidays page for gazetted days off.",
-        ],
-        links: [
-          {
-            text: "Article 9 — National symbols and national days",
-            href: "/constitution/chapter/2/article/9",
-          },
-          {
-            text: "Public holidays",
-            href: "/society-and-culture/holidays",
-          },
-        ],
-      },
-    ],
-    relatedLinks: [
-      { text: "Jamhuri Day", href: "/national-events/jamhuri-day" },
-      { text: "Mashujaa Day", href: "/national-events/mashujaa-day" },
-      { text: "National symbols", href: "/national-symbols" },
-    ],
-  },
-  {
-    slug: "mashujaa-day",
-    title: "Mashujaa Day",
-    summary:
-      "Honours heroes of the independence struggle and citizens who contribute to the nation. Observed on 20 October.",
-    meta: "20 October · National day",
-    categorySlug: "official-national-days",
-    lead: "Mashujaa Day (Heroes’ Day) is a constitutional national day. It honours those who struggled for freedom and Kenyans who contribute significantly to the country’s development.",
-    sections: [
-      {
-        heading: "What it commemorates",
-        paragraphs: [
-          "Mashujaa Day focuses on courage, sacrifice and service — including historical freedom fighters and contemporary contribution to national life. It replaced earlier colonial-era or single-personality commemorative framing with a broader constitutional idea of national heroes.",
-        ],
-      },
-      {
-        heading: "How it is observed",
-        paragraphs: [
-          "Observance can include state ceremonies, awards or recognition of heroes, cultural programmes and public education about Kenya’s history. The main national venue and guest list are announced for each year.",
-        ],
-      },
-      {
-        heading: "Legal basis",
-        paragraphs: [
-          "Listed among the national days in Article 9 of the Constitution.",
-        ],
-        links: [
-          {
-            text: "Article 9 — National symbols and national days",
-            href: "/constitution/chapter/2/article/9",
-          },
-          {
-            text: "Constitution and national values",
-            href: "/society-and-culture/constitution-and-national-values",
-          },
-        ],
-      },
-    ],
-    relatedLinks: [
-      { text: "Madaraka Day", href: "/national-events/madaraka-day" },
-      { text: "Jamhuri Day", href: "/national-events/jamhuri-day" },
-      { text: "Heritage sites", href: "/society-and-culture/heritage-sites" },
-    ],
-  },
-  {
-    slug: "jamhuri-day",
-    title: "Jamhuri Day",
-    summary:
-      "Kenya’s main national day on 12 December — independence (1963) and the Republic (1964).",
-    meta: "12 December · National day",
-    categorySlug: "official-national-days",
-    lead: "Jamhuri Day is Kenya’s primary national day. It marks full independence on 12 December 1963 and the declaration of the Republic on 12 December 1964.",
-    sections: [
-      {
-        heading: "What it commemorates",
-        paragraphs: [
-          "“Jamhuri” means republic. The day combines remembrance of independence from colonial rule with the constitutional status of Kenya as a republic. It is widely treated as the centrepiece of the national ceremonial calendar.",
-        ],
-      },
-      {
-        heading: "How it is observed",
-        paragraphs: [
-          "Celebrations commonly include a major state ceremony, military parade elements, cultural displays and a presidential address. Host counties or venues may vary; follow official announcements for the current year.",
-        ],
-      },
-      {
-        heading: "Legal basis",
-        paragraphs: [
-          "Listed among the national days in Article 9 of the Constitution.",
-        ],
-        links: [
-          {
-            text: "Article 9 — National symbols and national days",
-            href: "/constitution/chapter/2/article/9",
-          },
-          {
-            text: "Public holidays",
-            href: "/society-and-culture/holidays",
-          },
-        ],
-      },
-    ],
-    relatedLinks: [
-      { text: "Madaraka Day", href: "/national-events/madaraka-day" },
-      { text: "How government works", href: "/how-government-works" },
-    ],
-  },
+let cache: Bundle | null = null;
 
-  // —— Agricultural and trade ——
-  {
-    slug: "ask-shows",
-    title: "Agricultural Society of Kenya (ASK) shows",
-    summary:
-      "Full 2026 calendar, next upcoming show, and branch rates — international, national and regional shows.",
-    meta: "Calendar · Next event highlighted",
-    categorySlug: "agricultural-and-trade-expositions",
-    lead: "ASK runs Kenya’s network of agricultural shows and trade fairs. Use the dedicated ASK shows page for the full calendar (next, upcoming and past events), show classifications, and stand or gate charges where published.",
-    sections: [
-      {
-        heading: "Open the full ASK guide",
-        paragraphs: [
-          "The dedicated guide includes the 2026 theme, a highlighted next event (like public holidays on GOV.UK), upcoming and past tables, and profiles for Mombasa International Show, Nairobi International Trade Fair, national and regional branches.",
-        ],
-        links: [
-          {
-            text: "ASK shows calendar and rates",
-            href: "/national-events/ask-shows",
-          },
-        ],
-      },
-      {
-        heading: "About ASK",
-        paragraphs: [
-          "The Agricultural Society of Kenya is a private membership society (not a government parastatal). It works closely with government; state agencies often exhibit and public funds may support shows. Confirm fees with the relevant branch.",
-        ],
-      },
-    ],
-    relatedLinks: [
-      {
-        text: "ASK shows calendar and rates",
-        href: "/national-events/ask-shows",
-      },
-      {
-        text: "Nairobi International Trade Fair",
-        href: "/national-events/ask-shows/nairobi-international-trade-fair",
-      },
-      {
-        text: "Mombasa International Show",
-        href: "/national-events/ask-shows/mombasa-international-show",
-      },
-    ],
-  },
-  {
-    slug: "nairobi-international-trade-fair",
-    title: "Nairobi International Trade Fair (NITF)",
-    summary:
-      "ASK international trade fair at Jamhuri Park — 28 September to 4 October 2026 on the published calendar.",
-    meta: "28 Sep – 4 Oct 2026 · Nairobi",
-    categorySlug: "agricultural-and-trade-expositions",
-    lead: "The Nairobi International Trade Fair is the Nairobi branch of the Agricultural Society of Kenya. Full history, location notes and the 2026 calendar entry are on the ASK shows profile.",
-    sections: [
-      {
-        heading: "Open the full NITF / ASK profile",
-        paragraphs: [
-          "See dates in the national calendar, location (Jamhuri Park), history from 1901/1902, and links to the full ASK programme.",
-        ],
-        links: [
-          {
-            text: "Nairobi International Trade Fair — ASK profile",
-            href: "/national-events/ask-shows/nairobi-international-trade-fair",
-          },
-          {
-            text: "Full ASK calendar and next event",
-            href: "/national-events/ask-shows",
-          },
-        ],
-      },
-    ],
-    relatedLinks: [
-      {
-        text: "Mombasa International Show",
-        href: "/national-events/ask-shows/mombasa-international-show",
-      },
-      {
-        text: "ASK shows hub",
-        href: "/national-events/ask-shows",
-      },
-    ],
-  },
-  // —— Governance ——
-  {
-    slug: "devolution-conference",
-    title: "Devolution Conference",
-    summary:
-      "Council of Governors conference — 9 editions since 2014; most recent Homa Bay 2025. Next (2027) not yet announced.",
-    meta: "Biennial · Most recent: Aug 2025",
-    categorySlug: "governance-and-civic-events",
-    lead: "The Devolution Conference is the main intergovernmental forum on Kenya’s devolved system, convened with the Council of Governors. Open the full page for past hosts, venues and themes, and the next or most recent conference as dates change.",
-    sections: [
-      {
-        heading: "Past conferences and current highlight",
-        paragraphs: [
-          "See past editions (most recent first), notes on the 2020 COVID hiatus and the biennial cycle, and a green highlight that shows the conference happening now, next, or most recently held.",
-        ],
-        links: [
-          {
-            text: "Devolution Conference — past editions and highlight",
-            href: "/national-events/devolution-conference",
-          },
-        ],
-      },
-    ],
-    relatedLinks: [
-      {
-        text: "Devolution Sensitisation Week",
-        href: "/national-events/devolution-sensitisation-week",
-      },
-      {
-        text: "Chapter 11 — Devolved government",
-        href: "/constitution/chapter/11",
-      },
-      { text: "County governments", href: "/government/counties" },
-    ],
-  },
-  {
-    slug: "devolution-sensitisation-week",
-    title: "Devolution Sensitisation Week",
-    summary:
-      "Public education weeks on devolution — next in Garissa, 27 July – 1 August 2026.",
-    meta: "Upcoming · Garissa 2026",
-    categorySlug: "governance-and-civic-events",
-    lead: "Devolution Sensitisation Week (DSW) is a Council of Governors public-facing programme to explain devolution and gather feedback. It is separate from the multi-day Devolution Conference.",
-    sections: [
-      {
-        heading: "Next, ongoing or most recent week",
-        paragraphs: [
-          "The highlight card updates from next week, to happening now while the week runs, then to most recent once it ends. The 4th edition is listed for Garissa County, 27 July – 1 August 2026; earlier editions include Nairobi (2017), Mombasa (2018) and Homa Bay (2025).",
-        ],
-        links: [
-          {
-            text: "Devolution Sensitisation Week — full guide",
-            href: "/national-events/devolution-sensitisation-week",
-          },
-        ],
-      },
-    ],
-    relatedLinks: [
-      {
-        text: "Devolution Conference",
-        href: "/national-events/devolution-conference",
-      },
-      { text: "Devolution", href: "/government/counties/devolution" },
-    ],
-  },
-  {
-    slug: "civic-and-public-participation-events",
-    title: "Civic and public participation events",
-    summary:
-      "How national and county public participation forums relate to the civic calendar.",
-    meta: "Ongoing · National and county",
-    categorySlug: "governance-and-civic-events",
-    lead: "Kenya’s Constitution emphasises public participation in governance. National and county governments convene hearings, budget forums and consultation processes throughout the year.",
-    sections: [
-      {
-        heading: "What to expect",
-        paragraphs: [
-          "These are not always single “festival-style” national days. They include budget public participation, bill consultations and county assembly outreach. Announcements are usually local or sector-specific.",
-        ],
-        links: [
-          {
-            text: "Access to information",
-            href: "/access-to-information",
-          },
-          {
-            text: "How public money works",
-            href: "/how-public-money-works",
-          },
-        ],
-      },
-    ],
-    relatedLinks: [
-      {
-        text: "Article 10 — National values and principles of governance",
-        href: "/constitution/chapter/2/article/10",
-      },
-    ],
-  },
+export async function loadNationalEventsBundle(): Promise<Bundle> {
+  if (cache) return cache;
+  cache = await loadStaticJson<Bundle>("data/national-events.json");
+  return cache;
+}
 
-  // —— Education & arts ——
-  {
-    slug: "kenya-national-drama-and-film-festival",
-    title: "Kenya National Drama and Film Festival (KNDFF)",
-    summary:
-      "National co-curricular finals for schools and colleges — most recent 64th edition (Kagumo TTC, Nyeri, April 2026).",
-    meta: "Annual · Most recent: Apr 2026",
-    categorySlug: "education-arts-and-youth",
-    lead: "The Kenya National Drama and Film Festival is the national platform for student theatre, film and related performance under the Ministry of Education. The full page lists next, ongoing or most recent finals, plus past hosts, themes and secondary-school play winners where recorded.",
-    sections: [
-      {
-        heading: "Most recent finals and archive",
-        paragraphs: [
-          "The green highlight updates automatically: festival happening now, next announced edition, or most recent past finals. Past national finals (from 1985 in this dataset) are listed most recent first. The compiled high-school winners list records a COVID break for 2020–2022. The 64th State Concert was at State House Grounds, Nairobi.",
-        ],
-        links: [
-          {
-            text: "KNDFF — editions, hosts and winners",
-            href: "/national-events/kenya-national-drama-and-film-festival",
-          },
-        ],
-      },
-      {
-        heading: "Who takes part",
-        paragraphs: [
-          "Pre-primary through university learners progress through local and regional stages toward national finals. Rules and calendars are set by the education and festival organising structures each year.",
-        ],
-      },
-    ],
-    relatedLinks: [
-      {
-        text: "Kenya Music Festival",
-        href: "/national-events/kenya-music-festival",
-      },
-      { text: "Education topic", href: "/topics/education" },
-    ],
-  },
-  {
-    slug: "kenya-music-festival",
-    title: "Kenya Music Festival",
-    summary:
-      "Ministry of Education national music, dance and elocution festival — next Meru cycle August 2026; archive from 1985.",
-    meta: "Annual · Next: Aug 2026 (Meru)",
-    categorySlug: "education-arts-and-youth",
-    lead: "The Kenya Music Festival is one of Africa’s longest-running school-centred festivals of music, dance and elocution. The full page shows next, ongoing or most recent national finals, past editions (no winners column), and history from 1927.",
-    sections: [
-      {
-        heading: "Next finals and archive",
-        paragraphs: [
-          "The green highlight updates automatically for festival happening now, next announced edition, or most recent past finals. COVID-19 skipped full nationals in 2020 and 2021 (93rd in 2019, 94th in 2022). Past national finals from 1985 list edition, dates, venue and theme.",
-        ],
-        links: [
-          {
-            text: "Kenya Music Festival — editions and history",
-            href: "/national-events/kenya-music-festival",
-          },
-        ],
-      },
-      {
-        heading: "What it includes",
-        paragraphs: [
-          "Classes typically cover choral music, instrumental work, traditional dance, verse speaking and related categories. Institutions compete through progressive levels toward national adjudication.",
-        ],
-      },
-    ],
-    relatedLinks: [
-      {
-        text: "Kenya National Drama and Film Festival",
-        href: "/national-events/kenya-national-drama-and-film-festival",
-      },
-      {
-        text: "Languages",
-        href: "/society-and-culture/languages",
-      },
-    ],
-  },
-
-  // —— Cultural & heritage ——
-  {
-    slug: "lamu-cultural-festival",
-    title: "Lamu Cultural Festival",
-    summary:
-      "Celebration of Swahili coastal heritage in Lamu, a UNESCO World Heritage setting.",
-    meta: "Annual · Lamu County",
-    categorySlug: "cultural-and-heritage-festivals",
-    lead: "The Lamu Cultural Festival celebrates Swahili coastal heritage — crafts, performance, dhow culture and community traditions — in and around Lamu Old Town.",
-    sections: [
-      {
-        heading: "What visitors and residents experience",
-        paragraphs: [
-          "Programmes in recent years have included cultural processions, traditional sports such as donkey races, dhow-related activities, music, craft and food. Exact line-ups change each year.",
-        ],
-      },
-      {
-        heading: "Heritage context",
-        paragraphs: [
-          "Lamu Old Town is recognised as a UNESCO World Heritage site. Festival organisation typically involves county leadership, community groups and heritage institutions such as the National Museums of Kenya ecosystem. Confirm dates with official Lamu County or festival announcements.",
-        ],
-        links: [
-          {
-            text: "Heritage sites",
-            href: "/society-and-culture/heritage-sites",
-          },
-          {
-            text: "Cultural calendar",
-            href: "/society-and-culture/cultural-calendar",
-          },
-        ],
-      },
-    ],
-    relatedLinks: [
-      {
-        text: "Communities",
-        href: "/society-and-culture/communities",
-      },
-      {
-        text: "Religion and faith",
-        href: "/religion-and-faith",
-      },
-    ],
-  },
-  {
-    slug: "regional-cultural-festivals",
-    title: "Regional cultural festivals (overview)",
-    summary:
-      "How Kenya’s regions mark culture through festivals — a framework for a fuller multi-region directory.",
-    meta: "Various · County and community",
-    categorySlug: "cultural-and-heritage-festivals",
-    lead: "Kenya’s cultural life is regional as well as national. Many counties and communities host festivals that are locally important and sometimes nationally known. This page explains how we group them and will grow as verified events are added.",
-    sections: [
-      {
-        heading: "Regions to represent",
-        paragraphs: [
-          "A representative directory should not stop at Nairobi and the coast. Over time, entries can cover Rift Valley, lake region, Mount Kenya, western Kenya, northern Kenya and pastoralist cultures, and urban creative festivals — always with clear organisers and dates.",
-        ],
-        bullets: [
-          "Coastal and Swahili heritage events",
-          "Highland and Rift cultural gatherings",
-          "Lake region festivals",
-          "Northern and pastoralist public cultural events",
-          "Urban literature, film and music festivals with public programmes",
-        ],
-      },
-      {
-        heading: "What we need before listing an event",
-        paragraphs: [
-          "A public name, typical timing, host county or venue type, organising body, and a reliable source. Avoid political campaign rallies and unverified social media events.",
-        ],
-      },
-    ],
-    relatedLinks: [
-      {
-        text: "Lamu Cultural Festival",
-        href: "/national-events/lamu-cultural-festival",
-      },
-      {
-        text: "Cultural calendar",
-        href: "/society-and-culture/cultural-calendar",
-      },
-    ],
-  },
-
-  // —— Sports ——
-  {
-    slug: "safari-rally",
-    title: "Safari Rally",
-    summary:
-      "Historic motorsport event with deep roots in Kenya’s sporting identity; modern WRC editions when hosted.",
-    meta: "Motorsport · International profile",
-    categorySlug: "sports-and-national-gatherings",
-    lead: "The Safari Rally is one of Kenya’s most famous sporting events. It has a long history in African motorsport and, in modern form, has returned as a round of the FIA World Rally Championship when scheduled.",
-    sections: [
-      {
-        heading: "National significance",
-        paragraphs: [
-          "The rally is part of Kenya’s international sporting brand. Routes, service parks and spectator points are announced for each edition. Safety and access rules are set by organisers and security agencies.",
-        ],
-      },
-      {
-        heading: "Check before you go",
-        paragraphs: [
-          "Dates, itinerary and ticketing change every season. Use official Safari Rally / WRC and Government of Kenya tourism or sports announcements for the current year.",
-        ],
-      },
-    ],
-    relatedLinks: [
-      {
-        text: "Sports and national gatherings (category)",
-        href: "/national-events/sports-and-national-gatherings",
-      },
-    ],
-  },
-  {
-    slug: "athletics-and-national-sporting-events",
-    title: "Athletics and national sporting events",
-    summary:
-      "Kenya’s athletics championships and major meets that shape national sporting culture.",
-    meta: "Various · National and international",
-    categorySlug: "sports-and-national-gatherings",
-    lead: "Athletics is central to Kenya’s global sporting reputation. National trials, championships and international meets hosted in Kenya are part of the public sports calendar.",
-    sections: [
-      {
-        heading: "What this page covers",
-        paragraphs: [
-          "A high-level overview of why athletics and selected national competitions matter culturally — not live results. Specific meet calendars belong with Athletics Kenya and event organisers.",
-        ],
-      },
-      {
-        heading: "Related public interest",
-        paragraphs: [
-          "School and college sports, football cup finals and other mass spectator events can be added here as verified recurring national fixtures.",
-        ],
-      },
-    ],
-    relatedLinks: [
-      {
-        text: "Safari Rally",
-        href: "/national-events/safari-rally",
-      },
-    ],
-  },
-
-  // —— Category overview “landing” pages (also chevron targets) ——
-  {
-    slug: "official-national-days",
-    title: "Official national days (overview)",
-    summary:
-      "Madaraka Day, Mashujaa Day and Jamhuri Day under Article 9 of the Constitution.",
-    meta: "Category overview",
-    categorySlug: "official-national-days",
-    lead: "Kenya has three national days named in the Constitution. This overview links to each day. For other public holidays (Labour Day, religious holidays and others), use the holidays page.",
-    sections: [
-      {
-        heading: "The three national days",
-        paragraphs: [
-          "Madaraka Day (1 June), Mashujaa Day (20 October) and Jamhuri Day (12 December) are listed in Article 9. They are observed with state ceremonies and are also treated as public holidays in practice.",
-        ],
-        links: [
-          {
-            text: "Article 9 — National symbols and national days",
-            href: "/constitution/chapter/2/article/9",
-          },
-        ],
-      },
-      {
-        heading: "Events in this category",
-        paragraphs: [
-          "Open each day for a short history, how it is observed, and related links.",
-        ],
-      },
-    ],
-    relatedLinks: [
-      { text: "Madaraka Day", href: "/national-events/madaraka-day" },
-      { text: "Mashujaa Day", href: "/national-events/mashujaa-day" },
-      { text: "Jamhuri Day", href: "/national-events/jamhuri-day" },
-      { text: "Public holidays", href: "/society-and-culture/holidays" },
-    ],
-  },
-  {
-    slug: "agricultural-and-trade-expositions",
-    title: "Agricultural and trade expositions (overview)",
-    summary:
-      "ASK shows, Nairobi International Trade Fair and other trade expos — farming and industry, not governance summits.",
-    meta: "Category overview",
-    categorySlug: "agricultural-and-trade-expositions",
-    lead: "This category covers public agricultural shows and trade expositions. Governance conferences such as the Devolution Conference are listed under governance and civic events.",
-    sections: [
-      {
-        heading: "What you will find here",
-        paragraphs: [
-          "Summaries of major expositions. Detailed show calendars and exhibitor lists will grow as verified data is added — including more trade and industry fairs beyond agriculture.",
-        ],
-      },
-    ],
-    relatedLinks: [
-      { text: "ASK shows", href: "/national-events/ask-shows" },
-      {
-        text: "Nairobi International Trade Fair",
-        href: "/national-events/nairobi-international-trade-fair",
-      },
-    ],
-  },
-  {
-    slug: "governance-and-civic-events",
-    title: "Governance and civic events (overview)",
-    summary:
-      "Devolution Conference, Devolution Sensitisation Week and public participation.",
-    meta: "Category overview",
-    categorySlug: "governance-and-civic-events",
-    lead: "These events are about how Kenya is governed: devolution, accountability and public participation. They are separate from agricultural trade fairs.",
-    sections: [
-      {
-        heading: "Related civic guidance",
-        paragraphs: [
-          "For structure of government and counties, use the government explainers on this site.",
-        ],
-        links: [
-          { text: "How government works", href: "/how-government-works" },
-          { text: "County vs national", href: "/county-vs-national" },
-          { text: "Devolution", href: "/government/counties/devolution" },
-        ],
-      },
-    ],
-    relatedLinks: [
-      {
-        text: "Devolution Conference",
-        href: "/national-events/devolution-conference",
-      },
-      {
-        text: "Devolution Sensitisation Week",
-        href: "/national-events/devolution-sensitisation-week",
-      },
-      {
-        text: "Civic and public participation events",
-        href: "/national-events/civic-and-public-participation-events",
-      },
-    ],
-  },
-  {
-    slug: "education-arts-and-youth",
-    title: "Education, arts and youth festivals (overview)",
-    summary:
-      "National school and college festivals for drama, film, music and related arts.",
-    meta: "Category overview",
-    categorySlug: "education-arts-and-youth",
-    lead: "Kenya’s education system supports large national festivals that shape cultural life for young people. Open each festival page for a short overview.",
-    sections: [
-      {
-        heading: "In this category",
-        paragraphs: [
-          "Drama and film, music festival, and room to add science fairs or other national youth competitions when documented.",
-        ],
-      },
-    ],
-    relatedLinks: [
-      {
-        text: "Kenya National Drama and Film Festival",
-        href: "/national-events/kenya-national-drama-and-film-festival",
-      },
-      {
-        text: "Kenya Music Festival",
-        href: "/national-events/kenya-music-festival",
-      },
-    ],
-  },
-  {
-    slug: "cultural-and-heritage-festivals",
-    title: "Cultural and heritage festivals (overview)",
-    summary:
-      "Festivals that celebrate Kenya’s cultures and heritage — starting with Lamu and a multi-region framework.",
-    meta: "Category overview",
-    categorySlug: "cultural-and-heritage-festivals",
-    lead: "Cultural festivals express Kenya’s diversity. This category starts with well-known examples and a framework for regional expansion.",
-    sections: [
-      {
-        heading: "Balance across Kenya",
-        paragraphs: [
-          "Listings should grow beyond a single coastal example. Use the regional overview page to guide future entries.",
-        ],
-      },
-    ],
-    relatedLinks: [
-      {
-        text: "Lamu Cultural Festival",
-        href: "/national-events/lamu-cultural-festival",
-      },
-      {
-        text: "Regional cultural festivals overview",
-        href: "/national-events/regional-cultural-festivals",
-      },
-    ],
-  },
-  {
-    slug: "sports-and-national-gatherings",
-    title: "Sports and national gatherings (overview)",
-    summary:
-      "Safari Rally, athletics and other sporting events with national profile.",
-    meta: "Category overview",
-    categorySlug: "sports-and-national-gatherings",
-    lead: "Sport is part of Kenya’s public culture and international identity. This category summarises major recurring or iconic events.",
-    sections: [
-      {
-        heading: "In this category",
-        paragraphs: [
-          "Safari Rally, athletics overview, and space for other verified national fixtures.",
-        ],
-      },
-    ],
-    relatedLinks: [
-      {
-        text: "Safari Rally",
-        href: "/national-events/safari-rally",
-      },
-      {
-        text: "Athletics and national sporting events",
-        href: "/national-events/athletics-and-national-sporting-events",
-      },
-    ],
-  },
-];
+/** Empty at module init — use loadNationalEventsBundle(). */
+export const nationalEventCategories: NationalEventCategory[] = [];
+/** Empty at module init — use loadNationalEventsBundle(). */
+export const nationalEvents: NationalEvent[] = [];
 
 const BASE = "/national-events";
 
@@ -808,41 +61,51 @@ export function nationalEventHref(slug: string): string {
   return `${BASE}/${slug}`;
 }
 
-export function getNationalEventBySlug(slug: string): NationalEvent | undefined {
-  return nationalEvents.find((e) => e.slug === slug);
+export async function getNationalEventBySlug(
+  slug: string,
+): Promise<NationalEvent | undefined> {
+  const { events } = await loadNationalEventsBundle();
+  return events.find((e) => e.slug === slug);
 }
 
-export function getAllNationalEventSlugs(): string[] {
-  return nationalEvents.map((e) => e.slug);
+export async function getAllNationalEventSlugs(): Promise<string[]> {
+  const { events } = await loadNationalEventsBundle();
+  return events.map((e) => e.slug);
 }
 
-export function getEventsForCategory(categorySlug: string): NationalEvent[] {
-  return nationalEvents.filter(
+export async function getEventsForCategory(
+  categorySlug: string,
+): Promise<NationalEvent[]> {
+  const { events } = await loadNationalEventsBundle();
+  return events.filter(
     (e) => e.categorySlug === categorySlug && e.slug !== categorySlug,
   );
 }
 
-export function getCategoryBySlug(
+export async function getCategoryBySlug(
   slug: string,
-): NationalEventCategory | undefined {
-  return nationalEventCategories.find((c) => c.slug === slug);
+): Promise<NationalEventCategory | undefined> {
+  const { categories } = await loadNationalEventsBundle();
+  return categories.find((c) => c.slug === slug);
 }
 
-export function getSortedCategories(): NationalEventCategory[] {
-  return [...nationalEventCategories].sort((a, b) => a.order - b.order);
+export async function getSortedCategories(): Promise<NationalEventCategory[]> {
+  const { categories } = await loadNationalEventsBundle();
+  return [...categories].sort((a, b) => a.order - b.order);
 }
 
-/**
- * Hub chevron rows for a category: leaf topics only (not the category overview page).
- * Category overview pages remain available via related links on detail pages.
- */
-export function getHubCategoryItems(categorySlug: string): Array<{
-  title: string;
-  href: string;
-  description: string;
-  meta?: string;
-}> {
-  return getEventsForCategory(categorySlug).map((child) => ({
+export async function getHubCategoryItems(
+  categorySlug: string,
+): Promise<
+  Array<{
+    title: string;
+    href: string;
+    description: string;
+    meta?: string;
+  }>
+> {
+  const events = await getEventsForCategory(categorySlug);
+  return events.map((child) => ({
     title: child.title,
     href: nationalEventHref(child.slug),
     description: child.summary,

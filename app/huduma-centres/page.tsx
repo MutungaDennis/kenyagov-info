@@ -18,9 +18,9 @@ export const metadata: Metadata = {
     "What Huduma Centres are, opening hours, how they relate to eCitizen, and how to find a centre near you across Kenya.",
 };
 
-export default function HudumaCentresPage() {
-  const stats = hudumaStats();
-  const extendedCount = getExtendedHoursCentres().length;
+export default async function HudumaCentresPage() {
+  const stats = await hudumaStats();
+  const extendedCount = (await getExtendedHoursCentres()).length;
 
   return (
     <>

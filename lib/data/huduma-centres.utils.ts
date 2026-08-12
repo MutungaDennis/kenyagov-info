@@ -1,15 +1,16 @@
 // lib/data/huduma-centres.utils.ts
-// Pure helpers — concurrent-safe (no I/O, no shared mutable state)
+// Helpers — centre rows loaded via loadHudumaCentres() (not embedded in Worker)
 
 import {
   HUDUMA_REGIONS,
-  hudumaCentres,
+  loadHudumaCentres,
   type HudumaCentre,
   type HudumaRegion,
 } from "./huduma-centres";
 
-export function getAllHudumaCentres(): HudumaCentre[] {
-  return [...hudumaCentres].sort(
+export async function getAllHudumaCentres(): Promise<HudumaCentre[]> {
+  const centres = await loadHudumaCentres();
+  return [...centres].sort(
     (a, b) =>
       a.region.localeCompare(b.region) ||
       a.county.localeCompare(b.county) ||
@@ -17,33 +18,39 @@ export function getAllHudumaCentres(): HudumaCentre[] {
   );
 }
 
-export function countiesWithHuduma(): string[] {
-  return Array.from(new Set(hudumaCentres.map((c) => c.county))).sort((a, b) =>
+export async function countiesWithHuduma(): Promise<string[]> {
+  const centres = await loadHudumaCentres();
+  return Array.from(new Set(centres.map((c) => c.county))).sort((a, b) =>
     a.localeCompare(b),
   );
 }
 
-export function regionsWithHuduma(): HudumaRegion[] {
-  const present = new Set(hudumaCentres.map((c) => c.region));
+export async function regionsWithHuduma(): Promise<HudumaRegion[]> {
+  const centres = await loadHudumaCentres();
+  const present = new Set(centres.map((c) => c.region));
   return HUDUMA_REGIONS.filter((r) => present.has(r));
 }
 
-export function getCentresByRegion(region: HudumaRegion): HudumaCentre[] {
-  return getAllHudumaCentres().filter((c) => c.region === region);
+export async function getCentresByRegion(
+  region: HudumaRegion,
+): Promise<HudumaCentre[]> {
+  const all = await getAllHudumaCentres();
+  return all.filter((c) => c.region === region);
 }
 
-export function getCentresByCounty(county: string): HudumaCentre[] {
-  return getAllHudumaCentres().filter(
-    (c) => c.county.toLowerCase() === county.toLowerCase(),
-  );
+export async function getCentresByCounty(county: string): Promise<HudumaCentre[]> {
+  const all = await getAllHudumaCentres();
+  return all.filter((c) => c.county.toLowerCase() === county.toLowerCase());
 }
 
-export function getExtendedHoursCentres(): HudumaCentre[] {
-  return getAllHudumaCentres().filter((c) => c.extendedHours);
+export async function getExtendedHoursCentres(): Promise<HudumaCentre[]> {
+  const all = await getAllHudumaCentres();
+  return all.filter((c) => c.extendedHours);
 }
 
-export function getStandardHoursCentres(): HudumaCentre[] {
-  return getAllHudumaCentres().filter((c) => !c.extendedHours);
+export async function getStandardHoursCentres(): Promise<HudumaCentre[]> {
+  const all = await getAllHudumaCentres();
+  return all.filter((c) => !c.extendedHours);
 }
 
 export function formatHudumaTime(hhmm: string): string {
@@ -70,7 +77,7 @@ export type HudumaFilter = {
 
 export function filterHudumaCentres(
   filters: HudumaFilter = {},
-  list: HudumaCentre[] = hudumaCentres,
+  list: HudumaCentre[],
 ): HudumaCentre[] {
   const q = filters.q?.trim().toLowerCase() || "";
   const region = filters.region?.trim() || "";
@@ -84,7 +91,8 @@ export function filterHudumaCentres(
       if (hours === "extended" && !c.extendedHours) return false;
       if (hours === "standard" && c.extendedHours) return false;
       if (q) {
-        const hay = `${c.name} ${c.county} ${c.cityOrTown} ${c.address} ${c.region}`.toLowerCase();
+        const hay =
+          `${c.name} ${c.county} ${c.cityOrTown} ${c.address} ${c.region}`.toLowerCase();
         const tokens = q.split(/\s+/).filter(Boolean);
         if (!tokens.every((t) => hay.includes(t))) return false;
       }
@@ -107,12 +115,11 @@ export function groupCentresByRegion(
     arr.push(c);
     map.set(c.region, arr);
   }
-  return regionsWithHuduma()
-    .filter((r) => map.has(r))
-    .map((region) => ({
-      region,
-      centres: map.get(region)!,
-    }));
+  const order = HUDUMA_REGIONS.filter((r) => map.has(r));
+  return order.map((region) => ({
+    region,
+    centres: map.get(region)!,
+  }));
 }
 
 export function groupCentresByCounty(
@@ -140,13 +147,15 @@ export function countyAnchor(county: string): string {
   return `county-${county.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
 }
 
-export function hudumaStats() {
-  const all = hudumaCentres;
+export async function hudumaStats() {
+  const all = await loadHudumaCentres();
+  const counties = Array.from(new Set(all.map((c) => c.county)));
+  const regions = new Set(all.map((c) => c.region));
   return {
     total: all.length,
     extended: all.filter((c) => c.extendedHours).length,
     standard: all.filter((c) => !c.extendedHours).length,
-    counties: countiesWithHuduma().length,
-    regions: regionsWithHuduma().length,
+    counties: counties.length,
+    regions: regions.size,
   };
 }

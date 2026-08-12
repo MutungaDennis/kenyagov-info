@@ -227,8 +227,14 @@ Custom domain: Workers & Pages → your worker → **Domains & Routes** → add 
 | Workers **Paid** (~$5/mo) | **10 MiB** |
 
 This repo is tuned for **Workers Free** after stripping Studio / PDF / AI packages
-from the production dependency graph. `pnpm run build` runs a size gate
+from the production dependency graph, moving large datasets to `public/data/*.json`,
+and **removing Next middleware** (the middleware runtime alone was ~90 KiB gzip).
+`pnpm run build` minifies the handler then runs a size gate
 (`scripts/check-worker-size.mjs`) and fails if gzip would exceed 3 MiB.
+
+**Required Cloudflare Redirect Rule (replaces middleware host redirect):**  
+`citizenguide.ke/*` → `https://www.citizenguide.ke/$1` (308). Without this, apex and
+www both serve content (duplicate host for SEO).
 
 **If deploy still fails with code 10027:** enable
 [Workers Paid](https://dash.cloudflare.com/?to=/:account/workers/plans) (10 MiB).

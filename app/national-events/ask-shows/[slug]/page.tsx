@@ -6,6 +6,7 @@ import LastUpdated from "@/components/govuk/LastUpdated";
 import TableScroll from "@/components/govuk/TableScroll";
 import {
   askCalendarByYear,
+  ensureAskShowsLoaded,
   getAllAskProfileSlugs,
   getAskProfile,
   askTierLabels,
@@ -17,12 +18,13 @@ type Props = {
 };
 
 export async function generateStaticParams() {
-  return getAllAskProfileSlugs().map((slug) => ({ slug }));
+  const slugs = await getAllAskProfileSlugs();
+  return slugs.map((slug) => ({ slug }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const profile = getAskProfile(slug);
+  const profile = await getAskProfile(slug);
   if (!profile) return { title: "Show not found" };
   return {
     title: profile.name,
@@ -78,7 +80,8 @@ function FeeTable({
 
 export default async function AskShowProfilePage({ params }: Props) {
   const { slug } = await params;
-  const profile = getAskProfile(slug);
+  await ensureAskShowsLoaded();
+  const profile = await getAskProfile(slug);
   if (!profile) notFound();
 
   const calendarHits = Object.values(askCalendarByYear)

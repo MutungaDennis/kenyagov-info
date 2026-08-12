@@ -457,13 +457,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.75,
   }));
 
-  const nationalEventUrls: SitemapEntry[] = getAllNationalEventSlugs().map((slug) => ({
+  const nationalEventSlugs = await getAllNationalEventSlugs();
+  const nationalEventUrls: SitemapEntry[] = nationalEventSlugs.map((slug) => ({
     url: `${BASE_URL}/national-events/${slug}`,
     changeFrequency: 'monthly' as const,
     priority: 0.65,
   }));
 
-  const askProfileUrls: SitemapEntry[] = getAllAskProfileSlugs().map((slug) => ({
+  const askProfileSlugs = await getAllAskProfileSlugs();
+  const askProfileUrls: SitemapEntry[] = askProfileSlugs.map((slug) => ({
     url: `${BASE_URL}/national-events/ask-shows/${slug}`,
     changeFrequency: 'monthly' as const,
     priority: 0.6,
