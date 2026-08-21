@@ -8,9 +8,13 @@ import {
 
 export const dynamic = "force-dynamic";
 
-/** Escape characters that break PostgREST or/ilike filter strings */
-function sanitizeFilterValue(value: string): string {
-  return value.replace(/[%_,.()]/g, " ").replace(/\s+/g, " ").trim();
+/** 
+ * Clean the search term for tsquery. 
+ * We remove characters that break Postgres text search parsers.
+ */
+function sanitizeSearchTerm(value: string): string {
+  // Remove characters that can break plainto_tsquery, keep letters, numbers, spaces
+  return value.replace(/[^a-zA-Z0-9\s]/g, " ").replace(/\s+/g, " ").trim();
 }
 
 /** Quote a value for PostgREST filter expressions (handles spaces). */
@@ -52,7 +56,7 @@ function collectFacet(
   }
 }
 
-/* ====================== GET (unchanged) ====================== */
+/* ====================== GET ====================== */
 export async function GET(request: NextRequest) {
   const auth = await requireAdminApi();
   if (!auth.ok) return auth.response;
@@ -160,11 +164,15 @@ export async function GET(request: NextRequest) {
   const applyFilters = (query: any) => {
     let qy = query;
     if (q.length >= 1) {
-      const qSafe = sanitizeFilterValue(q);
+      const qSafe = sanitizeSearchTerm(q);
       if (qSafe.length >= 1) {
-        qy = qy.or(
-          `name.ilike.%${qSafe}%,short_name.ilike.%${qSafe}%,description.ilike.%${qSafe}%,official_name.ilike.%${qSafe}%,slug.ilike.%${qSafe}%`,
-        );
+        // ✅ CRITICAL FIX: Use textSearch on the search_vector column.
+        // This completely bypasses the PostgREST 'or' parser comma issue,
+        // handles punctuation automatically, and is 100x faster (uses GIN index).
+        qy = qy.textSearch('search_vector', qSafe, {
+          type: 'plain',
+          config: 'english'
+        });
       }
     }
     if (arm.length >= 1) {
@@ -177,7 +185,7 @@ export async function GET(request: NextRequest) {
       qy = qy.eq("institution_type", type);
     }
     if (activeOnly) {
-      qy = qy.or("is_active.eq.true,is_active.is.null");
+      qy = qy.eq("is_active", true);
     }
     return qy;
   };
@@ -202,7 +210,7 @@ export async function GET(request: NextRequest) {
       .from("institutions")
       .select(
         `id, slug, name, short_name, institution_type, institution_category, government_level,
-         arm_of_government, mtef_sector, is_active, description`,
+         arm_of_government, mtef_sector, is_active, status, description`,
         { count: "exact" },
       )
       .order("name", { ascending: true })

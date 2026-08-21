@@ -47,6 +47,22 @@ import {
 } from "@/lib/verification";
 import LeaderImageField from "@/components/admin/LeaderImageField";
 
+async function safeJsonResponse(res: Response) {
+  const contentType = res.headers.get("content-type");
+  if (contentType && contentType.includes("application/json")) {
+    return await res.json();
+  }
+  
+  // If the server returned HTML (e.g., Next.js error page or middleware redirect)
+  const text = await res.text();
+  console.error("Server returned HTML instead of JSON:", text.substring(0, 200));
+  
+  if (res.status === 401 || res.status === 302 || res.status === 307) {
+    throw new Error("Authentication failed. Please check your session.");
+  }
+  throw new Error(`Server error (HTTP ${res.status}). Check terminal for details.`);
+}
+
 // 🚀 Import the IndexNow helper
 import { triggerIndexNow } from "@/lib/indexnow";
 
@@ -308,7 +324,7 @@ export default function EditOfficialPage({
         `/api/admin/leaders/lookups?${params.toString()}`,
         { credentials: "include", cache: "no-store" },
       );
-      const json = await res.json();
+      const json = await safeJsonResponse(res);
       if (!res.ok) throw new Error(json.error || "Failed to load reference data");
       setLookups((prev) => ({
         parties: json.parties || prev.parties,
@@ -371,7 +387,7 @@ export default function EditOfficialPage({
           label: label.trim() || v,
         }),
       });
-      const json = await res.json();
+      const json = await safeJsonResponse(res);
       if (!res.ok) {
         throw new Error(
           [json.error, json.hint].filter(Boolean).join(" — ") ||
@@ -431,7 +447,7 @@ export default function EditOfficialPage({
           `/api/admin/leaders/lookups?${params.toString()}`,
           { credentials: "include", cache: "no-store" },
         );
-        const json = await res.json();
+        const json = await safeJsonResponse(res);
         if (!res.ok) break;
         const batch = (json.institutions as RefItem[]) || [];
         all.push(...batch);
@@ -502,7 +518,7 @@ export default function EditOfficialPage({
           `/api/admin/leaders/lookups?${params.toString()}`,
           { credentials: "include", cache: "no-store" },
         );
-        const json = await res.json();
+        const json = await safeJsonResponse(res);
         if (res.ok) {
           setOrgResults((json.institutions as RefItem[]) || []);
         } else {
@@ -567,7 +583,7 @@ export default function EditOfficialPage({
         credentials: "include",
         cache: "no-store",
       });
-      const json = await res.json();
+      const json = await safeJsonResponse(res);
       if (!res.ok) throw new Error(json.error || "Not found");
       const d = json.data;
       setForm({
@@ -749,7 +765,7 @@ export default function EditOfficialPage({
           description: newPosition.description.trim() || undefined,
         }),
       });
-      const json = await res.json();
+      const json = await safeJsonResponse(res);
       if (!res.ok) {
         throw new Error(
           [json.error, json.hint].filter(Boolean).join(" — ") ||
@@ -860,7 +876,7 @@ export default function EditOfficialPage({
       });
       let json: Record<string, unknown> = {};
       try {
-        json = await res.json();
+        json = await safeJsonResponse(res);
       } catch {
         throw new Error(
           res.ok
@@ -1026,7 +1042,7 @@ export default function EditOfficialPage({
           abbreviation: newParty.abbreviation.trim() || undefined,
         }),
       });
-      const json = await res.json();
+      const json = await safeJsonResponse(res);
       if (!res.ok) {
         throw new Error(json.error || "Failed to create party");
       }
@@ -1084,7 +1100,7 @@ export default function EditOfficialPage({
           is_active: newConstituency.is_active,
         }),
       });
-      const json = await res.json();
+      const json = await safeJsonResponse(res);
       if (!res.ok) {
         throw new Error(
           [json.error, json.hint].filter(Boolean).join(" — ") ||
@@ -1159,7 +1175,7 @@ export default function EditOfficialPage({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ name: roleForm.party_name.trim() }),
         });
-        const json = await res.json();
+        const json = await safeJsonResponse(res);
         if (!res.ok) throw new Error(json.error || "Failed to create party");
         partyId = String(json.data.id);
         setLookups((prev) => {
@@ -1303,7 +1319,7 @@ export default function EditOfficialPage({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-      const json = await res.json();
+      const json = await safeJsonResponse(res);
       if (!res.ok) {
         throw new Error(
           [json.error, json.hint].filter(Boolean).join(" — ") ||
@@ -1349,7 +1365,7 @@ export default function EditOfficialPage({
         method: "DELETE",
         credentials: "include",
       });
-      const json = await res.json();
+      const json = await safeJsonResponse(res);
       if (!res.ok) throw new Error(json.error || "Delete failed");
       await loadLeader();
       
