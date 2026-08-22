@@ -156,7 +156,44 @@ function statusIsEnded(status?: string | null): boolean {
   );
 }
 
-/** Current role (open-ended term preferred), or most recently ended role. */
+/**
+ * Assigns a priority score to a role title to ensure elective positions 
+ * (e.g., Governor, Senator, MP) are prioritized over appointed roles 
+ * (e.g., Committee Member) when multiple roles are concurrent.
+ */
+function getRolePriority(title: string | null | undefined): number {
+  if (!title) return 0;
+  const t = title.toLowerCase();
+  
+  // Tier 1: Head of State / National Executive
+  if (t.includes("president") && !t.includes("deputy")) return 100;
+  if (t.includes("deputy president")) return 90;
+  
+  // Tier 2: County Executive & National Legislature (Elective)
+  if (t.includes("governor") && !t.includes("deputy")) return 80;
+  if (t.includes("deputy governor")) return 75;
+  if (t.includes("senator")) return 70;
+  if (t.includes("member of parliament") || t === "mp" || t.includes("nominated mp")) return 65;
+  if (t.includes("woman representative") || t.includes("women rep")) return 60;
+  if (t.includes("member of county assembly") || t === "mca") return 55;
+  
+  // Tier 3: National Appointed Executive
+  if (t.includes("cabinet secretary") || t.includes("prime cabinet")) return 50;
+  if (t.includes("principal secretary")) return 45;
+  if (t.includes("attorney general")) return 40;
+  if (t.includes("solicitor general")) return 35;
+  if (t.includes("director of public prosecutions") || t.includes("dpp")) return 30;
+  
+  // Tier 4: Other Appointed/Nominated Roles (Committees, Boards, etc.)
+  if (t.includes("chairperson") || t.includes("chair")) return 20;
+  if (t.includes("vice chairperson") || t.includes("vice chair")) return 18;
+  if (t.includes("board member") || t.includes("board")) return 15;
+  if (t.includes("committee") || t.includes("commission")) return 10;
+  
+  return 5; // Default fallback
+}
+
+/** Current role (prioritized by elective status, then open-ended term preferred), or most recently ended role. */
 export function resolvePrimaryRole(roles: LeaderRoleLike[] | null | undefined): {
   role: LeaderRoleLike | null;
   isCurrent: boolean;
@@ -169,11 +206,18 @@ export function resolvePrimaryRole(roles: LeaderRoleLike[] | null | undefined): 
 
   const current = list
     .filter(isRoleCurrent)
-    .sort((a, b) =>
-      String(b.term_start_date || "").localeCompare(
-        String(a.term_start_date || ""),
-      ),
-    );
+    .sort((a, b) => {
+      const scoreA = getRolePriority(a.title);
+      const scoreB = getRolePriority(b.title);
+      
+      if (scoreB !== scoreA) {
+        return scoreB - scoreA; // Higher priority first
+      }
+      
+      // Tie-breaker: most recent start date
+      return String(b.term_start_date || "").localeCompare(String(a.term_start_date || ""));
+    });
+    
   if (current.length) {
     return {
       role: current[0],
