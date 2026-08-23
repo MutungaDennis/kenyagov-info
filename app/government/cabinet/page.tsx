@@ -3,6 +3,8 @@ import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import { createPublicClient } from "@/lib/supabase/public";
 import { displayNameWithTitles } from "@/lib/leaders/display";
 
+export const dynamic = 'force-dynamic';
+
 // Helper to safely generate slugs from organization names (used as fallback)
 function slugify(text: string): string {
   return text
