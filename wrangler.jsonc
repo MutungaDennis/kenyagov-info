@@ -1,32 +1,31 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  // Must match the Cloudflare Workers/Pages project name from the dashboard
   "name": "kenyagov-info",
   "main": ".open-next/worker.js",
   "compatibility_date": "2025-12-01",
   "compatibility_flags": [
-    // Required for Next.js on Cloudflare (Node.js APIs)
     "nodejs_compat",
     "global_fetch_strictly_public"
   ],
-  // Keep the Worker script as small as possible (gzip limit: Free 3 MiB / Paid 10 MiB)
   "minify": true,
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"
   },
-  // Self-reference for OpenNext routing / ISR helpers
-  // "service" must match "name" above
   "services": [
     {
       "binding": "WORKER_SELF_REFERENCE",
       "service": "kenyagov-info"
     }
   ],
-  // R2 optional — static-assets incremental cache is used in open-next.config.ts
-  // so deploy works without enabling R2. When you enable R2 later, add:
-  // "r2_buckets": [{ "binding": "NEXT_INC_CACHE_R2_BUCKET", "bucket_name": "kenyagov-info-next-cache" }]
   "observability": {
     "enabled": true
+  },
+  "vars": {
+    "NEXT_PUBLIC_SUPABASE_URL": "https://your-project-ref.supabase.co",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpnZWptaHNrc2NxeGhhcHNjaXJ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwNjIyNTMsImV4cCI6MjA5MzYzODI1M30.LyT4CLV_muNHjIhF1p0fHMARdPiGMmuJ_GFUB6NGUGQ",
+    "SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpnZWptaHNrc2NxeGhhcHNjaXJ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwNjIyNTMsImV4cCI6MjA5MzYzODI1M30.LyT4CLV_muNHjIhF1p0fHMARdPiGMmuJ_GFUB6NGUGQ",
+    "SUPABASE_SERVICE_ROLE_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpnZWptaHNrc2NxeGhhcHNjaXJ3Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODA2MjI1MywiZXhwIjoyMDkzNjM4MjUzfQ.GcA0_NqizsgNovDvh55AyghJTAvQk3UMoEE3W8crWS0",
+    "NEXT_PUBLIC_SANITY_DATASET": "production"
   }
 }
