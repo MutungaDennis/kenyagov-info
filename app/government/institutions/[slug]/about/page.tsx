@@ -66,6 +66,7 @@ type ChildInstitution = {
 };
 
 type CountyDetails = {
+  id?: string;
   code?: number | null;
   headquarters?: string | null;
   region?: string | null;
@@ -105,6 +106,14 @@ type Leader = {
   is_active: boolean;
 };
 
+type McaPartyStats = {
+  name: string;
+  abbrev: string;
+  total: number;
+  elected: number;
+  nominated: number;
+};
+
 export default function InstitutionAboutPage() {
   const params = useParams();
   const slug = params.slug as string;
@@ -121,6 +130,12 @@ export default function InstitutionAboutPage() {
   const [countyDetails, setCountyDetails] = useState<CountyDetails | null>(null);
   const [activeLeaders, setActiveLeaders] = useState<Leader[]>([]);
   const [formerLeaders, setFormerLeaders] = useState<Leader[]>([]);
+  
+  // Electoral and Assembly Data State
+  const [pollingStationsCount, setPollingStationsCount] = useState<number>(0);
+  const [mcaStats, setMcaStats] = useState<{ total: number; elected: number; nominated: number; parties: McaPartyStats[] } | null>(null);
+  const [constituencies, setConstituencies] = useState<any[]>([]);
+  const [wards, setWards] = useState<any[]>([]);
   
   const [isLoading, setIsLoading] = useState(true);
 
@@ -187,32 +202,128 @@ export default function InstitutionAboutPage() {
         // ✅ COUNTY SPECIFIC FETCH
         const isCounty = data.institution_category === 'County Government' || data.name.toLowerCase().includes('county');
         if (isCounty) {
-          const { data: countyData } = await supabase
+          // Match by slug (more reliable than name matching)
+          const { data: countyData, error: countyError } = await supabase
             .from("counties")
             .select("*")
-            .eq("name", data.name) // Matching by name as per your schema example
+            .eq("slug", slug)
             .maybeSingle();
+
+          if (countyError) {
+            console.error("[county] Error fetching county data:", countyError);
+          }
 
           if (countyData) {
             setCountyDetails(countyData as CountyDetails);
 
-            // Fetch leaders associated with this county
-            const { data: leadersData } = await supabase
-              .from("leaders")
-              .select("id, slug, title, full_name, is_active")
-              .eq("current_county", countyData.name)
-              .order("is_active", { ascending: false }) // Active leaders first
-              .order("updated_at", { ascending: false }); // Most recently updated first
+            // ✅ PARALLEL FETCHES with explicit FK hints for joins
+            const [
+              pollingRes,
+              mcasRes,
+              constituenciesRes,
+              wardsRes,
+              leadersRes
+            ] = await Promise.all([
+              // Polling stations count
+              supabase
+                .from("polling_stations_2022")
+                .select("id", { count: "exact", head: true })
+                .eq("county_id", countyData.id),
+              
+              // MCAs with explicit FK hint for political_parties join
+              supabase
+                .from("mcas")
+                .select(`
+                  id, 
+                  seat_type, 
+                  political_parties!fk_mcas_political_party(
+                    id, 
+                    abbreviation, 
+                    name
+                  )
+                `)
+                .eq("county_id", countyData.id)
+                .eq("status", "Active"),
+              
+              // Constituencies
+              supabase
+                .from("constituencies")
+                .select("id, name, constituency_code, number_of_wards, registered_voters_2022")
+                .eq("county_id", countyData.id)
+                .eq("is_active", true)
+                .order("name"),
+              
+              // Wards
+              supabase
+                .from("wards")
+                .select("id, name, ward_code, constituency_name, registered_voters_2022")
+                .eq("county_id", countyData.id)
+                .eq("is_active", true)
+                .order("name"),
+              
+              // Leaders
+              supabase
+                .from("leaders")
+                .select("id, slug, title, full_name, is_active")
+                .eq("current_county", countyData.name)
+                .order("is_active", { ascending: false })
+                .order("updated_at", { ascending: false })
+            ]);
 
-            if (leadersData) {
-              setActiveLeaders(leadersData.filter((l: Leader) => l.is_active));
-              setFormerLeaders(leadersData.filter((l: Leader) => !l.is_active));
+            // ✅ Log any errors for debugging
+            if (pollingRes.error) console.error("[county] Polling stations error:", pollingRes.error);
+            if (mcasRes.error) console.error("[county] MCAs error:", mcasRes.error);
+            if (constituenciesRes.error) console.error("[county] Constituencies error:", constituenciesRes.error);
+            if (wardsRes.error) console.error("[county] Wards error:", wardsRes.error);
+            if (leadersRes.error) console.error("[county] Leaders error:", leadersRes.error);
+
+            // Set polling stations count
+            setPollingStationsCount(pollingRes.count || 0);
+
+            // ✅ Process MCAs with proper party mapping
+            if (mcasRes.data && mcasRes.data.length > 0) {
+              const mcaList = mcasRes.data;
+              const total = mcaList.length;
+              const elected = mcaList.filter((m: any) => m.seat_type === "Elected").length;
+              const nominated = mcaList.filter((m: any) => m.seat_type === "Nominated").length;
+              
+              const partyMap: Record<string, McaPartyStats> = {};
+              mcaList.forEach((mca: any) => {
+                const p = mca.political_parties;
+                const key = p?.abbreviation || "IND";
+                const name = p?.name || "Independent Candidates";
+                if (!partyMap[key]) partyMap[key] = { name, abbrev: key, total: 0, elected: 0, nominated: 0 };
+                partyMap[key].total += 1;
+                if (mca.seat_type === "Elected") partyMap[key].elected += 1;
+                if (mca.seat_type === "Nominated") partyMap[key].nominated += 1;
+              });
+
+              setMcaStats({
+                total,
+                elected,
+                nominated,
+                parties: Object.values(partyMap).sort((a, b) => b.total - a.total)
+              });
+            } else {
+              console.warn("[county] No MCAs found for county:", countyData.name);
             }
+
+            // Set constituencies and wards
+            if (constituenciesRes.data) setConstituencies(constituenciesRes.data);
+            if (wardsRes.data) setWards(wardsRes.data);
+
+            // Set leaders
+            if (leadersRes.data) {
+              setActiveLeaders(leadersRes.data.filter((l: Leader) => l.is_active));
+              setFormerLeaders(leadersRes.data.filter((l: Leader) => !l.is_active));
+            }
+          } else {
+            console.warn("[county] No county data found for slug:", slug);
           }
         }
 
       } catch (err) {
-        console.error(err);
+        console.error("Error fetching institution data:", err);
       } finally {
         setIsLoading(false);
       }
@@ -223,7 +334,6 @@ export default function InstitutionAboutPage() {
   if (isLoading) return <div className="govuk-width-container"><main className="govuk-main-wrapper"><p className="govuk-body">Loading...</p></main></div>;
   if (!institution) return <div className="govuk-width-container"><main className="govuk-main-wrapper"><h1 className="govuk-heading-xl">Page not found</h1></main></div>;
 
-  // Helper to group leaders by title for clean display
   const groupLeadersByTitle = (leaders: Leader[]) => {
     const grouped: Record<string, Leader[]> = {};
     leaders.forEach(leader => {
@@ -253,6 +363,44 @@ export default function InstitutionAboutPage() {
             
             <span className="govuk-caption-l">{institution.institution_type || "Public body"}</span>
             <h1 className="govuk-heading-xl">{institution.name}</h1>
+
+            {/* ✅ Key Facts Hero Statistics */}
+            {countyDetails && (
+              <div className="govuk-grid-row govuk-!-margin-bottom-6">
+                <div className="govuk-grid-column-one-quarter">
+                  <div className="govuk-inset-text govuk-!-margin-top-0 govuk-!-margin-bottom-0">
+                    <span className="govuk-heading-m govuk-!-margin-bottom-1">
+                      {countyDetails.population ? formatNumber(countyDetails.population) : "Pending"}
+                    </span>
+                    <span className="govuk-body-s">Total Population</span>
+                  </div>
+                </div>
+                <div className="govuk-grid-column-one-quarter">
+                  <div className="govuk-inset-text govuk-!-margin-top-0 govuk-!-margin-bottom-0">
+                    <span className="govuk-heading-m govuk-!-margin-bottom-1">
+                      {countyDetails.wards || "Pending"}
+                    </span>
+                    <span className="govuk-body-s">Constitutional Wards</span>
+                  </div>
+                </div>
+                <div className="govuk-grid-column-one-quarter">
+                  <div className="govuk-inset-text govuk-!-margin-top-0 govuk-!-margin-bottom-0">
+                    <span className="govuk-heading-m govuk-!-margin-bottom-1">
+                      {pollingStationsCount > 0 ? formatNumber(pollingStationsCount) : "Pending"}
+                    </span>
+                    <span className="govuk-body-s">Polling Stations</span>
+                  </div>
+                </div>
+                <div className="govuk-grid-column-one-quarter">
+                  <div className="govuk-inset-text govuk-!-margin-top-0 govuk-!-margin-bottom-0">
+                    <span className="govuk-heading-m govuk-!-margin-bottom-1">
+                      {mcaStats?.total || "Pending"}
+                    </span>
+                    <span className="govuk-body-s">Assembly Seats</span>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <h2 className="govuk-heading-l">Overview</h2>
             {institution.description && <p className="govuk-body">{institution.description}</p>}
@@ -399,7 +547,7 @@ export default function InstitutionAboutPage() {
               </>
             )}
 
-            {/* ✅ COUNTY SPECIFIC: Leadership (Active and Former) */}
+            {/* ✅ COUNTY SPECIFIC: Leadership */}
             {(Object.keys(activeLeadersGrouped).length > 0 || Object.keys(formerLeadersGrouped).length > 0) && (
               <>
                 <h2 className="govuk-heading-l govuk-!-margin-top-9">Leadership</h2>
@@ -444,6 +592,130 @@ export default function InstitutionAboutPage() {
                       ))}
                     </dl>
                   </>
+                )}
+              </>
+            )}
+
+            {/* ✅ Legislative Balance of Power */}
+            {mcaStats && mcaStats.total > 0 && (
+              <>
+                <h2 className="govuk-heading-l govuk-!-margin-top-9">County Assembly Balance of Power</h2>
+                {(() => {
+                  const magicNumber = Math.floor(mcaStats.total / 2) + 1;
+                  const largestParty = mcaStats.parties[0];
+                  const majorityText = largestParty.total >= magicNumber 
+                    ? `${largestParty.name} (${largestParty.abbrev}) holds an absolute working majority`
+                    : `${largestParty.name} (${largestParty.abbrev}) maintains a relative plurality`;
+                  
+                  return (
+                    <>
+                      <div className="govuk-inset-text">
+                        <p className="govuk-body-m govuk-!-margin-bottom-1">
+                          <strong>{majorityText}</strong>.
+                        </p>
+                        <p className="govuk-body-s">
+                          Absolute working majority requires a minimum threshold of <strong>{magicNumber}</strong> seats in the floor plenary.
+                        </p>
+                      </div>
+
+                      <div className="govuk-!-margin-bottom-6">
+                        <table className="govuk-table">
+                          <thead className="govuk-table__head">
+                            <tr className="govuk-table__row">
+                              <th scope="col" className="govuk-table__header">Political Affiliation</th>
+                              <th scope="col" className="govuk-table__header govuk-table__header--numeric">Elected</th>
+                              <th scope="col" className="govuk-table__header govuk-table__header--numeric">Nominated</th>
+                              <th scope="col" className="govuk-table__header govuk-table__header--numeric">Total</th>
+                              <th scope="col" className="govuk-table__header govuk-table__header--numeric">Strength</th>
+                            </tr>
+                          </thead>
+                          <tbody className="govuk-table__body">
+                            {mcaStats.parties.map((party) => {
+                              const strengthPct = ((party.total / mcaStats.total) * 100).toFixed(1);
+                              return (
+                                <tr key={party.abbrev} className="govuk-table__row">
+                                  <th scope="row" className="govuk-table__header govuk-body-s font-normal">
+                                    <span className="font-bold">{party.abbrev}</span> — {party.name}
+                                  </th>
+                                  <td className="govuk-table__cell govuk-table__cell--numeric">{party.elected}</td>
+                                  <td className="govuk-table__cell govuk-table__cell--numeric">{party.nominated}</td>
+                                  <td className="govuk-table__cell govuk-table__cell--numeric"><strong>{party.total}</strong></td>
+                                  <td className="govuk-table__cell govuk-table__cell--numeric">{strengthPct}%</td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </>
+                  );
+                })()}
+              </>
+            )}
+
+            {/* ✅ Electoral Geography */}
+            {(constituencies.length > 0 || wards.length > 0) && (
+              <>
+                <h2 className="govuk-heading-l govuk-!-margin-top-9">Electoral Geography</h2>
+                
+                {constituencies.length > 0 && (
+                  <details className="govuk-details govuk-!-margin-bottom-6">
+                    <summary className="govuk-details__summary">
+                      <span className="govuk-details__summary-text">View Constituencies and Registered Voters ({constituencies.length})</span>
+                    </summary>
+                    <div className="govuk-details__text">
+                      <table className="govuk-table">
+                        <thead className="govuk-table__head">
+                          <tr className="govuk-table__row">
+                            <th scope="col" className="govuk-table__header">Code</th>
+                            <th scope="col" className="govuk-table__header">Constituency Name</th>
+                            <th scope="col" className="govuk-table__header govuk-table__header--numeric">Wards</th>
+                            <th scope="col" className="govuk-table__header govuk-table__header--numeric">Registered Voters (2022)</th>
+                          </tr>
+                        </thead>
+                        <tbody className="govuk-table__body">
+                          {constituencies.map((c: any) => (
+                            <tr key={c.id} className="govuk-table__row">
+                              <td className="govuk-table__cell govuk-body-s font-mono">{c.constituency_code}</td>
+                              <th scope="row" className="govuk-table__header govuk-body-s font-normal">{c.name}</th>
+                              <td className="govuk-table__cell govuk-table__cell--numeric">{c.number_of_wards || "N/A"}</td>
+                              <td className="govuk-table__cell govuk-table__cell--numeric font-mono">{c.registered_voters_2022 ? formatNumber(c.registered_voters_2022) : "Pending"}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </details>
+                )}
+
+                {wards.length > 0 && (
+                  <details className="govuk-details">
+                    <summary className="govuk-details__summary">
+                      <span className="govuk-details__summary-text">View Constitutional Wards Registry ({wards.length})</span>
+                    </summary>
+                    <div className="govuk-details__text">
+                      <table className="govuk-table">
+                        <thead className="govuk-table__head">
+                          <tr className="govuk-table__row">
+                            <th scope="col" className="govuk-table__header">Code</th>
+                            <th scope="col" className="govuk-table__header">Ward Name</th>
+                            <th scope="col" className="govuk-table__header">Constituency</th>
+                            <th scope="col" className="govuk-table__header govuk-table__header--numeric">Registered Voters (2022)</th>
+                          </tr>
+                        </thead>
+                        <tbody className="govuk-table__body">
+                          {wards.map((w: any) => (
+                            <tr key={w.id} className="govuk-table__row">
+                              <td className="govuk-table__cell govuk-body-s font-mono">{w.ward_code}</td>
+                              <th scope="row" className="govuk-table__header govuk-body-s font-normal">{w.name}</th>
+                              <td className="govuk-table__cell govuk-body-s">{w.constituency_name}</td>
+                              <td className="govuk-table__cell govuk-table__cell--numeric font-mono">{w.registered_voters_2022 ? formatNumber(w.registered_voters_2022) : "Pending"}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </details>
                 )}
               </>
             )}
