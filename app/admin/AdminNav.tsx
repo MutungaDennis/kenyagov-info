@@ -38,6 +38,13 @@ const NAV_SECTIONS: NavSection[] = [
     items: [{ segment: "hansard", label: "Hansard sittings" }],
   },
   {
+    heading: "Law & Constitution",
+    items: [
+      { segment: "constitution", label: "Constitution 2010" },
+      { segment: "legislation", label: "Acts & county laws" },
+    ],
+  },
+  {
     heading: "Elections data",
     items: [
       {

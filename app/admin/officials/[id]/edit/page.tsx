@@ -12,6 +12,7 @@ import {
 } from "@/lib/leaders/display";
 import {
   ENTRY_TYPES,
+  SENATE_NOMINATION_CATEGORIES,
   fieldsForPosition,
 } from "@/lib/leaders/role-fields";
 import {
@@ -109,6 +110,8 @@ type RoleForm = {
   term_end_date: string;
   status: string;
   entry_type: string;
+  /** Special interest for nominated Senator / nominated MP (like MCA nomination_category) */
+  nomination_category: string;
   official_email: string;
   office_location: string;
   set_as_current: boolean;
@@ -180,6 +183,7 @@ const emptyRole: RoleForm = {
   term_end_date: "",
   status: "Active",
   entry_type: "",
+  nomination_category: "",
   official_email: "",
   office_location: "",
   set_as_current: true,
@@ -705,8 +709,17 @@ export default function EditOfficialPage({
     i.short_name ? `${i.name} (${i.short_name})` : i.name || String(i.id);
 
   const visibility = useMemo(
-    () => fieldsForPosition(roleForm.title || roleForm.position_id),
-    [roleForm.title, roleForm.position_id],
+    () =>
+      fieldsForPosition(
+        roleForm.title || roleForm.position_id,
+        roleForm.seat_type || roleForm.entry_type,
+      ),
+    [
+      roleForm.title,
+      roleForm.position_id,
+      roleForm.seat_type,
+      roleForm.entry_type,
+    ],
   );
 
   const geoReqs = useMemo(
@@ -1006,6 +1019,11 @@ export default function EditOfficialPage({
         : "",
       status: normalizeRoleStatus(role.status, role.term_end_date),
       entry_type: role.entry_type || "",
+      nomination_category:
+        String(
+          (role as { nomination_category?: string | null })
+            .nomination_category || "",
+        ) || "",
       official_email: role.official_email || "",
       office_location: role.office_location || "",
       set_as_current:
@@ -1158,7 +1176,10 @@ export default function EditOfficialPage({
       setError("Select a position from the list (or enter a title)");
       return;
     }
-    const vis = fieldsForPosition(roleForm.title);
+    const vis = fieldsForPosition(
+      roleForm.title,
+      roleForm.seat_type || roleForm.entry_type,
+    );
     const geo = geographicRequirementsForTerm(
       {
         countyRequired: vis.countyRequired,
@@ -1171,6 +1192,15 @@ export default function EditOfficialPage({
     if (vis.partyRequired && !partyId && !roleForm.party_name.trim()) {
       setError(
         "Party is required — select one or use “Add party” to create it in the database.",
+      );
+      return;
+    }
+    if (
+      vis.nominationCategoryRequired &&
+      !roleForm.nomination_category.trim()
+    ) {
+      setError(
+        "Special interest / nomination category is required for nominated seats (e.g. PWD, Youth, Gender Top-up).",
       );
       return;
     }
@@ -1299,6 +1329,9 @@ export default function EditOfficialPage({
           roleForm.term_end_date || null,
         ),
         entry_type: roleForm.entry_type.trim() || null,
+        nomination_category: vis.showNominationCategory
+          ? roleForm.nomination_category.trim() || null
+          : null,
         official_email: roleForm.official_email.trim() || null,
         office_location: roleForm.office_location.trim() || null,
         set_as_current: roleForm.set_as_current,
@@ -1314,8 +1347,14 @@ export default function EditOfficialPage({
         if (!constText) body.constituency = null;
       }
       if (!vis.showWard) body.ward_id = null;
-      if (
-        !vis.showCounty &&
+      if (!vis.showNominationCategory) {
+        body.nomination_category = null;
+      }
+      // Nominated senators / nominated MPs do not represent a county
+      if (!vis.showCounty) {
+        body.county_id = null;
+        body.county = null;
+      } else if (
         !geo.showProvince &&
         !roleForm.county_id &&
         !roleForm.province
@@ -2467,13 +2506,26 @@ export default function EditOfficialPage({
                     id="role_seat"
                     className="govuk-select"
                     value={roleForm.seat_type}
-                    onChange={(e) =>
+                    onChange={(e) => {
+                      const nextSeat = e.target.value;
+                      const nextVis = fieldsForPosition(
+                        roleForm.title,
+                        nextSeat,
+                      );
                       setRoleForm({
                         ...roleForm,
-                        seat_type: e.target.value,
-                        entry_type: e.target.value,
-                      })
-                    }
+                        seat_type: nextSeat,
+                        entry_type: nextSeat,
+                        // Nominated Senator / MP: clear county; elected: clear category
+                        county_id: nextVis.showCounty
+                          ? roleForm.county_id
+                          : "",
+                        province: nextVis.showCounty ? roleForm.province : "",
+                        nomination_category: nextVis.showNominationCategory
+                          ? roleForm.nomination_category
+                          : "",
+                      });
+                    }}
                     required
                   >
                     {SEAT_TYPES.map((s) => (
@@ -2514,17 +2566,30 @@ export default function EditOfficialPage({
                     id="role_entry"
                     className="govuk-select"
                     value={roleForm.entry_type}
-                    onChange={(e) =>
+                    onChange={(e) => {
+                      const nextEntry = e.target.value;
+                      const nextSeat = normalizeSeatType(
+                        nextEntry,
+                        nextEntry,
+                        roleForm.title,
+                      );
+                      const nextVis = fieldsForPosition(
+                        roleForm.title,
+                        nextSeat || nextEntry,
+                      );
                       setRoleForm({
                         ...roleForm,
-                        entry_type: e.target.value,
-                        seat_type: normalizeSeatType(
-                          e.target.value,
-                          e.target.value,
-                          roleForm.title,
-                        ),
-                      })
-                    }
+                        entry_type: nextEntry,
+                        seat_type: nextSeat,
+                        county_id: nextVis.showCounty
+                          ? roleForm.county_id
+                          : "",
+                        province: nextVis.showCounty ? roleForm.province : "",
+                        nomination_category: nextVis.showNominationCategory
+                          ? roleForm.nomination_category
+                          : "",
+                      });
+                    }}
                   >
                     <option value="">— Optional —</option>
                     {ENTRY_TYPES.map((t) => (
@@ -2834,6 +2899,41 @@ export default function EditOfficialPage({
               </div>
             )}
 
+            {visibility.showNominationCategory && (
+              <div className="govuk-form-group">
+                <label className="govuk-label" htmlFor="role_nomination_category">
+                  Special interest / nomination category
+                  {visibility.nominationCategoryRequired ? " *" : ""}
+                </label>
+                <div className="govuk-hint">
+                  Nominated Senators (and nominated National Assembly members)
+                  represent special interests — not a county. Choose the category
+                  (same idea as nominated MCAs).
+                </div>
+                <select
+                  id="role_nomination_category"
+                  className="govuk-select"
+                  value={roleForm.nomination_category}
+                  onChange={(e) =>
+                    setRoleForm({
+                      ...roleForm,
+                      nomination_category: e.target.value,
+                      county_id: "",
+                      province: "",
+                    })
+                  }
+                  required={visibility.nominationCategoryRequired}
+                >
+                  <option value="">— Select category —</option>
+                  {SENATE_NOMINATION_CATEGORIES.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             {visibility.showCounty && (
               <div className="govuk-form-group">
                 <label className="govuk-label" htmlFor="role_county">
@@ -2843,7 +2943,7 @@ export default function EditOfficialPage({
                 <div className="govuk-hint">
                   {geoReqs.preDevolution
                     ? "Optional for terms before 2013. For former constituencies, pick the modern county that covers the area when adding a seat."
-                    : "Required for most county-based seats after devolution (2013)."}
+                    : "Required for most county-based seats after devolution (2013). Not used for nominated Senators."}
                 </div>
                 <select
                   id="role_county"

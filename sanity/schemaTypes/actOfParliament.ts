@@ -73,23 +73,35 @@ export default defineType({
 
 defineField({
   name: 'houseOfOrigin',
-  title: 'House of Origin',
+  title: 'House of Origin / Legislature',
   type: 'string',
-  description: 'Which House of Parliament introduced the Bill that became this Act?',
+  description:
+    'National Assembly, Senate, or a County Assembly that enacted this law',
   options: {
     list: [
-      {
-        title: 'National Assembly',
-        value: 'nationalAssembly',
-      },
-      {
-        title: 'Senate',
-        value: 'senate',
-      },
+      { title: 'National Assembly', value: 'nationalAssembly' },
+      { title: 'Senate', value: 'senate' },
+      { title: 'County Assembly', value: 'countyAssembly' },
     ],
     layout: 'radio',
   },
   validation: Rule => Rule.required(),
+}),
+
+defineField({
+  name: 'countyName',
+  title: 'County (County Assembly Acts)',
+  type: 'string',
+  description: 'Required when House is County Assembly — e.g. Makueni',
+  hidden: ({ parent }) => parent?.houseOfOrigin !== 'countyAssembly',
+}),
+
+defineField({
+  name: 'countySlug',
+  title: 'County slug',
+  type: 'string',
+  description: 'CitizenGuide county slug — e.g. makueni-county',
+  hidden: ({ parent }) => parent?.houseOfOrigin !== 'countyAssembly',
 }),
 
     // Link to Constitution

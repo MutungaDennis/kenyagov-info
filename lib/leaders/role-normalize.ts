@@ -126,6 +126,7 @@ export function buildLeaderRoleRow(input: {
   status?: string | null;
   entry_type?: string | null;
   seat_type?: string | null;
+  nomination_category?: string | null;
   official_email?: string | null;
   office_location?: string | null;
   position_id?: unknown;
@@ -173,6 +174,11 @@ export function buildLeaderRoleRow(input: {
     official_email: input.official_email || null,
     office_location: input.office_location || null,
   };
+
+  if (input.nomination_category != null && String(input.nomination_category).trim()) {
+    const cat = String(input.nomination_category).trim();
+    if (cat !== "N/A") row.nomination_category = cat;
+  }
 
   if (input.house) row.house = input.house;
 

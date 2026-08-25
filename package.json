@@ -17,8 +17,9 @@
     "upload": "pnpm run cf:build && opennextjs-cloudflare upload",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
     "postinstall": "node scripts/patch-opennext-windows.mjs",
-    "studio:deploy": "npx --yes sanity@latest deploy",
-    "studio:dev": "npx --yes sanity@latest dev"
+    "studio:deploy": "sanity deploy",
+    "studio:dev": "sanity dev",
+    "studio:schema": "sanity schema deploy"
   },
   "dependencies": {
     "@opennextjs/cloudflare": "^1.20.1",
@@ -36,11 +37,13 @@
     "use-debounce": "^10.1.1"
   },
   "devDependencies": {
+    "@sanity/vision": "^6.10.1",
     "@types/node": "^20.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "eslint": "^9.0.0",
     "eslint-config-next": "16.2.4",
+    "sanity": "^6.10.1",
     "typescript": "^5.0.0",
     "wrangler": "^4.110.0",
     "zod": "^4.4.3"

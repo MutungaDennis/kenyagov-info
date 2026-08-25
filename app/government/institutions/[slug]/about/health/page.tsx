@@ -1,8 +1,8 @@
 // app/government/institutions/[slug]/about/health/page.tsx
 import { notFound } from "next/navigation";
-import Link from "next/link";
 import { createPublicClient } from "@/lib/supabase/public";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
+import CountyAboutNav from "@/components/government/CountyAboutNav";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -73,11 +73,14 @@ export default async function CountyHealthPage({ params }: Props) {
     notFound();
   }
 
-  // Calculate total facilities if not already set
-  const totalFacilities = county.health_facilities_count || 
-    ((county.level_5_hospitals_count || 0) + 
-     (county.level_4_hospitals_count || 0) + 
-     (county.private_clinics_count || 0));
+  // Only use real stored totals — never invent placeholder facility counts
+  const derivedFacilities =
+    (county.level_5_hospitals_count || 0) +
+    (county.level_4_hospitals_count || 0) +
+    (county.private_clinics_count || 0);
+  const totalFacilities =
+    county.health_facilities_count ??
+    (derivedFacilities > 0 ? derivedFacilities : null);
 
   return (
     <>
@@ -96,201 +99,169 @@ export default async function CountyHealthPage({ params }: Props) {
         <main className="govuk-main-wrapper" id="main-content" role="main">
           <div className="govuk-grid-row">
             <div className="govuk-grid-column-two-thirds">
-              <span className="govuk-caption-l">{county.name}</span>
+              <span className="govuk-caption-l">{county.name} County</span>
               <h1 className="govuk-heading-xl govuk-!-margin-bottom-4">
-                Health & Social Services
+                Health and social services
               </h1>
               <p className="govuk-body-l govuk-!-margin-bottom-6">
-                Comprehensive overview of health facilities, health workforce, maternal and child health, 
-                disease burden, and key health indicators in {county.name}.
+                Health facilities, maternal and child health indicators, and key
+                outcomes for {county.name} County. Figures show published data
+                only — where a figure is not yet available we show N/A.
               </p>
             </div>
           </div>
 
-          {/* Hero Statistics */}
+          <div className="govuk-grid-row">
+            <div className="govuk-grid-column-two-thirds">
+
+          {/* Hero Statistics — real data only */}
           <div className="govuk-grid-row govuk-!-margin-bottom-8">
-            <div className="govuk-grid-column-one-quarter">
-              <div className="govuk-inset-text govuk-!-margin-top-0 govuk-!-margin-bottom-0">
-                <span className="govuk-heading-m govuk-!-margin-bottom-1">
+            <div className="govuk-grid-column-one-half">
+              <div className="govuk-inset-text govuk-!-margin-top-0 govuk-!-margin-bottom-4">
+                <span className="govuk-heading-m govuk-!-margin-bottom-1 govuk-!-display-block">
                   {formatNumber(totalFacilities)}
                 </span>
-                <span className="govuk-body-s">Total Health Facilities</span>
+                <span className="govuk-body-s">Total health facilities</span>
               </div>
             </div>
-            <div className="govuk-grid-column-one-quarter">
-              <div className="govuk-inset-text govuk-!-margin-top-0 govuk-!-margin-bottom-0">
-                <span className="govuk-heading-m govuk-!-margin-bottom-1">
-                  {county.chvs_count ? formatNumber(county.chvs_count) : "N/A"}
+            <div className="govuk-grid-column-one-half">
+              <div className="govuk-inset-text govuk-!-margin-top-0 govuk-!-margin-bottom-4">
+                <span className="govuk-heading-m govuk-!-margin-bottom-1 govuk-!-display-block">
+                  {county.chvs_count != null
+                    ? formatNumber(county.chvs_count)
+                    : "N/A"}
                 </span>
-                <span className="govuk-body-s">Community Health Volunteers</span>
+                <span className="govuk-body-s">Community health volunteers</span>
               </div>
             </div>
-            <div className="govuk-grid-column-one-quarter">
-              <div className="govuk-inset-text govuk-!-margin-top-0 govuk-!-margin-bottom-0">
-                <span className="govuk-heading-m govuk-!-margin-bottom-1">
-                  {county.immunization_coverage_percentage ? `${county.immunization_coverage_percentage}%` : "N/A"}
+            <div className="govuk-grid-column-one-half">
+              <div className="govuk-inset-text govuk-!-margin-top-0 govuk-!-margin-bottom-4">
+                <span className="govuk-heading-m govuk-!-margin-bottom-1 govuk-!-display-block">
+                  {county.immunization_coverage_percentage != null
+                    ? `${county.immunization_coverage_percentage}%`
+                    : "N/A"}
                 </span>
-                <span className="govuk-body-s">Immunization Coverage</span>
+                <span className="govuk-body-s">Immunisation coverage</span>
               </div>
             </div>
-            <div className="govuk-grid-column-one-quarter">
-              <div className="govuk-inset-text govuk-!-margin-top-0 govuk-!-margin-bottom-0">
-                <span className="govuk-heading-m govuk-!-margin-bottom-1">
-                  {county.life_expectancy_female ? `${county.life_expectancy_female} yrs` : "N/A"}
+            <div className="govuk-grid-column-one-half">
+              <div className="govuk-inset-text govuk-!-margin-top-0 govuk-!-margin-bottom-4">
+                <span className="govuk-heading-m govuk-!-margin-bottom-1 govuk-!-display-block">
+                  {county.life_expectancy_female != null
+                    ? `${county.life_expectancy_female} yrs`
+                    : "N/A"}
                 </span>
-                <span className="govuk-body-s">Female Life Expectancy</span>
+                <span className="govuk-body-s">Female life expectancy</span>
               </div>
             </div>
           </div>
 
-          {/* Health Facilities Breakdown */}
-          <section className="govuk-!-margin-bottom-8" aria-labelledby="facilities-heading">
+          <section
+            className="govuk-!-margin-bottom-8"
+            aria-labelledby="facilities-heading"
+          >
             <h2 id="facilities-heading" className="govuk-heading-l">
-              Health Facilities by Level
+              Health facilities by level
             </h2>
             <p className="govuk-body govuk-!-margin-bottom-4">
-              Health facilities in {county.name} are categorized by level of care, from specialized referral 
-              hospitals to primary care clinics.
+              Published facility counts for {county.name} County. Missing levels
+              show as N/A until data is added.
             </p>
 
-            <div className="govuk-table-wrapper">
-              <table className="govuk-table govuk-!-margin-bottom-6">
-                <caption className="govuk-table__caption govuk-visually-hidden">
-                  Health facilities breakdown by level of care
-                </caption>
-                <thead className="govuk-table__head">
-                  <tr className="govuk-table__row">
-                    <th scope="col" className="govuk-table__header">Facility Level</th>
-                    <th scope="col" className="govuk-table__header govuk-table__header--numeric">Number</th>
-                    <th scope="col" className="govuk-table__header">Description</th>
-                  </tr>
-                </thead>
-                <tbody className="govuk-table__body">
-                  <tr className="govuk-table__row">
-                    <th scope="row" className="govuk-table__header">Level 6 - National Referral Hospitals</th>
-                    <td className="govuk-table__cell govuk-table__cell--numeric">
-                      <strong>22</strong>
-                    </td>
-                    <td className="govuk-table__cell">Specialized tertiary care hospitals</td>
-                  </tr>
-                  <tr className="govuk-table__row">
-                    <th scope="row" className="govuk-table__header">Level 5 - County Referral Hospitals</th>
-                    <td className="govuk-table__cell govuk-table__cell--numeric">
-                      <strong>{county.level_5_hospitals_count || 1}</strong>
-                    </td>
-                    <td className="govuk-table__cell">County referral and specialized care</td>
-                  </tr>
-                  <tr className="govuk-table__row">
-                    <th scope="row" className="govuk-table__header">Level 4 - Sub-County Hospitals</th>
-                    <td className="govuk-table__cell govuk-table__cell--numeric">
-                      <strong>{county.level_4_hospitals_count || 6}</strong>
-                    </td>
-                    <td className="govuk-table__cell">Sub-county level hospitals</td>
-                  </tr>
-                  <tr className="govuk-table__row">
-                    <th scope="row" className="govuk-table__header">Level 2 & 3 - Health Centres</th>
-                    <td className="govuk-table__cell govuk-table__cell--numeric">
-                      <strong>49</strong>
-                    </td>
-                    <td className="govuk-table__cell">Primary and secondary care centres</td>
-                  </tr>
-                  <tr className="govuk-table__row">
-                    <th scope="row" className="govuk-table__header">Private Clinics</th>
-                    <td className="govuk-table__cell govuk-table__cell--numeric">
-                      <strong>{county.private_clinics_count || 184}</strong>
-                    </td>
-                    <td className="govuk-table__cell">Private healthcare providers</td>
-                  </tr>
-                  <tr className="govuk-table__row">
-                    <th scope="row" className="govuk-table__header govuk-!-font-weight-bold">Total</th>
-                    <td className="govuk-table__cell govuk-table__cell--numeric govuk-!-font-weight-bold">
-                      <strong>{totalFacilities}</strong>
-                    </td>
-                    <td className="govuk-table__cell"></td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            {/* Level 6 Hospitals by Sub-County */}
-            <h3 className="govuk-heading-m govuk-!-margin-top-6">
-              Level 6 Hospitals by Sub-County
-            </h3>
-            <div className="govuk-table-wrapper">
-              <table className="govuk-table">
-                <caption className="govuk-table__caption govuk-visually-hidden">
-                  Level 6 hospitals distribution by sub-county
-                </caption>
-                <thead className="govuk-table__head">
-                  <tr className="govuk-table__row">
-                    <th scope="col" className="govuk-table__header">Sub-County</th>
-                    <th scope="col" className="govuk-table__header govuk-table__header--numeric">Number of Hospitals</th>
-                  </tr>
-                </thead>
-                <tbody className="govuk-table__body">
-                  <tr className="govuk-table__row">
-                    <th scope="row" className="govuk-table__header">Mvita</th>
-                    <td className="govuk-table__cell govuk-table__cell--numeric">11</td>
-                  </tr>
-                  <tr className="govuk-table__row">
-                    <th scope="row" className="govuk-table__header">Nyali</th>
-                    <td className="govuk-table__cell govuk-table__cell--numeric">3</td>
-                  </tr>
-                  <tr className="govuk-table__row">
-                    <th scope="row" className="govuk-table__header">Likoni</th>
-                    <td className="govuk-table__cell govuk-table__cell--numeric">3</td>
-                  </tr>
-                  <tr className="govuk-table__row">
-                    <th scope="row" className="govuk-table__header">Changamwe</th>
-                    <td className="govuk-table__cell govuk-table__cell--numeric">2</td>
-                  </tr>
-                  <tr className="govuk-table__row">
-                    <th scope="row" className="govuk-table__header">Kisauni</th>
-                    <td className="govuk-table__cell govuk-table__cell--numeric">2</td>
-                  </tr>
-                  <tr className="govuk-table__row">
-                    <th scope="row" className="govuk-table__header">Jomvu</th>
-                    <td className="govuk-table__cell govuk-table__cell--numeric">1</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+            <table className="govuk-table govuk-!-margin-bottom-6">
+              <caption className="govuk-table__caption govuk-visually-hidden">
+                Health facilities breakdown by level of care
+              </caption>
+              <thead className="govuk-table__head">
+                <tr className="govuk-table__row">
+                  <th scope="col" className="govuk-table__header">
+                    Facility level
+                  </th>
+                  <th
+                    scope="col"
+                    className="govuk-table__header govuk-table__header--numeric"
+                  >
+                    Number
+                  </th>
+                  <th scope="col" className="govuk-table__header">
+                    Description
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="govuk-table__body">
+                <tr className="govuk-table__row">
+                  <th scope="row" className="govuk-table__header">
+                    Level 5 — County referral hospitals
+                  </th>
+                  <td className="govuk-table__cell govuk-table__cell--numeric">
+                    <strong>
+                      {formatNumber(county.level_5_hospitals_count)}
+                    </strong>
+                  </td>
+                  <td className="govuk-table__cell">
+                    County referral and specialised care
+                  </td>
+                </tr>
+                <tr className="govuk-table__row">
+                  <th scope="row" className="govuk-table__header">
+                    Level 4 — Sub-county hospitals
+                  </th>
+                  <td className="govuk-table__cell govuk-table__cell--numeric">
+                    <strong>
+                      {formatNumber(county.level_4_hospitals_count)}
+                    </strong>
+                  </td>
+                  <td className="govuk-table__cell">
+                    Sub-county level hospitals
+                  </td>
+                </tr>
+                <tr className="govuk-table__row">
+                  <th scope="row" className="govuk-table__header">
+                    Private clinics
+                  </th>
+                  <td className="govuk-table__cell govuk-table__cell--numeric">
+                    <strong>{formatNumber(county.private_clinics_count)}</strong>
+                  </td>
+                  <td className="govuk-table__cell">
+                    Private healthcare providers
+                  </td>
+                </tr>
+                <tr className="govuk-table__row">
+                  <th
+                    scope="row"
+                    className="govuk-table__header govuk-!-font-weight-bold"
+                  >
+                    Total (recorded)
+                  </th>
+                  <td className="govuk-table__cell govuk-table__cell--numeric govuk-!-font-weight-bold">
+                    <strong>{formatNumber(totalFacilities)}</strong>
+                  </td>
+                  <td className="govuk-table__cell"></td>
+                </tr>
+              </tbody>
+            </table>
           </section>
 
-          {/* Health Workforce */}
-          <section className="govuk-!-margin-bottom-8" aria-labelledby="workforce-heading">
-            <h2 id="workforce-heading" className="govuk-heading-l">
-              Health Workforce
-            </h2>
-            <p className="govuk-body govuk-!-margin-bottom-4">
-              Health workforce ratios indicate the availability of qualified health professionals relative to the population.
-            </p>
-
-            <dl className="govuk-summary-list">
-              <div className="govuk-summary-list__row">
-                <dt className="govuk-summary-list__key">Doctor to Population Ratio</dt>
-                <dd className="govuk-summary-list__value">2 per 10,000</dd>
-              </div>
-              <div className="govuk-summary-list__row">
-                <dt className="govuk-summary-list__key">Nurse to Population Ratio</dt>
-                <dd className="govuk-summary-list__value">9.3 per 10,000</dd>
-              </div>
-              <div className="govuk-summary-list__row">
-                <dt className="govuk-summary-list__key">Clinical Officers to Population Ratio</dt>
-                <dd className="govuk-summary-list__value">2 per 10,000</dd>
-              </div>
-              <div className="govuk-summary-list__row">
-                <dt className="govuk-summary-list__key">Laboratory Technicians to Population Ratio</dt>
-                <dd className="govuk-summary-list__value">2.3 per 10,000</dd>
-              </div>
-              {county.chvs_count && (
+          {county.chvs_count != null && (
+            <section
+              className="govuk-!-margin-bottom-8"
+              aria-labelledby="workforce-heading"
+            >
+              <h2 id="workforce-heading" className="govuk-heading-l">
+                Health workforce
+              </h2>
+              <dl className="govuk-summary-list">
                 <div className="govuk-summary-list__row">
-                  <dt className="govuk-summary-list__key">Community Health Volunteers (CHVs)</dt>
-                  <dd className="govuk-summary-list__value">{formatNumber(county.chvs_count)}</dd>
+                  <dt className="govuk-summary-list__key">
+                    Community health volunteers (CHVs)
+                  </dt>
+                  <dd className="govuk-summary-list__value">
+                    {formatNumber(county.chvs_count)}
+                  </dd>
                 </div>
-              )}
-            </dl>
-          </section>
+              </dl>
+            </section>
+          )}
 
           {/* Maternal and Child Health */}
           <section className="govuk-!-margin-bottom-8" aria-labelledby="maternal-heading">
@@ -358,60 +329,37 @@ export default async function CountyHealthPage({ params }: Props) {
             </div>
           </section>
 
-          {/* Disease Burden */}
-          <section className="govuk-!-margin-bottom-8" aria-labelledby="disease-heading">
-            <h2 id="disease-heading" className="govuk-heading-l">
-              Disease Burden
-            </h2>
-            <p className="govuk-body govuk-!-margin-bottom-4">
-              The five most common diseases in {county.name}, ranked by prevalence.
-            </p>
-
-            <div className="govuk-grid-row">
-              <div className="govuk-grid-column-one-half">
-                <h3 className="govuk-heading-m">Children Under 5 Years</h3>
-                <ol className="govuk-list govuk-list--number">
-                  <li>Upper respiratory tract infection</li>
-                  <li>Lower respiratory tract infection</li>
-                  <li>Diarrhea</li>
-                  <li>Skin diseases</li>
-                  <li>Pneumonia</li>
-                </ol>
-              </div>
-              <div className="govuk-grid-column-one-half">
-                <h3 className="govuk-heading-m">Persons Above 5 Years</h3>
-                <ol className="govuk-list govuk-list--number">
-                  <li>Upper respiratory tract infection</li>
-                  <li>Lower respiratory tract infection</li>
-                  <li>Urinary tract infection</li>
-                  <li>Skin diseases</li>
-                  <li>Diarrhea</li>
-                </ol>
-              </div>
-            </div>
-          </section>
-
-          {/* HIV/AIDS and Immunization */}
-          <section className="govuk-!-margin-bottom-8" aria-labelledby="hiv-heading">
-            <h2 id="hiv-heading" className="govuk-heading-l">
-              HIV/AIDS and Immunization
-            </h2>
-
-            <dl className="govuk-summary-list">
-              {county.hiv_prevalence_percentage && (
-                <div className="govuk-summary-list__row">
-                  <dt className="govuk-summary-list__key">HIV Prevalence</dt>
-                  <dd className="govuk-summary-list__value">{county.hiv_prevalence_percentage}%</dd>
-                </div>
-              )}
-              {county.immunization_coverage_percentage && (
-                <div className="govuk-summary-list__row">
-                  <dt className="govuk-summary-list__key">Immunization Coverage</dt>
-                  <dd className="govuk-summary-list__value">{county.immunization_coverage_percentage}%</dd>
-                </div>
-              )}
-            </dl>
-          </section>
+          {(county.hiv_prevalence_percentage != null ||
+            county.immunization_coverage_percentage != null) && (
+            <section
+              className="govuk-!-margin-bottom-8"
+              aria-labelledby="hiv-heading"
+            >
+              <h2 id="hiv-heading" className="govuk-heading-l">
+                HIV and immunisation
+              </h2>
+              <dl className="govuk-summary-list">
+                {county.hiv_prevalence_percentage != null && (
+                  <div className="govuk-summary-list__row">
+                    <dt className="govuk-summary-list__key">HIV prevalence</dt>
+                    <dd className="govuk-summary-list__value">
+                      {county.hiv_prevalence_percentage}%
+                    </dd>
+                  </div>
+                )}
+                {county.immunization_coverage_percentage != null && (
+                  <div className="govuk-summary-list__row">
+                    <dt className="govuk-summary-list__key">
+                      Immunisation coverage
+                    </dt>
+                    <dd className="govuk-summary-list__value">
+                      {county.immunization_coverage_percentage}%
+                    </dd>
+                  </div>
+                )}
+              </dl>
+            </section>
+          )}
 
           {/* Family Planning and Nutrition */}
           <section className="govuk-!-margin-bottom-8" aria-labelledby="nutrition-heading">
@@ -482,44 +430,16 @@ export default async function CountyHealthPage({ params }: Props) {
             </div>
           </section>
 
-          {/* Navigation to Other Sections */}
-          <nav className="govuk-!-margin-top-8" aria-label="Explore more about the county">
-            <h2 className="govuk-heading-m">
-              Explore more about {county.name}
-            </h2>
-            <ul className="govuk-list govuk-list--spaced">
-              <li>
-                <Link href={`/government/institutions/${slug}/about/overview`} className="govuk-link">
-                  Overview & Leadership
-                </Link>
-              </li>
-              <li>
-                <Link href={`/government/institutions/${slug}/about/demographics`} className="govuk-link">
-                  Demographics & Population
-                </Link>
-              </li>
-              <li>
-                <Link href={`/government/institutions/${slug}/about/education`} className="govuk-link">
-                  Education & Skills Development
-                </Link>
-              </li>
-              <li>
-                <Link href={`/government/institutions/${slug}/about/economy`} className="govuk-link">
-                  Economy, Agriculture & Blue Economy
-                </Link>
-              </li>
-              <li>
-                <Link href={`/government/institutions/${slug}/about/infrastructure`} className="govuk-link">
-                  Infrastructure, Water & Housing
-                </Link>
-              </li>
-              <li>
-                <Link href={`/government/institutions/${slug}/about/tourism-culture`} className="govuk-link">
-                  Tourism, Culture & Environment
-                </Link>
-              </li>
-            </ul>
-          </nav>
+            </div>
+
+            <div className="govuk-grid-column-one-third">
+              <CountyAboutNav
+                countySlug={slug}
+                countyName={county.name}
+                current="health"
+              />
+            </div>
+          </div>
         </main>
       </div>
     </>

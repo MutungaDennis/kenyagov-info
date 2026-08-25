@@ -62,7 +62,9 @@ export default function GeneralFeedbackPage() {
       return;
     }
 
-    if (!implicitToken) {
+    const turnstileOn =
+      process.env.NEXT_PUBLIC_TURNSTILE_ENABLED === "true";
+    if (turnstileOn && !implicitToken) {
       setSubmissionState({
         error: "Security check is initializing. Please try again in a moment.",
         errorType: "security",
@@ -71,7 +73,10 @@ export default function GeneralFeedbackPage() {
     }
 
     startTransition(async () => {
-      const result = await handleGeneralFeedback(formData, implicitToken);
+      const result = await handleGeneralFeedback(
+        formData,
+        implicitToken || "",
+      );
 
       if (result.success) {
         setSubmissionState({ success: true, recordId: result.recordId });
@@ -228,13 +233,15 @@ export default function GeneralFeedbackPage() {
               />
             </div>
 
-            <div className="govuk-form-group">
-              <div
-                className="cf-turnstile"
-                data-sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
-                data-theme="light"
-              />
-            </div>
+            {process.env.NEXT_PUBLIC_TURNSTILE_ENABLED === "true" && (
+              <div className="govuk-form-group">
+                <div
+                  className="cf-turnstile"
+                  data-sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
+                  data-theme="light"
+                />
+              </div>
+            )}
 
             <div className="govuk-button-group">
               <button

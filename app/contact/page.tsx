@@ -80,7 +80,9 @@ function ContactPageContent() {
       return;
     }
 
-    if (!implicitToken) {
+    const turnstileOn =
+      process.env.NEXT_PUBLIC_TURNSTILE_ENABLED === "true";
+    if (turnstileOn && !implicitToken) {
       setSubmissionState({
         error: "Security check is initializing. Please try again in a moment.",
         errorType: "security",
@@ -89,7 +91,10 @@ function ContactPageContent() {
     }
 
     startTransition(async () => {
-      const result = await handleContactMessage(formData, implicitToken);
+      const result = await handleContactMessage(
+        formData,
+        implicitToken || "",
+      );
 
       if (result.success) {
         setSubmissionState({ success: true });
@@ -281,14 +286,16 @@ function ContactPageContent() {
                 rows={8}
               />
 
-              {/* Cloudflare Turnstile */}
-              <div className="govuk-form-group">
-                <div
-                  className="cf-turnstile"
-                  data-sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
-                  data-theme="light"
-                />
-              </div>
+              {/* Cloudflare Turnstile — off unless NEXT_PUBLIC_TURNSTILE_ENABLED=true */}
+              {process.env.NEXT_PUBLIC_TURNSTILE_ENABLED === "true" && (
+                <div className="govuk-form-group">
+                  <div
+                    className="cf-turnstile"
+                    data-sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
+                    data-theme="light"
+                  />
+                </div>
+              )}
 
               <div className="govuk-button-group">
                 <button type="submit" disabled={isPending} className="govuk-button">

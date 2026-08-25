@@ -253,9 +253,12 @@ export async function getConstitutionChapter(chapter: number) {
       _id,
       chapter,
       chapterTitle,
+      partNumber,
+      partTitle,
       articleNumber,
       articleTitle,
-      officialText
+      officialText,
+      amplifiedText
     }
     `,
     { chapter }
@@ -315,6 +318,75 @@ export async function getChapterArticles(chapter: number) {
         articleTitle
       }
   `, { chapter });
+}
+
+export async function getConstitutionSettings() {
+  try {
+    return await sanityClient.fetch(
+      `*[_type == "constitutionSettings" && _id == "constitutionSettings"][0]{
+        _id,
+        showPlainEnglishGlobal,
+        chapterPlainEnglish[]{ chapter, showPlainEnglish }
+      }`,
+    );
+  } catch (err) {
+    console.error("[sanity] getConstitutionSettings failed:", err);
+    return null;
+  }
+}
+
+export async function getAllConstitutionSchedules() {
+  try {
+    return await sanityClient.fetch(
+      `*[_type == "constitutionSchedule"] | order(scheduleNumber asc) {
+        _id,
+        scheduleNumber,
+        "slug": slug.current,
+        fullTitle,
+        title,
+        citation
+      }`,
+    );
+  } catch (err) {
+    console.error("[sanity] getAllConstitutionSchedules failed:", err);
+    return [];
+  }
+}
+
+export async function getConstitutionScheduleBySlug(slug: string) {
+  try {
+    return await sanityClient.fetch(
+      `*[_type == "constitutionSchedule" && slug.current == $slug][0]{
+        _id,
+        scheduleNumber,
+        "slug": slug.current,
+        fullTitle,
+        title,
+        citation,
+        officialText,
+        amplifiedText
+      }`,
+      { slug },
+    );
+  } catch (err) {
+    console.error("[sanity] getConstitutionScheduleBySlug failed:", err);
+    return null;
+  }
+}
+
+/** Enabled glossary phrases for display-time linking */
+export async function getConstitutionLinkPhrases() {
+  try {
+    return await sanityClient.fetch(
+      `*[_type == "constitutionLinkPhrase" && enabled != false] | order(sortOrder asc) {
+        _id, phrase, matchMode, internalHref, externalHref, externalLabel,
+        constitutionChapter, constitutionArticle, scopeChapters, enabled, sortOrder
+      }`,
+    );
+  } catch (err) {
+    console.error("[sanity] getConstitutionLinkPhrases failed:", err);
+    return [];
+  }
 }
 
 // ==========================================

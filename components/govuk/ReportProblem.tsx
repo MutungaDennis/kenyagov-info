@@ -35,6 +35,7 @@ export default function GovUKReportProblem() {
   }, [submissionState]);
 
   useEffect(() => {
+    if (process.env.NEXT_PUBLIC_TURNSTILE_ENABLED !== "true") return;
     if (!isOpen || typeof window === "undefined" || !window.turnstile) return;
 
     const timer = setTimeout(() => {
@@ -79,7 +80,9 @@ export default function GovUKReportProblem() {
       return;
     }
 
-    if (!implicitToken) {
+    const turnstileOn =
+      process.env.NEXT_PUBLIC_TURNSTILE_ENABLED === "true";
+    if (turnstileOn && !implicitToken) {
       setSubmissionState({
         error: "Security check is initializing. Please try again in a moment.",
         errorType: "security",
@@ -90,7 +93,10 @@ export default function GovUKReportProblem() {
     formData.append("page_path", pathname);
 
     startTransition(async () => {
-      const result = await handleFeedbackSubmission(formData, implicitToken);
+      const result = await handleFeedbackSubmission(
+        formData,
+        implicitToken || "",
+      );
 
       if (result.success) {
         setSubmissionState({ success: true });
@@ -221,13 +227,15 @@ export default function GovUKReportProblem() {
               />
             </div>
 
-            <div className="govuk-form-group">
-              <div
-                className="cf-turnstile"
-                data-sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
-                data-theme="light"
-              />
-            </div>
+            {process.env.NEXT_PUBLIC_TURNSTILE_ENABLED === "true" && (
+              <div className="govuk-form-group">
+                <div
+                  className="cf-turnstile"
+                  data-sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
+                  data-theme="light"
+                />
+              </div>
+            )}
 
             <div className="govuk-button-group">
               <button

@@ -204,14 +204,15 @@ export default function SupportPage() {
               />
             </div>
 
-            {/* Anti-Bot Challenge Check Container */}
-            <div className="govuk-form-group">
-              <div 
-                className="cf-turnstile" 
-                data-sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
-                data-theme="light"
-              ></div>
-            </div>
+            {process.env.NEXT_PUBLIC_TURNSTILE_ENABLED === "true" && (
+              <div className="govuk-form-group">
+                <div
+                  className="cf-turnstile"
+                  data-sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
+                  data-theme="light"
+                />
+              </div>
+            )}
 
             {/* Submit Actions Layer */}
             <div className="govuk-button-group">
@@ -234,8 +235,10 @@ export default function SupportPage() {
 
                   const formData = new FormData(currentForm);
                   const turnstileToken = formData.get("cf-turnstile-response") as string;
+                  const turnstileOn =
+                    process.env.NEXT_PUBLIC_TURNSTILE_ENABLED === "true";
 
-                  if (!turnstileToken) {
+                  if (turnstileOn && !turnstileToken) {
                     setSubmissionState({ error: "Security check is initializing. Please wait a moment and try again." });
                     return;
                   }
@@ -244,7 +247,10 @@ export default function SupportPage() {
                   formData.append("currency", currency);
 
                   startTransition(async () => {
-                    const result = await createSupportIntent(formData, turnstileToken);
+                    const result = await createSupportIntent(
+                      formData,
+                      turnstileToken || "",
+                    );
                     if (result.success && result.checkoutUrl) {
                       // Redirect the supporter directly to the secure checkout handler path loop
                       window.location.href = result.checkoutUrl;

@@ -1,5 +1,6 @@
 // sanity/schemaTypes/constitutionArticle.ts
 import {defineType, defineField} from 'sanity'
+import { constitutionPortableText } from './portableTextConstitution'
 
 export default defineType({
   name: 'constitutionArticle',
@@ -44,21 +45,22 @@ export default defineType({
       type: 'string',
     }),
 
-    // Core Content
+    // Core Content — annotations: constitutionRef, entityLink, internalPage, externalUrl
     defineField({
       name: 'officialText',
       title: 'Official Constitutional Text',
       type: 'array',
-      of: [{ type: 'block' }],
-      description: 'Exact text from the Constitution (supports line breaks & formatting)',
+      of: constitutionPortableText,
+      description:
+        'Exact text from the Constitution. Highlight phrases to add Constitution / entity / external links.',
     }),
 
     defineField({
       name: 'amplifiedText',
       title: 'Amplified / Plain English Version',
       type: 'array',
-      of: [{type: 'block'}],
-      description: 'Simplified explanation for citizens',
+      of: constitutionPortableText,
+      description: 'Simplified explanation for citizens (may also contain links)',
     }),
 
     // Metadata & Linking

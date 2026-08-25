@@ -1407,3 +1407,132 @@ iframe {
     --foreground: #0b0c0c;
   }
 }
+
+/* ===== Constitution reader (YouVersion-inspired, GOV.UK colours) ===== */
+.app-constitution-prose {
+  max-width: 66ch;
+  line-height: 1.65;
+}
+.app-constitution-para {
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+.app-constitution-entity {
+  white-space: nowrap;
+}
+.app-constitution-external {
+  display: inline-block;
+  margin-left: 0.15rem;
+  font-weight: 700;
+  color: #1d70b8;
+  text-decoration: none;
+  vertical-align: super;
+  font-size: 0.85em;
+  line-height: 1;
+}
+.app-constitution-external:hover,
+.app-constitution-external:focus {
+  color: #003078;
+}
+.app-constitution-external:focus {
+  outline: 3px solid transparent;
+  background-color: #ffdd00;
+  box-shadow: 0 -2px #ffdd00, 0 4px #0b0c0c;
+}
+.app-constitution-reader {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+.app-constitution-reader__layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+.app-constitution-reader__toc {
+  display: none;
+}
+.app-constitution-reader__sticky {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: #ffffff;
+  border-bottom: 1px solid #b1b4b6;
+  padding: 0.75rem 0;
+  margin: 0 0 1rem;
+}
+.app-constitution-reader__article {
+  scroll-margin-top: 5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #f3f2f1;
+}
+.app-constitution-reader__article.is-active .app-constitution-reader__article-title {
+  color: #1d70b8;
+}
+.app-constitution-toc-link {
+  display: block;
+  padding: 0.35rem 0.5rem;
+  text-decoration: none;
+  border-left: 4px solid transparent;
+  color: #0b0c0c;
+}
+.app-constitution-toc-link:hover {
+  background: #f3f2f1;
+}
+.app-constitution-toc-link.is-active {
+  border-left-color: #1d70b8;
+  background: #f3f2f1;
+  font-weight: 700;
+}
+@media (min-width: 768px) {
+  .app-constitution-reader__layout {
+    grid-template-columns: minmax(12rem, 15rem) minmax(0, 1fr);
+  }
+  .app-constitution-reader__toc {
+    display: block;
+    position: sticky;
+    top: 4.5rem;
+    max-height: calc(100vh - 5.5rem);
+    overflow: auto;
+  }
+  .app-constitution-reader__mobile-toc {
+    display: none !important;
+  }
+}
+@media print {
+  .app-constitution-reader__sticky,
+  .app-constitution-reader__toc,
+  .app-constitution-reader__mobile-toc,
+  .app-constitution-external {
+    display: none !important;
+  }
+  .app-constitution-reader__layout {
+    display: block;
+  }
+}
+
+/* Constitution clause hierarchy — mirrors statute indentation */
+.app-constitution-clause--l0 { padding-left: 0; }
+.app-constitution-clause--l1 { padding-left: 1.25rem; }
+.app-constitution-clause--l2 { padding-left: 2.5rem; }
+.app-constitution-clause--l3 { padding-left: 3.75rem; }
+.app-constitution-clause--l4 { padding-left: 5rem; }
+@media (min-width: 40.0625em) {
+  .app-constitution-clause--l1 { padding-left: 1.5rem; }
+  .app-constitution-clause--l2 { padding-left: 3rem; }
+  .app-constitution-clause--l3 { padding-left: 4.5rem; }
+  .app-constitution-clause--l4 { padding-left: 6rem; }
+}
+.app-constitution-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  max-width: 100%;
+}
+.app-constitution-table {
+  margin-bottom: 0;
+}
+.app-constitution-table .govuk-table__header,
+.app-constitution-table .govuk-table__cell {
+  vertical-align: top;
+}

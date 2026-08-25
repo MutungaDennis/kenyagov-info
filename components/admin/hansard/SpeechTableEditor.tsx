@@ -9,13 +9,31 @@ import {
 type Props = {
   tables: SpeechTableDraft[];
   onChange: (tables: SpeechTableDraft[]) => void;
+  /** Heading above the editor */
+  title?: string;
+  /** Hint under the heading */
+  hint?: string;
+  /** Label for the add button */
+  addLabel?: string;
+  /** Default column count when adding a table */
+  defaultColumns?: number;
+  /** Default data rows when adding a table */
+  defaultRows?: number;
 };
 
 /**
- * Visual schedule/estimate table builder for Hansard contributions.
+ * Visual table builder (Hansard + Constitution schedules).
  * Admin picks column count and fills cells — no Markdown required.
  */
-export default function SpeechTableEditor({ tables, onChange }: Props) {
+export default function SpeechTableEditor({
+  tables,
+  onChange,
+  title = "Schedule / estimate tables",
+  hint = "Choose how many columns, name the headers, then fill each row — shown as a proper table on the public page.",
+  addLabel = "+ Add table",
+  defaultColumns = 4,
+  defaultRows = 2,
+}: Props) {
   const update = (id: string, patch: Partial<SpeechTableDraft>) => {
     onChange(tables.map((t) => (t.id === id ? { ...t, ...patch } : t)));
   };
@@ -94,27 +112,26 @@ export default function SpeechTableEditor({ tables, onChange }: Props) {
           marginBottom: 8,
         }}
       >
-        <h3 className="govuk-heading-s govuk-!-margin-bottom-0">
-          Schedule / estimate tables
-        </h3>
+        <h3 className="govuk-heading-s govuk-!-margin-bottom-0">{title}</h3>
         <button
           type="button"
           className="govuk-button govuk-button--secondary"
           style={{ marginBottom: 0 }}
-          onClick={() => onChange([...tables, createEmptyTable(4, 2)])}
+          onClick={() =>
+            onChange([
+              ...tables,
+              createEmptyTable(defaultColumns, defaultRows),
+            ])
+          }
         >
-          + Add table
+          {addLabel}
         </button>
       </div>
-      <p className="govuk-hint govuk-!-margin-bottom-3">
-        Choose how many columns, name the headers, then fill each row — shown
-        as a proper table on the public Hansard page.
-      </p>
+      <p className="govuk-hint govuk-!-margin-bottom-3">{hint}</p>
 
       {tables.length === 0 && (
         <p className="govuk-body-s" style={{ color: "#505a5f" }}>
-          No tables yet. Use <strong>+ Add table</strong> for First Schedule /
-          vote estimates, etc.
+          No tables yet. Use <strong>{addLabel}</strong> to build one manually.
         </p>
       )}
 

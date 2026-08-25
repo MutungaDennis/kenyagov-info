@@ -2,10 +2,16 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import PrintPageButton from "@/components/govuk/PrintPageButton";
-import PortableTextContent from "@/components/sanity/PortableTextContent";
+import ConstitutionPortableText from "@/components/sanity/ConstitutionPortableText";
 import { JsonLd } from "@/components/JsonLd";
 
-import { getConstitutionArticle, getChapterArticles } from "@/lib/sanity/client";
+import {
+  getConstitutionArticle,
+  getChapterArticles,
+  getConstitutionSettings,
+  getConstitutionLinkPhrases,
+} from "@/lib/sanity/client";
+import { resolveShowPlainEnglish } from "@/lib/constitution/plain-english";
 
 export const revalidate = 3600;
 
@@ -19,12 +25,26 @@ export default async function ConstitutionArticlePage({ params }: Props) {
   const chapterNum = parseInt(chapter);
   const articleNum = parseInt(article);
 
-  const articleData = await getConstitutionArticle(chapterNum, articleNum);
-  const allArticlesInChapter = await getChapterArticles(chapterNum);
+  const [
+    articleData,
+    allArticlesInChapter,
+    constitutionSettings,
+    linkPhrases,
+  ] = await Promise.all([
+    getConstitutionArticle(chapterNum, articleNum),
+    getChapterArticles(chapterNum),
+    getConstitutionSettings(),
+    getConstitutionLinkPhrases(),
+  ]);
 
   if (!articleData) {
     notFound();
   }
+
+  const showPlainEnglish = resolveShowPlainEnglish(
+    constitutionSettings,
+    chapterNum,
+  );
 
   const articlesInChapter = [...allArticlesInChapter].sort(
     (a: any, b: any) => Number(a.articleNumber) - Number(b.articleNumber)
@@ -104,6 +124,19 @@ export default async function ConstitutionArticlePage({ params }: Props) {
 
         <PrintPageButton />
 
+        <p className="govuk-body govuk-!-margin-bottom-4">
+          <a
+            href={`/constitution/chapter/${chapter}#article-${article}`}
+            className="govuk-link"
+          >
+            Read in chapter view
+          </a>
+          <span className="govuk-hint">
+            {" "}
+            — continuous reading with contents and neighbouring articles
+          </span>
+        </p>
+
         {/* Mobile Quick Navigation */}
         <details className="govuk-details mobile-only-navigation govuk-!-margin-bottom-4">
           <summary className="govuk-details__summary">
@@ -172,37 +205,53 @@ export default async function ConstitutionArticlePage({ params }: Props) {
                 Official Constitutional Text
               </h2>
               <div className="govuk-body">
-                <PortableTextContent content={articleData.officialText} />
+                <ConstitutionPortableText
+                  content={articleData.officialText}
+                  linkPhrases={linkPhrases}
+                />
               </div>
             </div>
 
-            {/* Plain English Explanation - UPDATED TEXT */}
-            <details className="govuk-details govuk-!-margin-bottom-4 govuk-!-background-grey govuk-!-padding-2 govuk-!-border-left-4">
-              <summary className="govuk-details__summary">
-                <span className="govuk-details__summary-text govuk-!-font-weight-bold govuk-!-text-colour-blue">
-                  Plain English Explanation
-                </span>
-              </summary>
-              <div className="govuk-details__text">
-                <p className="govuk-body-s govuk-!-margin-bottom-3 govuk-!-text-colour-secondary govuk-!-font-style-italic">
-                  This is a simplified summary to explain this article in clear language. It is not the legal text of the Constitution.
-                </p>
-                {articleData.amplifiedText ? (
-                  <div className="govuk-body-s">
-                    <PortableTextContent content={articleData.amplifiedText} />
-                  </div>
-                ) : (
-                  <p className="govuk-body-s">A simplified explanation is being prepared for this article.</p>
-                )}
-              </div>
-            </details>
+            {/* Plain English — hidden when settings turn it off for this chapter / globally */}
+            {showPlainEnglish && (
+              <details className="govuk-details govuk-!-margin-bottom-4 govuk-!-background-grey govuk-!-padding-2 govuk-!-border-left-4">
+                <summary className="govuk-details__summary">
+                  <span className="govuk-details__summary-text govuk-!-font-weight-bold govuk-!-text-colour-blue">
+                    Plain English Explanation
+                  </span>
+                </summary>
+                <div className="govuk-details__text">
+                  <p className="govuk-body-s govuk-!-margin-bottom-3 govuk-!-text-colour-secondary govuk-!-font-style-italic">
+                    This is a simplified summary to explain this article in
+                    clear language. It is not the legal text of the
+                    Constitution.
+                  </p>
+                  {articleData.amplifiedText ? (
+                    <div className="govuk-body-s">
+                      <ConstitutionPortableText
+                        content={articleData.amplifiedText}
+                        linkPhrases={linkPhrases}
+                      />
+                    </div>
+                  ) : (
+                    <p className="govuk-body-s">
+                      A simplified explanation is being prepared for this
+                      article.
+                    </p>
+                  )}
+                </div>
+              </details>
+            )}
 
             {/* Case Scenarios */}
             {articleData.caseScenarios && articleData.caseScenarios.length > 0 && (
               <div className="govuk-!-padding-4 govuk-!-margin-bottom-6">
                 <h3 className="govuk-heading-s govuk-!-margin-top-0 govuk-!-margin-bottom-2 govuk-!-text-colour-green">Real-life Case Scenarios</h3>
                 <div className="govuk-body-s">
-                  <PortableTextContent content={articleData.caseScenarios} />
+                  <ConstitutionPortableText
+                    content={articleData.caseScenarios}
+                    linkPhrases={linkPhrases}
+                  />
                 </div>
               </div>
             )}
@@ -241,6 +290,9 @@ export default async function ConstitutionArticlePage({ params }: Props) {
                   style={{ margin: 0 }}
                 >
                   ← Article {prevArticle.articleNumber}
+                  {prevArticle.articleTitle
+                    ? `: ${prevArticle.articleTitle}`
+                    : ""}
                 </Link>
               ) : (
                 <div />
@@ -252,7 +304,11 @@ export default async function ConstitutionArticlePage({ params }: Props) {
                   className="govuk-button govuk-button--secondary govuk-!-margin-bottom-0" 
                   style={{ margin: 0 }}
                 >
-                  Article {nextArticle.articleNumber} →
+                  Article {nextArticle.articleNumber}
+                  {nextArticle.articleTitle
+                    ? `: ${nextArticle.articleTitle}`
+                    : ""}{" "}
+                  →
                 </Link>
               ) : (
                 <div />

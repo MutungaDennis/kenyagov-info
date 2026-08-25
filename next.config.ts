@@ -6,6 +6,20 @@ const nextConfig: NextConfig = {
   // Tell Next.js to leave pdfjs-dist alone and resolve it from node_modules
   serverExternalPackages: ["pdfjs-dist"],
 
+   // ==========================================
+  // ALLOW SUPABASE STORAGE IMAGES
+  // ==========================================
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "jgejmhskscqxhapscirw.supabase.co",
+        port: "",
+        pathname: "/storage/v1/object/public/**",
+      },
+    ],
+  },
+
   // Keep compile-only / unused packages out of the OpenNext Worker (gzip limit).
   // Free plan = 3 MiB gzip; every extra traced module risks deploy failure.
   outputFileTracingExcludes: {

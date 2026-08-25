@@ -1,8 +1,8 @@
 // app/government/institutions/[slug]/about/demographics/page.tsx
 import { notFound } from "next/navigation";
-import Link from "next/link";
 import { createPublicClient } from "@/lib/supabase/public";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
+import CountyAboutNav from "@/components/government/CountyAboutNav";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -562,42 +562,13 @@ export default async function CountyDemographicsPage({ params }: Props) {
             </section>
           )}
 
-          {/* Navigation to other sections */}
-          <nav className="govuk-!-margin-top-8" aria-label="Explore more about the county">
-            <h2 className="govuk-heading-m govuk-!-margin-bottom-4">Explore more about {countyName}</h2>
-            <ul className="govuk-list govuk-list--spaced">
-              <li>
-                <Link href={`/government/institutions/${slug}/about/overview`} className="govuk-link">
-                  Overview & Leadership
-                </Link>
-              </li>
-              <li>
-                <Link href={`/government/institutions/${slug}/about/health`} className="govuk-link">
-                  Health & Social Services
-                </Link>
-              </li>
-              <li>
-                <Link href={`/government/institutions/${slug}/about/education`} className="govuk-link">
-                  Education & Skills Development
-                </Link>
-              </li>
-              <li>
-                <Link href={`/government/institutions/${slug}/about/economy`} className="govuk-link">
-                  Economy, Agriculture & Blue Economy
-                </Link>
-              </li>
-              <li>
-                <Link href={`/government/institutions/${slug}/about/infrastructure`} className="govuk-link">
-                  Infrastructure, Water & Housing
-                </Link>
-              </li>
-              <li>
-                <Link href={`/government/institutions/${slug}/about/tourism-culture`} className="govuk-link">
-                  Tourism, Culture & Environment
-                </Link>
-              </li>
-            </ul>
-          </nav>
+          <div className="govuk-!-margin-top-8">
+            <CountyAboutNav
+              countySlug={slug}
+              countyName={countyName}
+              current="demographics"
+            />
+          </div>
         </main>
       </div>
     </>

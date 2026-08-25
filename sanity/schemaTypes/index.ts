@@ -4,6 +4,9 @@ import { type SchemaTypeDefinition } from 'sanity';
 import { page } from './page';
 import { institutionContent } from './institutionContent';
 import constitutionArticle from './constitutionArticle';
+import constitutionSettings from './constitutionSettings';
+import constitutionLinkPhrase from './constitutionLinkPhrase';
+import constitutionSchedule from './constitutionSchedule';
 import actOfParliament from './actOfParliament';
 import courtPronouncement from './courtPronouncement';
 import reportMandate from './reportMandate';
@@ -30,6 +33,9 @@ export const schema: { types: SchemaTypeDefinition[] } = {
     page,
     institutionContent,
     constitutionArticle,
+    constitutionSettings,
+    constitutionLinkPhrase,
+    constitutionSchedule,
     actOfParliament,
     courtPronouncement,
     reportMandate,

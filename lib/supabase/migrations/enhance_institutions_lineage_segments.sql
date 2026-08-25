@@ -1,5 +1,53 @@
 -- Institution lineage (many-to-many), lifecycle segments (resurrection), dated names.
 -- Run in Supabase SQL editor. Additive — existing predecessor/successor columns remain.
+--
+-- Safe to re-run. If an earlier partial run left empty/broken tables (missing columns),
+-- those tables are dropped and recreated.
+
+-- ---------------------------------------------------------------------------
+-- Heal partial / broken tables from earlier failed runs
+-- ---------------------------------------------------------------------------
+DO $$
+BEGIN
+  -- institution_relationships: must have from_institution_id
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = 'institution_relationships'
+  ) AND NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'institution_relationships'
+      AND column_name = 'from_institution_id'
+  ) THEN
+    DROP TABLE public.institution_relationships CASCADE;
+  END IF;
+
+  -- institution_lifecycle_segments: must have institution_id
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = 'institution_lifecycle_segments'
+  ) AND NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'institution_lifecycle_segments'
+      AND column_name = 'institution_id'
+  ) THEN
+    DROP TABLE public.institution_lifecycle_segments CASCADE;
+  END IF;
+
+  -- institution_name_history: must have institution_id + name
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = 'institution_name_history'
+  ) AND NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'institution_name_history'
+      AND column_name = 'name'
+  ) THEN
+    DROP TABLE public.institution_name_history CASCADE;
+  END IF;
+END $$;
 
 -- ---------------------------------------------------------------------------
 -- A. Operational periods (same conceptual office across eras)
@@ -51,12 +99,30 @@ CREATE TABLE IF NOT EXISTS public.institution_relationships (
   CONSTRAINT institution_relationships_no_self CHECK (from_institution_id <> to_institution_id)
 );
 
-CREATE UNIQUE INDEX IF NOT EXISTS institution_relationships_unique_idx
+-- Backfill any missing optional columns if an older good schema lacked them
+ALTER TABLE public.institution_relationships
+  ADD COLUMN IF NOT EXISTS effective_date date;
+ALTER TABLE public.institution_relationships
+  ADD COLUMN IF NOT EXISTS end_date date;
+ALTER TABLE public.institution_relationships
+  ADD COLUMN IF NOT EXISTS legal_instrument text;
+ALTER TABLE public.institution_relationships
+  ADD COLUMN IF NOT EXISTS notes text;
+ALTER TABLE public.institution_relationships
+  ADD COLUMN IF NOT EXISTS is_primary boolean NOT NULL DEFAULT false;
+ALTER TABLE public.institution_relationships
+  ADD COLUMN IF NOT EXISTS created_at timestamptz NOT NULL DEFAULT now();
+ALTER TABLE public.institution_relationships
+  ADD COLUMN IF NOT EXISTS updated_at timestamptz NOT NULL DEFAULT now();
+
+-- Unique key after columns exist. Drop first so re-runs are safe.
+DROP INDEX IF EXISTS public.institution_relationships_unique_idx;
+CREATE UNIQUE INDEX institution_relationships_unique_idx
   ON public.institution_relationships (
     from_institution_id,
     to_institution_id,
     relationship_type,
-    COALESCE(effective_date, '0001-01-01'::date)
+    (COALESCE(effective_date, '0001-01-01'::date))
   );
 
 CREATE INDEX IF NOT EXISTS institution_relationships_from_idx

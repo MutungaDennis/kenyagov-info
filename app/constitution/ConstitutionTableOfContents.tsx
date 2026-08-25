@@ -267,6 +267,19 @@ export default function ConstitutionTableOfContents({
                 No constitutional text found matching your search.
               </p>
             )}
+
+            <div className="govuk-!-margin-top-6 govuk-!-padding-top-4" style={{ borderTop: "1px solid #b1b4b6" }}>
+              <h3 className="govuk-heading-m">
+                <Link href="/constitution/schedules" className="govuk-link">
+                  Schedules
+                </Link>
+              </h3>
+              <p className="govuk-body">
+                First to Sixth Schedules — counties, national symbols, oaths,
+                distribution of functions, legislation timelines, and transitional
+                provisions.
+              </p>
+            </div>
           </div>
         </div>
 

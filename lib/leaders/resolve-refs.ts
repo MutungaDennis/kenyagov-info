@@ -433,6 +433,9 @@ export async function prepareRoleInsert(
     status: body.status ? String(body.status) : null,
     entry_type: body.entry_type ? String(body.entry_type) : null,
     seat_type: body.seat_type ? String(body.seat_type) : null,
+    nomination_category: body.nomination_category
+      ? String(body.nomination_category)
+      : null,
     official_email: body.official_email ? String(body.official_email) : null,
     office_location: body.office_location
       ? String(body.office_location)

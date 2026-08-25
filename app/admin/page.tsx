@@ -28,6 +28,18 @@ const TASKS = [
     group: "Parliament & Hansard",
   },
   {
+    segment: "constitution",
+    title: "Constitution 2010",
+    body: "Paste official chapter text into Sanity (from Chapter 10), browse uploaded articles, and control Plain English visibility.",
+    group: "Law & Constitution",
+  },
+  {
+    segment: "legislation",
+    title: "Acts & county laws",
+    body: "Paste National Assembly, Senate, or County Assembly Acts — fill unique identity fields, then let Grok structure the body.",
+    group: "Law & Constitution",
+  },
+  {
     segment: "polling-stations/upload",
     title: "Polling stations upload",
     body: "Upload IEBC polling station data into Supabase.",
@@ -68,6 +80,7 @@ const TASKS = [
 const GROUPS = [
   "Government directory",
   "Parliament & Hansard",
+  "Law & Constitution",
   "Elections data",
   "Citizen responses",
   "System",

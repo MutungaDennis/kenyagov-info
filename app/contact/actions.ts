@@ -1,50 +1,10 @@
 "use server";
 
 import { createClient } from "@supabase/supabase-js";
-import { headers } from "next/headers";
-
-async function verifyTurnstileToken(token: string): Promise<boolean> {
-  const secretKey = process.env.TURNSTILE_SECRET_KEY;
-  if (!secretKey) {
-    console.error("CONFIG ERROR: TURNSTILE_SECRET_KEY is missing");
-    return false;
-  }
-
-  const headersList = await headers();
-  const remoteIp =
-    headersList.get("cf-connecting-ip") ||
-    headersList.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    "";
-
-  const isDev = process.env.NODE_ENV === "development";
-  const isTestKey = secretKey.includes("000000000000000000000000000000000000000");
-
-  if (isDev || isTestKey) {
-    return !!token && token.length > 8;
-  }
-
-  try {
-    const payload = new URLSearchParams();
-    payload.append("secret", secretKey);
-    payload.append("response", token);
-    if (remoteIp) payload.append("remoteip", remoteIp);
-
-    const response = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: payload.toString(),
-    });
-
-    const data = await response.json();
-    return data.success === true;
-  } catch (error) {
-    console.error("Turnstile verification error:", error);
-    return false;
-  }
-}
+import { verifyTurnstileToken } from "@/lib/turnstile";
 
 export async function handleContactMessage(formData: FormData, turnstileToken: string) {
-  const isValid = await verifyTurnstileToken(turnstileToken);
+  const isValid = await verifyTurnstileToken(turnstileToken || "");
   if (!isValid) {
     return { success: false, error: "We could not verify the security check. Please refresh the page and try again." };
   }

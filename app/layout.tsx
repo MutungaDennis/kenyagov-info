@@ -1,5 +1,5 @@
-// app/layout.tsx
 import { Metadata, Viewport } from 'next';
+import Script from 'next/script'; // ✅ 1. IMPORT THE NEXT.JS SCRIPT COMPONENT
 
 import "govuk-frontend/govuk-frontend.min.css";
 import "@/app/globals.css";
@@ -19,14 +19,8 @@ export const viewport: Viewport = {
   themeColor: '#00703c',
 };
 
-/**
- * Root metadata for social previews (WhatsApp, X, Facebook, Telegram, iMessage).
- * Per-page routes should override title/description/canonical via generateMetadata
- * or page `metadata` — do NOT set a sitewide canonical to "/" here.
- */
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-
   title: {
     default: DEFAULT_TITLE,
     template: `%s | ${SITE_NAME}`,
@@ -68,10 +62,6 @@ export const metadata: Metadata = {
     },
   },
 
-  // Do NOT set openGraph.url or alternates.canonical to the homepage here.
-  // A sitewide homepage canonical makes Google treat every URL as a duplicate
-  // of "/" (GSC: "Alternate page with proper canonical tag").
-  // Each route must set its own canonical via buildPageMetadata / generateMetadata.
   openGraph: {
     type: 'website',
     locale: 'en_KE',
@@ -98,7 +88,6 @@ export const metadata: Metadata = {
 
   other: {
     'ai-content': 'index',
-    // WhatsApp / some scrapers also look at these loosely
     'og:logo': `${SITE_URL}/logo.webp`,
     'origin-trial': 'A4osS6hE38l+I8HVoNIZUPu9CvgXN7Wk4+mu9gbnNgUlJpGPrpgjNNw+kHB/IPzh2AwL+sjPB5rnWBQMk1OGLw8AAAB2eyJvcmlnaW4iOiJodHRwczovL2NpdGl6ZW5ndWlkZS5rZTo0NDMiLCJmZWF0dXJlIjoiV2ViTUNQIiwiZXhwaXJ5IjoxNzk0ODczNjAwLCJpc1N1YmRvbWFpbiI6dHJ1ZSwiaXN0aGlyZFBhcnR5Ijp0cnVlfQ==',
   },
@@ -109,9 +98,6 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Inject Supabase public env for the browser when Worker runtime has vars
-  // but they were not inlined at `next build` (common Cloudflare misconfig).
-  // Client pages then skip a failing placeholder and avoid blank data UIs.
   const runtimeSupabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() || "";
   const runtimeSupabaseKey =
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim() ||
@@ -125,8 +111,6 @@ export default function RootLayout({
         })};`
       : "";
 
-  // WebSite + SearchAction enables Google’s sitelinks search box when eligible.
-  // Target must match the real site search that returns institutions, laws, pages, etc.
   const websiteSchema = {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
@@ -165,7 +149,6 @@ export default function RootLayout({
       '@type': 'Country',
       name: 'Kenya',
     },
-    // Not an official government body — do not claim GovernmentOrganization.
     sameAs: [],
   };
 
@@ -195,11 +178,16 @@ export default function RootLayout({
           }}
         />
         <link rel="alternate" type="text/plain" href="/llms.txt" title="llms.txt" />
+        
+        {/* ✅ 2. REPLACE NATIVE <script> WITH NEXT.JS <Script> COMPONENT */}
         {publicEnvBootstrap ? (
-          <script
+          <Script
+            id="public-env-bootstrap"
+            strategy="beforeInteractive"
             dangerouslySetInnerHTML={{ __html: publicEnvBootstrap }}
           />
         ) : null}
+
         {runtimeSupabaseUrl ? (
           <link rel="preconnect" href={runtimeSupabaseUrl} crossOrigin="anonymous" />
         ) : null}

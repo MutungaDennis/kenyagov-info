@@ -10,10 +10,13 @@ export type RoleFieldVisibility = {
   showWard: boolean;
   showOrganization: boolean;
   showLevel: boolean;
+  /** Nominated Senator / nominated NA — special interest category (like MCA nomination_category) */
+  showNominationCategory: boolean;
   partyRequired: boolean;
   constituencyRequired: boolean;
   countyRequired: boolean;
   organizationRequired: boolean;
+  nominationCategoryRequired: boolean;
 };
 
 const DEFAULT: RoleFieldVisibility = {
@@ -23,11 +26,23 @@ const DEFAULT: RoleFieldVisibility = {
   showWard: false,
   showOrganization: true,
   showLevel: true,
+  showNominationCategory: false,
   partyRequired: false,
   constituencyRequired: false,
   countyRequired: false,
   organizationRequired: false,
+  nominationCategoryRequired: false,
 };
+
+/** Special interest options for nominated Senators (aligned with MCA categories + workers) */
+export const SENATE_NOMINATION_CATEGORIES = [
+  "Gender Top-up",
+  "PWD",
+  "Youth",
+  "Marginalized",
+  "Workers",
+  "Other",
+] as const;
 
 function norm(s: string): string {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
@@ -35,13 +50,18 @@ function norm(s: string): string {
 
 /**
  * Infer field visibility from position title or code (e.g. "Member of Parliament", "MP", "CABINET_SECRETARY").
+ * Optional seatOrEntry: "Nominated" / "Elected" etc. so "Senator" + Nominated does not require a county.
  */
 export function fieldsForPosition(
   titleOrCode?: string | null,
+  seatOrEntry?: string | null,
 ): RoleFieldVisibility {
   if (!titleOrCode?.trim()) return { ...DEFAULT };
 
   const t = norm(titleOrCode);
+  const seat = norm(seatOrEntry || "");
+  const markedNominated =
+    seat.includes("nominat") || t.includes("nominated");
 
   // Judiciary / technocratic — no party
   if (
@@ -87,18 +107,20 @@ export function fieldsForPosition(
     t === "mp" ||
     t === "nominated_mp"
   ) {
-    const nominated = t.includes("nominated");
+    const nominated = markedNominated;
     return {
       ...DEFAULT,
       showParty: true,
       partyRequired: true,
       showConstituency: !nominated,
       constituencyRequired: !nominated,
-      showCounty: true,
+      showCounty: !nominated,
       countyRequired: false,
       showWard: false,
       showOrganization: true,
       organizationRequired: false,
+      showNominationCategory: nominated,
+      nominationCategoryRequired: nominated,
     };
   }
 
@@ -116,17 +138,20 @@ export function fieldsForPosition(
     };
   }
 
-  // Senator
+  // Senator — elected represent a county; nominated represent special interests (no county)
   if (/\bsenator\b/.test(t) || t === "senator") {
+    const nominated = markedNominated;
     return {
       ...DEFAULT,
       showParty: true,
       partyRequired: true,
       showConstituency: false,
-      showCounty: true,
-      countyRequired: true,
+      showCounty: !nominated,
+      countyRequired: !nominated,
       showWard: false,
       showOrganization: true,
+      showNominationCategory: nominated,
+      nominationCategoryRequired: nominated,
     };
   }
 

@@ -32,14 +32,18 @@ const portableTextComponents = {
     em: ({ children }: any) => <em className="italic">{children}</em>,
 
     internalLink: ({ children, value }: any) => {
-      const { chapter, article } = value || {};
-      if (!chapter || !article) return <span>{children}</span>;
-
+      const chapter = Number(value?.chapter);
+      if (!Number.isFinite(chapter)) return <span>{children}</span>;
+      const article =
+        value?.article == null || value?.article === ""
+          ? null
+          : Number(value.article);
+      const href =
+        article != null && Number.isFinite(article)
+          ? `/constitution/chapter/${chapter}/article/${article}`
+          : `/constitution/chapter/${chapter}`;
       return (
-        <Link 
-          href={`/constitution/${chapter}/${article}`}
-          className="govuk-link"
-        >
+        <Link href={href} className="govuk-link">
           {children}
         </Link>
       );
