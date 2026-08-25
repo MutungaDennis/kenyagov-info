@@ -204,8 +204,10 @@ export default function NewOfficialPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (saving) return;
     if (!form.first_name.trim() || !form.surname.trim()) {
       setError("First name and surname are required.");
+      window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
     setSaving(true);
@@ -235,24 +237,46 @@ export default function NewOfficialPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      const json = await res.json();
+      let json: Record<string, unknown> = {};
+      try {
+        const ct = res.headers.get("content-type") || "";
+        if (ct.includes("application/json")) {
+          json = await res.json();
+        } else {
+          const text = await res.text();
+          throw new Error(
+            res.status === 401
+              ? "Session expired — sign in again and retry."
+              : `Create failed (HTTP ${res.status}). ${text.slice(0, 120)}`,
+          );
+        }
+      } catch (parseErr) {
+        if (parseErr instanceof Error && parseErr.message.startsWith("Create")) {
+          throw parseErr;
+        }
+        throw new Error(`Create failed (HTTP ${res.status}).`);
+      }
       if (!res.ok) {
         throw new Error(
           [json.error, json.hint].filter(Boolean).join(" — ") ||
             "Failed to create official",
         );
       }
-      if (json.data?.slug) {
-        void triggerIndexNow(json.data.slug, "leaders");
+      const data = json.data as { id?: string; slug?: string } | undefined;
+      if (data?.slug && form.is_active) {
+        void triggerIndexNow(data.slug, "leaders");
       }
-      const id = json.data?.id;
+      const id = data?.id;
       if (id) {
         router.push(adminPath(`officials/${id}/edit`));
         return;
       }
-      router.push(adminPath("officials"));
+      throw new Error(
+        "Created but no id returned — check the officials list.",
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Create failed");
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } finally {
       setSaving(false);
     }
@@ -597,6 +621,10 @@ export default function NewOfficialPage() {
             idPrefix="new-official-image"
             onChange={(url) => setField("image_url", url)}
           />
+          <p className="govuk-hint govuk-!-margin-bottom-6">
+            Drag or click in the box above to add a portrait. It is stored when
+            you click <strong>Create official</strong>.
+          </p>
 
           <h2 className="govuk-heading-m">Social links</h2>
           {socialLinks.map((link, i) => (

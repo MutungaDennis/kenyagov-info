@@ -811,16 +811,88 @@ export default function EditOfficialPage({
     }
   };
 
+  const persistPersonalDetails = async (opts?: {
+    /** When set, only patch these fields (e.g. portrait auto-save). */
+    only?: Record<string, unknown>;
+    quiet?: boolean;
+  }) => {
+    if (!form.first_name.trim() || !form.surname.trim()) {
+      throw new Error("First name and surname are required.");
+    }
+    // level must be enum national|county|ward (never "National")
+    const levelNorm = form.level.trim()
+      ? normalizeLeaderLevel(form.level, form.title)
+      : null;
+
+    const fullPayload: Record<string, unknown> = {
+      first_name: form.first_name.trim(),
+      other_names: form.other_names.trim() || null,
+      surname: form.surname.trim(),
+      slug: form.slug.trim() || null,
+      title: form.title.trim() || null,
+      current_party: form.current_party.trim() || null,
+      current_constituency: form.current_constituency.trim() || null,
+      current_county: form.current_county.trim() || null,
+      current_organization: form.current_organization.trim() || null,
+      level: levelNorm,
+      bio: form.bio.trim() || null,
+      image_url: form.image_url.trim() || null,
+      contact_email: form.contact_email.trim() || null,
+      phone: form.phone.trim() || null,
+      official_website: form.official_website.trim() || null,
+      is_active: form.is_active,
+      verification_status: normalizeVerificationStatus(
+        form.verification_status,
+      ),
+      name_titles: nameTitles,
+      national_honours: nationalHonours,
+      social_media: socialLinks.filter((l) => l.platform && l.url.trim()),
+      academic_qualifications: qualifications
+        .filter((q) => q.degree || q.institution)
+        .map((q) => ({
+          degree: q.degree || undefined,
+          field: q.field || undefined,
+          institution: q.institution || undefined,
+          year: q.year || undefined,
+          notes: q.notes || undefined,
+        })),
+    };
+
+    const payload = opts?.only
+      ? { ...opts.only }
+      : fullPayload;
+
+    const res = await fetch(`/api/admin/leaders/${id}`, {
+      method: "PATCH",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    let json: Record<string, unknown> = {};
+    try {
+      json = await safeJsonResponse(res);
+    } catch {
+      throw new Error(
+        res.ok
+          ? "Saved but response was not JSON"
+          : `Save failed (HTTP ${res.status})`,
+      );
+    }
+    if (!res.ok) {
+      throw new Error(
+        [json.error, json.hint].filter(Boolean).join(" — ") ||
+          `Update failed (HTTP ${res.status})`,
+      );
+    }
+    return json;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (saving) return;
-    if (!personalDirty) {
-      setError(null);
-      setSuccessMessage("No changes to save — edit a field first.");
-      return;
-    }
     if (!form.first_name.trim() || !form.surname.trim()) {
       setError("First name and surname are required.");
+      window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
     setSaving(true);
@@ -829,103 +901,45 @@ export default function EditOfficialPage({
     setSuccessMessage(null);
     setWarnings([]);
     try {
-      // level must be enum national|county|ward (never "National")
-      const levelNorm = form.level.trim()
-        ? normalizeLeaderLevel(form.level, form.title)
-        : null;
+      const json = await persistPersonalDetails();
 
-      const payload: Record<string, unknown> = {
-        first_name: form.first_name.trim(),
-        other_names: form.other_names.trim() || null,
-        surname: form.surname.trim(),
-        slug: form.slug.trim() || null,
-        title: form.title.trim() || null,
-        current_party: form.current_party.trim() || null,
-        current_constituency: form.current_constituency.trim() || null,
-        current_county: form.current_county.trim() || null,
-        current_organization: form.current_organization.trim() || null,
-        level: levelNorm,
-        bio: form.bio.trim() || null,
-        image_url: form.image_url.trim() || null,
-        contact_email: form.contact_email.trim() || null,
-        phone: form.phone.trim() || null,
-        official_website: form.official_website.trim() || null,
-        is_active: form.is_active,
-        verification_status: normalizeVerificationStatus(
-          form.verification_status,
-        ),
-        name_titles: nameTitles,
-        national_honours: nationalHonours,
-        social_media: socialLinks.filter((l) => l.platform && l.url.trim()),
-        academic_qualifications: qualifications
-          .filter((q) => q.degree || q.institution)
-          .map((q) => ({
-            degree: q.degree || undefined,
-            field: q.field || undefined,
-            institution: q.institution || undefined,
-            year: q.year || undefined,
-            notes: q.notes || undefined,
-          })),
-      };
-
-      const res = await fetch(`/api/admin/leaders/${id}`, {
-        method: "PATCH",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      let json: Record<string, unknown> = {};
-      try {
-        json = await safeJsonResponse(res);
-      } catch {
-        throw new Error(
-          res.ok
-            ? "Saved but response was not JSON"
-            : `Save failed (HTTP ${res.status})`,
-        );
-      }
-      if (!res.ok) {
-        throw new Error(
-          [json.error, json.hint].filter(Boolean).join(" — ") ||
-            `Update failed (HTTP ${res.status})`,
-        );
-      }
-
-      // Reload from DB so UI matches server and dirty flag clears cleanly
       setPersonalDirty(false);
       setSaved(true);
-      setSuccessMessage(
-        form.is_active
-          ? "Personal details saved successfully (including organisation snapshot)."
-          : "Personal details saved. Profile is inactive (not listed publicly).",
-      );
+      const msg = form.is_active
+        ? "Personal details saved successfully."
+        : "Personal details saved. Profile is inactive (not listed publicly).";
+      setSuccessMessage(msg);
+
+      const nextWarnings: string[] = [];
       if (Array.isArray(json.warnings) && json.warnings.length) {
-        setWarnings(json.warnings.map(String));
+        nextWarnings.push(...json.warnings.map(String));
       }
       if (Array.isArray(json.dropped) && (json.dropped as string[]).length) {
-        setWarnings((w) => [
-          ...w,
+        nextWarnings.push(
           `Saved without optional columns: ${(json.dropped as string[]).join(", ")}.`,
-        ]);
+        );
       }
-      // Refresh form from server (keeps personalDirty false)
-      await loadLeader();
-      setPersonalDirty(false);
-      setSaved(true);
-      setSuccessMessage(
-        form.is_active
-          ? "Personal details saved successfully (including organisation snapshot)."
-          : "Personal details saved. Profile is inactive (not listed publicly).",
-      );
+      setWarnings(nextWarnings);
 
-      // 🚀 Trigger IndexNow to notify search engines of the update
+      // Refresh from server — do not fail the whole save if reload hiccups
+      try {
+        await loadLeader();
+        setPersonalDirty(false);
+        setSaved(true);
+        setSuccessMessage(msg);
+      } catch {
+        /* keep success; form still has what we saved */
+      }
+
       if (form.is_active && form.slug) {
         void triggerIndexNow(form.slug, "leaders");
       }
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Update failed");
       setSuccessMessage(null);
       setSaved(false);
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } finally {
       setSaving(false);
     }
@@ -1965,6 +1979,16 @@ export default function EditOfficialPage({
             value={form.image_url}
             leaderId={id}
             onChange={(url) => setField("image_url", url)}
+            onUploaded={async (url) => {
+              // Persist portrait immediately so admins don't lose it if they forget Save
+              await persistPersonalDetails({
+                only: { image_url: url },
+                quiet: true,
+              });
+              setForm((prev) => ({ ...prev, image_url: url }));
+              setSuccessMessage("Portrait uploaded and saved.");
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
           />
           <div className="govuk-grid-row">
             <div className="govuk-grid-column-one-third">
@@ -2140,8 +2164,8 @@ export default function EditOfficialPage({
             <button
               type="submit"
               className="govuk-button"
-              disabled={saving || !personalDirty}
-              aria-disabled={saving || !personalDirty}
+              disabled={saving}
+              aria-disabled={saving}
             >
               {saving ? "Saving…" : "Save personal details"}
             </button>
@@ -2162,14 +2186,11 @@ export default function EditOfficialPage({
               </Link>
             )}
           </div>
-          {!personalDirty && !saving && (
-            <p className="govuk-hint">
-              No unsaved changes. Edit a field (e.g. Organisation) to enable
-              Save.
-            </p>
-          )}
           {personalDirty && !saving && (
             <p className="govuk-hint">You have unsaved changes.</p>
+          )}
+          {!personalDirty && !saving && saved && (
+            <p className="govuk-hint">All personal details are saved.</p>
           )}
         </form>
 

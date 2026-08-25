@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdminApi, slugify } from "@/lib/admin-api";
 import { nameForSlug, splitFullName } from "@/lib/leaders/display";
+import { normalizeLeaderLevel } from "@/lib/leaders/role-normalize";
 import {
   normalizeSocialUrl,
   parseNameTitles,
@@ -14,6 +15,41 @@ import {
   DEFAULT_VERIFICATION_STATUS,
   normalizeVerificationStatus,
 } from "@/lib/verification";
+
+/** Columns that may be missing until migrations are applied */
+const OPTIONAL_INSERT_COLUMNS = [
+  "academic_qualifications",
+  "name_titles",
+  "national_honours",
+  "social_media",
+  "verification_status",
+  "verified_at",
+  "is_active",
+  "status",
+  "level",
+  "category",
+  "sub_category",
+  "contact_email",
+  "phone",
+  "official_website",
+  "image_url",
+  "bio",
+  "title",
+  "current_party",
+  "current_constituency",
+  "current_county",
+  "current_organization",
+] as const;
+
+function missingColumnFromError(message: string): string | null {
+  const m =
+    message.match(/Could not find the '([^']+)' column/i) ||
+    message.match(
+      /column ["']?([a-z0-9_]+)["']? (?:of relation )?.*does not exist/i,
+    ) ||
+    message.match(/column\s+([a-z0-9_]+)\s+does not exist/i);
+  return m?.[1] || null;
+}
 
 export const dynamic = "force-dynamic";
 
@@ -366,12 +402,18 @@ export async function POST(request: NextRequest) {
   let slug = String(body.slug || "").trim() || slugify(forSlug);
   if (!slug) slug = `leader-${Date.now()}`;
 
+  const title = body.title ? String(body.title) : null;
+  let level: string | null = null;
+  if (body.level) {
+    level = normalizeLeaderLevel(String(body.level), title);
+  }
+
   const row: Record<string, unknown> = {
     first_name,
     other_names: other_names || null,
     surname,
     slug,
-    title: body.title ? String(body.title) : null,
+    title,
     current_party: body.current_party ? String(body.current_party) : null,
     current_constituency: body.current_constituency
       ? String(body.current_constituency)
@@ -380,7 +422,6 @@ export async function POST(request: NextRequest) {
     current_organization: body.current_organization
       ? String(body.current_organization)
       : null,
-    level: body.level ? String(body.level) : null,
     bio: body.bio ? String(body.bio) : null,
     image_url: body.image_url ? String(body.image_url) : null,
     contact_email: body.contact_email ? String(body.contact_email) : null,
@@ -394,6 +435,7 @@ export async function POST(request: NextRequest) {
       ? normalizeVerificationStatus(body.verification_status)
       : DEFAULT_VERIFICATION_STATUS,
   };
+  if (level) row.level = level;
   if (row.verification_status === "Verified") {
     row.verified_at = new Date().toISOString();
   }
@@ -417,37 +459,102 @@ export async function POST(request: NextRequest) {
     row.academic_qualifications = body.academic_qualifications;
   }
 
-  const { data, error } = await auth.supabase
-    .from("leaders")
-    .insert(row)
-    .select("id, slug, full_name, first_name, surname")
-    .single();
+  // Never send full_name — generated column
+  delete row.full_name;
 
-  if (error) {
-    delete row.academic_qualifications;
-    delete row.name_titles;
-    delete row.national_honours;
-    delete row.social_media;
-    delete row.is_active;
-    delete row.status;
-    delete row.verification_status;
-    delete row.verified_at;
-    const res2 = await auth.supabase
+  const working = { ...row };
+  const dropped: string[] = [];
+  let lastError: string | null = null;
+  let created: Record<string, unknown> | null = null;
+
+  for (let attempt = 0; attempt < 25; attempt++) {
+    const { data, error } = await auth.supabase
       .from("leaders")
-      .insert(row)
+      .insert(working)
       .select("id, slug, full_name, first_name, surname")
       .single();
-    if (res2.error) {
-      return NextResponse.json(
-        {
-          error: res2.error.message,
-          hint: "Do not send full_name — it is generated from first_name and surname.",
-        },
-        { status: 500 },
-      );
+
+    if (!error && data) {
+      created = data as Record<string, unknown>;
+      break;
     }
-    return NextResponse.json({ data: res2.data }, { status: 201 });
+
+    lastError = String(error?.message || error || "Insert failed");
+
+    // Unique slug → append suffix and retry
+    if (/duplicate|unique|slug/i.test(lastError)) {
+      working.slug = `${slug}-${Date.now().toString(36).slice(-5)}`;
+      continue;
+    }
+
+    // Invalid enum value → drop that column
+    if (/invalid input value for enum/i.test(lastError) || /22P02/.test(lastError)) {
+      const badVal = lastError.match(
+        /invalid input value for enum \w+: "([^"]+)"/i,
+      )?.[1];
+      let droppedEnum = false;
+      for (const key of Object.keys(working)) {
+        if (badVal != null && String(working[key]) === badVal) {
+          delete working[key];
+          dropped.push(key);
+          droppedEnum = true;
+          break;
+        }
+      }
+      if (!droppedEnum && "level" in working) {
+        delete working.level;
+        dropped.push("level");
+        droppedEnum = true;
+      }
+      if (droppedEnum) continue;
+    }
+
+    const col = missingColumnFromError(lastError);
+    if (col && col in working) {
+      delete working[col];
+      dropped.push(col);
+      continue;
+    }
+
+    // Drop next optional column
+    let removed = false;
+    for (const k of OPTIONAL_INSERT_COLUMNS) {
+      if (k in working) {
+        delete working[k];
+        dropped.push(k);
+        removed = true;
+        break;
+      }
+    }
+    if (!removed) break;
   }
 
-  return NextResponse.json({ data }, { status: 201 });
+  if (!created) {
+    return NextResponse.json(
+      {
+        error: lastError || "Failed to create official",
+        dropped: dropped.length ? dropped : undefined,
+        hint:
+          lastError && /full_name|DEFAULT/i.test(lastError)
+            ? "full_name is generated — send first_name and surname only."
+            : dropped.length
+              ? `Some columns were skipped (${dropped.join(", ")}). Run leader migrations in Supabase if titles/honours did not save.`
+              : "Check Supabase RLS and that SUPABASE_SERVICE_ROLE_KEY is set for admin APIs.",
+      },
+      { status: 500 },
+    );
+  }
+
+  return NextResponse.json(
+    {
+      data: created,
+      dropped: dropped.length ? dropped : undefined,
+      warnings: dropped.length
+        ? [
+            `Created without optional columns: ${dropped.join(", ")}. Run lib/supabase/migrations/fix_leaders_missing_columns.sql if needed.`,
+          ]
+        : undefined,
+    },
+    { status: 201 },
+  );
 }

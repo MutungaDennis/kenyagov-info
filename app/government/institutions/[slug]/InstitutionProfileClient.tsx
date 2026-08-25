@@ -10,6 +10,11 @@ import {
   isInstitutionHistorical,
   statusLifecyclePhrase,
 } from "@/lib/institutions/fields";
+import {
+  formatSegmentRange,
+  isJudicialAnnulmentStatus,
+  relationshipTypeMeta,
+} from "@/lib/institutions/lineage";
 
 function formatGovUKDate(dateStr: string | null | undefined): string {
   if (!dateStr) return "";
@@ -56,6 +61,35 @@ type LinkedInstitution = {
   short_name?: string | null;
 };
 
+type SegmentRow = {
+  id: string;
+  label: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  segment_status: string;
+  legal_basis_name: string | null;
+  notes: string | null;
+};
+
+type RelRow = {
+  id: string;
+  from_institution_id: string;
+  to_institution_id: string;
+  relationship_type: string;
+  effective_date: string | null;
+  legal_instrument: string | null;
+  from_institution?: LinkedInstitution | null;
+  to_institution?: LinkedInstitution | null;
+};
+
+type NameRow = {
+  id: string;
+  name: string;
+  name_kind: string;
+  start_date: string | null;
+  end_date: string | null;
+};
+
 export default function InstitutionProfileClient() {
   const params = useParams();
   const slug = params.slug as string;
@@ -63,6 +97,9 @@ export default function InstitutionProfileClient() {
   const [institution, setInstitution] = useState<Institution | null>(null);
   const [parentChain, setParentChain] = useState<LinkedInstitution[]>([]);
   const [successors, setSuccessors] = useState<LinkedInstitution[]>([]); // Changed to array for splits
+  const [segments, setSegments] = useState<SegmentRow[]>([]);
+  const [relationships, setRelationships] = useState<RelRow[]>([]);
+  const [nameHistory, setNameHistory] = useState<NameRow[]>([]);
   const [headLeaderSlug, setHeadLeaderSlug] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -128,6 +165,76 @@ export default function InstitutionProfileClient() {
           .order("name");
         if (succs) setSuccessors(succs as LinkedInstitution[]);
 
+        // Lifecycle segments / lineage / dated names (tables optional until migration)
+        const [segRes, relRes, nameRes] = await Promise.all([
+          supabase
+            .from("institution_lifecycle_segments")
+            .select(
+              "id, label, start_date, end_date, segment_status, legal_basis_name, notes",
+            )
+            .eq("institution_id", instData.id)
+            .order("sort_order", { ascending: true })
+            .order("start_date", { ascending: true }),
+          supabase
+            .from("institution_relationships")
+            .select(
+              `id, from_institution_id, to_institution_id, relationship_type, effective_date, legal_instrument,
+               from_institution:institutions!institution_relationships_from_institution_id_fkey ( id, slug, name, short_name ),
+               to_institution:institutions!institution_relationships_to_institution_id_fkey ( id, slug, name, short_name )`,
+            )
+            .or(
+              `from_institution_id.eq.${instData.id},to_institution_id.eq.${instData.id}`,
+            ),
+          supabase
+            .from("institution_name_history")
+            .select("id, name, name_kind, start_date, end_date")
+            .eq("institution_id", instData.id)
+            .order("start_date", { ascending: true }),
+        ]);
+        if (!segRes.error && segRes.data) {
+          setSegments(segRes.data as SegmentRow[]);
+        }
+        if (!relRes.error && relRes.data) {
+          setRelationships(relRes.data as unknown as RelRow[]);
+        } else if (relRes.error) {
+          // Fallback without embed if FK names differ
+          const simple = await supabase
+            .from("institution_relationships")
+            .select(
+              "id, from_institution_id, to_institution_id, relationship_type, effective_date, legal_instrument",
+            )
+            .or(
+              `from_institution_id.eq.${instData.id},to_institution_id.eq.${instData.id}`,
+            );
+          if (!simple.error && simple.data) {
+            const ids = Array.from(
+              new Set(
+                simple.data.flatMap((r) => [
+                  r.from_institution_id,
+                  r.to_institution_id,
+                ]),
+              ),
+            );
+            const { data: insts } = await supabase
+              .from("institutions")
+              .select("id, slug, name, short_name")
+              .in("id", ids);
+            const byId = new Map(
+              (insts || []).map((i) => [i.id, i as LinkedInstitution]),
+            );
+            setRelationships(
+              simple.data.map((r) => ({
+                ...r,
+                from_institution: byId.get(r.from_institution_id) || null,
+                to_institution: byId.get(r.to_institution_id) || null,
+              })) as RelRow[],
+            );
+          }
+        }
+        if (!nameRes.error && nameRes.data) {
+          setNameHistory(nameRes.data as NameRow[]);
+        }
+
         // Resolve linked head
         if (instData.current_head_id) {
           const { data: headLeader } = await supabase
@@ -180,6 +287,14 @@ export default function InstitutionProfileClient() {
 
   const historical = isInstitutionHistorical(institution.status);
   const earmarked = isInstitutionEarmarked(institution.status);
+  const judicial = isJudicialAnnulmentStatus(institution.status);
+
+  const lineageOutgoing = relationships.filter(
+    (r) => r.from_institution_id === institution.id,
+  );
+  const lineageIncoming = relationships.filter(
+    (r) => r.to_institution_id === institution.id,
+  );
 
   return (
     <div className="govuk-width-container">
@@ -208,8 +323,24 @@ export default function InstitutionProfileClient() {
               </div>
             )}
 
+            {judicial && (
+              <div className="govuk-warning-text">
+                <span className="govuk-warning-text__icon" aria-hidden="true">!</span>
+                <strong className="govuk-warning-text__text">
+                  <span className="govuk-warning-text__assistive">Warning</span>
+                  Legal status — this organisation{" "}
+                  {statusLifecyclePhrase(institution.status)}
+                  {institution.status_effective_date
+                    ? ` on ${formatGovUKDate(institution.status_effective_date)}`
+                    : ""}
+                  . It is recorded here as a historical and legal trail, not as
+                  a currently lawful office.
+                </strong>
+              </div>
+            )}
+
             {/* ✅ Enhanced Historical Banner showing all successors */}
-            {historical && (
+            {historical && !judicial && (
               <div className="govuk-warning-text">
                 <span className="govuk-warning-text__icon" aria-hidden="true">!</span>
                 <strong className="govuk-warning-text__text">
@@ -225,6 +356,24 @@ export default function InstitutionProfileClient() {
                   )}
                 </strong>
               </div>
+            )}
+
+            {nameHistory.length > 0 && (
+              <p className="govuk-body">
+                <strong>Also known as / formerly: </strong>
+                {nameHistory.map((n, i) => (
+                  <span key={n.id}>
+                    {n.name}
+                    {(n.start_date || n.end_date) && (
+                      <span className="govuk-hint">
+                        {" "}
+                        ({formatSegmentRange(n.start_date, n.end_date)})
+                      </span>
+                    )}
+                    {i < nameHistory.length - 1 ? "; " : ""}
+                  </span>
+                ))}
+              </p>
             )}
 
             <h2 className="govuk-heading-l">Mandate</h2>
@@ -263,6 +412,130 @@ export default function InstitutionProfileClient() {
                     </div>
                   )}
                 </dl>
+              </>
+            )}
+
+            {segments.length > 0 && (
+              <>
+                <h2 className="govuk-heading-l govuk-!-margin-top-9">
+                  Operational history
+                </h2>
+                <p className="govuk-body">
+                  This office has more than one recorded period of existence —
+                  for example after abolition and later recreation.
+                </p>
+                <ol className="govuk-list govuk-list--number">
+                  {segments.map((seg) => (
+                    <li key={seg.id} className="govuk-!-margin-bottom-3">
+                      <strong>
+                        {seg.label || seg.segment_status || "Period"}
+                      </strong>
+                      <br />
+                      <span className="govuk-body-s">
+                        {formatSegmentRange(seg.start_date, seg.end_date)}
+                        {seg.segment_status
+                          ? ` · ${seg.segment_status}`
+                          : ""}
+                      </span>
+                      {seg.legal_basis_name && (
+                        <>
+                          <br />
+                          <span className="govuk-body-s">
+                            Legal basis: {seg.legal_basis_name}
+                          </span>
+                        </>
+                      )}
+                      {seg.notes && (
+                        <>
+                          <br />
+                          <span className="govuk-body-s">{seg.notes}</span>
+                        </>
+                      )}
+                    </li>
+                  ))}
+                </ol>
+              </>
+            )}
+
+            {(lineageOutgoing.length > 0 || lineageIncoming.length > 0) && (
+              <>
+                <h2 className="govuk-heading-l govuk-!-margin-top-9">
+                  Related institutions (lineage)
+                </h2>
+                <p className="govuk-body">
+                  How this body connects to others through renames, mergers,
+                  splits or succession.
+                </p>
+                {lineageOutgoing.length > 0 && (
+                  <>
+                    <h3 className="govuk-heading-s">This organisation led to</h3>
+                    <ul className="govuk-list govuk-list--bullet">
+                      {lineageOutgoing.map((r) => {
+                        const meta = relationshipTypeMeta(r.relationship_type);
+                        const other = r.to_institution;
+                        return (
+                          <li key={r.id}>
+                            <strong>{meta.publicFromLabel}: </strong>
+                            {other?.slug ? (
+                              <Link
+                                href={`/government/institutions/${other.slug}`}
+                                className="govuk-link"
+                              >
+                                {other.short_name || other.name}
+                              </Link>
+                            ) : (
+                              other?.name || "Related body"
+                            )}
+                            {r.effective_date && (
+                              <span className="govuk-hint">
+                                {" "}
+                                ({formatGovUKDate(r.effective_date)})
+                              </span>
+                            )}
+                            {r.legal_instrument && (
+                              <span className="govuk-body-s">
+                                {" "}
+                                — {r.legal_instrument}
+                              </span>
+                            )}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </>
+                )}
+                {lineageIncoming.length > 0 && (
+                  <>
+                    <h3 className="govuk-heading-s">This organisation came from</h3>
+                    <ul className="govuk-list govuk-list--bullet">
+                      {lineageIncoming.map((r) => {
+                        const meta = relationshipTypeMeta(r.relationship_type);
+                        const other = r.from_institution;
+                        return (
+                          <li key={r.id}>
+                            <strong>{meta.publicToLabel}: </strong>
+                            {other?.slug ? (
+                              <Link
+                                href={`/government/institutions/${other.slug}`}
+                                className="govuk-link"
+                              >
+                                {other.short_name || other.name}
+                              </Link>
+                            ) : (
+                              other?.name || "Related body"
+                            )}
+                            {r.effective_date && (
+                              <span className="govuk-hint">
+                                {" "}
+                                ({formatGovUKDate(r.effective_date)})
+                              </span>
+                            )}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </>
+                )}
               </>
             )}
 

@@ -220,6 +220,8 @@ export const ARM_OF_GOVERNMENT_OPTIONS = [
 
 export const CONSTITUTIONAL_STATUS_OPTIONS = [
   "Constitutional",
+  "Post-2010 constitutional",
+  "Pre-2010 constitutional",
   "Statutory",
   "Executive",
   "County Legislative",
@@ -228,10 +230,14 @@ export const CONSTITUTIONAL_STATUS_OPTIONS = [
 
 export const LEGAL_BASIS_TYPE_OPTIONS = [
   "Act of Parliament",
+  "Constitution 2010",
+  "Pre-2010 Constitution",
   "Constitution",
+  "National Accord / political agreement",
   "Executive Order",
   "Presidential Decree",
   "Gazette Notice",
+  "Court judgment",
   "Treaty",
   "Regulation",
   "Cabinet Decision",
@@ -321,9 +327,13 @@ export const INSTITUTION_STATUS_OPTIONS = [
   "Restructured",
   "Merged",
   "Succeeded",
+  "Split",
+  "Absorbed",
   "Dissolved",
   "Abolished",
   "Suspended",
+  "Unconstitutional",
+  "Judiciously annulled",
   "Earmarked for change",
   "Proposed",
 ] as const;
@@ -354,6 +364,10 @@ export const INSTITUTION_STATUS_IMPLIES_INACTIVE = new Set([
   "Merged",
   "Succeeded",
   "Restructured",
+  "Split",
+  "Absorbed",
+  "Unconstitutional",
+  "Judiciously annulled",
 ]);
 
 /** Statuses where linking a successor institution is strongly recommended */
@@ -363,6 +377,8 @@ export const INSTITUTION_STATUS_NEEDS_SUCCESSOR = new Set([
   "Succeeded",
   "Restructured",
   "Former",
+  "Split",
+  "Absorbed",
 ]);
 
 /** Statuses where a predecessor link is useful (this body replaced another) */
@@ -403,7 +419,7 @@ export function isInstitutionHistorical(status: unknown): boolean {
   }
   // Custom free-text statuses that look historical
   if (
-    /former|dissolv|abolis|merg|renam|succeed|restructur|defunct|closed|wound.?up/i.test(
+    /former|dissolv|abolis|merg|renam|succeed|restructur|defunct|closed|wound.?up|split|absorb|unconstitutional|annul/i.test(
       s,
     )
   ) {
@@ -438,6 +454,10 @@ export function statusEffectiveDateLabel(status: unknown): string {
     Renamed: "Renamed on",
     Succeeded: "Succeeded on",
     Restructured: "Restructured on",
+    Split: "Split on",
+    Absorbed: "Absorbed on",
+    Unconstitutional: "Ruled unconstitutional on",
+    "Judiciously annulled": "Annulled by court on",
     Former: "Ceased / former from",
     Inactive: "Inactive from",
     Suspended: "Suspended on",
@@ -464,6 +484,10 @@ export function statusLifecyclePhrase(status: unknown): string {
     Renamed: "was renamed",
     Succeeded: "was succeeded",
     Restructured: "was restructured",
+    Split: "was split into other bodies",
+    Absorbed: "was absorbed into another body",
+    Unconstitutional: "was held unconstitutional",
+    "Judiciously annulled": "was annulled by the courts",
     Former: "is a former institution",
     Inactive: "is inactive",
     Suspended: "is suspended",
@@ -524,6 +548,16 @@ export const INSTITUTION_CHANGE_NATURE_OPTIONS = [
     hint: "A new body took over its role or mandate",
   },
   {
+    value: "Split",
+    label: "Split into multiple bodies",
+    hint: "This body fractured into several successors (use lineage links for each child)",
+  },
+  {
+    value: "Absorbed",
+    label: "Absorbed into a ministry / parent",
+    hint: "Mandate returned to a line ministry or parent organisation",
+  },
+  {
     value: "Dissolved",
     label: "Dissolved",
     hint: "Formally wound up; may or may not have a successor",
@@ -532,6 +566,16 @@ export const INSTITUTION_CHANGE_NATURE_OPTIONS = [
     value: "Abolished",
     label: "Abolished",
     hint: "Abolished by law or policy",
+  },
+  {
+    value: "Unconstitutional",
+    label: "Unconstitutional",
+    hint: "Created or continued without a lawful constitutional basis",
+  },
+  {
+    value: "Judiciously annulled",
+    label: "Annulled by court",
+    hint: "Declared invalid by the Judiciary (e.g. CAS positions)",
   },
   {
     value: "Former",
@@ -649,6 +693,42 @@ export function lifecycleChangeUi(status: unknown): LifecycleChangeUi {
         successorHint:
           "Search the institution that took over this body’s role (required)",
         summary: "Link the successor institution that took over the mandate.",
+      };
+    case "Split":
+      return {
+        ...base,
+        showSuccessor: true,
+        showPredecessor: false,
+        successorRequired: false,
+        successorLabel: "One resulting body (optional primary)",
+        successorHint:
+          "Use the Lineage section to link all children (e.g. KP&TC → Telkom, Posta, CA). Optionally set one primary here.",
+        summary:
+          "Record the split date. Add every resulting institution under Lineage with type “Split from”.",
+      };
+    case "Absorbed":
+      return {
+        ...base,
+        showSuccessor: true,
+        showPredecessor: false,
+        successorRequired: true,
+        successorLabel: "Absorbed into",
+        successorHint:
+          "Search the ministry or parent that took on the mandate (required)",
+        summary: "Link the body that absorbed this organisation’s functions.",
+      };
+    case "Unconstitutional":
+    case "Judiciously annulled":
+      return {
+        ...base,
+        showSuccessor: true,
+        showPredecessor: false,
+        successorRequired: false,
+        successorLabel: "Related / covering institution (optional)",
+        successorHint:
+          "If another lawful body covers related functions, link it here",
+        summary:
+          "Record the court judgment date and legal basis (Court judgment). Keep the record published as a historical/legal trail.",
       };
     case "Dissolved":
     case "Abolished":

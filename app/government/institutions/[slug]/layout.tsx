@@ -36,14 +36,29 @@ export async function generateMetadata({
       ]
         .filter(Boolean)
         .join(" · ");
+      
+      // ✅ Detect if this is a county for better SEO targeting
+      const isCounty = data.institution_category?.toLowerCase().includes("county");
+      
       const rawDesc =
         data.description ||
         data.mandate ||
-        `${name}${typeBits ? ` (${typeBits})` : ""} — public institution profile on ${SITE_NAME}.`;
+        `${name}${typeBits ? ` (${typeBits})` : ""} — ${isCounty ? "Official county profile, demographics, and development data" : "public institution profile"} on ${SITE_NAME}.`;
+        
       const description = String(rawDesc)
         .replace(/\s+/g, " ")
         .trim()
         .slice(0, 300);
+
+      const keywords = [
+        name,
+        data.short_name,
+        data.institution_type,
+        isCounty ? "Kenya counties" : "Kenya institutions",
+        isCounty ? `${name} county government` : "",
+        isCounty ? `${name} county profile` : "",
+        SITE_NAME,
+      ].filter(Boolean) as string[];
 
       return buildPageMetadata({
         title: data.short_name
@@ -51,13 +66,7 @@ export async function generateMetadata({
           : name,
         description,
         path: `/government/institutions/${data.slug || slug}`,
-        keywords: [
-          name,
-          data.short_name,
-          data.institution_type,
-          "Kenya institutions",
-          SITE_NAME,
-        ].filter(Boolean) as string[],
+        keywords,
       });
     }
   } catch {

@@ -18,6 +18,7 @@ import InstitutionForm, {
   type InstitutionFormState,
 } from "@/components/admin/InstitutionForm";
 import type { LeaderPickResult } from "@/components/admin/LeaderLinkPicker";
+import InstitutionLifecyclePanel from "@/components/admin/InstitutionLifecyclePanel";
 import type { SocialLink } from "@/lib/leaders/titles-social";
 
 // 🚀 Import the IndexNow helper
@@ -531,6 +532,13 @@ export default function EditInstitutionPage({
             ) : null
           }
         />
+
+        {id ? (
+          <InstitutionLifecyclePanel
+            institutionId={id}
+            institutionName={form.name || form.official_name || ""}
+          />
+        ) : null}
       </main>
     </div>
   );
