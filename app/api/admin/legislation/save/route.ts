@@ -88,12 +88,12 @@ export async function POST(request: NextRequest) {
     const parts = partsIn.map((part: Record<string, unknown>) => {
       const sectionsIn = Array.isArray(part.sections) ? part.sections : [];
       return {
-        _type: "part",
+        _type: "part" as const,
         _key: randomKey(),
         partNumber: part.partNumber != null ? String(part.partNumber) : "",
         partTitle: part.partTitle != null ? String(part.partTitle) : "",
         sections: sectionsIn.map((sec: Record<string, unknown>) => ({
-          _type: "section",
+          _type: "section" as const,
           _key: randomKey(),
           sectionNumber:
             sec.sectionNumber != null ? String(sec.sectionNumber) : "",
@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
     const scheduleObjects = schedulesIn.map((sch: Record<string, unknown>) => {
       const itemsIn = Array.isArray(sch.items) ? sch.items : [];
       return {
-        _type: "schedule",
+        _type: "schedule" as const,
         _key: randomKey(),
         scheduleNumber:
           sch.scheduleNumber != null ? String(sch.scheduleNumber) : "",
@@ -123,7 +123,7 @@ export async function POST(request: NextRequest) {
           sch.relatedSection != null ? String(sch.relatedSection) : "",
         introText: toBlocks(sch.introText),
         items: itemsIn.map((it: Record<string, unknown>) => ({
-          _type: "scheduleItem",
+          _type: "scheduleItem" as const,
           _key: randomKey(),
           itemNumber: it.itemNumber != null ? String(it.itemNumber) : "",
           itemTitle: it.itemTitle != null ? String(it.itemTitle) : "",
@@ -162,11 +162,13 @@ export async function POST(request: NextRequest) {
       slugCurrent = `${baseSlug}-${Date.now().toString(36).slice(-4)}`;
     }
 
-    const doc: Record<string, unknown> = {
-      _type: "actOfParliament",
+    // ✅ FIX: Removed `Record<string, unknown>` and added `as const` to `_type` 
+    // so TypeScript correctly infers the required string literal types.
+    const doc = {
+      _type: "actOfParliament" as const,
       title,
       shortTitle,
-      slug: { _type: "slug", current: slugCurrent },
+      slug: { _type: "slug" as const, current: slugCurrent },
       citation,
       capNumber: meta.capNumber ? String(meta.capNumber).trim() : undefined,
       yearEnacted,
