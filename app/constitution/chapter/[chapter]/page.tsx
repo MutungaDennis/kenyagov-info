@@ -17,6 +17,12 @@ type Props = {
   params: Promise<{ chapter: string }>;
 };
 
+// Define the shape of the chapter data to satisfy TypeScript
+type ChapterData = {
+  chapter: number;
+  chapterTitle?: string;
+};
+
 export default async function ConstitutionChapterPage({ params }: Props) {
   const { chapter } = await params;
   const chapterNum = parseInt(chapter, 10);
@@ -44,10 +50,13 @@ export default async function ConstitutionChapterPage({ params }: Props) {
   const chapterTitle =
     articles[0]?.chapterTitle || defaultChapterTitle(chapterNum);
 
-  const sortedChapterNums = (allChapters || [])
-    .map((c: { chapter: number }) => Number(c.chapter))
-    .filter((n: number) => Number.isFinite(n))
-    .sort((a: number, b: number) => a - b);
+  // Explicitly cast allChapters to our defined type to resolve 'unknown' errors
+  const chapters = (allChapters as ChapterData[] | undefined) || [];
+
+  const sortedChapterNums = chapters
+    .map((c) => Number(c.chapter))
+    .filter((n) => Number.isFinite(n))
+    .sort((a, b) => a - b);
 
   const idx = sortedChapterNums.indexOf(chapterNum);
   const prevNum = idx > 0 ? sortedChapterNums[idx - 1] : null;
@@ -58,9 +67,7 @@ export default async function ConstitutionChapterPage({ params }: Props) {
 
   const titleFor = (n: number | null) => {
     if (n == null) return null;
-    const row = (allChapters || []).find(
-      (c: { chapter: number }) => Number(c.chapter) === n,
-    );
+    const row = chapters.find((c) => Number(c.chapter) === n);
     return {
       chapter: n,
       title: row?.chapterTitle || defaultChapterTitle(n),
