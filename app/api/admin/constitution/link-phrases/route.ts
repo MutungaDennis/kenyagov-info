@@ -83,8 +83,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const doc: Record<string, unknown> = {
-      _type: "constitutionLinkPhrase",
+    // ✅ FIX: Removed `Record<string, unknown>` and added `as const` to `_type`
+    // so TypeScript knows `_type` is explicitly present and is a string literal.
+    const doc = {
+      _type: "constitutionLinkPhrase" as const,
       phrase,
       matchMode: body.matchMode === "exact" ? "exact" : "caseInsensitive",
       internalHref: body.internalHref
@@ -108,11 +110,11 @@ export async function POST(request: NextRequest) {
         ? body.scopeChapters.map(Number).filter(Number.isFinite)
         : undefined,
       enabled: body.enabled !== false,
-      sortOrder:
-        body.sortOrder != null ? Number(body.sortOrder) : 100,
+      sortOrder: body.sortOrder != null ? Number(body.sortOrder) : 100,
     };
 
     if (body.id) {
+      // We can safely destructure `_type` out since patch doesn't need it
       const { _type: _t, ...patch } = doc;
       await sanity.patch(String(body.id)).set(patch).commit();
     } else {
