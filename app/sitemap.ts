@@ -8,8 +8,6 @@ import { sanityClient } from '@/lib/sanity/client';
 import { getAllTopicSlugs } from '@/lib/topics';
 import { getAllNationalEventSlugs } from '@/lib/data/national-events';
 import { getAllAskProfileSlugs } from '@/lib/data/ask-shows';
-import { counties } from '@/data/counties';
-
 /** Rebuild periodically — crawlers must not force heavy Worker work each hit. */
 export const revalidate = 3600;
 

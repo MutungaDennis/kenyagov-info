@@ -3,14 +3,20 @@
 import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import type { Member } from "@/data/national-assembly-members";
+type Member = {
+  id: string;
+  name: string;
+  seat: string;
+  party: string;
+  type: string;
+  slug: string | null;
+};
 
 const ITEMS_PER_PAGE = 50;
 
-// Helper to format "Surname, Firstname" to "Firstname Surname" for better readability
 const formatName = (name: string) => {
-  if (name.includes(',')) {
-    const parts = name.split(',').map(p => p.trim());
+  if (name.includes(",")) {
+    const parts = name.split(",").map((p) => p.trim());
     return `${parts[1]} ${parts[0]}`;
   }
   return name;
@@ -18,11 +24,10 @@ const formatName = (name: string) => {
 
 export default function MembersClient() {
   const searchParams = useSearchParams();
-  
-  // Pre-fill filters from URL parameters (e.g., ?type=Women%20Representative)
-  const initialType = searchParams.get('type') || "";
-  const initialParty = searchParams.get('party') || "";
-  const initialSearch = searchParams.get('q') || "";
+
+  const initialType = searchParams.get("type") || "";
+  const initialParty = searchParams.get("party") || "";
+  const initialSearch = searchParams.get("q") || "";
 
   const [members, setMembers] = useState<Member[] | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -33,12 +38,15 @@ export default function MembersClient() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/data/national-assembly-members.json")
-      .then((r) => {
-        if (!r.ok) throw new Error(`Failed to load members (${r.status})`);
-        return r.json();
+    fetch("/api/legislature/national-assembly/members")
+      .then(async (r) => {
+        const json = await r.json();
+        if (!r.ok || !json.success) {
+          throw new Error(json.error || `Failed to load members (${r.status})`);
+        }
+        return json.data as Member[];
       })
-      .then((data: Member[]) => {
+      .then((data) => {
         if (!cancelled) setMembers(Array.isArray(data) ? data : []);
       })
       .catch((err: Error) => {
@@ -49,24 +57,27 @@ export default function MembersClient() {
     };
   }, []);
 
-  // Sort members alphabetically by formatted name (First Last) for better UX
-  const sortedMembers = useMemo(() => {
+  const parties = useMemo(() => {
     if (!members) return [];
-    return [...members].sort((a, b) => {
-      const nameA = formatName(a.name).toLowerCase();
-      const nameB = formatName(b.name).toLowerCase();
-      return nameA.localeCompare(nameB);
-    });
+    return Array.from(new Set(members.map((m) => m.party).filter(Boolean))).sort(
+      (a, b) => a.localeCompare(b),
+    );
   }, [members]);
 
-  // Filter full array based on user interactions
+  const sortedMembers = useMemo(() => {
+    if (!members) return [];
+    return [...members].sort((a, b) =>
+      formatName(a.name).toLowerCase().localeCompare(formatName(b.name).toLowerCase()),
+    );
+  }, [members]);
+
   const filteredMembers = useMemo(() => {
     return sortedMembers.filter((member) => {
       const formattedName = formatName(member.name);
-      const matchesSearch = 
+      const matchesSearch =
         formattedName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        member.constituency.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        member.party.toLowerCase().includes(searchTerm.toLowerCase());
+        (member.seat || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (member.party || "").toLowerCase().includes(searchTerm.toLowerCase());
 
       const matchesParty = !selectedParty || member.party === selectedParty;
       const matchesType = !selectedType || member.type === selectedType;
@@ -102,10 +113,10 @@ export default function MembersClient() {
     const headers = ["No.", "Name", "Constituency / County", "Political Party", "Representation Type"];
     const rows = filteredMembers.map((member, idx) => [
       (idx + 1).toString(),
-      `"${formatName(member.name).replace(/"/g, '""')}"`, // ✅ Uses formatted name in CSV too
-      `"${member.constituency.replace(/"/g, '""')}"`,
-      `"${member.party.replace(/"/g, '""')}"`,
-      `"${member.type.replace(/"/g, '""')}"`
+      `"${formatName(member.name).replace(/"/g, '""')}"`,
+      `"${(member.seat || "").replace(/"/g, '""')}"`,
+      `"${(member.party || "").replace(/"/g, '""')}"`,
+      `"${(member.type || "").replace(/"/g, '""')}"`,
     ]);
 
     const csvContent = "data:text/csv;charset=utf-8," 
@@ -177,28 +188,11 @@ export default function MembersClient() {
                   onChange={(e) => setSelectedParty(e.target.value)}
                 >
                   <option value="">All Parties</option>
-                  <option value="ANC">ANC - Amani National Congress</option>
-                  <option value="CCM">CCM - Chama Cha Mashinani</option>
-                  <option value="DAP-K">DAP-K - Democratic Action Party</option>
-                  <option value="DP">DP - Democratic Party of Kenya</option>
-                  <option value="FORD-K">FORD-K - Forum for the Restoration of Democracy</option>
-                  <option value="GDDP">GDDP - Grand Dream Development Party</option>
-                  <option value="Independent">Independent</option>
-                  <option value="JP">JP - Jubilee Party</option>
-                  <option value="KANU">KANU - Kenya African National Union</option>
-                  <option value="KUP">KUP - Kenya Union Party</option>
-                  <option value="MCCP">MCCP - Maendeleo Chap Chap Party</option>
-                  <option value="MDG">MDG - Movement for Democracy and Growth</option>
-                  <option value="NAP-K">NAP-K - National Alliance Party</option>
-                  <option value="NOPEU">NOPEU - National Ordinary People Empowerment Union</option>
-                  <option value="ODM">ODM - Orange Democratic Movement</option>
-                  <option value="PAA">PAA - Pamoja African Alliance</option>
-                  <option value="TSP">TSP - The Service Party</option>
-                  <option value="UDA">UDA - United Democratic Alliance</option>
-                  <option value="UDM">UDM - United Democratic Movement</option>
-                  <option value="UPA">UPA - United Progressive Alliance</option>
-                  <option value="UPIA">UPIA - United Party of Independent Alliance</option>
-                  <option value="WDM-K">WDM-K - Wiper Democratic Movement</option>
+                  {parties.map((p) => (
+                    <option key={p} value={p}>
+                      {p}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
@@ -306,14 +300,20 @@ export default function MembersClient() {
                       <tr key={member.id} className="govuk-table__row">
                         <td className="govuk-table__cell govuk-body-s">{fromOffset + index + 1}</td>
                         <th scope="row" className="govuk-table__header govuk-body-s" style={{ fontWeight: 'normal' }}>
-                          <Link 
-                            href={`/government/people/${member.slug}`} 
-                            className="govuk-link govuk-!-font-weight-bold"
-                          >
-                            {formatName(member.name)} {/* ✅ Displays "Firstname Surname" */}
-                          </Link>
+                          {member.slug ? (
+                            <Link
+                              href={`/government/people/${member.slug}`}
+                              className="govuk-link govuk-!-font-weight-bold"
+                            >
+                              {formatName(member.name)}
+                            </Link>
+                          ) : (
+                            <span className="govuk-!-font-weight-bold">
+                              {formatName(member.name)}
+                            </span>
+                          )}
                         </th>
-                        <td className="govuk-table__cell govuk-body-s">{member.constituency}</td>
+                        <td className="govuk-table__cell govuk-body-s">{member.seat}</td>
                         <td className="govuk-table__cell govuk-body-s">
                           <span className="govuk-!-font-weight-bold">{member.party}</span>
                         </td>

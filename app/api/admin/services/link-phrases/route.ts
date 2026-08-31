@@ -54,8 +54,14 @@ export async function POST(request: NextRequest) {
       for (const seed of SEED_SERVICE_LINK_PHRASES) {
         if (have.has(seed.phrase.toLowerCase())) continue;
         await sanity.create({
-          _type: "serviceLinkPhrase",
-          ...seed,
+          _type: "serviceLinkPhrase" as const,
+          phrase: seed.phrase,
+          matchMode: seed.matchMode,
+          internalHref: seed.internalHref,
+          ...(seed.externalHref ? { externalHref: seed.externalHref } : {}),
+          ...(seed.externalLabel ? { externalLabel: seed.externalLabel } : {}),
+          sortOrder: seed.sortOrder,
+          enabled: seed.enabled,
         });
         created++;
       }

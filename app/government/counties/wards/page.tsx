@@ -32,8 +32,9 @@ export default async function WardsPage({
   const toOffset = fromOffset + ITEMS_PER_PAGE - 1;
 
   // Static 47 counties — no DB round-trip for dropdown
-  const { counties: staticCounties } = await import("@/data/counties");
-  const counties = staticCounties.map((c) => ({ name: c.name }));
+  const { fetchCountyNames } = await import("@/lib/legislature/members");
+  const countyNames = await fetchCountyNames();
+  const counties = countyNames.map((name) => ({ name }));
 
   let selectedCounty = county;
   let constituencies: Array<{ name: string; county_code?: string | null }> = [];
@@ -73,9 +74,13 @@ export default async function WardsPage({
 
     // Constituencies only when a county is selected (never all ~290)
     if (selectedCounty) {
-      const staticHit = staticCounties.find((c) => c.name === selectedCounty);
-      const code = staticHit?.code;
-      if (code) {
+      const { data: countyRow } = await supabase
+        .from("counties")
+        .select("code")
+        .eq("name", selectedCounty)
+        .maybeSingle();
+      const code = countyRow?.code;
+      if (code != null) {
         const { data } = await supabase
           .from("constituencies")
           .select("name, county_code")

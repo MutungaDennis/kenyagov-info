@@ -182,7 +182,10 @@ export async function POST(request: NextRequest) {
         portalLabel: String(p.portalLabel || "").trim(),
         portalUrl: String(p.portalUrl || "").trim(),
       }))
-      .filter((p) => p.portalLabel && p.portalUrl);
+      .filter(
+        (p: { portalLabel: string; portalUrl: string }) =>
+          Boolean(p.portalLabel && p.portalUrl),
+      );
 
     if (transactionPortals.length === 0) {
       return NextResponse.json(
@@ -208,7 +211,10 @@ export async function POST(request: NextRequest) {
         shortName: p.shortName ? String(p.shortName).trim() : undefined,
         parentName: p.parentName ? String(p.parentName).trim() : undefined,
       }))
-      .filter((p) => p.institutionId && p.name);
+      .filter(
+        (p: { institutionId: string; name: string }) =>
+          Boolean(p.institutionId && p.name),
+      );
 
     const providingBodyIds: string[] = Array.isArray(payload.providingBodyIds)
       ? payload.providingBodyIds.map(String).filter(Boolean)

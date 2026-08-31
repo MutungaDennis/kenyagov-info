@@ -3,7 +3,7 @@ import { createPublicClient, isPublicSupabaseConfigured } from "@/lib/supabase/p
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import Pagination from "@/components/govuk/Pagination";
 import ParliamentExplainer from "@/components/hansard/ParliamentExplainer";
-import { counties } from "@/data/counties";
+import { fetchCountyNames } from "@/lib/legislature/members";
 
 interface PageProps {
   searchParams: Promise<{
@@ -106,7 +106,7 @@ export default async function FindMembersPage({ searchParams }: PageProps) {
   }
 
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
-  const uniqueCounties = counties.map((c) => c.name).sort((a, b) => a.localeCompare(b));
+  const uniqueCounties = await fetchCountyNames();
 
   const paginationParams: Record<string, string> = {};
   if (filters.q) paginationParams.q = filters.q;

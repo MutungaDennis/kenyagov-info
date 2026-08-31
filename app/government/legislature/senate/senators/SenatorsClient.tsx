@@ -3,14 +3,18 @@
 import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { senateMembers, type Senator } from "@/data/senate-members";
+type Senator = {
+  id: string;
+  name: string;
+  seat: string;
+  party: string;
+  type: string;
+  slug: string | null;
+};
 
-const ITEMS_PER_PAGE = 50;
-
-// Helper to format "Surname, Firstname" to "Firstname Surname" for better readability
 const formatName = (name: string) => {
-  if (name.includes(',')) {
-    const parts = name.split(',').map(p => p.trim());
+  if (name.includes(",")) {
+    const parts = name.split(",").map((p) => p.trim());
     return `${parts[1]} ${parts[0]}`;
   }
   return name;
@@ -18,34 +22,60 @@ const formatName = (name: string) => {
 
 export default function SenatorsClient() {
   const searchParams = useSearchParams();
-  
-  // Pre-fill filters from URL parameters
-  const initialType = searchParams.get('type') || "";
-  const initialParty = searchParams.get('party') || "";
-  const initialSearch = searchParams.get('q') || "";
 
+  const initialType = searchParams.get("type") || "";
+  const initialParty = searchParams.get("party") || "";
+  const initialSearch = searchParams.get("q") || "";
+
+  const [senators, setSenators] = useState<Senator[] | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState(initialSearch);
   const [selectedParty, setSelectedParty] = useState(initialParty);
   const [selectedType, setSelectedType] = useState(initialType);
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Sort senators alphabetically by formatted name (First Last) for better UX
-  const sortedSenators = useMemo(() => {
-    return [...senateMembers].sort((a, b) => {
-      const nameA = formatName(a.name).toLowerCase();
-      const nameB = formatName(b.name).toLowerCase();
-      return nameA.localeCompare(nameB);
-    });
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/legislature/senate/members")
+      .then(async (r) => {
+        const json = await r.json();
+        if (!r.ok || !json.success) {
+          throw new Error(json.error || `Failed to load senators (${r.status})`);
+        }
+        return json.data as Senator[];
+      })
+      .then((data) => {
+        if (!cancelled) setSenators(Array.isArray(data) ? data : []);
+      })
+      .catch((err: Error) => {
+        if (!cancelled) setLoadError(err.message || "Failed to load senators");
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  // Filter full array based on user interactions
+  const parties = useMemo(() => {
+    if (!senators) return [];
+    return Array.from(new Set(senators.map((s) => s.party).filter(Boolean))).sort(
+      (a, b) => a.localeCompare(b),
+    );
+  }, [senators]);
+
+  const sortedSenators = useMemo(() => {
+    if (!senators) return [];
+    return [...senators].sort((a, b) =>
+      formatName(a.name).toLowerCase().localeCompare(formatName(b.name).toLowerCase()),
+    );
+  }, [senators]);
+
   const filteredSenators = useMemo(() => {
     return sortedSenators.filter((sen) => {
       const formattedName = formatName(sen.name);
-      const matchesSearch = 
+      const matchesSearch =
         formattedName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (sen.county || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-        sen.party.toLowerCase().includes(searchTerm.toLowerCase());
+        (sen.seat || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (sen.party || "").toLowerCase().includes(searchTerm.toLowerCase());
 
       const matchesParty = !selectedParty || sen.party === selectedParty;
       const matchesType = !selectedType || sen.type === selectedType;
@@ -54,7 +84,6 @@ export default function SenatorsClient() {
     });
   }, [sortedSenators, searchTerm, selectedParty, selectedType]);
 
-  // Reset page index safely to page 1 whenever search criteria boundaries shift
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, selectedParty, selectedType]);
@@ -68,15 +97,14 @@ export default function SenatorsClient() {
     setSelectedType("");
   };
 
-  // Safe client-side spreadsheet compilation
   const handleExportCSV = () => {
     const headers = ["No.", "Name", "County Delegation", "Political Party", "Representation Type"];
     const rows = filteredSenators.map((sen, idx) => [
       (idx + 1).toString(),
       `"${formatName(sen.name).replace(/"/g, '""')}"`,
-      `"${(sen.county || "National Representation").replace(/"/g, '""')}"`,
-      `"${sen.party.replace(/"/g, '""')}"`,
-      `"${sen.type.replace(/"/g, '""')}"`
+      `"${(sen.seat || "National Representation").replace(/"/g, '""')}"`,
+      `"${(sen.party || "").replace(/"/g, '""')}"`,
+      `"${(sen.type || "").replace(/"/g, '""')}"`,
     ]);
 
     const csvContent = "data:text/csv;charset=utf-8," 
@@ -90,6 +118,22 @@ export default function SenatorsClient() {
     link.click();
     document.body.removeChild(link);
   };
+
+  if (loadError) {
+    return (
+      <main className="govuk-main-wrapper" id="main-content" role="main">
+        <p className="govuk-body">Could not load the senators list. {loadError}</p>
+      </main>
+    );
+  }
+
+  if (!senators) {
+    return (
+      <main className="govuk-main-wrapper" id="main-content" role="main">
+        <p className="govuk-body">Loading senators…</p>
+      </main>
+    );
+  }
 
   return (
     <main className="govuk-main-wrapper" id="main-content" role="main">
@@ -132,18 +176,11 @@ export default function SenatorsClient() {
                   onChange={(e) => setSelectedParty(e.target.value)}
                 >
                   <option value="">All Parties</option>
-                  <option value="ANC">ANC - Amani National Congress</option>
-                  <option value="DAP-K">DAP-K - Democratic Action Party</option>
-                  <option value="DP">DP - Democratic Party</option>
-                  <option value="FORD-K">FORD-K - Forum for the Restoration of Democracy</option>
-                  <option value="Independent">Independent</option>
-                  <option value="JP">JP - Jubilee Party</option>
-                  <option value="KANU">KANU - Kenya African National Union</option>
-                  <option value="NRA">NRA - National Reconstruction Alliance</option>
-                  <option value="ODM">ODM - Orange Democratic Movement</option>
-                  <option value="UDA">UDA - United Democratic Alliance</option>
-                  <option value="UDM">UDM - United Democratic Movement</option>
-                  <option value="WDM-K">WDM-K - Wiper Democratic Movement</option>
+                  {parties.map((p) => (
+                    <option key={p} value={p}>
+                      {p}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
@@ -227,7 +264,7 @@ export default function SenatorsClient() {
 
           {/* Results Live Announcer Counter */}
           <h2 className="govuk-heading-s govuk-!-margin-bottom-3" aria-live="polite">
-            Showing {totalSenators.toLocaleString()} of {senateMembers.length} senators
+            Showing {totalSenators.toLocaleString()} of {senators.length} senators
           </h2>
 
           {filteredSenators.length > 0 ? (
@@ -248,11 +285,15 @@ export default function SenatorsClient() {
                     <tr key={sen.id} className="govuk-table__row">
                       <td className="govuk-table__cell govuk-body-s">{index + 1}</td>
                       <th scope="row" className="govuk-table__header govuk-body-s" style={{ fontWeight: 'normal' }}>
-                        <Link href={`/government/people/${sen.slug}`} className="govuk-link govuk-!-font-weight-bold">
-                          {formatName(sen.name)}
-                        </Link>
+                        {sen.slug ? (
+                          <Link href={`/government/people/${sen.slug}`} className="govuk-link govuk-!-font-weight-bold">
+                            {formatName(sen.name)}
+                          </Link>
+                        ) : (
+                          <span className="govuk-!-font-weight-bold">{formatName(sen.name)}</span>
+                        )}
                       </th>
-                      <td className="govuk-table__cell govuk-body-s">{sen.county || "National Representation"}</td>
+                      <td className="govuk-table__cell govuk-body-s">{sen.seat || "National Representation"}</td>
                       <td className="govuk-table__cell govuk-body-s">
                         <span className="govuk-!-font-weight-bold">{sen.party}</span>
                       </td>

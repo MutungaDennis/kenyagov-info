@@ -36,8 +36,9 @@ export default async function MCAsPage({
   const toOffset = fromOffset + ITEMS_PER_PAGE - 1;
 
   // Static 47 counties for the dropdown (no DB round-trip needed)
-  const { counties: staticCounties } = await import("@/data/counties");
-  const countiesList = staticCounties.map((c) => ({ name: c.name }));
+  const { fetchCountyNames } = await import("@/lib/legislature/members");
+  const countyNames = await fetchCountyNames();
+  const countiesList = countyNames.map((name) => ({ name }));
 
   // Standardized party list for consistent filtering
   const partiesList = [
