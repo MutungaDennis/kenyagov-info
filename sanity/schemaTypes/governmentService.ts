@@ -1,5 +1,6 @@
 // sanity/schemaTypes/governmentService.ts 
 import { defineType, defineField } from 'sanity'
+import { servicePortableText } from './portableTextService'
 
 export default defineType({
   name: 'governmentService',
@@ -33,21 +34,109 @@ export default defineType({
       description: 'A 2-3 sentence introductory lead paragraph explaining what the service achieves and who qualifies.',
       validation: Rule => Rule.required(),
     }),
-
-    // --- ENHANCED GOV.UK FIELD: MULTIPLE PROVIDING AGENCIES ---
     defineField({
-  name: 'providingBodies',
-  title: 'Providing Government Bodies / Departments',
-  type: 'array',
-  description: 'Select the specific State Departments or Umbrella Ministries co-managing this service. Every department you enter under the Ministries tab is reusable here.',
-  of: [
-    {
-      type: 'reference',
-      to: [{ type: 'governmentMinistry' }]
-    }
-  ],
-  validation: Rule => Rule.required().min(1),
-}),
+      name: 'body',
+      title: 'Additional guidance (rich text)',
+      type: 'array',
+      of: servicePortableText,
+      description:
+        'Optional GOV.UK-style guidance paragraphs with linkable phrases (eCitizen, agencies, etc.).',
+    }),
+    defineField({
+      name: 'status',
+      title: 'Publication status',
+      type: 'string',
+      initialValue: 'published',
+      options: {
+        list: [
+          { title: 'Published', value: 'published' },
+          { title: 'Draft', value: 'draft' },
+        ],
+        layout: 'radio',
+      },
+    }),
+    defineField({
+      name: 'reviewedAt',
+      title: 'Last reviewed',
+      type: 'date',
+      description: 'Shown on the public page as “Last reviewed”.',
+    }),
+    defineField({
+      name: 'moreInformationUrl',
+      title: 'More information URL (non-transactional)',
+      type: 'url',
+      description:
+        'Official page for further reading — not the Start now transaction portal.',
+      validation: (Rule) => Rule.uri({ scheme: ['http', 'https'] }),
+    }),
+    defineField({
+      name: 'relatedLinks',
+      title: 'Related links',
+      type: 'array',
+      of: [
+        {
+          type: 'object',
+          name: 'relatedLink',
+          fields: [
+            {
+              name: 'label',
+              title: 'Label',
+              type: 'string',
+              validation: (Rule) => Rule.required(),
+            },
+            {
+              name: 'href',
+              title: 'URL or path',
+              type: 'string',
+              description: 'https://… or /internal-path',
+              validation: (Rule) => Rule.required(),
+            },
+          ],
+          preview: {
+            select: { title: 'label', subtitle: 'href' },
+          },
+        },
+      ],
+    }),
+
+    // --- PROVIDING INSTITUTIONS (Supabase institutions, denormalised) ---
+    defineField({
+      name: 'providingInstitutions',
+      title: 'Providing institutions',
+      type: 'array',
+      description:
+        'Live institutions from the CitizenGuide institutions directory (Supabase). Preferred over legacy Sanity ministries.',
+      of: [
+        {
+          type: 'object',
+          name: 'providingInstitution',
+          fields: [
+            { name: 'institutionId', title: 'Institution ID', type: 'string' },
+            { name: 'name', title: 'Name', type: 'string', validation: (Rule) => Rule.required() },
+            { name: 'slug', title: 'Slug', type: 'string' },
+            { name: 'shortName', title: 'Short name', type: 'string' },
+            { name: 'parentName', title: 'Parent institution name', type: 'string' },
+          ],
+          preview: {
+            select: { title: 'name', subtitle: 'parentName' },
+          },
+        },
+      ],
+    }),
+
+    // --- Legacy Sanity ministries (optional fallback) ---
+    defineField({
+      name: 'providingBodies',
+      title: 'Providing Government Bodies / Departments (legacy)',
+      type: 'array',
+      description: 'Legacy Sanity ministry references. Prefer providing institutions above.',
+      of: [
+        {
+          type: 'reference',
+          to: [{ type: 'governmentMinistry' }]
+        }
+      ],
+    }),
 
     defineField({
       name: 'popularityWeight',

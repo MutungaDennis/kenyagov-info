@@ -1,5 +1,5 @@
 import { Metadata, Viewport } from 'next';
-import Script from 'next/script'; // ✅ 1. IMPORT THE NEXT.JS SCRIPT COMPONENT
+import Script from 'next/script';
 
 import "govuk-frontend/govuk-frontend.min.css";
 import "@/app/globals.css";
@@ -43,13 +43,11 @@ export const metadata: Metadata = {
     'CitizenGuide',
     'civic information',
   ],
-
   alternates: {
     types: {
       'text/plain': [{ url: '/llms.txt', title: 'llms.txt' }],
     },
   },
-
   robots: {
     index: true,
     follow: true,
@@ -61,7 +59,6 @@ export const metadata: Metadata = {
       'max-video-preview': -1,
     },
   },
-
   openGraph: {
     type: 'website',
     locale: 'en_KE',
@@ -70,14 +67,12 @@ export const metadata: Metadata = {
     description: DEFAULT_DESCRIPTION,
     images: [DEFAULT_OG_IMAGE],
   },
-
   twitter: {
     card: 'summary_large_image',
     title: DEFAULT_TITLE,
     description: DEFAULT_DESCRIPTION,
     images: [DEFAULT_OG_IMAGE.url],
   },
-
   icons: {
     icon: [
       { url: '/logo.webp', type: 'image/webp' },
@@ -85,7 +80,6 @@ export const metadata: Metadata = {
     ],
     apple: [{ url: '/logo.webp', type: 'image/webp' }],
   },
-
   other: {
     'ai-content': 'index',
     'og:logo': `${SITE_URL}/logo.webp`,
@@ -103,6 +97,7 @@ export default function RootLayout({
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim() ||
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.trim() ||
     "";
+  
   const publicEnvBootstrap =
     runtimeSupabaseUrl && runtimeSupabaseKey
       ? `window.__CG_PUBLIC_ENV=${JSON.stringify({
@@ -156,43 +151,44 @@ export default function RootLayout({
     <html lang="en-KE" className="govuk-template">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
-        />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
           href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap"
           rel="stylesheet"
         />
-        <script
+        
+        {/* ✅ Use Next.js Script for JSON-LD to avoid hydration issues */}
+        <Script
+          id="website-schema"
           type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify(websiteSchema),
-          }}
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
         />
-        <script
+        <Script
+          id="organization-schema"
           type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify(organizationSchema),
-          }}
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
         />
+
         <link rel="alternate" type="text/plain" href="/llms.txt" title="llms.txt" />
         
-        {/* ✅ 2. REPLACE NATIVE <script> WITH NEXT.JS <Script> COMPONENT */}
-        {publicEnvBootstrap ? (
+        {/* ✅ Environment Bootstrap Script */}
+        {publicEnvBootstrap && (
           <Script
             id="public-env-bootstrap"
             strategy="beforeInteractive"
             dangerouslySetInnerHTML={{ __html: publicEnvBootstrap }}
           />
-        ) : null}
+        )}
 
-        {runtimeSupabaseUrl ? (
+        {runtimeSupabaseUrl && (
           <link rel="preconnect" href={runtimeSupabaseUrl} crossOrigin="anonymous" />
-        ) : null}
+        )}
       </head>
-      <ClientLayoutWrapper>{children}</ClientLayoutWrapper>
+      <body>
+        <ClientLayoutWrapper>{children}</ClientLayoutWrapper>
+      </body>
     </html>
   );
 }

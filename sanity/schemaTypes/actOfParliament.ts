@@ -1,5 +1,6 @@
 // sanity/schemaTypes/actOfParliament.ts
 import {defineType, defineField} from 'sanity'
+import { constitutionPortableText } from './portableTextConstitution'
 
 export default defineType({
   name: 'actOfParliament',
@@ -178,7 +179,9 @@ defineField({
                   name: 'officialText',
                   title: 'Official Legal Text',
                   type: 'array',
-                  of: [{ type: 'block' }]
+                  of: constitutionPortableText,
+                  description:
+                    'Supports clause hierarchy and tables (same as Constitution schedules)',
                 }),
 
                 defineField({
@@ -227,9 +230,9 @@ defineField({
 
         defineField({
           name: 'introText',
-          title: 'Introductory Text',
+          title: 'Introductory Text / tables',
           type: 'array',
-          of: [{ type: 'block' }]
+          of: constitutionPortableText,
         }),
 
         // =========================================
@@ -262,7 +265,7 @@ defineField({
                   name: 'officialText',
                   title: 'Official Legal Text',
                   type: 'array',
-                  of: [{ type: 'block' }]
+                  of: constitutionPortableText,
                 }),
 
                 defineField({

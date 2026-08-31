@@ -6,7 +6,7 @@ import Link from "next/link";
 type County = {
   slug: string;
   name: string;
-  code: number;
+  code: number | null;
   headquarters: string | null;
   region: string | null;
 };
@@ -86,10 +86,10 @@ export default function AllCountiesClient({ initialCounties }: { initialCounties
   const handleExportCSV = () => {
     const headers = ["County Code", "County Name", "County Capital", "Geographic Region"];
     const rows = filteredCounties.map((county) => [
-      county.code.toString().padStart(2, '0'),
+      county.code != null ? county.code.toString().padStart(2, "0") : "",
       `"${county.name.replace(/"/g, '""')}"`,
       `"${(county.headquarters || "").replace(/"/g, '""')}"`,
-      `"${(county.region || "").replace(/"/g, '""')}"`
+      `"${(county.region || "").replace(/"/g, '""')}"`,
     ]);
 
     const csvContent = "data:text/csv;charset=utf-8," 
@@ -111,66 +111,31 @@ export default function AllCountiesClient({ initialCounties }: { initialCounties
 
   return (
     <>
-      <div className="govuk-grid-row">
-        <div className="govuk-grid-column-two-thirds">
-          <h1 className="govuk-heading-xl govuk-!-margin-bottom-4">Counties of Kenya</h1>
-          <p className="govuk-body-l">
-            Profiles, assembly mappings, service channels, and administrative frameworks for all 47 devolved county governments.
-          </p>
-        </div>
-      </div>
-
-      {/* Enhanced Analytics Banner Panel */}
-      <div className="govuk-grid-row govuk-!-margin-bottom-6">
-        <div className="govuk-grid-column-full">
-          <div className="bg-blue-50 p-6 border-l-4 border-blue-800 flex flex-wrap gap-6 justify-between items-center shadow-sm">
-            <div>
-              <h2 className="govuk-heading-s govuk-!-margin-bottom-1 text-blue-900">National Register Framework Summary</h2>
-              <p className="govuk-body-s govuk-!-margin-bottom-0 text-gray-700">
-                Tracking devolved units, regional distributions, and active legislative county-assembly boundaries.
-              </p>
-            </div>
-            <div className="flex gap-6">
-              <div className="text-center">
-                <span className="block govuk-heading-xl font-bold text-blue-800 govuk-!-margin-0">{statisticsBannerData.total}</span>
-                <span className="govuk-body-s text-xs font-semibold text-gray-600 uppercase tracking-wider">Counties Listed</span>
-              </div>
-              <div className="text-center border-l border-blue-200 pl-6">
-                <span className="block govuk-heading-xl font-bold text-blue-800 govuk-!-margin-0">{statisticsBannerData.uniqueRegions}</span>
-                <span className="govuk-body-s text-xs font-semibold text-gray-600 uppercase tracking-wider font-medium">Regions Active</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Filters Grid Layout */}
       <div className="govuk-grid-row govuk-!-margin-bottom-4">
         <div className="govuk-grid-column-one-half govuk-!-margin-bottom-2">
           <div className="govuk-form-group govuk-!-margin-bottom-0">
             <label className="govuk-label govuk-!-font-weight-bold" htmlFor="search">
-              Filter by Keyword
+              Search
             </label>
             <input
               className="govuk-input"
               id="search"
               name="search"
               type="search"
-              placeholder="e.g. Mombasa, Nairobi, Capital..."
+              placeholder="County name or capital…"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <div className="govuk-hint" id="search-hint">Search by county name or capital city</div>
           </div>
         </div>
 
         <div className="govuk-grid-column-one-half govuk-!-margin-bottom-2">
           <div className="govuk-form-group govuk-!-margin-bottom-0">
             <label className="govuk-label govuk-!-font-weight-bold" htmlFor="region">
-              Filter by Region
+              Region
             </label>
-            <select 
-              className="govuk-select govuk-!-width-full" 
+            <select
+              className="govuk-select govuk-!-width-full"
               id="region"
               name="region"
               value={selectedRegion}
@@ -186,60 +151,37 @@ export default function AllCountiesClient({ initialCounties }: { initialCounties
         </div>
       </div>
 
-      {/* Custom Filter Tags Panel Layout */}
       {hasActiveFilters && (
-        <div className="govuk-!-margin-bottom-6 p-4 border-2 border-gray-200 bg-gray-50">
-          <p className="govuk-body-s govuk-!-font-weight-bold govuk-!-margin-bottom-2">Active filters:</p>
-          <div className="flex flex-wrap gap-2 items-center">
-            {searchTerm && (
-              <button 
-                type="button"
-                onClick={() => setSearchTerm("")}
-                className="bg-white border-2 border-blue-700 hover:border-red-600 px-3 py-1 font-semibold text-sm cursor-pointer transition-colors inline-flex items-center gap-2"
-              >
-                Search: &ldquo;{searchTerm}&rdquo; <span className="text-red-600 font-bold">&times;</span>
-              </button>
-            )}
-            {selectedRegion !== "All Regions" && (
-              <button 
-                type="button"
-                onClick={() => setSelectedRegion("All Regions")}
-                className="bg-white border-2 border-blue-700 hover:border-red-600 px-3 py-1 font-semibold text-sm cursor-pointer transition-colors inline-flex items-center gap-2"
-              >
-                Region: {selectedRegion} <span className="text-red-600 font-bold">&times;</span>
-              </button>
-            )}
-            <button 
-              type="button"
-              onClick={clearAllFilters}
-              className="govuk-link govuk-!-font-size-16 ml-2 cursor-pointer bg-transparent border-0 underline p-1 font-medium"
-            >
-              Clear all filters
-            </button>
-          </div>
+        <div className="govuk-!-margin-bottom-4">
+          <button
+            type="button"
+            onClick={clearAllFilters}
+            className="govuk-link govuk-!-font-size-16 cursor-pointer bg-transparent border-0 underline p-0"
+          >
+            Clear filters
+          </button>
         </div>
       )}
 
-      {/* Open Data Download Utility Bar Panel */}
-      <div className="govuk-!-margin-bottom-6 p-4 border border-gray-300 bg-gray-100 flex justify-between items-center flex-wrap gap-3">
-        <span className="govuk-body-s govuk-!-margin-0 text-gray-700">
-          Machine-readable data access framework aligned with national open information disclosure guidelines.
-        </span>
-        <button 
-          type="button" 
+      <div className="govuk-!-margin-bottom-4 flex justify-between items-center flex-wrap gap-2">
+        <p className="govuk-body govuk-!-margin-0" aria-live="polite">
+          Showing <strong>{filteredCounties.length}</strong> of{" "}
+          {initialCounties.length} counties
+          {statisticsBannerData.uniqueRegions
+            ? ` · ${statisticsBannerData.uniqueRegions} regions`
+            : ""}
+        </p>
+        <button
+          type="button"
           onClick={handleExportCSV}
           className="govuk-link govuk-!-font-size-16 govuk-!-font-weight-bold bg-transparent border-0 cursor-pointer underline p-0"
         >
-          Download filtered list as CSV text spreadsheet
+          Download CSV
         </button>
       </div>
 
-      {/* Results Metadata Summary Hook */}
       <div className="govuk-grid-row">
         <div className="govuk-grid-column-full">
-          <h2 className="govuk-heading-m govuk-!-margin-bottom-4" aria-live="polite">
-            Showing {filteredCounties.length} of {initialCounties.length} counties
-          </h2>
 
           {filteredCounties.length > 0 ? (
             <div className="w-full overflow-x-auto scrolling-touch mb-8 border-b-2 border-gray-200 shadow-sm">
@@ -273,12 +215,20 @@ export default function AllCountiesClient({ initialCounties }: { initialCounties
                 </thead>
                 <tbody className="govuk-table__body divide-y divide-gray-200">
                   {filteredCounties.map((county) => (
-                    <tr key={county.code} className="govuk-table__row hover:bg-gray-50 transition-colors">
+                    <tr
+                      key={county.slug}
+                      className="govuk-table__row hover:bg-gray-50 transition-colors"
+                    >
                       <td className="govuk-table__cell govuk-body-s govuk-!-font-weight-bold py-3 px-3 text-gray-600 font-mono">
-                        {county.code.toString().padStart(2, '0')}
+                        {county.code != null
+                          ? county.code.toString().padStart(2, "0")
+                          : "—"}
                       </td>
                       <th scope="row" className="govuk-table__header govuk-body-s py-3 px-2 text-left font-normal">
-                        <Link href={`/government/institutions/${county.slug}`} className="govuk-link govuk-!-font-weight-bold text-blue-700 font-bold hover:text-blue-900 transition-colors">
+                        <Link
+                          href={`/government/institutions/${county.slug}`}
+                          className="govuk-link govuk-!-font-weight-bold"
+                        >
                           {county.name}
                         </Link>
                       </th>
@@ -296,14 +246,10 @@ export default function AllCountiesClient({ initialCounties }: { initialCounties
               </table>
             </div>
           ) : (
-            <div className="govuk-inset-text govuk-!-margin-top-4">
-              <p className="govuk-body mb-0 italic text-gray-600">
-                No county boundaries or capitals match your active keyword filter parameters.
-              </p>
-            </div>
+            <p className="govuk-body">No counties match your search filters.</p>
           )}
         </div>
       </div>
     </>
   );
-} // <-- THIS WAS THE MISSING CLOSING BRACE!
+}

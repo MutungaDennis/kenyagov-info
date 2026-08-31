@@ -45,6 +45,10 @@ const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
+    heading: "Services & guidance",
+    items: [{ segment: "services", label: "Service guides" }],
+  },
+  {
     heading: "Elections data",
     items: [
       {

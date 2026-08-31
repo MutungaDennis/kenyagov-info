@@ -23,25 +23,21 @@ export interface GovernmentCategoryFilter {
   subcategories?: Array<{ title: string; slug: string }>;
 }
 
-const ALL_SERVICES_QUERY = `*[_type == "governmentService"]{
+const ALL_SERVICES_QUERY = `*[_type == "governmentService" && (status != "draft")]{
   _id,
   title,
   summary,
   "slug": slug.current,
   "popularityWeight": coalesce(popularityWeight, 0),
   executionMode,
-  "providingBody": coalesce(providingBody, "Government Agency"),
-  "subcategorySlug": subcategory->slug.current,
+  "providingBody": coalesce(providingInstitutions[0].name, providingBodies[0]->name, "Government Agency"),
   "categorySlug": coalesce(*[_type == "governmentCategory" && references(^._id)].slug.current, [])
 }`;
 
-const ALL_CATEGORIES_QUERY = `*[_type == "governmentCategory" && !defined(parentCategory)]{
+const ALL_CATEGORIES_QUERY = `*[_type == "governmentCategory"]{
   title,
   "slug": slug.current,
-  "subcategories": *[_type == "governmentSubcategory" && references(^._id)]{
-    title,
-    "slug": slug.current
-  }
+  "subcategories": subTopics[]{ "title": heading, "slug": heading }
 }`;
 
 const SITE_URL = "https://www.citizenguide.ke";

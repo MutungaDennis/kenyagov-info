@@ -4,6 +4,7 @@ import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import PrintPageButton from "@/components/govuk/PrintPageButton";
 import ConstitutionPortableText from "@/components/sanity/ConstitutionPortableText";
 import { JsonLd } from "@/components/JsonLd";
+import CivicDisclaimer from "@/components/site/CivicDisclaimer";
 
 import {
   getConstitutionArticle,
@@ -117,10 +118,15 @@ export default async function ConstitutionArticlePage({ params }: Props) {
               Part {articleData.partNumber} — {articleData.partTitle}
             </span>
           )}
-          <h1 className="govuk-heading-l govuk-!-margin-top-1 govuk-!-margin-bottom-2">
+          <h1
+            id={`article-${articleData.articleNumber}`}
+            className="govuk-heading-l govuk-!-margin-top-1 govuk-!-margin-bottom-2"
+          >
             Article {articleData.articleNumber}. {articleData.articleTitle}
           </h1>
         </div>
+
+        <CivicDisclaimer context="This page reproduces constitutional text for civic reference, with optional plain-English help." />
 
         <PrintPageButton />
 

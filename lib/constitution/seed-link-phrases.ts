@@ -103,7 +103,7 @@ export const SEED_LINK_PHRASES: Omit<LinkPhrase, "_id">[] = [
   {
     phrase: "county assembly",
     matchMode: "caseInsensitive",
-    internalHref: "/government/county-assemblies/mcas",
+    internalHref: "/government/counties/county-assemblies/mcas",
     sortOrder: 70,
     enabled: true,
   },

@@ -196,7 +196,8 @@ export async function GET(request: NextRequest) {
       `id, slug, name, short_name, official_name, institution_type, institution_category,
        institution_subtype, institution_nature, government_level, arm_of_government,
        constitutional_status, mtef_sector, is_active, status, description, mandate,
-       headquarters, website_url, current_head, head_title, verification_status, updated_at`,
+       headquarters, website_url, current_head, head_title, verification_status, updated_at,
+       parent_institution_id`,
       { count: "exact" },
     )
     .order("name", { ascending: true })
@@ -210,7 +211,7 @@ export async function GET(request: NextRequest) {
       .from("institutions")
       .select(
         `id, slug, name, short_name, institution_type, institution_category, government_level,
-         arm_of_government, mtef_sector, is_active, status, description`,
+         arm_of_government, mtef_sector, is_active, status, description, parent_institution_id`,
         { count: "exact" },
       )
       .order("name", { ascending: true })

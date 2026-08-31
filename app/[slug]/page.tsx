@@ -10,11 +10,23 @@ interface PageProps {
 }
 
 // ALIGNED GROQ QUERY: Fetches metadata sizes, timestamps, structural portals, and nested ministries
-const SERVICE_QUERY = `*[_type == "governmentService" && slug.current == $slug]{
+const SERVICE_QUERY = `*[_type == "governmentService" && slug.current == $slug && (status != "draft")]{
   title,
   summary,
+  body,
+  status,
+  reviewedAt,
+  moreInformationUrl,
+  relatedLinks[]{ label, href },
   _createdAt,
   _updatedAt,
+  providingInstitutions[]{
+    institutionId,
+    name,
+    slug,
+    shortName,
+    parentName
+  },
   "providingBodies": providingBodies[]->{
     name,
     "slug": slug.current,
@@ -39,7 +51,7 @@ const SERVICE_QUERY = `*[_type == "governmentService" && slug.current == $slug]{
   downloadableResources[]{
     label,
     "fileUrl": fileUpload.asset->url,
-    "fileSize": fileUpload.asset->size, // Fetches raw bytes for dynamic conversion
+    "fileSize": fileUpload.asset->size,
     sourceUrl
   },
   commonMistakes[],
@@ -52,7 +64,7 @@ const SERVICE_QUERY = `*[_type == "governmentService" && slug.current == $slug]{
     portalLabel,
     portalUrl
   },
-  "parentCategory": *[_type == "governmentCategory" && references(^._id)]{
+  "parentCategory": *[_type == "governmentCategory" && references(^._id)][0]{
     title,
     "slug": slug.current
   }

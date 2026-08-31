@@ -4,18 +4,14 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { adminPath } from "@/lib/admin-path";
-import {
-  DEFAULT_VERIFICATION_STATUS,
-  VERIFICATION_FIELD_HINT,
-  VERIFICATION_STATUS_OPTIONS,
-} from "@/lib/verification";
+import { DEFAULT_VERIFICATION_STATUS } from "@/lib/verification";
 
 export default function NewMCAPage() {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [formData, setFormData] = useState<any>({
+  const [formData, setFormData] = useState({
     first_name: "",
     other_names: "",
     surname: "",
@@ -29,7 +25,7 @@ export default function NewMCAPage() {
   });
 
   // Initial term data (every MCA needs at least one term)
-  const [termData, setTermData] = useState<any>({
+  const [termData, setTermData] = useState({
     start_date: "2022-09-08",
     party_id: "",
     ward_id: "",
@@ -69,14 +65,14 @@ export default function NewMCAPage() {
       .replace(/^-|-$/g, "");
     
     if (name.length >= 3) {
-      setFormData((prev: any) => ({ ...prev, slug: name }));
+      setFormData((prev) => ({ ...prev, slug: name }));
     }
   }, [formData.first_name, formData.other_names, formData.surname]);
 
   // Auto-set nomination_category to N/A when seat_type is Elected
   useEffect(() => {
     if (formData.seat_type === "Elected" && formData.nomination_category !== "N/A") {
-      setFormData((prev: any) => ({ ...prev, nomination_category: "N/A" }));
+      setFormData((prev) => ({ ...prev, nomination_category: "N/A" }));
     }
   }, [formData.seat_type]);
 
@@ -86,7 +82,7 @@ export default function NewMCAPage() {
   const isElected = formData.seat_type === "Elected";
   const isNominated = formData.seat_type === "Nominated";
 
-  const sanitizeUUID = (value: any): string | null => {
+  const sanitizeUUID = (value: string): string | null => {
     if (!value || value === "undefined" || value === "" || value === "null") {
       return null;
     }
@@ -133,10 +129,14 @@ export default function NewMCAPage() {
         seat_type: formData.seat_type,
         nomination_category: isElected ? "N/A" : formData.nomination_category,
         county_id: formData.county_id,
+        // Snapshot fields used by directory + DB constraints
+        ward_id: isElected ? sanitizeUUID(termData.ward_id) : null,
+        party_id: sanitizeUUID(termData.party_id),
         status: formData.status,
         slug: formData.slug,
-        assembly_role: "Member of the County Assembly",
+        assembly_role: termData.assembly_role || "Member of the County Assembly",
         term_count: 1,
+        term_start_date: termData.start_date,
       };
 
       const mcaRes = await fetch("/api/admin/mcas", {
@@ -160,7 +160,7 @@ export default function NewMCAPage() {
         party_id: sanitizeUUID(termData.party_id),
         ward_id: isElected ? sanitizeUUID(termData.ward_id) : null,
         votes_garnered: termData.votes_garnered ? Number(termData.votes_garnered) : null,
-        assembly_role: termData.assembly_role,
+        assembly_role: termData.assembly_role || "Member of the County Assembly",
         reason_for_exit: "N/A",
         successor_mca_id: null,
       };
@@ -173,7 +173,14 @@ export default function NewMCAPage() {
 
       if (!termRes.ok) {
         const termJson = await termRes.json();
-        throw new Error(termJson.error || "MCA created but failed to add initial term");
+        console.warn("Term creation warning:", termJson);
+        // MCA exists — send them to edit with a notice rather than a dead-end
+        router.push(
+          adminPath(
+            `mcas/${newMcaId}/edit?termWarning=${encodeURIComponent(termJson.error || "Initial term was not saved — please add it below.")}`,
+          ),
+        );
+        return;
       }
 
       // Step 3: Redirect to edit page
@@ -358,9 +365,7 @@ export default function NewMCAPage() {
                   id="nomination_category"
                   className="govuk-select govuk-!-width-full"
                   value={formData.nomination_category}
-                  onChange={(e) =>
-                    setFormData({ ...formData, nomination_category: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, nomination_category: e.target.value })}
                   disabled={isElected}
                   style={isElected ? { opacity: 0.6, cursor: "not-allowed" } : {}}
                 >
@@ -488,7 +493,7 @@ export default function NewMCAPage() {
                   className="govuk-input"
                   value={termData.assembly_role}
                   onChange={(e) => setTermData({ ...termData, assembly_role: e.target.value })}
-                  placeholder="e.g. Speaker, Majority Leader"
+                  placeholder="e.g. Speaker, Majority Leader, Committee Chairperson"
                 />
               </div>
             </div>

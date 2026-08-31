@@ -2,6 +2,11 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import SpeechTableEditor from "@/components/admin/hansard/SpeechTableEditor";
+import {
+  createEmptyTable,
+  type SpeechTableDraft,
+} from "@/lib/hansard/tables";
 
 type County = { id: string; name: string; slug: string };
 
@@ -55,6 +60,8 @@ export default function LegislationUploadPanel({ counties, onSaved }: Props) {
   const [publicPath, setPublicPath] = useState<string | null>(null);
   /** Last Grok-proposed Plain English summary (admin may use or replace) */
   const [suggestedSummary, setSuggestedSummary] = useState<string | null>(null);
+  /** Hansard-style manual tables (Act schedules / dense data) */
+  const [manualTables, setManualTables] = useState<SpeechTableDraft[]>([]);
 
   const sectionCount = useMemo(() => {
     if (!structured?.parts) return 0;
@@ -161,6 +168,7 @@ export default function LegislationUploadPanel({ counties, onSaved }: Props) {
             yearEnacted: Number(meta.yearEnacted),
           },
           structured,
+          manualTables,
         }),
       });
       const json = await res.json();
@@ -501,6 +509,35 @@ export default function LegislationUploadPanel({ counties, onSaved }: Props) {
               ),
             )}
           </ol>
+
+          <div className="govuk-!-margin-top-6 govuk-!-margin-bottom-6">
+            <SpeechTableEditor
+              tables={manualTables}
+              onChange={setManualTables}
+              title="Manual tables (Act schedules)"
+              hint="Same as Hansard: add columns, edit headers, type cells. Use this when Grok misses tabular schedules."
+              addLabel="+ Add table"
+              defaultColumns={2}
+              defaultRows={4}
+            />
+            {manualTables.length === 0 && (
+              <button
+                type="button"
+                className="govuk-button govuk-button--secondary"
+                onClick={() =>
+                  setManualTables([
+                    {
+                      ...createEmptyTable(2, 4),
+                      headers: ["Column 1", "Column 2"],
+                      caption: "First Schedule",
+                    },
+                  ])
+                }
+              >
+                + Add starter schedule table
+              </button>
+            )}
+          </div>
 
           <button
             type="button"

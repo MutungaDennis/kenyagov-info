@@ -6,6 +6,8 @@ import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import GovUKSummaryList from "@/components/govuk/SummaryList";
 import FromAttribution from "@/components/site/FromAttribution";
+import ServicePortableText from "@/components/sanity/ServicePortableText";
+import CivicDisclaimer from "@/components/site/CivicDisclaimer";
 
 interface MinistryReference {
   name: string;
@@ -20,9 +22,20 @@ interface ServiceClientViewProps {
   service: {
     title: string;
     summary: string;
+    body?: unknown;
+    reviewedAt?: string;
+    moreInformationUrl?: string;
+    relatedLinks?: Array<{ label: string; href: string }>;
     _createdAt: string;
     _updatedAt: string;
-    providingBodies: MinistryReference[];
+    providingInstitutions?: Array<{
+      institutionId?: string;
+      name: string;
+      slug?: string;
+      shortName?: string;
+      parentName?: string;
+    }>;
+    providingBodies?: MinistryReference[];
     processingTime: string;
     baseCostLabel: string;
     executionMode: string;
@@ -52,9 +65,9 @@ interface ServiceClientViewProps {
 
 export default function ServiceClientView({ service }: ServiceClientViewProps) {
   const modeLabels: Record<string, string> = {
-    online: "Online (Digital submission)",
-    hybrid: "Hybrid (Online form and physical attendance required)",
-    manual: "Manual (Physical office submission)",
+    online: "Online only",
+    hybrid: "Online and in person",
+    manual: "In person only",
   };
 
   const [openFaqs, setOpenFaqs] = useState<Record<number, boolean>>({});
@@ -127,10 +140,21 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
   const primaryPortal = service.transactionPortals?.[0];
   const secondaryPortals = service.transactionPortals?.slice(1) ?? [];
 
+  const hasRelated =
+    Boolean(service.relatedServices?.length) ||
+    Boolean(service.relatedLinks?.length) ||
+    Boolean(service.moreInformationUrl);
+
   const contentItems = [
     { href: "#overview", text: "Overview" },
     { href: "#quick-facts", text: "Quick facts" },
+    ...(Array.isArray(service.body) && service.body.length
+      ? [{ href: "#guidance", text: "Guidance" }]
+      : []),
     { href: "#before-you-start", text: "Before you start" },
+    ...(service.timelineGuidancePoints?.length
+      ? [{ href: "#timeline", text: "Timeline" }]
+      : []),
     { href: "#required-documents", text: "Documents you need" },
     ...(service.steps?.length
       ? [{ href: "#step-by-step", text: "Step by step" }]
@@ -141,21 +165,34 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
     ...(service.physicalVisits?.length
       ? [{ href: "#office-visits", text: "Office visits" }]
       : []),
+    ...(service.commonMistakes?.length
+      ? [{ href: "#common-mistakes", text: "Common mistakes" }]
+      : []),
     ...(service.downloadableResources?.length
       ? [{ href: "#downloads", text: "Downloads" }]
       : []),
     ...(service.faqs?.length ? [{ href: "#faqs", text: "Questions" }] : []),
-    ...(service.relatedServices?.length
-      ? [{ href: "#related", text: "Related" }]
-      : []),
+    ...(hasRelated ? [{ href: "#related", text: "Related" }] : []),
   ];
 
   const fromBodies =
-    service.providingBodies?.map((body) => ({
-      name: body.parentMinistry
-        ? `${body.name} (under ${body.parentMinistry.name})`
-        : body.name,
-    })) ?? [];
+    (service.providingInstitutions?.length
+      ? service.providingInstitutions.map((inst) => ({
+          name: inst.parentName
+            ? `${inst.name} (under ${inst.parentName})`
+            : inst.name,
+          href: inst.slug
+            ? `/government/institutions/${inst.slug}`
+            : undefined,
+        }))
+      : service.providingBodies?.map((body) => ({
+          name: body.parentMinistry
+            ? `${body.name} (under ${body.parentMinistry.name})`
+            : body.name,
+          href: body.slug
+            ? `/government/institutions/${body.slug}`
+            : undefined,
+        }))) ?? [];
 
   return (
     <>
@@ -191,20 +228,6 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
               {service.title}
             </h1>
 
-            <FromAttribution
-              bodies={
-                fromBodies.length
-                  ? fromBodies
-                  : [{ name: "Government of Kenya (public information)" }]
-              }
-              published={
-                service._createdAt ? formatDate(service._createdAt) : undefined
-              }
-              updated={
-                service._updatedAt ? formatDate(service._updatedAt) : undefined
-              }
-            />
-
             <p className="govuk-body-l govuk-!-margin-bottom-4">
               {service.summary}
             </p>
@@ -223,63 +246,7 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
                 </Link>
               </strong>
             </div>
-
-            {/* GOV.UK Start now — single primary CTA */}
-            <div className="govuk-!-margin-bottom-6">
-              {primaryPortal?.portalUrl ? (
-                <>
-                  <a
-                    href={primaryPortal.portalUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="govuk-button"
-                    data-module="govuk-button"
-                  >
-                    {primaryPortal.portalLabel || "Start on official website"}
-                    <span className="govuk-visually-hidden">
-                      {" "}
-                      (opens in a new tab)
-                    </span>
-                  </a>
-                  <p className="govuk-body-s govuk-!-margin-top-2">
-                    You will leave CitizenGuide.KE to complete the application
-                    on an official system.
-                  </p>
-                </>
-              ) : (
-                <p className="govuk-body">
-                  No direct application link is listed yet. Try{" "}
-                  <Link href="/ecitizen" className="govuk-link">
-                    eCitizen
-                  </Link>{" "}
-                  or{" "}
-                  <Link href="/contact-government" className="govuk-link">
-                    contact government
-                  </Link>
-                  .
-                </p>
-              )}
-              {secondaryPortals.length > 0 && (
-                <ul className="govuk-list govuk-list--bullet govuk-!-margin-top-3">
-                  {secondaryPortals.map((portal, pIdx) => (
-                    <li key={pIdx}>
-                      <a
-                        href={portal.portalUrl}
-                        className="govuk-link"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        {portal.portalLabel || "Related official website"}
-                        <span className="govuk-visually-hidden">
-                          {" "}
-                          (opens in a new tab)
-                        </span>
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
+            <CivicDisclaimer />
           </div>
 
           <section
@@ -317,6 +284,78 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
             </p>
           </section>
 
+          {/* GOV.UK Start now — single primary CTA (external) */}
+          <div className="govuk-!-margin-bottom-6">
+            {primaryPortal?.portalUrl ? (
+              <>
+                <a
+                  href={primaryPortal.portalUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="govuk-button"
+                  data-module="govuk-button"
+                >
+                  {primaryPortal.portalLabel || "Start on official website"}
+                  <span aria-hidden="true"> ↗</span>
+                  <span className="govuk-visually-hidden">
+                    {" "}
+                    (opens in a new tab)
+                  </span>
+                </a>
+                <p className="govuk-body-s govuk-!-margin-top-2">
+                  You will leave CitizenGuide.KE to complete the application on
+                  an official system.
+                </p>
+              </>
+            ) : (
+              <p className="govuk-body">
+                No direct application link is listed yet. Try{" "}
+                <Link href="/ecitizen" className="govuk-link">
+                  eCitizen
+                </Link>{" "}
+                or{" "}
+                <Link href="/contact-government" className="govuk-link">
+                  contact government
+                </Link>
+                .
+              </p>
+            )}
+            {secondaryPortals.length > 0 && (
+              <ul className="govuk-list govuk-list--bullet govuk-!-margin-top-3">
+                {secondaryPortals.map((portal, pIdx) => (
+                  <li key={pIdx}>
+                    <a
+                      href={portal.portalUrl}
+                      className="govuk-link"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {portal.portalLabel || "Related official website"}
+                      <span aria-hidden="true"> ↗</span>
+                      <span className="govuk-visually-hidden">
+                        {" "}
+                        (opens in a new tab)
+                      </span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {Array.isArray(service.body) && service.body.length > 0 ? (
+            <section
+              id="guidance"
+              aria-labelledby="guidance-heading"
+              className="govuk-!-margin-bottom-6"
+            >
+              <h2 id="guidance-heading" className="govuk-heading-m">
+                Guidance
+              </h2>
+              <ServicePortableText value={service.body} />
+            </section>
+          ) : null}
+
           <section
             id="before-you-start"
             aria-labelledby="before-you-start-heading"
@@ -331,6 +370,26 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
               ))}
             </ul>
           </section>
+
+          {service.timelineGuidancePoints &&
+            service.timelineGuidancePoints.length > 0 && (
+              <section
+                id="timeline"
+                aria-labelledby="timeline-heading"
+                className="govuk-!-margin-bottom-6"
+              >
+                <h2 id="timeline-heading" className="govuk-heading-m">
+                  Timeline
+                </h2>
+                <div className="govuk-inset-text">
+                  <ul className="govuk-list govuk-list--bullet govuk-!-margin-bottom-0">
+                    {service.timelineGuidancePoints.map((point, idx) => (
+                      <li key={idx}>{point}</li>
+                    ))}
+                  </ul>
+                </div>
+              </section>
+            )}
 
           <section
             id="required-documents"
@@ -437,6 +496,33 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
             </section>
           )}
 
+          {service.commonMistakes && service.commonMistakes.length > 0 && (
+            <section
+              id="common-mistakes"
+              aria-labelledby="common-mistakes-heading"
+              className="govuk-!-margin-bottom-6"
+            >
+              <h2 id="common-mistakes-heading" className="govuk-heading-m">
+                Common mistakes
+              </h2>
+              <dl className="govuk-summary-list">
+                {service.commonMistakes.map((mistake, idx) => (
+                  <div
+                    key={idx}
+                    className="govuk-summary-list__row"
+                  >
+                    <dt className="govuk-summary-list__key">
+                      {mistake.errorTitle}
+                    </dt>
+                    <dd className="govuk-summary-list__value">
+                      {mistake.errorFix || "—"}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </section>
+          )}
+
           {service.downloadableResources &&
             service.downloadableResources.length > 0 && (
               <section
@@ -448,29 +534,32 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
                   Downloads
                 </h2>
                 <ul className="govuk-list govuk-list--bullet">
-                  {service.downloadableResources.map((res, idx) => (
-                    <li key={idx}>
-                      {res.fileUrl ? (
-                        <a
-                          href={res.fileUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="govuk-link"
-                        >
-                          {res.label}
-                          {res.fileSize
-                            ? ` (${formatBytes(res.fileSize)})`
-                            : ""}
-                          <span className="govuk-visually-hidden">
-                            {" "}
-                            (opens in a new tab)
-                          </span>
-                        </a>
-                      ) : (
-                        res.label
-                      )}
-                    </li>
-                  ))}
+                  {service.downloadableResources.map((res, idx) => {
+                    const href = res.fileUrl || res.sourceUrl || "";
+                    return (
+                      <li key={idx}>
+                        {href ? (
+                          <a
+                            href={href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="govuk-link"
+                          >
+                            {res.label}
+                            {res.fileSize
+                              ? ` (${formatBytes(res.fileSize)})`
+                              : ""}
+                            <span className="govuk-visually-hidden">
+                              {" "}
+                              (opens in a new tab)
+                            </span>
+                          </a>
+                        ) : (
+                          res.label
+                        )}
+                      </li>
+                    );
+                  })}
                 </ul>
               </section>
             )}
@@ -520,6 +609,51 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
               Explore the topic
             </h2>
             <ul className="govuk-list govuk-list--bullet">
+              {service.moreInformationUrl ? (
+                <li>
+                  <a
+                    href={service.moreInformationUrl}
+                    className="govuk-link"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    More information on the official website
+                    <span className="govuk-visually-hidden">
+                      {" "}
+                      (opens in a new tab)
+                    </span>
+                  </a>
+                </li>
+              ) : null}
+              {service.relatedLinks?.map((link, idx) => (
+                <li key={`rl-${idx}`}>
+                  {link.href.startsWith("/") ? (
+                    <Link href={link.href} className="govuk-link">
+                      {link.label}
+                    </Link>
+                  ) : (
+                    <a
+                      href={link.href}
+                      className="govuk-link"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {link.label}
+                      <span className="govuk-visually-hidden">
+                        {" "}
+                        (opens in a new tab)
+                      </span>
+                    </a>
+                  )}
+                </li>
+              ))}
+              {service.relatedServices?.map((rel) => (
+                <li key={rel.slug}>
+                  <Link href={`/${rel.slug}`} className="govuk-link">
+                    {rel.title}
+                  </Link>
+                </li>
+              ))}
               {service.parentCategory && (
                 <li>
                   <Link
@@ -530,11 +664,6 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
                   </Link>
                 </li>
               )}
-              <li>
-                <Link href="/topics" className="govuk-link">
-                  Browse all topics
-                </Link>
-              </li>
               <li>
                 <Link href="/services/popular" className="govuk-link">
                   Popular services
@@ -567,8 +696,29 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
             )}
           </section>
 
+          <div className="govuk-!-margin-top-8 govuk-!-margin-bottom-4">
+            <FromAttribution
+              bodies={
+                fromBodies.length
+                  ? fromBodies
+                  : [{ name: "Government of Kenya (public information)" }]
+              }
+              published={
+                service._createdAt ? formatDate(service._createdAt) : undefined
+              }
+              updated={
+                service._updatedAt ? formatDate(service._updatedAt) : undefined
+              }
+            />
+            {service.reviewedAt ? (
+              <p className="govuk-body-s govuk-!-margin-top-1 govuk-!-margin-bottom-0">
+                Last reviewed {formatDate(service.reviewedAt)}
+              </p>
+            ) : null}
+          </div>
+
           {primaryPortal?.portalUrl && (
-            <div className="govuk-!-margin-top-6">
+            <div className="govuk-!-margin-top-4">
               <a
                 href={primaryPortal.portalUrl}
                 target="_blank"
@@ -576,6 +726,7 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
                 className="govuk-button"
               >
                 {primaryPortal.portalLabel || "Start on official website"}
+                <span aria-hidden="true"> ↗</span>
                 <span className="govuk-visually-hidden">
                   {" "}
                   (opens in a new tab)

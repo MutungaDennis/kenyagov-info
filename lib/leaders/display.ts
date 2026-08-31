@@ -427,7 +427,7 @@ export function relatedLinksForLeader(opts: {
   if (/\bgovernor\b/.test(t) && county) {
     links.push({
       label: `${county} County`,
-      href: `/government/counties/${slugifyPath(county)}`,
+      href: `/government/institutions/${slugifyPath(county)}`,
     });
   }
 

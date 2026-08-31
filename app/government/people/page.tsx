@@ -37,6 +37,7 @@ type Leader = {
   national_honours?: unknown;
   category: string | null;
   bio: string | null;
+  image_url?: string | null;
   current_organization: string | null;
   current_constituency: string | null;
   current_county: string | null;
@@ -107,7 +108,9 @@ export default function GovernmentPeoplePage() {
     <Suspense
       fallback={
         <div className="govuk-width-container">
-          <p className="govuk-body">Loading directory...</p>
+          <main className="govuk-main-wrapper">
+            <p className="govuk-body">Loading directory...</p>
+          </main>
         </div>
       }
     >
@@ -132,7 +135,6 @@ function PeopleDirectoryContent() {
   const itemsPerPage = 20;
   const currentPage = Number(searchParams.get("page")) || 1;
 
-  // ✅ Helper to clear the page parameter from the URL when filters change
   const clearPageParam = () => {
     if (searchParams.has("page")) {
       const params = new URLSearchParams(searchParams.toString());
@@ -165,7 +167,7 @@ function PeopleDirectoryContent() {
       try {
         const supabase = await createBrowserClientAsync();
 
-        // 1. Fetch Leaders
+        // 1. Fetch Active Leaders from Database
         const { data: leadersData, error: leadersError } = await supabase
           .from("leaders")
           .select(
@@ -182,7 +184,7 @@ function PeopleDirectoryContent() {
           .eq("is_active", true)
           .order("surname", { ascending: true });
 
-        // 2. Fetch published MCAs only
+        // 2. Fetch Published MCAs from Database
         const { data: mcasData, error: mcasError } = await supabase
           .from("mcas")
           .select(`
@@ -192,13 +194,14 @@ function PeopleDirectoryContent() {
             wards (name),
             political_parties (name, abbreviation)
           `)
-          .neq("status", "Unpublished")
+          .eq("status", "Active") // Only fetch active MCAs for the main directory
           .order("surname", { ascending: true });
 
         if (leadersError) throw leadersError;
         if (mcasError) throw mcasError;
 
         if (!cancelled) {
+          // Map MCAs to match the Leader shape for unified rendering
           const mappedMCAs: Leader[] = (mcasData || []).map((mca: any) => {
             const rawCountyName = mca.counties?.name || "";
             const cleanCountyName = rawCountyName.replace(/\s+County$/i, "").trim();
@@ -206,7 +209,7 @@ function PeopleDirectoryContent() {
             const wardName = mca.wards?.name || (mca.seat_type === 'Nominated' ? 'County-wide' : "");
             const partyName = mca.political_parties?.abbreviation || mca.political_parties?.name || "Independent";
             const roleTitle = mca.assembly_role || "Member of County Assembly";
-            const orgName = cleanCountyName ? `${cleanCountyName} County Assembly` : null;
+            const orgName = cleanCountyName ? `${cleanCountyName} County Assembly` : "County Assembly";
 
             return {
               id: mca.id,
@@ -214,12 +217,13 @@ function PeopleDirectoryContent() {
               first_name: mca.first_name,
               other_names: mca.other_names || null,
               surname: mca.surname,
-              full_name: `${mca.first_name} ${mca.surname}`.trim(),
+              full_name: mca.full_name || `${mca.first_name} ${mca.other_names || ""} ${mca.surname}`.replace(/\s+/g, " ").trim(),
               title: roleTitle,
               name_titles: null,
               national_honours: null,
               category: "Member of County Assembly",
               bio: mca.bio || null,
+              image_url: mca.image_url || null,
               current_organization: orgName,
               current_constituency: wardName || null,
               current_county: rawCountyName || null,
@@ -238,19 +242,22 @@ function PeopleDirectoryContent() {
             };
           });
 
+          // Combine and deduplicate by ID
           const combined = [...(leadersData || []), ...mappedMCAs] as Leader[];
           const seen = new Set<string>();
           const unique: Leader[] = [];
+          
           for (const person of combined) {
             if (!person?.id || seen.has(person.id)) continue;
             seen.add(person.id);
             unique.push(person);
           }
+          
           setAllLeaders(unique);
         }
       } catch (err: unknown) {
         console.error("Error fetching people:", err);
-        if (!cancelled) setError("Failed to load government officials.");
+        if (!cancelled) setError("Failed to load government officials. Please try again later.");
       } finally {
         if (!cancelled) setIsLoading(false);
       }
@@ -495,7 +502,7 @@ function PeopleDirectoryContent() {
                   value={searchTerm}
                   onChange={(e) => {
                     setSearchTerm(e.target.value);
-                    clearPageParam(); // ✅ Reset page when searching
+                    clearPageParam();
                   }}
                 />
               </div>
@@ -513,7 +520,7 @@ function PeopleDirectoryContent() {
                   value={selectedDepartment}
                   onChange={(e) => {
                     setSelectedDepartment(e.target.value);
-                    clearPageParam(); // ✅ Reset page when filtering
+                    clearPageParam();
                   }}
                 >
                   {departments.map((dept) => (
@@ -534,7 +541,7 @@ function PeopleDirectoryContent() {
                   value={sortOrder}
                   onChange={(e) => {
                     setSortOrder(e.target.value as "az" | "za" | "newest" | "oldest");
-                    clearPageParam(); // ✅ Reset page when sorting
+                    clearPageParam();
                   }}
                 >
                   <option value="az">A to Z</option>

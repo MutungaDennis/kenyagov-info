@@ -63,6 +63,11 @@ type ChildInstitution = {
   name: string;
 };
 
+type CountyFact = {
+  statistic: string | null;
+  tip: string | null;
+};
+
 // GOV.UK Style Topic Link Component
 function TopicLink({ href, title, description }: { href: string; title: string; description: string }) {
   return (
@@ -88,6 +93,7 @@ export default function InstitutionAboutPage() {
   const [predecessor, setPredecessor] = useState<LinkedInstitution | null>(null);
   const [successors, setSuccessors] = useState<LinkedInstitution[]>([]);
   const [childInstitutions, setChildInstitutions] = useState<ChildInstitution[]>([]);
+  const [countyFact, setCountyFact] = useState<CountyFact>({ statistic: null, tip: null });
   
   const [isLoading, setIsLoading] = useState(true);
 
@@ -110,6 +116,32 @@ export default function InstitutionAboutPage() {
 
         if (!data) return;
         setInstitution(data as Institution);
+
+        const nameLower = (data.name || "").toLowerCase();
+        const isCountyAssembly =
+          nameLower.includes("county assembly") ||
+          (data.institution_type || "").toLowerCase().includes("county assembly");
+        const isCounty =
+          !isCountyAssembly &&
+          (data.institution_type === "County Government" ||
+            data.institution_category?.toLowerCase().includes("county") ||
+            (nameLower.includes("county") && !nameLower.includes("assembly")));
+
+        // Fetch county fact dynamically if it's a county
+        if (isCounty) {
+          const { data: countyData } = await supabase
+            .from("counties")
+            .select("statistic, tip")
+            .eq("name", data.name)
+            .maybeSingle();
+          
+          if (countyData) {
+            setCountyFact({
+              statistic: countyData.statistic,
+              tip: countyData.tip
+            });
+          }
+        }
 
         // Build parent chain
         const chain: LinkedInstitution[] = [];
@@ -163,7 +195,21 @@ export default function InstitutionAboutPage() {
   if (isLoading) return <div className="govuk-width-container"><main className="govuk-main-wrapper"><p className="govuk-body">Loading...</p></main></div>;
   if (!institution) return <div className="govuk-width-container"><main className="govuk-main-wrapper"><h1 className="govuk-heading-xl">Page not found</h1></main></div>;
 
-  const isCounty = institution.institution_category?.toLowerCase().includes("county") || institution.name.toLowerCase().includes("county");
+  const nameLower = (institution.name || "").toLowerCase();
+  const isCountyAssembly =
+    nameLower.includes("county assembly") ||
+    (institution.institution_type || "").toLowerCase().includes("county assembly");
+  const isCounty =
+    !isCountyAssembly &&
+    (institution.institution_type === "County Government" ||
+      institution.institution_category?.toLowerCase().includes("county") ||
+      (nameLower.includes("county") && !nameLower.includes("assembly")));
+
+  const defaultStatistic = `${institution.name} is one of Kenya's devolved units, established under the Constitution of Kenya 2010 to bring services closer to the people and drive localized socio-economic development.`;
+  const defaultTip = "Explore the county's unique cultural heritage, natural resources, and economic opportunities.";
+
+  const displayStatistic = countyFact.statistic || defaultStatistic;
+  const displayTip = countyFact.tip || defaultTip;
 
   return (
     <div className="govuk-width-container">
@@ -193,8 +239,11 @@ export default function InstitutionAboutPage() {
                 </p>
 
                 <div className="govuk-inset-text govuk-!-margin-bottom-8">
+                  <p className="govuk-body govuk-!-margin-bottom-2">
+                    <strong>Statistic:</strong> {displayStatistic}
+                  </p>
                   <p className="govuk-body govuk-!-margin-bottom-0">
-                    <strong>Did you know?</strong> {institution.name} is one of Kenya's devolved units, established under the Constitution of Kenya 2010 to bring services closer to the people and drive localized socio-economic development.
+                    <strong>Tip:</strong> {displayTip}
                   </p>
                 </div>
 

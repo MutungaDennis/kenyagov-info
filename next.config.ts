@@ -770,6 +770,25 @@ const nextConfig: NextConfig = {
         destination: '/constitution',
         permanent: true,
       },
+
+      // Counties directory moved off /all
+      {
+        source: '/government/counties/all',
+        destination: '/government/counties',
+        permanent: true,
+      },
+
+      // County Assemblies moved under /government/counties
+      {
+        source: '/government/county-assemblies',
+        destination: '/government/counties/county-assemblies',
+        permanent: true,
+      },
+      {
+        source: '/government/county-assemblies/:path*',
+        destination: '/government/counties/county-assemblies/:path*',
+        permanent: true,
+      },
     ];
   },
 };

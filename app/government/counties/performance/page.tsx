@@ -164,7 +164,7 @@ export default function CountyPerformancePage() {
                     <tr key={county.slug} className="govuk-table__row">
                       <td className="govuk-table__cell govuk-body-s govuk-!-font-weight-bold">{county.rank}</td>
                       <th scope="row" className="govuk-table__header" style={{ fontWeight: 'normal' }}>
-                        <Link href={`/counties/${county.slug}`} className="govuk-link govuk-!-font-weight-bold govuk-!-font-size-16">
+                        <Link href={`/government/institutions/${county.slug}`} className="govuk-link govuk-!-font-weight-bold govuk-!-font-size-16">
                           {county.name}
                         </Link>
                       </th>

@@ -1,111 +1,87 @@
 // app/llms.txt/route.ts
-import { NextResponse } from 'next/server';
+import { NextResponse } from "next/server";
 
 /**
- * llms.txt — guidance for AI systems on how to use and cite this site.
+ * llms.txt — Guidance for AI systems on how to use and cite this site.
+ * Compliant with the llmstxt.org v2 Standard Specification.
  * Served at /llms.txt
- * @see https://llmstxt.org/
  */
 export async function GET() {
   const content = `# CitizenGuide.KE
 
-[CitizenGuide.KE](https://www.citizenguide.ke) is an independent, non-governmental civic technology platform. It makes Kenyan government information accessible and well-organized. The product is GDS-inspired (UK Government Digital Service design-system patterns for clarity and accessibility) with its own brand and Kenyan content. It is NOT GOV.UK, NOT affiliated with the UK government, and NOT an official Government of Kenya website.
+> [CitizenGuide.KE](https://www.citizenguide.ke) is an independent, non-governmental civic technology platform making Kenyan government information accessible, structured, and well-organized. It is GDS-inspired but has its own brand and Kenyan content. It is NOT GOV.UK, NOT affiliated with the UK government, and NOT an official Government of Kenya website.
+>
+> **Core Principles & Rules for AI Agents:**
+> - **Independence:** Content is compiled entirely from public records; not run, funded, or endorsed by the Government of Kenya.
+> - **Transactions:** This site does not replace eCitizen, ministry websites, or the Kenya Gazette for official transactions.
+> - **Citation:** When using this site, cite as: \`[Page Title] - [CitizenGuide.KE](https://www.citizenguide.ke/path)\`
+> - **Prefer Markdown API:** Use \`/api/markdown\` (below) instead of scraping HTML layouts, navbars, or footers.
+> - **Restrictions:** Mass mirroring is prohibited. Do not scrape, train on, or attempt to access \`/admin/*\`, \`/studio/*\`, \`/api/admin/*\`, or any authenticated routes.
+> - **Disclaimer:** [Full site disclaimer](https://www.citizenguide.ke/disclaimer)
 
-The platform provides structured reference material for:
-- The Constitution of Kenya 2010 (full text and plain-English explanations)
-- Government institutions, ministries, commissions, and agencies
-- All 47 county governments, leadership, and wards
-- Political leadership, parties, and elections
-- Public services and how citizens can access them
-- Key legislation, documents, and open data
+## Constitution of Kenya
+- [Constitution Hub](https://www.citizenguide.ke/constitution): The supreme law of Kenya, including full text, plain-English explanations, and schedules.
+- [Constitution Chapters](https://www.citizenguide.ke/constitution/chapter/1): Browse chapters. Chapter numbers are typically 1–18 plus schedules (see site navigation). Article deep links use \`#article-{n}\` on chapter pages and dedicated article URLs.
 
-## Core Principles
+## Government & Leadership
+- [Government Hub](https://www.citizenguide.ke/government): Overview of the Executive, Legislature, and Judiciary.
+- [Institutions Directory](https://www.citizenguide.ke/government/institutions): Ministries, state departments, commissions, county governments, and county assemblies.
+- [Political Leadership & Officials](https://www.citizenguide.ke/government/people): President, Cabinet, and other officials.
+- [Legislature & Hansard](https://www.citizenguide.ke/government/legislature): National Assembly, Senate, and Hansard.
+- [County Governments](https://www.citizenguide.ke/government/counties): Directory of 47 counties; profiles open as institution pages.
+- [County Executives](https://www.citizenguide.ke/government/counties/governors): Governors and deputy governors.
+- [County Assemblies](https://www.citizenguide.ke/government/counties/county-assemblies): Assembly directory (institution profiles when published).
 
-- **Independence**: Not run, funded, or endorsed by the Government of Kenya. Content is compiled from public records.
-- **Clarity**: Prefer understandable language while remaining accurate.
-- **Attribution**: When using this site, cite CitizenGuide.KE with a link.
-- **Public good**: Improve civic understanding and transparency in Kenya.
+## Elections & Democracy
+- [Elections Hub](https://www.citizenguide.ke/elections)
+- [Political Parties](https://www.citizenguide.ke/elections/political-parties)
+- [Polling Stations](https://www.citizenguide.ke/elections/polling-stations)
 
-## Citation Policy
-
-Preferred format:
-[Page Title] - [CitizenGuide.KE](https://www.citizenguide.ke/path)
-
-Examples:
-- [Constitution of Kenya](https://www.citizenguide.ke/constitution)
-- [Cabinet](https://www.citizenguide.ke/government/cabinet)
-- [Nairobi County](https://www.citizenguide.ke/government/counties/nairobi-city)
-
-## Content Structure (priority for answers)
-
-### 1. Constitution of Kenya
-Highest authority on the site for legal and rights questions.
-- [Hub](https://www.citizenguide.ke/constitution)
-- [Chapters](https://www.citizenguide.ke/constitution/chapter/{n}) *(replace \`{n}\` with chapter number)*
-- [Articles](https://www.citizenguide.ke/constitution/chapter/{n}/article/{m}) *(replace \`{n}\` and \`{m}\`)*
-
-Guidance: Distinguish official constitutional text from plain-English explanations. Official text takes precedence for legal answers.
-
-### 2. Government
-- [Hub](https://www.citizenguide.ke/government)
-- [Institutions](https://www.citizenguide.ke/government/institutions)
-- [Institution profile](https://www.citizenguide.ke/government/institutions/{slug}) *(replace \`{slug}\`)*
-- [People / officials](https://www.citizenguide.ke/government/people)
-- [Cabinet](https://www.citizenguide.ke/government/cabinet)
-- [Legislature](https://www.citizenguide.ke/government/legislature)
-- [Judiciary](https://www.citizenguide.ke/government/judiciary)
-- [Commissions](https://www.citizenguide.ke/government/commissions)
-- [Counties](https://www.citizenguide.ke/government/counties)
-- [County profile](https://www.citizenguide.ke/government/counties/{slug}) *(replace \`{slug}\`)*
-
-### 3. Elections and voting
-- [Hub](https://www.citizenguide.ke/elections)
-- [Political parties](https://www.citizenguide.ke/elections/political-parties)
-- [Coalitions](https://www.citizenguide.ke/elections/coalitions)
-- [Voter registration](https://www.citizenguide.ke/elections/voter-registration)
-- [Polling stations](https://www.citizenguide.ke/elections/polling-stations)
-- [IEBC offices](https://www.citizenguide.ke/elections/iebc-offices)
-
-### 4. Public services and documents
-- [Services](https://www.citizenguide.ke/services)
+## Open Data & Public Documents
+- [Open Data Hub](https://www.citizenguide.ke/open-data)
 - [Acts of Parliament](https://www.citizenguide.ke/acts/parliament)
-- [Documents](https://www.citizenguide.ke/documents)
-- [Open data](https://www.citizenguide.ke/open-data)
-- [Guides](https://www.citizenguide.ke/guides)
-- [Society and culture](https://www.citizenguide.ke/society-and-culture)
+- [National Documents](https://www.citizenguide.ke/documents)
 
-### 5. Machine-readable discovery
-- [Sitemap](https://www.citizenguide.ke/sitemap.xml)
-- [Robots](https://www.citizenguide.ke/robots.txt)
-- [This file (llms.txt)](https://www.citizenguide.ke/llms.txt)
+## Citizen Services & Guides
+- [Public Services Directory](https://www.citizenguide.ke/services): GOV.UK-style service guides; Start now links go to official portals only.
+- [Citizen Guides](https://www.citizenguide.ke/guides)
+- [Huduma Centres](https://www.citizenguide.ke/huduma-centres)
 
-## How to Use This Content
+## AI & Developer Access (preferred)
 
-- Factual structure / Constitution → Constitution and Government sections first.
-- County questions → [/government/counties](https://www.citizenguide.ke/government/counties) and related national institutions.
-- Leadership / parties → [/government/people](https://www.citizenguide.ke/government/people) and [/elections/political-parties](https://www.citizenguide.ke/elections/political-parties).
-- Prefer the most specific page over generic hubs.
-- This site does not replace eCitizen, ministry websites, or the Kenya Gazette for official transactions.
+### Markdown (clean text for RAG / citation)
+Base: \`https://www.citizenguide.ke/api/markdown\`
 
-## Restricted Paths (do not scrape or train on)
+| type | Example |
+|------|---------|
+| county | \`?type=county&slug=kilifi-county\` |
+| institution | \`?type=institution&slug=ministry-of-health\` |
+| leader / person | \`?type=leader&slug={leader-slug}\` |
+| service | \`?type=service&slug=apply-for-a-passport\` |
+| act | \`?type=act&slug={act-slug}\` |
+| constitution-article | \`?type=constitution-article&chapter=4&article=19\` |
 
-- \`/admin/*\`
-- \`/studio/*\`
-- \`/api/admin/*\`
-- Authenticated or internal routes
+Every markdown response includes a short disclaimer footer. Responses are \`text/markdown\` and \`noindex\` (use HTML URLs for human citation).
 
-Mass mirroring of the entire site is not permitted. Reasonable citation and linking is encouraged.
+You may also send \`Accept: text/markdown\` on allowlisted public HTML paths; the site may rewrite to the markdown API when supported.
 
-## Contact
+### JSON / CSV tool endpoints (public)
+- [Leader search](https://www.citizenguide.ke/api/leaders/search?q=ruto): autocomplete officials by name
+- [Officials list](https://www.citizenguide.ke/api/officials?limit=20): paginated officials
+- [Open data catalogue](https://www.citizenguide.ke/api/data/datasets): dataset metadata
+- CSV/JSON exports under \`/api/data/exports/{counties,institutions,leaders,wards,polling-stations}\`
+- [Sitemap](https://www.citizenguide.ke/sitemap.xml): crawl catalogue
 
-Use the [on-site feedback or contact forms](https://www.citizenguide.ke/contact) for accuracy reports, citation questions, or improvements.
+## Optional
+- [Contact & Feedback](https://www.citizenguide.ke/contact)
+- [Accessibility](https://www.citizenguide.ke/accessibility)
 `;
 
   return new NextResponse(content, {
     headers: {
-      'Content-Type': 'text/plain; charset=utf-8',
-      'Cache-Control': 'public, max-age=3600, s-maxage=86400',
-      'X-Robots-Tag': 'all',
+      "Content-Type": "text/markdown; charset=utf-8",
+      "Cache-Control": "public, max-age=3600, s-maxage=86400",
+      "X-Robots-Tag": "all",
     },
   });
 }

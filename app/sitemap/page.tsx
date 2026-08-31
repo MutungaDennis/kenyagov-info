@@ -283,10 +283,13 @@ export default function SitemapPage() {
                 <p className="govuk-body-s govuk-!-margin-top-1 govuk-text-secondary">Explore the 47 county governments, their leadership, and performance.</p>
               </li>
               <li>
-                <Link href="/government/counties/all" className="govuk-link">All 47 Counties</Link>
+                <Link href="/government/counties" className="govuk-link">All 47 Counties</Link>
               </li>
               <li>
-                <Link href="/government/counties/governors" className="govuk-link">County Governors and Deputies</Link>
+                <Link href="/government/counties/governors" className="govuk-link">County Executives</Link>
+              </li>
+              <li>
+                <Link href="/government/counties/county-assemblies" className="govuk-link">County Assemblies</Link>
               </li>
               <li>
                 <Link href="/government/counties/wards" className="govuk-link">Wards and Constituencies</Link>

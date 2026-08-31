@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { createPublicClient } from "@/lib/supabase/public";
-import { buildPageMetadata, SITE_NAME } from "@/lib/seo";
+import { buildPageMetadata, SITE_NAME, SITE_URL } from "@/lib/seo";
+import { JsonLd } from "@/components/JsonLd";
 
 type Props = {
   children: React.ReactNode;
@@ -36,15 +37,27 @@ export async function generateMetadata({
       ]
         .filter(Boolean)
         .join(" · ");
-      
-      // ✅ Detect if this is a county for better SEO targeting
-      const isCounty = data.institution_category?.toLowerCase().includes("county");
-      
+
+      const nameLower = name.toLowerCase();
+      const isCountyAssembly =
+        nameLower.includes("county assembly") ||
+        (data.institution_type || "").toLowerCase().includes("county assembly");
+      const isCounty =
+        !isCountyAssembly &&
+        (data.institution_type === "County Government" ||
+          data.institution_category?.toLowerCase().includes("county"));
+
       const rawDesc =
         data.description ||
         data.mandate ||
-        `${name}${typeBits ? ` (${typeBits})` : ""} — ${isCounty ? "Official county profile, demographics, and development data" : "public institution profile"} on ${SITE_NAME}.`;
-        
+        `${name}${typeBits ? ` (${typeBits})` : ""} — ${
+          isCountyAssembly
+            ? "County Assembly institution profile"
+            : isCounty
+              ? "Official county profile, demographics, and development data"
+              : "public institution profile"
+        } on ${SITE_NAME}.`;
+
       const description = String(rawDesc)
         .replace(/\s+/g, " ")
         .trim()
@@ -54,9 +67,14 @@ export async function generateMetadata({
         name,
         data.short_name,
         data.institution_type,
-        isCounty ? "Kenya counties" : "Kenya institutions",
+        isCountyAssembly
+          ? "Kenya county assemblies"
+          : isCounty
+            ? "Kenya counties"
+            : "Kenya institutions",
         isCounty ? `${name} county government` : "",
         isCounty ? `${name} county profile` : "",
+        isCountyAssembly ? `${name} legislature` : "",
         SITE_NAME,
       ].filter(Boolean) as string[];
 
@@ -73,7 +91,6 @@ export async function generateMetadata({
     /* fall through */
   }
 
-  // Unknown slug — server page will 404; keep out of the index if this HTML is served
   return buildPageMetadata({
     title: "Institution",
     description: `Public institutions on ${SITE_NAME}.`,
@@ -82,6 +99,73 @@ export async function generateMetadata({
   });
 }
 
-export default function InstitutionSlugLayout({ children }: Props) {
-  return children;
+export default async function InstitutionSlugLayout({
+  children,
+  params,
+}: Props) {
+  const { slug } = await params;
+  let schema: Record<string, unknown> | null = null;
+
+  try {
+    const supabase = createPublicClient();
+    const { data: inst } = await supabase
+      .from("institutions")
+      .select(
+        "name, short_name, official_name, description, mandate, email, phone, physical_address, headquarters, website_url, established_date, institution_type, institution_category, parent_institution_id, slug",
+      )
+      .eq("slug", slug)
+      .maybeSingle();
+
+    if (inst) {
+      let parent:
+        | { name: string; slug: string }
+        | null = null;
+      if (inst.parent_institution_id) {
+        const { data: p } = await supabase
+          .from("institutions")
+          .select("name, slug")
+          .eq("id", inst.parent_institution_id)
+          .maybeSingle();
+        if (p?.name && p?.slug) parent = { name: p.name, slug: p.slug };
+      }
+
+      const nameLower = (inst.name || "").toLowerCase();
+      const isCounty =
+        inst.institution_type === "County Government" ||
+        (!nameLower.includes("assembly") &&
+          (inst.institution_category || "").toLowerCase().includes("county"));
+
+      schema = {
+        "@context": "https://schema.org",
+        "@type": isCounty ? "AdministrativeArea" : "GovernmentOrganization",
+        name: inst.official_name || inst.name,
+        alternateName: inst.short_name || undefined,
+        description: inst.description || inst.mandate || undefined,
+        url: `${SITE_URL}/government/institutions/${inst.slug || slug}`,
+        email: inst.email || undefined,
+        telephone: inst.phone || undefined,
+        address: inst.physical_address || inst.headquarters || undefined,
+        sameAs: inst.website_url ? [inst.website_url] : undefined,
+        areaServed: { "@type": "Country", name: "Kenya" },
+        parentOrganization: parent
+          ? {
+              "@type": "GovernmentOrganization",
+              name: parent.name,
+              url: `${SITE_URL}/government/institutions/${parent.slug}`,
+            }
+          : undefined,
+        foundingDate: inst.established_date || undefined,
+        inLanguage: "en-KE",
+      };
+    }
+  } catch {
+    /* skip schema */
+  }
+
+  return (
+    <>
+      {schema ? <JsonLd data={schema} /> : null}
+      {children}
+    </>
+  );
 }

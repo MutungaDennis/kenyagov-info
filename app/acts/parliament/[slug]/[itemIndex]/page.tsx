@@ -2,8 +2,8 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 
-import PortableTextContent from "@/components/sanity/PortableTextContent";
-import { getActOfParliamentBySlug } from "@/lib/sanity/client";
+import ConstitutionPortableText from "@/components/sanity/ConstitutionPortableText";
+import { getActOfParliamentBySlug, getConstitutionLinkPhrases } from "@/lib/sanity/client";
 
 type Props = {
   params: Promise<{ slug: string; itemIndex: string }>;
@@ -15,7 +15,10 @@ export default async function ActItemViewPage({ params }: Props) {
   const { slug, itemIndex } = await params;
   const indexNum = parseInt(itemIndex, 10);
 
-  const act = await getActOfParliamentBySlug(slug);
+  const [act, linkPhrases] = await Promise.all([
+    getActOfParliamentBySlug(slug),
+    getConstitutionLinkPhrases(),
+  ]);
   if (!act || !act.parts || isNaN(indexNum) || indexNum < 0 || indexNum >= act.parts.length) {
     notFound();
   }
@@ -166,10 +169,13 @@ export default async function ActItemViewPage({ params }: Props) {
                       {section.sectionTitle}
                     </h2>
                     
-                    {/* Official Provision Text */}
+                    {/* Official Provision Text — hierarchy + tables + first-hit links */}
                     {section.officialText && (
-                      <div className="govuk-body-m legislation-clause-text" style={{ fontSize: "16px", lineHeight: "1.5", color: "#0b0c0c" }}>
-                        <PortableTextContent content={section.officialText} />
+                      <div className="govuk-body-m legislation-clause-text app-constitution-prose">
+                        <ConstitutionPortableText
+                          content={section.officialText}
+                          linkPhrases={linkPhrases}
+                        />
                       </div>
                     )}
 
@@ -203,8 +209,11 @@ export default async function ActItemViewPage({ params }: Props) {
 
                 <div className="govuk-!-padding-3">
                   {currentItem.introText && (
-                    <div className="govuk-body-m legislation-clause-text" style={{ fontStyle: "italic", marginBottom: "20px", borderBottom: "1px solid #e5e5e5", paddingBottom: "10px" }}>
-                      <PortableTextContent content={currentItem.introText} />
+                    <div className="govuk-body-m legislation-clause-text app-constitution-prose" style={{ fontStyle: "italic", marginBottom: "20px", borderBottom: "1px solid #e5e5e5", paddingBottom: "10px" }}>
+                      <ConstitutionPortableText
+                        content={currentItem.introText}
+                        linkPhrases={linkPhrases}
+                      />
                     </div>
                   )}
 
@@ -215,8 +224,11 @@ export default async function ActItemViewPage({ params }: Props) {
                       </h3>
                       
                       {scheduleItem.officialText && (
-                        <div className="govuk-body-s legislation-clause-text" style={{ fontSize: "15px", lineHeight: "1.5" }}>
-                          <PortableTextContent content={scheduleItem.officialText} />
+                        <div className="govuk-body-s legislation-clause-text app-constitution-prose">
+                          <ConstitutionPortableText
+                            content={scheduleItem.officialText}
+                            linkPhrases={linkPhrases}
+                          />
                         </div>
                       )}
 

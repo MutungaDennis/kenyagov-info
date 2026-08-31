@@ -132,6 +132,47 @@ export async function POST(request: NextRequest) {
       };
     });
 
+    // Hansard-style manual tables from admin UI
+    const manualTables = Array.isArray(body.manualTables)
+      ? body.manualTables
+      : [];
+    for (const t of manualTables as Array<Record<string, unknown>>) {
+      const headers = Array.isArray(t.headers)
+        ? t.headers.map((h) => String(h ?? "").trim() || " ")
+        : [];
+      const rowsRaw = Array.isArray(t.rows) ? t.rows : [];
+      const rows = rowsRaw
+        .filter(
+          (row) =>
+            Array.isArray(row) &&
+            row.some((c) => String(c ?? "").trim()),
+        )
+        .map((row) => ({
+          _key: randomKey(),
+          cells: headers.map((_, i) =>
+            String((row as unknown[])[i] ?? "").trim(),
+          ),
+        }));
+      if (!headers.length || !rows.length) continue;
+      scheduleObjects.push({
+        _type: "schedule" as const,
+        _key: randomKey(),
+        scheduleNumber: String(t.caption || "Schedule table").trim(),
+        scheduleTitle: String(t.caption || "Table").trim(),
+        relatedSection: "",
+        introText: [
+          {
+            _type: "constitutionTable",
+            _key: randomKey(),
+            caption: String(t.caption || "").trim() || undefined,
+            headers,
+            rows,
+          },
+        ],
+        items: [],
+      });
+    }
+
     // Flatten parts + schedules into the single `parts` array field used by schema
     const partsField = [...parts, ...scheduleObjects];
 

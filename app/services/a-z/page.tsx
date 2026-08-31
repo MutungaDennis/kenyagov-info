@@ -16,7 +16,7 @@ type ServiceRow = {
   summary: string;
 };
 
-const SERVICES_AZ_QUERY = `*[_type == "governmentService" && defined(slug.current)] | order(title asc) {
+const SERVICES_AZ_QUERY = `*[_type == "governmentService" && defined(slug.current) && (status != "draft")] | order(title asc) {
   title,
   "slug": slug.current,
   summary

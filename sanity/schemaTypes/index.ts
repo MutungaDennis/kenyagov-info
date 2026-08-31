@@ -14,6 +14,7 @@ import reportMandate from './reportMandate';
 import governmentCategory from './governmentCategory';
 import governmentService from './governmentService';
 import governmentMinistry from './governmentMinistry';
+import serviceLinkPhrase from './serviceLinkPhrase';
 import presidentialTrip from './presidentialTrip';
 
 // NEW HANSARD & LEGISLATIVE SCHEMAS
@@ -42,6 +43,7 @@ export const schema: { types: SchemaTypeDefinition[] } = {
     governmentCategory,
     governmentService,
     governmentMinistry,
+    serviceLinkPhrase,
     presidentialTrip,
 
     // Hansard & Legislative Tracker

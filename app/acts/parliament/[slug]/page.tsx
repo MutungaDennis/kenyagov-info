@@ -1,8 +1,10 @@
 import { notFound } from "next/navigation";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-
 import PrintPageButton from "@/components/govuk/PrintPageButton";
+import CivicDisclaimer from "@/components/site/CivicDisclaimer";
+import { JsonLd } from "@/components/JsonLd";
 import { getActOfParliamentBySlug } from "@/lib/sanity/client";
+import { SITE_URL } from "@/lib/seo";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -20,6 +22,24 @@ export default async function ActTableOfContentsPage({ params }: Props) {
 
   const items = act.parts || [];
 
+  const legislationSchema = {
+    "@context": "https://schema.org",
+    "@type": "Legislation",
+    name: act.shortTitle || act.title,
+    alternateName: act.title,
+    legislationIdentifier: act.citation || undefined,
+    legislationDate: act.yearEnacted
+      ? String(act.yearEnacted)
+      : undefined,
+    legislationLegalForce:
+      act.status === "active" || act.status === "inForce"
+        ? "InForce"
+        : undefined,
+    jurisdiction: { "@type": "Country", name: "Kenya" },
+    url: `${SITE_URL}/acts/parliament/${slug}`,
+    inLanguage: "en-KE",
+  };
+
   return (
   <>
     
@@ -31,7 +51,8 @@ export default async function ActTableOfContentsPage({ params }: Props) {
         ]}
       />
 
-      
+      <JsonLd data={legislationSchema} />
+
         {/* Document Context Header Panel */}
         <div className="govuk-!-margin-bottom-4">
           <span className="govuk-caption-m" style={{ color: "#505a5f", textTransform: "uppercase", letterSpacing: "0.5px" }}>
@@ -44,6 +65,8 @@ export default async function ActTableOfContentsPage({ params }: Props) {
             {act.title}
           </p>
         </div>
+
+        <CivicDisclaimer context="This is a structured civic copy of legislation for reading and navigation — not a certified Gazette text." />
 
         {/* Action Controls Cluster Row */}
         <div className="govuk-!-margin-bottom-4" style={{ display: "flex", gap: "1.5rem", flexWrap: "wrap", alignItems: "center" }}>

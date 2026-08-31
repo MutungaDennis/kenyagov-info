@@ -14,7 +14,8 @@ export async function triggerIndexNow(slug: string, type: 'leaders' | 'instituti
         path = `/government/institutions/${slug}`;
         break;
       case 'counties':
-        path = `/government/counties/${slug}`;
+        // County profiles live under institutions
+        path = `/government/institutions/${slug}`;
         break;
       default:
         return;

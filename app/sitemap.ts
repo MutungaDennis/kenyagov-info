@@ -184,31 +184,9 @@ async function getSupabaseUrls(): Promise<SitemapEntry[]> {
     });
   }
 
-  // 4. COUNTIES — always include static 47 (DB slug format may differ)
-  const staticCountySlugs = counties.map((c) => c.slug);
-  for (const slug of staticCountySlugs) {
-    urls.push({
-      url: `${BASE_URL}/government/counties/${slug}`,
-      changeFrequency: 'monthly',
-      priority: 0.7,
-    });
-  }
-  // Also DB counties if different slugs exist
-  let dbCounties = envOk ? await fetchAllSlugs('counties', { maxRows: 100 }) : [];
-  if (dbCounties.length === 0) {
-    dbCounties = await fetchSlugsViaRest('counties', '', 100);
-  }
-  const countyUrlSet = new Set(staticCountySlugs.map((s) => `${BASE_URL}/government/counties/${s}`));
-  for (const c of dbCounties) {
-    const url = `${BASE_URL}/government/counties/${c.slug}`;
-    if (countyUrlSet.has(url)) continue;
-    urls.push({
-      url,
-      lastModified: c.updated_at ? new Date(c.updated_at) : undefined,
-      changeFrequency: 'monthly',
-      priority: 0.65,
-    });
-  }
+  // 4. COUNTIES — profiles are institution pages (/government/institutions/[slug])
+  // Index pages only here; individual county URLs are covered by institutions above.
+  // Keep a note in the HTML sitemap; avoid duplicate /government/counties/[slug] URLs.
 
   // 5. WARDS (cap — large table)
   let wards = envOk
@@ -232,6 +210,9 @@ async function getSupabaseUrls(): Promise<SitemapEntry[]> {
     { url: `${BASE_URL}/government/people`, changeFrequency: 'weekly', priority: 0.8 },
     { url: `${BASE_URL}/government/institutions`, changeFrequency: 'weekly', priority: 0.8 },
     { url: `${BASE_URL}/government/counties`, changeFrequency: 'weekly', priority: 0.8 },
+    { url: `${BASE_URL}/government/counties/governors`, changeFrequency: 'weekly', priority: 0.8 },
+    { url: `${BASE_URL}/government/counties/county-assemblies`, changeFrequency: 'weekly', priority: 0.8 },
+    { url: `${BASE_URL}/government/counties/county-assemblies/mcas`, changeFrequency: 'weekly', priority: 0.7 },
     { url: `${BASE_URL}/government/legislature`, changeFrequency: 'weekly', priority: 0.8 },
   );
 
