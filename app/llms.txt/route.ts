@@ -63,7 +63,7 @@ Base: \`https://www.citizenguide.ke/api/markdown\`
 
 Every markdown response includes a short disclaimer footer. Responses are \`text/markdown\` and \`noindex\` (use HTML URLs for human citation).
 
-You may also send \`Accept: text/markdown\` on allowlisted public HTML paths; the site may rewrite to the markdown API when supported.
+Prefer the Markdown API above (Cloudflare OpenNext does not yet support Next.js 16 \`proxy.ts\` Node middleware).
 
 ### JSON / CSV tool endpoints (public)
 - [Leader search](https://www.citizenguide.ke/api/leaders/search?q=ruto): autocomplete officials by name

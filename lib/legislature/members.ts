@@ -2,7 +2,10 @@
  * National Assembly / Senate member lists from Supabase leaders + leader_roles.
  */
 
-import { createPublicClient } from "@/lib/supabase/public";
+import {
+  createPublicClient,
+  isPublicSupabaseConfigured,
+} from "@/lib/supabase/public";
 
 export type ParliamentMember = {
   id: string;
@@ -85,6 +88,7 @@ function unwrapLeader(raw: RoleRow["leaders"]) {
 export async function fetchNationalAssemblyMembers(): Promise<
   ParliamentMember[]
 > {
+  if (!isPublicSupabaseConfigured()) return [];
   const supabase = createPublicClient();
   const { data, error } = await supabase
     .from("leader_roles")
@@ -142,6 +146,7 @@ export async function fetchNationalAssemblyMembers(): Promise<
 }
 
 export async function fetchSenateMembers(): Promise<ParliamentMember[]> {
+  if (!isPublicSupabaseConfigured()) return [];
   const supabase = createPublicClient();
   const { data, error } = await supabase
     .from("leader_roles")
@@ -190,6 +195,7 @@ export async function fetchSenateMembers(): Promise<ParliamentMember[]> {
 
 /** Lightweight county name list for dropdowns (not the bloated static roster). */
 export async function fetchCountyNames(): Promise<string[]> {
+  if (!isPublicSupabaseConfigured()) return [];
   const supabase = createPublicClient();
   const { data, error } = await supabase
     .from("counties")
