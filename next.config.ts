@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 import path from "path";
 import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
+import withBundleAnalyzer from "@next/bundle-analyzer";
 
 const nextConfig: NextConfig = {
   // Tell Next.js to leave pdfjs-dist alone and resolve it from node_modules
@@ -793,8 +794,9 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+// ✅ CONDITIONALLY WRAP WITH BUNDLE ANALYZER
+   export default process.env.ANALYZE === "true" 
+     ? withBundleAnalyzer({ enabled: true })(nextConfig) 
+     : nextConfig;
 
-// OpenNext Cloudflare: enable local bindings during `next dev`.
-// https://opennext.js.org/cloudflare/get-started
-initOpenNextCloudflareForDev();
+   initOpenNextCloudflareForDev();
