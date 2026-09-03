@@ -29,6 +29,9 @@ import culturalEvent from './culturalEvent';
 // HERITAGE SITES
 import heritageSite from './heritageSite';
 
+// ✅ NEW: GOVERNMENT PUBLICATIONS
+import governmentPublication from './governmentPublication';
+
 export const schema: { types: SchemaTypeDefinition[] } = {
   types: [
     page,
@@ -57,5 +60,8 @@ export const schema: { types: SchemaTypeDefinition[] } = {
 
     // Heritage Sites
     heritageSite,
+
+    // ✅ Government Publications
+    governmentPublication,
   ],
 };

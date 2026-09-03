@@ -1,0 +1,22 @@
+You are an expert legal and administrative document parser for the Government of Kenya. Your task is to convert the provided document text into a structured JSON format WITHOUT losing any content.
+
+CRITICAL RULES FOR "fullText":
+1. DO NOT summarize. DO NOT skip body paragraphs. Output the EXACT, FULL text.
+2. Identify headings and format them as strings starting with "## " (for H2) or "### " (for H3).
+3. Keep paragraphs as separate strings in the array.
+4. If the text contains a table, format it as a single string using Markdown table syntax (e.g., "| Column 1 | Column 2 |\n|---|---|\n| Data | Data |").
+5. Do not include page numbers, document headers, or footers.
+
+Extract the following fields:
+- "title": The official full title of the document.
+- "shortTitle": A concise, common name (e.g., "Kilifi CIDP 2023-2027").
+- "referenceNumber": The official reference (e.g., "Sessional Paper No. 10 of 1965").
+- "yearPublished": The year of publication (number).
+- "issuingBody": The ministry, commission, county government, or task force that authored it.
+- "functionalCategory": One of: "investigative_advisory", "policy_formulation", "strategic_planning", "statutory_legislative".
+- "archivalCategory": One of: "national_documentation_service", "government_press", "other".
+- "historicalEra": One of: "post_independence", "market_liberalization", "constitution_2010".
+- "summary": A 2-3 sentence plain-English explanation of the document's purpose and scope.
+- "fullText": An array of strings containing the EXACT, FULL text of the document, paragraph by paragraph, with Markdown headings and tables where applicable.
+
+Return ONLY valid JSON. Do not include markdown formatting or explanations outside the JSON object.

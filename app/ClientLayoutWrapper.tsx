@@ -3,7 +3,6 @@
 
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
-import Script from "next/script";
 import { SiteHeader } from "@/components/site";
 import SiteNotifications from "@/components/site/SiteNotifications";
 import GovUKFooter from "@/components/govuk/Footer";
@@ -13,31 +12,19 @@ import GovUKPhaseBanner from "@/components/govuk/PhaseBanner";
 import CookieBanner from "@/components/govuk/CookieBanner";
 import { logPageViewClient } from "@/lib/supabase/log-page-view";
 
-export function ClientLayoutWrapper({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export function ClientLayoutWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const adminBase =
-    process.env.NEXT_PUBLIC_ADMIN_BASE_PATH?.replace(/\/$/, "") || "/admin";
-  const isAdminRoute =
-    !!pathname &&
-    (pathname === adminBase ||
-      pathname.startsWith(`${adminBase}/`) ||
-      pathname.startsWith("/admin"));
+  const adminBase = process.env.NEXT_PUBLIC_ADMIN_BASE_PATH?.replace(/\/$/, "") || "/admin";
+  const isAdminRoute = !!pathname && (pathname === adminBase || pathname.startsWith(`${adminBase}/`) || pathname.startsWith("/admin"));
   const isHome = pathname === "/";
 
-  // GOV.UK: mark JS support on body (do not use raw <script> in client components)
+  // GOV.UK: mark JS support on body
   useEffect(() => {
     const body = document.body;
     if (!body.classList.contains("js-enabled")) {
       body.classList.add("js-enabled");
     }
-    if (
-      "noModule" in HTMLScriptElement.prototype &&
-      !body.classList.contains("govuk-frontend-supported")
-    ) {
+    if ("noModule" in HTMLScriptElement.prototype && !body.classList.contains("govuk-frontend-supported")) {
       body.classList.add("govuk-frontend-supported");
     }
   }, []);
@@ -65,66 +52,26 @@ export function ClientLayoutWrapper({
           try {
             const u = new URL(document.referrer);
             refHost = u.hostname;
-          } catch {
-            // ignore
-          }
+          } catch { /* ignore */ }
         }
         void logPageViewClient(pathname, refHost);
       }
     }
   }, [pathname, isAdminRoute]);
 
+  // ✅ REMOVED <body> tag. Replaced with Fragment <>
   return (
-    <body className="govuk-template__body" suppressHydrationWarning={true}>
-      {/* Google Consent Mode */}
-      <Script id="google-consent-mode" strategy="afterInteractive">
-        {`
-          window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
-          gtag('consent', 'default', {
-            'ad_storage': 'denied',
-            'ad_user_data': 'denied',
-            'ad_personalization': 'denied',
-            'analytics_storage': 'denied'
-          });
-        `}
-      </Script>
-
-      <Script
-        src="https://www.googletagmanager.com/gtag/js?id=G-GG9GWN5J48"
-        strategy="afterInteractive"
-      />
-      
-      <Script id="google-analytics-config" strategy="afterInteractive">
-        {`
-          window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
-          gtag('js', new Date());
-          gtag('config', 'G-GG9GWN5J48');
-        `}
-      </Script>
-
-      <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer />
-
+    <>
       {!isAdminRoute && <CookieBanner />}
 
-      {/* Skip link must be early in the body for keyboard/screen-reader users */}
       {!isAdminRoute && (
-        <a
-          href="#main-content"
-          className="govuk-skip-link"
-          data-module="govuk-skip-link"
-        >
+        <a href="#main-content" className="govuk-skip-link" data-module="govuk-skip-link">
           Skip to main content
         </a>
       )}
 
       {!isAdminRoute && (
         <>
-          {/*
-            Home: no strip header — large green masthead (with Menu) is enough.
-            Other pages: small SiteHeader strip + width-contained main.
-          */}
           {isHome ? (
             <>
               <div className="govuk-width-container">
@@ -132,11 +79,7 @@ export function ClientLayoutWrapper({
                 <SiteNotifications />
               </div>
 
-              <main
-                className="govuk-main-wrapper app-main--home"
-                id="main-content"
-                role="main"
-              >
+              <main className="govuk-main-wrapper app-main--home" id="main-content" role="main">
                 {children}
               </main>
 
@@ -155,11 +98,7 @@ export function ClientLayoutWrapper({
                 <GovUKPhaseBanner />
                 <SiteNotifications />
 
-                <main
-                  className="govuk-main-wrapper"
-                  id="main-content"
-                  role="main"
-                >
+                <main className="govuk-main-wrapper" id="main-content" role="main">
                   {children}
                 </main>
 
@@ -176,6 +115,6 @@ export function ClientLayoutWrapper({
       )}
 
       {isAdminRoute && children}
-    </body>
+    </>
   );
 }

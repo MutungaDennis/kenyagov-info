@@ -1,4 +1,3 @@
-// app/services/ServicesClientView.tsx (Part 1 of 3)
 "use client";
 
 import React, { useState, useMemo } from "react";
@@ -26,9 +25,40 @@ export interface GovernmentCategoryFilter {
 interface ServicesClientViewProps {
   initialServices: GovernmentServiceSummary[];
   categories: GovernmentCategoryFilter[];
-  /** When set (from /services/categories/[slug]), overrides ?category= */
   pathCategorySlug?: string;
 }
+
+/**
+ * Lightweight client-side fuzzy search to handle common typos and near matches.
+ * Handles: exact matches, missing end characters, missing start characters, and transposed adjacent characters.
+ */
+const isFuzzyMatch = (text: string, query: string) => {
+  const queryWords = query.toLowerCase().split(/\s+/).filter(Boolean);
+  if (queryWords.length === 0) return true;
+  
+  const lowerText = text.toLowerCase();
+
+  return queryWords.every(qWord => {
+    // 1. Exact substring match
+    if (lowerText.includes(qWord)) return true;
+    
+    // 2. Near match: allow 1 missing character at the end (e.g., "licens" -> "license")
+    if (qWord.length >= 4 && lowerText.includes(qWord.slice(0, -1))) return true;
+    
+    // 3. Near match: allow 1 missing character at the beginning (e.g., "icense" -> "license")
+    if (qWord.length >= 4 && lowerText.includes(qWord.slice(1))) return true;
+
+    // 4. Near match: allow 1 transposed character (e.g., "lciense" -> "license")
+    if (qWord.length >= 5) {
+      for (let i = 1; i < qWord.length - 1; i++) {
+        const swapped = qWord.slice(0, i - 1) + qWord[i] + qWord[i - 1] + qWord.slice(i + 1);
+        if (lowerText.includes(swapped)) return true;
+      }
+    }
+    
+    return false;
+  });
+};
 
 export default function ServicesClientView({
   initialServices,
@@ -45,13 +75,11 @@ export default function ServicesClientView({
   const ITEMS_PER_PAGE = 20;
 
   // GOV.UK Filter States synchronized with Search URL Parameters / clean path
-  const selectedCategory =
-    pathCategorySlug || searchParams.get("category") || "all";
+  const selectedCategory = pathCategorySlug || searchParams.get("category") || "all";
   const selectedSubcategory = searchParams.get("subcategory") || "all";
   const selectedOrganization = searchParams.get("organization") || "all";
 
   // Accordion toggle states
-  const [topicsOpen, setTopicsOpen] = useState(true);
   const [orgsOpen, setOrgsOpen] = useState(true);
 
   // Extract unique providing bodies for organization filtering
@@ -64,13 +92,12 @@ export default function ServicesClientView({
   const filteredAndSortedServices = useMemo(() => {
     let results = [...initialServices];
 
-    // 1. Text Search matching
+    // 1. Fuzzy Text Search matching (Title and Summary)
     if (searchQuery.trim() !== "") {
-      const cleanQuery = searchQuery.toLowerCase();
       results = results.filter(
         (service) =>
-          service.title.toLowerCase().includes(cleanQuery) ||
-          service.summary.toLowerCase().includes(cleanQuery)
+          isFuzzyMatch(service.title, searchQuery) ||
+          isFuzzyMatch(service.summary, searchQuery)
       );
     }
 
@@ -106,9 +133,7 @@ export default function ServicesClientView({
 
   const totalServicesCount = filteredAndSortedServices.length;
   const totalPages = Math.ceil(totalServicesCount / ITEMS_PER_PAGE) || 1;
-  const resultsAnnouncement = `${totalServicesCount} service${
-    totalServicesCount === 1 ? "" : "s"
-  } found`;
+  const resultsAnnouncement = `${totalServicesCount} service${totalServicesCount === 1 ? "" : "s"} found`;
   
   const paginatedServices = useMemo(() => {
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -132,9 +157,7 @@ export default function ServicesClientView({
     if (category && category !== "all") {
       params.delete("category");
       const qs = params.toString();
-      router.push(
-        `/services/categories/${encodeURIComponent(category)}${qs ? `?${qs}` : ""}`,
-      );
+      router.push(`/services/categories/${encodeURIComponent(category)}${qs ? `?${qs}` : ""}`);
       return;
     }
 
@@ -151,11 +174,12 @@ export default function ServicesClientView({
         ]}
       />
 
-        <div className="govuk-grid-row">
-          <div className="govuk-grid-column-two-thirds">
-            <h1 className="govuk-heading-xl">
-              Services and guidance
-            </h1>
+      <div className="govuk-grid-row">
+        <div className="govuk-grid-column-two-thirds">
+          <h1 className="govuk-heading-xl">Services and guidance</h1>
+          
+          {/* 
+            TODO: Uncomment this introductory text when needed.
             <p className="govuk-body-l govuk-!-margin-bottom-2">
               Find services from across government. Search or filter by topic.
             </p>
@@ -178,23 +202,62 @@ export default function ServicesClientView({
               </Link>
               . This website does not process applications.
             </p>
-          </div>
+          */}
         </div>
+      </div>
 
-      {/* Top Controller Search Bar & Sort Toggle Header Node */}
-      {/* Search and sort controls - using GOV.UK form patterns */}
+            {/* Search and sort controls - using GOV.UK form patterns */}
       <div className="govuk-grid-row govuk-!-margin-bottom-6">
         <div className="govuk-grid-column-two-thirds">
           <div className="govuk-form-group">
             <label className="govuk-label" htmlFor="search-input">Search services</label>
-            <input
-              id="search-input"
-              type="text"
-              value={searchQuery}
-              onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-              placeholder="e.g. passport, driving license"
-              className="govuk-input"
-            />
+            <div className="relative">
+              <input
+                id="search-input"
+                type="text"
+                value={searchQuery}
+                onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+                placeholder="e.g. passport, driving license"
+                className="govuk-input w-full pr-10" // pr-10 ensures text doesn't overlap the right-side icon
+              />
+              
+              {/* Right-side Icon Container */}
+              <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                {searchQuery ? (
+                  // Clear (X) Button - Visible when there is text
+                  <button
+                    type="button"
+                    onClick={() => { setSearchQuery(""); setCurrentPage(1); }}
+                    className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-[#b1b4b6] transition-colors"
+                    aria-label="Clear search"
+                    title="Clear search"
+                  >
+                    <svg 
+                      className="h-4 w-4 text-[#0b0c0c]" 
+                      xmlns="http://www.w3.org/2000/svg" 
+                      fill="none" 
+                      viewBox="0 0 24 24" 
+                      stroke="currentColor" 
+                      strokeWidth={2.5}
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                ) : (
+                  // Search Icon - Visible when empty
+                  <svg 
+                    className="h-5 w-5 text-[#505a5f]" 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    fill="none" 
+                    viewBox="0 0 24 24" 
+                    stroke="currentColor" 
+                    strokeWidth={2}
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                )}
+              </div>
+            </div>
           </div>
         </div>
         <div className="govuk-grid-column-one-third">
@@ -204,7 +267,7 @@ export default function ServicesClientView({
               id="sort-select"
               value={sortOrder}
               onChange={(e) => { setSortOrder(e.target.value as "popular" | "az"); setCurrentPage(1); }}
-              className="govuk-select"
+              className="govuk-select w-full"
             >
               <option value="popular">Most viewed</option>
               <option value="az">A to Z</option>
@@ -212,6 +275,7 @@ export default function ServicesClientView({
           </div>
         </div>
       </div>
+
       {/* Main layout: filters in one-third sidebar, results in two-thirds (GOV.UK grid pattern) */}
       <div className="govuk-grid-row">
         
@@ -219,76 +283,70 @@ export default function ServicesClientView({
         <div className="govuk-grid-column-one-third">
           
           {/* 1. TOPICS & SUBTOPICS DROPDOWN FILTER SEGMENT */}
-<div className="border-b border-[#b1b4b6] pb-4 space-y-4">
-  {/* Main Topic Level Selection Dropdown */}
-  <div className="govuk-form-group">
-    <label htmlFor="category-select" className="govuk-label">
-      Topic
-    </label>
-    <div className="relative">
-      <select
-        id="category-select"
-        value={selectedCategory}
-        onChange={(e) => updateUrlParams("category", e.target.value, true)}
-        className="w-full bg-white text-base font-bold border-2 border-[#0b0c0c] px-3 py-2.5 text-[#0b0c0c] appearance-none focus:outline-none focus:ring-4 focus:ring-[#ffdd00] cursor-pointer pr-10"
-      >
-        <option value="all">All topics</option>
-        {categories.map((cat) => (
-          <option key={cat.slug} value={cat.slug}>
-            {cat.title}
-          </option>
-        ))}
-      </select>
-      
-      {/* GOV.UK Standard Downward Chevron Indicator */}
-      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-[#0b0c0c] font-bold">
-        <svg className="fill-current h-4 w-4" xmlns="http://w3.org" viewBox="0 0 20 20">
-          <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
-        </svg>
-      </div>
-    </div>
-  </div>
+          <div className="govuk-!-margin-bottom-6" style={{ borderBottom: "1px solid #b1b4b6", paddingBottom: "1rem" }}>
+            <div className="govuk-form-group">
+              <label htmlFor="category-select" className="govuk-label govuk-!-font-weight-bold">
+                Topic
+              </label>
+              <div className="relative">
+                <select
+                  id="category-select"
+                  value={selectedCategory}
+                  onChange={(e) => updateUrlParams("category", e.target.value, true)}
+                  className="govuk-select w-full pr-10"
+                >
+                  <option value="all">All topics</option>
+                  {categories.map((cat) => (
+                    <option key={cat.slug} value={cat.slug}>
+                      {cat.title}
+                    </option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-[#0b0c0c]">
+                  <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                    <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+                  </svg>
+                </div>
+              </div>
+            </div>
 
-  {/* Contextual Subtopic Layer Selection Dropdown (Only appears when parent topic selection is active and has valid subgroups) */}
-  {(() => {
-    const currentActiveCat = categories.find((c) => c.slug === selectedCategory);
-    if (!currentActiveCat || !currentActiveCat.subcategories || currentActiveCat.subcategories.length === 0) return null;
+            {/* Contextual Subtopic Layer Selection Dropdown */}
+            {(() => {
+              const currentActiveCat = categories.find((c) => c.slug === selectedCategory);
+              if (!currentActiveCat || !currentActiveCat.subcategories || currentActiveCat.subcategories.length === 0) return null;
 
-    return (
-      <div className="govuk-form-group pl-4 border-l-2 border-[#b1b4b6] animate-fadeIn">
-        <label htmlFor="subcategory-select" className="govuk-label govuk-label--s">
-          Subtopic
-        </label>
-        <div className="relative">
-          <select
-            id="subcategory-select"
-            value={selectedSubcategory}
-            onChange={(e) => updateUrlParams("subcategory", e.target.value)}
-            className="w-full bg-white text-sm font-bold border-2 border-[#0b0c0c] px-3 py-2 text-[#0b0c0c] appearance-none focus:outline-none focus:ring-4 focus:ring-[#ffdd00] cursor-pointer pr-10"
-          >
-            <option value="all">All {currentActiveCat.title}</option>
-            {currentActiveCat.subcategories.map((sub) => (
-              <option key={sub.slug} value={sub.slug}>
-                {sub.title}
-              </option>
-            ))}
-          </select>
-
-          {/* Subtopic Chevron Overlay */}
-          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-[#505a5f] font-bold">
-            <svg className="fill-current h-3 w-3" xmlns="http://w3.org" viewBox="0 0 20 20">
-              <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
-            </svg>
+              return (
+                <div className="govuk-form-group govuk-!-margin-top-4" style={{ paddingLeft: "1rem", borderLeft: "2px solid #b1b4b6" }}>
+                  <label htmlFor="subcategory-select" className="govuk-label govuk-label--s">
+                    Subtopic
+                  </label>
+                  <div className="relative">
+                    <select
+                      id="subcategory-select"
+                      value={selectedSubcategory}
+                      onChange={(e) => updateUrlParams("subcategory", e.target.value)}
+                      className="govuk-select w-full pr-10"
+                    >
+                      <option value="all">All {currentActiveCat.title}</option>
+                      {currentActiveCat.subcategories.map((sub) => (
+                        <option key={sub.slug} value={sub.slug}>
+                          {sub.title}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-[#505a5f]">
+                      <svg className="fill-current h-3 w-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                        <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
-        </div>
-      </div>
-    );
-  })()}
-</div>
 
-
-          {/* 2. ORGANIZATIONS ACCORDION (Enforces single-selection checkbox rule) */}
-          <div className="border-b border-[#b1b4b6] pb-4">
+          {/* 2. ORGANIZATIONS ACCORDION */}
+          <div className="govuk-!-margin-bottom-6" style={{ borderBottom: "1px solid #b1b4b6", paddingBottom: "1rem" }}>
             <button
               type="button"
               onClick={() => setOrgsOpen(!orgsOpen)}
@@ -300,23 +358,22 @@ export default function ServicesClientView({
             </button>
 
             {orgsOpen && (
-              <div className="mt-3 space-y-3 pl-1 max-h-64 overflow-y-auto pr-1">
+              <div className="govuk-!-margin-top-3 space-y-3" style={{ paddingLeft: "0.25rem", maxHeight: "16rem", overflowY: "auto", paddingRight: "0.25rem" }}>
                 {uniqueOrganizations.map((org) => {
                   const isChecked = selectedOrganization === org;
                   return (
-                    <div key={org} className="flex items-start">
+                    <div key={org} className="govuk-checkboxes__item">
                       <input
                         id={`org-${org}`}
                         type="checkbox"
                         checked={isChecked}
                         onChange={() => {
-                          // Toggle logic: selecting an active checkbox clears it back to "all"
                           const nextVal = isChecked ? "all" : org;
                           updateUrlParams("organization", nextVal);
                         }}
-                        className="w-5 h-5 border-2 border-[#0b0c0c] accent-[#0b0c0c] rounded-none focus:ring-4 focus:ring-[#ffdd00] mt-0.5 shrink-0"
+                        className="govuk-checkboxes__input"
                       />
-                      <label htmlFor={`org-${org}`} className="govuk-body-s govuk-!-margin-left-1">
+                      <label className="govuk-label govuk-checkboxes__label govuk-body-s" htmlFor={`org-${org}`}>
                         {org}
                       </label>
                     </div>
@@ -332,14 +389,14 @@ export default function ServicesClientView({
           
           {/* Results count + live region for screen readers */}
           <p
-            className="govuk-body govuk-!-margin-bottom-2"
+            className="govuk-body govuk-!-margin-bottom-4"
             aria-live="polite"
             aria-atomic="true"
             role="status"
           >
             <strong>{totalServicesCount.toLocaleString()}</strong>{" "}
             {resultsAnnouncement.replace(/^\d+\s*/, "")}
-            <span className="govuk-body-s govuk-!-margin-left-2 govuk-!-color-grey">
+            <span className="govuk-body-s govuk-!-margin-left-2 govuk-!-text-colour-secondary">
               — page {currentPage} of {totalPages}
             </span>
           </p>
@@ -353,13 +410,13 @@ export default function ServicesClientView({
           ) : (
             <ul className="govuk-list govuk-list--spaced">
               {paginatedServices.map((service) => (
-                <li key={service._id} className="govuk-!-padding-bottom-4 govuk-!-border-bottom-1">
+                <li key={service._id} className="govuk-!-padding-bottom-4" style={{ borderBottom: "1px solid #b1b4b6" }}>
                   <h3 className="govuk-heading-m govuk-!-margin-bottom-1">
                     <Link href={`/${service.slug}`} className="govuk-link govuk-!-font-weight-bold">
                       {service.title}
                     </Link>
                   </h3>
-                  <p className="govuk-body-s govuk-!-color-grey govuk-!-margin-bottom-1">{service.providingBody}</p>
+                  <p className="govuk-body-s govuk-!-text-colour-secondary govuk-!-margin-bottom-1">{service.providingBody}</p>
                   <p className="govuk-body">{service.summary}</p>
                 </li>
               ))}
@@ -381,7 +438,7 @@ export default function ServicesClientView({
                     </button>
                   </li>
                 )}
-                <li className="govuk-body-s govuk-!-margin-left-2 govuk-!-color-grey">
+                <li className="govuk-body-s govuk-!-margin-left-2 govuk-!-text-colour-secondary">
                   Page {currentPage} of {totalPages}
                 </li>
                 {currentPage < totalPages && (
@@ -401,7 +458,6 @@ export default function ServicesClientView({
 
         </div>
       </div>
-      
     </div>
   );
 }
