@@ -1,6 +1,6 @@
 // app/layout.tsx
-import { Metadata, Viewport } from 'next';
-import Script from 'next/script';
+import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 
 import "govuk-frontend/govuk-frontend.min.css";
 import "@/app/globals.css";
@@ -15,140 +15,296 @@ import {
 } from "@/lib/seo";
 
 export const viewport: Viewport = {
-  width: 'device-width',
+  width: "device-width",
   initialScale: 1,
-  themeColor: '#00703c',
+  themeColor: "#00703c",
 };
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: { default: DEFAULT_TITLE, template: `%s | ${SITE_NAME}` },
+  title: {
+    default: DEFAULT_TITLE,
+    template: `%s | ${SITE_NAME}`,
+  },
   description: DEFAULT_DESCRIPTION,
   applicationName: SITE_NAME,
-  authors: [{ name: SITE_NAME, url: SITE_URL }],
+
+  authors: [
+    {
+      name: SITE_NAME,
+      url: SITE_URL,
+    },
+  ],
+
   creator: SITE_NAME,
   publisher: SITE_NAME,
-  category: 'government',
+  category: "government",
+
   keywords: [
-    'Kenya government', 'Constitution of Kenya', 'counties', 'public services',
-    'elections', 'IEBC', 'Parliament of Kenya', 'cabinet', 'CitizenGuide', 'civic information',
+    "Kenya government",
+    "Constitution of Kenya",
+    "counties",
+    "public services",
+    "elections",
+    "IEBC",
+    "Parliament of Kenya",
+    "cabinet",
+    "CitizenGuide",
+    "civic information",
   ],
+
   alternates: {
-    types: { 'text/plain': [{ url: '/llms.txt', title: 'llms.txt' }] },
+    types: {
+      "text/plain": [
+        {
+          url: "/llms.txt",
+          title: "llms.txt",
+        },
+      ],
+    },
   },
+
   robots: {
-    index: true, follow: true,
-    googleBot: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1, 'max-video-preview': -1 },
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
   },
+
   openGraph: {
-    type: 'website', locale: 'en_KE', siteName: SITE_NAME,
-    title: DEFAULT_TITLE, description: DEFAULT_DESCRIPTION, images: [DEFAULT_OG_IMAGE],
+    type: "website",
+    locale: "en_KE",
+    siteName: SITE_NAME,
+    title: DEFAULT_TITLE,
+    description: DEFAULT_DESCRIPTION,
+    images: [DEFAULT_OG_IMAGE],
   },
+
   twitter: {
-    card: 'summary_large_image', title: DEFAULT_TITLE,
-    description: DEFAULT_DESCRIPTION, images: [DEFAULT_OG_IMAGE.url],
+    card: "summary_large_image",
+    title: DEFAULT_TITLE,
+    description: DEFAULT_DESCRIPTION,
+    images: [DEFAULT_OG_IMAGE.url],
   },
+
   icons: {
-    icon: [{ url: '/logo.webp', type: 'image/webp' }, { url: '/favicon.ico', sizes: 'any' }],
-    apple: [{ url: '/logo.webp', type: 'image/webp' }],
+    icon: [
+      {
+        url: "/logo.webp",
+        type: "image/webp",
+      },
+      {
+        url: "/favicon.ico",
+        sizes: "any",
+      },
+    ],
+    apple: [
+      {
+        url: "/logo.webp",
+        type: "image/webp",
+      },
+    ],
   },
+
   other: {
-    'ai-content': 'index',
-    'og:logo': `${SITE_URL}/logo.webp`,
-    'origin-trial': 'A4osS6hE38l+I8HVoNIZUPu9CvgXN7Wk4+mu9gbnNgUlJpGPrpgjNNw+kHB/IPzh2AwL+sjPB5rnWBQMk1OGLw8AAAB2eyJvcmlnaW4iOiJodHRwczovL2NpdGl6ZW5ndWlkZS5rZTo0NDMiLCJmZWF0dXJlIjoiV2ViTUNQIiwiZXhwaXJ5IjoxNzk0ODczNjAwLCJpc1N1YmRvbWFpbiI6dHJ1ZSwiaXN0aGlyZFBhcnR5Ijp0cnVlfQ==',
+    "ai-content": "index",
+    "og:logo": `${SITE_URL}/logo.webp`,
+    "origin-trial":
+      "A4osS6hE38l+I8HVoNIZUPu9CvgXN7Wk4+mu9gbnNgUlJpGPrpgjNNw+kHB/IPzh2AwL+sjPB5rnWBQMk1OGLw8AAAB2eyJvcmlnaW4iOiJodHRwczovL2NpdGl6ZW5ndWlkZS5rZTo0NDMiLCJmZWF0dXJlIjoiV2ViTUNQIiwiZXhwaXJ5IjoxNzk0ODczNjAwLCJpc1N1YmRvbWFpbiI6dHJ1ZSwiaXN0aGlyZFBhcnR5Ijp0cnVlfQ==",
   },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-  const runtimeSupabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() || "";
-  const runtimeSupabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim() || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.trim() || "";
-  
-  const publicEnvBootstrap = runtimeSupabaseUrl && runtimeSupabaseKey
-    ? `window.__CG_PUBLIC_ENV=${JSON.stringify({ supabaseUrl: runtimeSupabaseUrl, supabaseAnonKey: runtimeSupabaseKey })};`
-    : "";
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const runtimeSupabaseUrl =
+    process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() || "";
+
+  const runtimeSupabaseKey =
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim() ||
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.trim() ||
+    "";
+
+  const publicEnvBootstrap =
+    runtimeSupabaseUrl && runtimeSupabaseKey
+      ? `window.__CG_PUBLIC_ENV=${JSON.stringify({
+          supabaseUrl: runtimeSupabaseUrl,
+          supabaseAnonKey: runtimeSupabaseKey,
+        }).replace(/</g, "\\u003c")};`
+      : "";
 
   const websiteSchema = {
-    '@context': 'https://schema.org', 
-    '@type': 'WebSite', 
-    '@id': `${SITE_URL}/#website`,
-    name: SITE_NAME, 
-    alternateName: ['Citizen Guide Kenya', 'CitizenGuide', 'citizenguide.ke'],
-    url: SITE_URL, 
-    description: DEFAULT_DESCRIPTION, 
-    inLanguage: 'en-KE',
-    publisher: { '@id': `${SITE_URL}/#organization` },
-    potentialAction: { 
-      '@type': 'SearchAction', 
-      target: { '@type': 'EntryPoint', urlTemplate: `${SITE_URL}/search?q={search_term_string}` }, 
-      'query-input': 'required name=search_term_string' 
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "@id": `${SITE_URL}/#website`,
+    name: SITE_NAME,
+    alternateName: [
+      "Citizen Guide Kenya",
+      "CitizenGuide",
+      "citizenguide.ke",
+    ],
+    url: SITE_URL,
+    description: DEFAULT_DESCRIPTION,
+    inLanguage: "en-KE",
+    publisher: {
+      "@id": `${SITE_URL}/#organization`,
+    },
+    potentialAction: {
+      "@type": "SearchAction",
+      target: {
+        "@type": "EntryPoint",
+        urlTemplate: `${SITE_URL}/search?q={search_term_string}`,
+      },
+      "query-input": "required name=search_term_string",
     },
   };
 
-  // 🌟 5-STAR ENHANCED ORGANIZATION SCHEMA
   const organizationSchema = {
-    '@context': 'https://schema.org', 
-    '@type': 'Organization', 
-    '@id': `${SITE_URL}/#organization`,
-    name: SITE_NAME, 
-    alternateName: ['Citizen Guide Kenya', 'CitizenGuide', 'citizenguide.ke', 'Citizen Guide Africa'],
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "@id": `${SITE_URL}/#organization`,
+    name: SITE_NAME,
+    alternateName: [
+      "Citizen Guide Kenya",
+      "CitizenGuide",
+      "citizenguide.ke",
+      "Citizen Guide Africa",
+    ],
     url: SITE_URL,
-    logo: { 
-      '@type': 'ImageObject', 
-      url: `${SITE_URL}/logo.webp`, 
-      width: 512, 
-      height: 512 
+    logo: {
+      "@type": "ImageObject",
+      url: `${SITE_URL}/logo.webp`,
+      width: 512,
+      height: 512,
     },
-    description: 'Independent civic technology platform and informational guide to Kenyan governance.',
-    foundingDate: '2026-06-01', // 🌟 Added official inception date
-    areaServed: { 
-      '@type': 'Country', 
-      name: 'Kenya' 
+    description:
+      "Independent civic technology platform and informational guide to Kenyan governance.",
+    foundingDate: "2026-06-01",
+    areaServed: {
+      "@type": "Country",
+      name: "Kenya",
     },
-    // 🌟 5-STAR MAGIC: Explicitly link your organization to the global knowledge graph
     sameAs: [
-      'https://www.wikidata.org/wiki/Q141265951'
+      "https://www.wikidata.org/wiki/Q141265951",
     ],
   };
 
   return (
     <html lang="en-KE" className="govuk-template">
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
-        
-        {/* ✅ JSON-LD MUST use native <script> inside <head> for crawlers */}
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }} />
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }} />
+        <link
+          rel="preconnect"
+          href="https://fonts.googleapis.com"
+        />
 
-        <link rel="alternate" type="text/plain" href="/llms.txt" title="llms.txt" />
-        
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
+
+        <link
+          href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap"
+          rel="stylesheet"
+        />
+
+        {publicEnvBootstrap && (
+          <script
+            id="public-env-bootstrap"
+            dangerouslySetInnerHTML={{
+              __html: publicEnvBootstrap,
+            }}
+          />
+        )}
+
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(websiteSchema).replace(
+              /</g,
+              "\\u003c"
+            ),
+          }}
+        />
+
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(organizationSchema).replace(
+              /</g,
+              "\\u003c"
+            ),
+          }}
+        />
+
+        <link
+          rel="alternate"
+          type="text/plain"
+          href="/llms.txt"
+          title="llms.txt"
+        />
+
         {runtimeSupabaseUrl && (
-          <link rel="preconnect" href={runtimeSupabaseUrl} crossOrigin="anonymous" />
+          <link
+            rel="preconnect"
+            href={runtimeSupabaseUrl}
+            crossOrigin="anonymous"
+          />
         )}
       </head>
-      
-      {/* ✅ The SINGLE <body> tag lives here, with the GOV.UK class */}
-      <body className="govuk-template__body" suppressHydrationWarning={true}>
-        
-        {/* ✅ All global next/script components MUST live inside <body> */}
-        {publicEnvBootstrap && (
-          <Script id="public-env-bootstrap" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: publicEnvBootstrap }} />
-        )}
 
-        <Script id="google-consent-mode" strategy="afterInteractive">
-          {`window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('consent', 'default', { 'ad_storage': 'denied', 'ad_user_data': 'denied', 'ad_personalization': 'denied', 'analytics_storage': 'denied' });`}
+      <body
+        className="govuk-template__body"
+        suppressHydrationWarning
+      >
+        <Script
+          id="google-consent-mode"
+          strategy="afterInteractive"
+        >
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('consent', 'default', {
+              'ad_storage': 'denied',
+              'ad_user_data': 'denied',
+              'ad_personalization': 'denied',
+              'analytics_storage': 'denied'
+            });
+          `}
         </Script>
 
-        <Script src="https://www.googletagmanager.com/gtag/js?id=G-GG9GWN5J48" strategy="afterInteractive" />
-        
-        <Script id="google-analytics-config" strategy="afterInteractive">
-          {`window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-GG9GWN5J48');`}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-GG9GWN5J48"
+          strategy="afterInteractive"
+        />
+
+        <Script
+          id="google-analytics-config"
+          strategy="afterInteractive"
+        >
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-GG9GWN5J48');
+          `}
         </Script>
 
-        <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" strategy="afterInteractive" />
+        <Script
+          src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+          strategy="afterInteractive"
+        />
 
-        <ClientLayoutWrapper>{children}</ClientLayoutWrapper>
+        <ClientLayoutWrapper>
+          {children}
+        </ClientLayoutWrapper>
       </body>
     </html>
   );

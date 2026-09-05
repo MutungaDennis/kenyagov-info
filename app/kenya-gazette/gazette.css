@@ -1,0 +1,50 @@
+/* Gazette layout enhancements only.
+   No font-family or replacement typography is defined here. */
+
+.gazette-table-scroll,
+.gazette-notice-content > div[style*="overflow-x"] {
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.gazette-table-scroll .govuk-table,
+.gazette-notice-content > div[style*="overflow-x"] .govuk-table {
+  min-width: 70rem;
+}
+
+.gazette-table-scroll:focus {
+  outline: 3px solid #ffdd00;
+  outline-offset: 0;
+  box-shadow: inset 0 0 0 2px #0b0c0c;
+}
+
+.gazette-notice-content {
+  overflow-wrap: anywhere;
+}
+
+.gazette-notice-content > p,
+.gazette-notice-content > h2,
+.gazette-notice-content > h3,
+.gazette-notice-content > h4,
+.gazette-notice-content > ul,
+.gazette-notice-content > ol,
+.gazette-notice-content > blockquote {
+  max-width: 44rem;
+}
+
+.gazette-search-match {
+  background: #ffdd00;
+  color: #0b0c0c;
+  padding: 0 0.1em;
+}
+
+.gazette-search-match[aria-current="true"] {
+  outline: 3px solid #0b0c0c;
+  outline-offset: 1px;
+}
+
+.gazette-result-meta,
+.gazette-pagination-summary {
+  color: #505a5f;
+}
