@@ -12,6 +12,9 @@ import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import GazetteSearchForm from "@/components/gazette/GazetteSearchForm";
 import NoticeTextSearch from "@/components/gazette/NoticeTextSearch";
 import CopyNoticeButton from "@/components/gazette/CopyNoticeButton";
+import GazetteNoticeContext from "@/components/gazette/GazetteNoticeContext";
+import GazetteLinkedContent from "@/components/gazette/GazetteLinkedContent";
+import { getGazetteNoticeContext } from "@/lib/gazette/get-notice-context";
 
 export const revalidate =
   3600;
@@ -325,6 +328,9 @@ export default async function GazetteNoticePage({
   const nextNotice =
     nextRows?.[0];
 
+  const noticeContext =
+    await getGazetteNoticeContext(notice.id);
+
   const publishedDate =
     new Date(
       issue.date
@@ -589,6 +595,12 @@ export default async function GazetteNoticePage({
           </div>
         </div>
 
+        <div className="govuk-grid-row">
+          <div className="govuk-grid-column-two-thirds">
+            <GazetteNoticeContext context={noticeContext} />
+          </div>
+        </div>
+
         <hr className="govuk-section-break govuk-section-break--visible govuk-section-break--l" />
 
         <section
@@ -624,17 +636,9 @@ export default async function GazetteNoticePage({
           </div>
 
           {notice.content_html ? (
-            <article
-              id="gazette-notice-content"
-              className="gazette-notice-content govuk-body-l govuk-!-font-size-19"
-              style={{
-                lineHeight:
-                  "1.6",
-              }}
-              dangerouslySetInnerHTML={{
-                __html:
-                  notice.content_html,
-              }}
+            <GazetteLinkedContent
+              noticeId={notice.id}
+              html={notice.content_html}
             />
           ) : (
             <div className="govuk-grid-row">
