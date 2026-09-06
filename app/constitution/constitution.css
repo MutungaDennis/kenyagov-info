@@ -1,0 +1,226 @@
+/* Constitution reader — server-safe styles. No styled-jsx required. */
+
+.constitution-intro {
+  max-width: 42rem;
+}
+
+.constitution-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.constitution-actions .govuk-button {
+  margin-bottom: 0;
+}
+
+.constitution-chapter-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.constitution-chapter-card {
+  border-top: 4px solid #1d70b8;
+  padding: 16px 0 18px;
+}
+
+.constitution-card-link {
+  display: block;
+  text-decoration: none;
+}
+
+.constitution-card-link:hover .govuk-heading-m {
+  text-decoration: underline;
+  text-decoration-thickness: max(1px, 0.0625rem);
+}
+
+.constitution-schedule-list li {
+  padding: 12px 0;
+  border-bottom: 1px solid #b1b4b6;
+}
+
+.constitution-search-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: start;
+}
+
+.constitution-search-row .govuk-button {
+  margin-bottom: 0;
+}
+
+.constitution-search-results li {
+  padding: 12px 0;
+  border-bottom: 1px solid #b1b4b6;
+}
+
+.constitution-article-list li {
+  border-bottom: 1px solid #d8dde0;
+}
+
+.constitution-article-list a {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr);
+  gap: 15px;
+  padding: 14px 0;
+  text-decoration: none;
+}
+
+.constitution-article-list a:hover span {
+  text-decoration: underline;
+}
+
+.constitution-reader-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 46rem) 15rem;
+  gap: 50px;
+  align-items: start;
+}
+
+.constitution-context {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.constitution-reading-column {
+  min-width: 0;
+}
+
+.constitution-reader-tools {
+  position: sticky;
+  top: 20px;
+  border-left: 1px solid #b1b4b6;
+  padding-left: 20px;
+}
+
+.constitution-citation-code {
+  display: block;
+  white-space: normal;
+  font-size: 14px;
+  padding: 8px;
+  background: #f3f2f1;
+}
+
+.constitution-article-text .constitution-provision {
+  font-size: 19px;
+  line-height: 1.7;
+  max-width: 42rem;
+}
+
+.constitution-marker {
+  font-weight: 700;
+}
+
+.constitution-paragraph,
+.constitution-subparagraph {
+  padding-left: 1.25rem;
+}
+
+.constitution-reader-nav {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  border-top: 1px solid #b1b4b6;
+  padding-top: 20px;
+  margin-top: 40px;
+}
+
+.constitution-reader-nav .next {
+  text-align: right;
+}
+
+.constitution-reader-nav a {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.constitution-reader-nav .nav-title {
+  font-size: 16px;
+}
+
+.constitution-schedule-reading {
+  max-width: 48rem;
+}
+
+.constitution-schedule-provision {
+  font-size: 18px;
+  line-height: 1.65;
+}
+
+.constitution-preamble-reading,
+.constitution-preamble-reading.constitution-reading-column {
+  max-width: 46rem;
+}
+
+.constitution-preamble-line {
+  font-size: 20px;
+  line-height: 1.65;
+}
+
+@media (max-width: 48.0525em) {
+  .constitution-reader-layout {
+    grid-template-columns: 1fr;
+    gap: 25px;
+  }
+
+  .constitution-reader-tools {
+    position: static;
+    border-left: 0;
+    border-top: 1px solid #b1b4b6;
+    padding: 20px 0 0;
+  }
+}
+
+@media (max-width: 40.0525em) {
+  .constitution-chapter-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .constitution-chapter-card {
+    padding-bottom: 12px;
+  }
+
+  .constitution-search-row {
+    grid-template-columns: 1fr;
+  }
+
+  .constitution-search-row .govuk-button {
+    width: 100%;
+  }
+
+  .constitution-article-list a {
+    grid-template-columns: 1fr;
+    gap: 3px;
+    padding: 12px 0;
+  }
+
+  .constitution-article-text .constitution-provision {
+    font-size: 18px;
+    line-height: 1.65;
+  }
+
+  .constitution-paragraph,
+  .constitution-subparagraph {
+    padding-left: 0.75rem;
+  }
+
+  .constitution-reader-nav {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    background: #fff;
+    margin-left: -15px;
+    margin-right: -15px;
+    padding: 10px 15px calc(10px + env(safe-area-inset-bottom));
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.12);
+  }
+
+  .constitution-reader-nav .nav-title {
+    display: none;
+  }
+}

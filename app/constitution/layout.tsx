@@ -1,14 +1,6 @@
-import React from "react";
+import type { ReactNode } from "react";
+import "./constitution.css";
 
-export default function ConstitutionLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return (
-    // Transparent node container shell allowing child pages to mount
-    <>
-      {children}
-    </>
-  );
+export default function ConstitutionLayout({ children }: { children: ReactNode }) {
+  return <>{children}</>;
 }

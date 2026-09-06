@@ -763,12 +763,7 @@ const nextConfig: NextConfig = {
       // ==========================================
       {
         source: '/constitution/articles/:article',
-        destination: '/constitution',
-        permanent: true,
-      },
-      {
-        source: '/constitution/article/:article',
-        destination: '/constitution',
+        destination: '/constitution/article/:article',
         permanent: true,
       },
 

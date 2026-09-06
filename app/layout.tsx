@@ -196,13 +196,20 @@ export default function RootLayout({
     ],
   };
 
+  const websiteSchemaJson = JSON.stringify(websiteSchema).replace(
+    /</g,
+    "\\u003c"
+  );
+
+  const organizationSchemaJson = JSON.stringify(organizationSchema).replace(
+    /</g,
+    "\\u003c"
+  );
+
   return (
     <html lang="en-KE" className="govuk-template">
       <head>
-        <link
-          rel="preconnect"
-          href="https://fonts.googleapis.com"
-        />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
 
         <link
           rel="preconnect"
@@ -215,32 +222,40 @@ export default function RootLayout({
           rel="stylesheet"
         />
 
-        {publicEnvBootstrap && (
-          <script
+        {/*
+          Use next/script rather than a raw <script> element.
+          beforeInteractive places this in the initial document early enough
+          for client code that reads window.__CG_PUBLIC_ENV.
+        */}
+        {publicEnvBootstrap ? (
+          <Script
             id="public-env-bootstrap"
+            strategy="beforeInteractive"
             dangerouslySetInnerHTML={{
               __html: publicEnvBootstrap,
             }}
           />
-        )}
+        ) : null}
 
-        <script
+        {/*
+          Structured data is also emitted through next/script so React 19 does
+          not treat these as dynamically inserted raw script elements.
+        */}
+        <Script
+          id="website-schema"
           type="application/ld+json"
+          strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify(websiteSchema).replace(
-              /</g,
-              "\\u003c"
-            ),
+            __html: websiteSchemaJson,
           }}
         />
 
-        <script
+        <Script
+          id="organization-schema"
           type="application/ld+json"
+          strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify(organizationSchema).replace(
-              /</g,
-              "\\u003c"
-            ),
+            __html: organizationSchemaJson,
           }}
         />
 
@@ -251,13 +266,13 @@ export default function RootLayout({
           title="llms.txt"
         />
 
-        {runtimeSupabaseUrl && (
+        {runtimeSupabaseUrl ? (
           <link
             rel="preconnect"
             href={runtimeSupabaseUrl}
             crossOrigin="anonymous"
           />
-        )}
+        ) : null}
       </head>
 
       <body
