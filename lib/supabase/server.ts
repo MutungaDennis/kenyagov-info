@@ -1,16 +1,21 @@
 // lib/supabase/server.ts
+
 import { createServerClient } from "@supabase/ssr";
-import { cookies, headers } from "next/headers";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+
+import { adminPath } from "@/lib/admin-path";
 import { resolveSupabasePublicEnv } from "@/lib/supabase/env";
 
 /**
- * Creates a Supabase server client using the request cookies.
- * Soft-resolves URL/key so Cloudflare builds do not crash when NEXT_PUBLIC_*
- * are only configured as Worker runtime vars.
+ * Creates a Supabase server client using request cookies.
+ *
+ * Cookie writes work in Server Actions and Route Handlers. They can throw
+ * from Server Components, so setAll deliberately tolerates that case.
  */
 export async function createClient() {
   const cookieStore = await cookies();
+
   const { url: supabaseUrl, key: supabaseAnonKey } =
     resolveSupabasePublicEnv(true);
 
@@ -19,13 +24,16 @@ export async function createClient() {
       getAll() {
         return cookieStore.getAll();
       },
+
       setAll(cookiesToSet) {
         try {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            cookieStore.set(name, value, options),
-          );
+          cookiesToSet.forEach(({ name, value, options }) => {
+            cookieStore.set(name, value, options);
+          });
         } catch {
-          // Ignore cookie writes from Server Components / RSC
+          // Expected when called while rendering a Server Component.
+          // Session mutation should be performed by a Server Action or
+          // Route Handler instead.
         }
       },
     },
@@ -33,106 +41,88 @@ export async function createClient() {
 }
 
 /**
- * Returns the current authenticated user or null.
- * Always uses getUser() (validates with Supabase, not just local JWT).
+ * Returns the currently authenticated Supabase user, or null.
+ *
+ * getUser() validates the session with Supabase rather than trusting only
+ * local cookie/JWT contents.
  */
 export async function getCurrentUser() {
   const supabase = await createClient();
+
   const {
     data: { user },
+    error,
   } = await supabase.auth.getUser();
+
+  if (error || !user) {
+    return null;
+  }
+
   return user;
 }
 
 /**
- * Checks whether the current user is an admin by looking up the profiles table.
- * Returns false if not authenticated, no row, or is_admin is not true.
- * Gracefully handles missing table or RLS issues.
+ * Returns true only when the signed-in user's profiles row has is_admin=true.
+ *
+ * There is intentionally no hard-coded email bypass here. Admin privilege
+ * should be data-driven and revocable.
  */
 export async function isCurrentUserAdmin(): Promise<boolean> {
+  const user = await getCurrentUser();
+
+  if (!user) {
+    return false;
+  }
+
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) return false;
-
-  // Bootstrap (temporary): primary admin always treated as admin
-  // TODO remove once is_admin flag set for dennis.mutunga14@gmail.com
-  if (user.email === "dennis.mutunga14@gmail.com") return true;
 
   try {
     const { data: profile, error } = await supabase
       .from("profiles")
       .select("is_admin")
       .eq("id", user.id)
-      .single();
+      .maybeSingle();
 
     if (error) {
-      // Table may not exist yet, or no row for this user → not admin
+      console.error("Admin profile lookup failed:", error.message);
       return false;
     }
 
-    return !!profile?.is_admin;
-  } catch {
+    return profile?.is_admin === true;
+  } catch (error) {
+    console.error("Admin profile lookup failed:", error);
     return false;
   }
 }
 
 /**
- * Requires an admin user.
- * - On protected admin pages: redirects to {adminBase}/login if not admin.
- * - When already on login / forgot / reset: returns null instead of redirecting
- *   to avoid redirect loops.
+ * Requires a valid administrator.
+ *
+ * IMPORTANT:
+ * This function performs no pathname detection.
+ *
+ * It must only be called from the protected admin route-group layout:
+ *   app/admin/(protected)/layout.tsx
+ *
+ * Authentication pages live under:
+ *   app/admin/(auth)/
+ *
+ * Because route groups do not appear in the URL, public paths remain:
+ *   /admin/login
+ *   /admin
+ *   /admin/legislation
+ * etc.
  */
 export async function requireAdmin() {
-  const { adminPath } = await import("@/lib/admin-path");
-  const headersList = await headers();
-  const forwardedPath = headersList.get("x-pathname") || "";
-
-  // Auth pages: never redirect-loop (works with secret base path too)
-  if (
-    forwardedPath.includes("/login") ||
-    forwardedPath.includes("/forgot-password") ||
-    forwardedPath.includes("/reset-password")
-  ) {
-    return null;
-  }
-
   const user = await getCurrentUser();
 
-  let currentPath = forwardedPath;
-  if (!currentPath) {
-    const referer = headersList.get("referer") || "";
-    const urlHeader = headersList.get("x-url") || referer;
-    try {
-      if (urlHeader) currentPath = new URL(urlHeader).pathname;
-    } catch {
-      /* ignore */
-    }
-  }
-
-  const isAuthPage =
-    /\/(login|forgot-password|reset-password)\/?$/.test(currentPath) ||
-    currentPath.endsWith("/login") ||
-    currentPath.endsWith("/forgot-password") ||
-    currentPath.endsWith("/reset-password");
-
   if (!user) {
-    if (isAuthPage) return null;
     redirect(adminPath("login"));
   }
-
-  // Bootstrap (temporary)
-  if (user.email === "dennis.mutunga14@gmail.com") return user;
 
   const isAdmin = await isCurrentUserAdmin();
 
   if (!isAdmin) {
-    const supabase = await createClient();
-    await supabase.auth.signOut();
-
-    if (isAuthPage) return null;
     redirect(`${adminPath("login")}?error=unauthorized`);
   }
 
