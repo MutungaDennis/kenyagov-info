@@ -56,7 +56,7 @@ export function LegislationProvisionLinker({
   function clearPending() {
     const preview = previewRef.current;
     if (preview && pendingId) {
-      const marker = preview.querySelector(
+      const marker = preview.querySelector<HTMLElement>(
         `[data-legislation-inline-link="${CSS.escape(pendingId)}"]`,
       );
 
@@ -145,7 +145,7 @@ export function LegislationProvisionLinker({
       return;
     }
 
-    const marker = preview.querySelector(
+    const marker = preview.querySelector<HTMLElement>(
       `[data-legislation-inline-link="${CSS.escape(pendingId)}"]`,
     );
 
