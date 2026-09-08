@@ -1,0 +1,116 @@
+/* CitizenGuide.KE
+   Election Laws (Amendment) Act 2016 — structured legal numbering
+   Append to your legislation stylesheet.
+*/
+
+.legislation-section-structured {
+  font-family: inherit;
+  line-height: 1.55;
+}
+
+.legislation-legal-prose {
+  margin: 0 0 1rem;
+}
+
+/* Every legal numbered block is a two-cell grid:
+   label | text */
+.legislation-legal-line {
+  display: grid;
+  grid-template-columns: 2.9rem minmax(0, 1fr);
+  column-gap: 0.35rem;
+  align-items: start;
+  margin: 0 0 0.75rem;
+}
+
+.legislation-legal-line__label {
+  white-space: nowrap;
+  font-weight: 400;
+}
+
+.legislation-legal-line__body {
+  min-width: 0;
+}
+
+/* (1), (2), (2A) */
+.legislation-legal-line--subsection {
+  margin-left: 1.5rem;
+}
+
+/* (a), (b), (ba), ... */
+.legislation-legal-line--alpha {
+  margin-left: 3rem;
+}
+
+/* (i), (ii), (iii), ... nested under an alphabetic paragraph */
+.legislation-legal-line--roman {
+  margin-left: 5.5rem;
+}
+
+
+/* Embedded/replacement provision with its own marginal heading */
+.legislation-embedded-provision {
+  display: grid;
+  grid-template-columns: minmax(8rem, 0.72fr) minmax(0, 2.2fr);
+  gap: 1.25rem;
+  align-items: start;
+  margin: 1.25rem 0;
+}
+
+.legislation-embedded-provision__marginal-note {
+  font-size: 0.82em;
+  line-height: 1.35;
+  color: #505a5f;
+}
+
+.legislation-embedded-provision__body {
+  min-width: 0;
+}
+
+/* Inside an inserted provision the base text is already pushed right,
+   therefore reduce the relative indentation slightly. */
+.legislation-embedded-provision__body .legislation-legal-line--subsection {
+  margin-left: 0;
+}
+
+.legislation-embedded-provision__body .legislation-legal-line--alpha {
+  margin-left: 1.75rem;
+}
+
+.legislation-embedded-provision__body .legislation-legal-line--roman {
+  margin-left: 4rem;
+}
+
+
+@media (max-width: 40.0625em) {
+  .legislation-legal-line--subsection {
+    margin-left: 0;
+  }
+
+  .legislation-legal-line--alpha {
+    margin-left: 1rem;
+  }
+
+  .legislation-legal-line--roman {
+    margin-left: 2.5rem;
+  }
+
+  .legislation-embedded-provision {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .legislation-embedded-provision__marginal-note {
+    max-width: 20rem;
+    padding-left: 0.75rem;
+    border-left: 3px solid #b1b4b6;
+    margin-bottom: 0.5rem;
+  }
+
+  .legislation-embedded-provision__body .legislation-legal-line--alpha {
+    margin-left: 1rem;
+  }
+
+  .legislation-embedded-provision__body .legislation-legal-line--roman {
+    margin-left: 2.5rem;
+  }
+}

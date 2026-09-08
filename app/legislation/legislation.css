@@ -1,0 +1,96 @@
+.legislation-home-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;margin:32px 0}.legislation-home-grid section{border-top:4px solid #1d70b8;padding-top:16px}.legislation-filters{background:#f3f2f1;padding:20px;margin-bottom:30px}.legislation-list{list-style:none;padding:0;margin:0}.legislation-list__item{border-bottom:1px solid #b1b4b6;padding:18px 0}.legislation-aside{border-top:4px solid #1d70b8;padding-top:15px}.legislation-contents li{margin-bottom:8px}.legislation-reader{max-width:44rem}.legislation-reader__text{font-size:1.1875rem;line-height:1.55}.legislation-reader__text p{margin:0 0 1.25rem}.legislation-reader__nav{display:grid;grid-template-columns:1fr 1fr;gap:24px;border-top:1px solid #b1b4b6;border-bottom:1px solid #b1b4b6;padding:16px 0;margin:32px 0}.legislation-reader__nav-next{text-align:right}.legislation-county-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 24px}.legislation-county-grid a{display:block;padding:10px 0;border-bottom:1px solid #b1b4b6}@media(max-width:40.0625em){.legislation-home-grid,.legislation-reader__nav,.legislation-county-grid{grid-template-columns:1fr}.legislation-reader__nav-next{text-align:left}.legislation-filters{padding:15px}.legislation-reader__text{font-size:1rem}}
+
+/* Amendment Acts */
+.legislation-contents--schedules {
+  margin-top: 12px;
+}
+
+.legislation-amending-act-note {
+  margin-top: 20px;
+}
+
+.legislation-amendment-schedule {
+  margin-top: 48px;
+}
+
+.legislation-amendment-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.legislation-amendment-table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.legislation-amendment-table__law {
+  width: 24%;
+}
+
+.legislation-amendment-table__provision {
+  width: 16%;
+}
+
+.legislation-amendment-cell {
+  vertical-align: top;
+}
+
+.legislation-amendment-cell--law strong,
+.legislation-amendment-cell--law a {
+  display: block;
+}
+
+.legislation-amendment-citation {
+  display: block;
+  margin-top: 4px;
+  color: #505a5f;
+  font-size: 1rem;
+}
+
+.legislation-amendment-text {
+  white-space: pre-wrap;
+  line-height: 1.55;
+}
+
+@media (max-width: 40.0625em) {
+  .legislation-amendment-table,
+  .legislation-amendment-table thead,
+  .legislation-amendment-table tbody,
+  .legislation-amendment-table tr,
+  .legislation-amendment-table th,
+  .legislation-amendment-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .legislation-amendment-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .legislation-amendment-row {
+    border-top: 3px solid #b1b4b6;
+    padding: 14px 0 8px;
+  }
+
+  .legislation-amendment-cell {
+    border-bottom: 0;
+    padding: 4px 0 12px;
+  }
+
+  .legislation-amendment-cell::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 4px;
+    font-weight: 700;
+  }
+
+  .legislation-amendment-cell--law:empty {
+    display: none;
+  }
+}

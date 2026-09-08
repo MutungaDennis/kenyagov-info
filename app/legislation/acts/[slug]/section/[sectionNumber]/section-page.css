@@ -1,0 +1,34 @@
+/*
+ * Keep legislation section pages on the same typography as the rest of
+ * CitizenGuide.KE.
+ *
+ * The page inherits the site's normal body font. The descendant rule removes
+ * any local font-family introduced by SectionReader, imported legal HTML,
+ * prose/markdown styles, or browser-specific component styles.
+ */
+
+.legislation-section-page {
+  font-family: inherit;
+}
+
+.legislation-section-page * {
+  font-family: inherit !important;
+}
+
+/*
+ * Preserve the site's GOV.UK typography sizing/weight classes.
+ * These rules deliberately do NOT set a font face.
+ */
+.legislation-section-page .govuk-heading-xl,
+.legislation-section-page .govuk-heading-l,
+.legislation-section-page .govuk-heading-m,
+.legislation-section-page .govuk-heading-s,
+.legislation-section-page .govuk-caption-xl,
+.legislation-section-page .govuk-caption-l,
+.legislation-section-page .govuk-caption-m,
+.legislation-section-page .govuk-body,
+.legislation-section-page .govuk-body-l,
+.legislation-section-page .govuk-body-s,
+.legislation-section-page .govuk-link {
+  font-family: inherit !important;
+}

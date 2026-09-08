@@ -224,3 +224,417 @@
     display: none;
   }
 }
+
+.constitution-copy-bar {
+  border-top: 1px solid #b1b4b6;
+  border-bottom: 1px solid #b1b4b6;
+  padding: 15px 0;
+}
+
+.constitution-copy-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.constitution-copy-status {
+  min-height: 1.25rem;
+  margin: 0;
+  font-weight: 600;
+}
+
+.constitution-source-box {
+  border-left: 5px solid #1d70b8;
+  padding: 15px 20px;
+  background: #f3f2f1;
+}
+
+.constitution-citation-panel {
+  border-top: 1px solid #b1b4b6;
+  padding-top: 15px;
+}
+
+.constitution-citation-code {
+  display: block;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.constitution-anthem-table {
+  width: 100%;
+  table-layout: fixed;
+}
+
+.constitution-anthem-header {
+  width: 50%;
+}
+
+.constitution-anthem-cell {
+  width: 50%;
+  vertical-align: top;
+  padding-top: 20px;
+  padding-bottom: 25px;
+}
+
+.constitution-anthem-cell:first-child,
+.constitution-anthem-header:first-child {
+  padding-right: 30px;
+}
+
+.constitution-anthem-cell:last-child,
+.constitution-anthem-header:last-child {
+  padding-left: 30px;
+  border-left: 1px solid #b1b4b6;
+}
+
+.constitution-anthem-verse-number {
+  display: block;
+  margin-bottom: 12px;
+  font-weight: 700;
+}
+
+.constitution-anthem-lines {
+  line-height: 1.8;
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+  .constitution-anthem-table,
+  .constitution-anthem-table tbody,
+  .constitution-anthem-table tr,
+  .constitution-anthem-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .constitution-anthem-table thead {
+    display: none;
+  }
+
+  .constitution-anthem-table tr {
+    padding: 0;
+    border-bottom: 2px solid #b1b4b6;
+  }
+
+  .constitution-anthem-cell {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 20px 0;
+    border-bottom: 0;
+  }
+
+  .constitution-anthem-cell:first-child {
+    padding-right: 0;
+  }
+
+  .constitution-anthem-cell:last-child {
+    padding-left: 0;
+    border-left: 0;
+    border-top: 1px solid #d8dde0;
+  }
+
+  .constitution-anthem-cell[lang="sw"]::before,
+  .constitution-anthem-cell[lang="en"]::before {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: 700;
+    font-size: 1rem;
+  }
+
+  .constitution-anthem-cell[lang="sw"]::before {
+    content: "Kiswahili";
+  }
+
+  .constitution-anthem-cell[lang="en"]::before {
+    content: "English";
+  }
+
+  .constitution-anthem-verse-number {
+    margin-bottom: 8px;
+  }
+
+  .constitution-anthem-lines {
+    line-height: 1.7;
+  }
+}
+
+.constitution-fifth-schedule-table {
+  width: 100%;
+}
+
+.constitution-fifth-schedule-table th:first-child,
+.constitution-fifth-schedule-table td:first-child {
+  width: 72%;
+}
+
+.constitution-fifth-schedule-table th:last-child,
+.constitution-fifth-schedule-table td:last-child {
+  width: 28%;
+}
+
+.constitution-fifth-schedule-chapter th,
+.constitution-fifth-schedule-chapter td {
+  padding-top: 28px;
+  font-weight: 700;
+}
+
+.constitution-fifth-schedule-chapter td {
+  background: transparent;
+}
+
+/* =========================================================
+   Constitution admin relationship linker
+   ========================================================= */
+
+/* =========================================================
+   CONSTITUTION ADMIN RELATIONSHIP LINKER
+   ========================================================= */
+
+.constitution-admin-linking-content {
+  border: 1px solid #b1b4b6;
+  border-left: 5px solid #1d70b8;
+  padding: 24px;
+  background: #ffffff;
+}
+
+/*
+ * Native browser selection.
+ */
+.constitution-admin-linking-content::selection,
+.constitution-admin-linking-content *::selection {
+  background: #ffdd00;
+  color: #0b0c0c;
+}
+
+/*
+ * =========================================================
+ * PENDING SELECTION
+ * =========================================================
+ *
+ * Wording selected by admin but not yet linked.
+ */
+.constitution-inline-pending {
+  background: #ffdd00;
+  color: #0b0c0c;
+
+  outline: 2px solid #0b0c0c;
+  outline-offset: 1px;
+
+  padding: 1px 2px;
+}
+
+/*
+ * =========================================================
+ * SAVED ADMIN RELATIONSHIP
+ * =========================================================
+ *
+ * The pale yellow remains after saving so the administrator
+ * can immediately identify wording which already has a
+ * relationship.
+ */
+.constitution-admin-linking-content
+  .constitution-inline-link {
+  position: relative;
+
+  display: inline;
+
+  background: #fff7bf;
+
+  color: #0b0c0c;
+
+  text-decoration-line: underline;
+  text-decoration-style: solid;
+  text-decoration-color: #1d70b8;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+
+  cursor: default;
+
+  padding: 1px 2px;
+}
+
+/*
+ * Relationship reference number.
+ *
+ * Parliament¹
+ * Commission²
+ *
+ * This is admin-only. It is not stored in the Constitution
+ * wording and is not shown on the public site.
+ */
+.constitution-admin-linking-content
+  .constitution-inline-link[data-link-number]::after {
+  content: attr(data-link-number);
+
+  position: relative;
+
+  top: -0.45em;
+
+  margin-left: 2px;
+
+  font-size: 0.7em;
+  line-height: 0;
+
+  font-weight: 700;
+
+  color: #144e81;
+
+  text-decoration: none;
+}
+
+/*
+ * Extra visual feedback when hovering over an existing
+ * relationship.
+ */
+.constitution-admin-linking-content
+  .constitution-inline-link:hover {
+  background: #ffdd00;
+}
+
+/* =========================================================
+   SEARCH RESULTS
+   ========================================================= */
+
+.constitution-link-search-results {
+  border: 1px solid #b1b4b6;
+  border-top: 0;
+
+  max-height: 360px;
+  overflow-y: auto;
+
+  background: #ffffff;
+}
+
+.constitution-link-search-result {
+  display: block;
+
+  width: 100%;
+
+  padding: 12px 15px;
+
+  border: 0;
+  border-bottom: 1px solid #b1b4b6;
+
+  background: #ffffff;
+  color: #0b0c0c;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  font: inherit;
+}
+
+.constitution-link-search-result:last-child {
+  border-bottom: 0;
+}
+
+.constitution-link-search-result:hover {
+  background: #f3f2f1;
+}
+
+.constitution-link-search-result:focus {
+  outline: 3px solid #ffdd00;
+  outline-offset: 0;
+
+  background: #ffdd00;
+  color: #0b0c0c;
+}
+
+.constitution-link-search-result strong {
+  display: block;
+}
+
+.constitution-link-search-result span {
+  display: block;
+
+  margin-top: 4px;
+
+  color: #505a5f;
+}
+
+/* =========================================================
+   RELATIONSHIP TABLE
+   ========================================================= */
+
+.constitution-relationship-reference {
+  width: 3rem;
+
+  font-size: 1.15rem;
+
+  font-weight: 700;
+}
+
+.constitution-relationship-table-wording {
+  background: #fff7bf;
+
+  border-bottom: 2px solid #1d70b8;
+
+  padding: 1px 3px;
+}
+
+/* =========================================================
+   PUBLIC CONSTITUTION LINKS
+   ========================================================= */
+
+/*
+ * Person / institution / law links intentionally retain
+ * ordinary GOV.UK link styling.
+ *
+ * Do not remove the underline.
+ * Do not replace these with button-like styling.
+ */
+.constitution-article-body
+  .constitution-entity-link {
+  font-weight: inherit;
+}
+
+/*
+ * Constitution Article / Schedule cross references.
+ */
+.constitution-article-body
+  .constitution-internal-link {
+  font-weight: inherit;
+}
+
+/*
+ * GOV.UK-style focus treatment.
+ */
+.constitution-article-body
+  .constitution-entity-link:focus,
+.constitution-article-body
+  .constitution-internal-link:focus {
+  color: #0b0c0c;
+
+  background-color: #ffdd00;
+
+  outline: 3px solid transparent;
+
+  box-shadow:
+    0 -2px #ffdd00,
+    0 4px #0b0c0c;
+
+  text-decoration: none;
+}
+
+/* =========================================================
+   Public Constitution relationships
+   ========================================================= */
+
+.constitution-entity-link {
+  font-weight: inherit;
+}
+
+.constitution-internal-link {
+  font-weight: inherit;
+}
+
+/*
+ * Keep ordinary GOV.UK link behaviour and accessibility.
+ */
+.constitution-entity-link:focus,
+.constitution-internal-link:focus {
+  background: #ffdd00;
+  color: #0b0c0c;
+}

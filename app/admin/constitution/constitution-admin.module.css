@@ -1,7 +1,22 @@
 .stats {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 15px;
+  gap: 20px;
+}
+
+.stat {
+  border-top: 4px solid #1d70b8;
+  padding-top: 10px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.tableWrapper {
+  overflow-x: auto;
 }
 
 @media (max-width: 48.0525em) {
@@ -13,5 +28,150 @@
 @media (max-width: 40.0525em) {
   .stats {
     grid-template-columns: 1fr;
+  }
+
+  .actions {
+    flex-direction: column;
+    gap: 6px;
+  }
+}
+
+.constitution-admin-linking-content {
+  border: 1px solid #b1b4b6;
+  border-left: 5px solid #1d70b8;
+  padding: 25px;
+  background: #ffffff;
+}
+
+.constitution-admin-linking-content::selection,
+.constitution-admin-linking-content *::selection {
+  background: #ffdd00;
+  color: #0b0c0c;
+}
+
+.constitution-inline-pending {
+  background: #ffdd00;
+  outline: 2px solid #0b0c0c;
+  padding: 1px 2px;
+}
+
+.constitution-inline-link {
+  background: #d2e2f1;
+  border-bottom: 3px solid #1d70b8;
+  padding: 1px 2px;
+}
+
+.app-button-as-link {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+}
+
+/*
+ * Temporary selection.
+ *
+ * This appears immediately after the admin highlights
+ * Constitution wording.
+ */
+.constitution-inline-pending {
+  background: #ffdd00;
+  color: #0b0c0c;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  padding: 0 2px;
+  outline: 2px solid #ffdd00;
+}
+
+/*
+ * Saved relationship.
+ *
+ * This remains visible after saving AND after refreshing
+ * because the span itself is stored in body_html.
+ */
+.constitution-inline-entity {
+  background: #d2e2f1;
+  color: #0b0c0c;
+  border-bottom: 3px solid #1d70b8;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  padding: 0 2px;
+}
+
+/*
+ * Saved wording shown in the relationships table.
+ */
+.constitution-linked-wording-summary {
+  background: #d2e2f1;
+  color: #0b0c0c;
+  padding: 2px 4px;
+}
+
+/*
+ * Keyboard/selection usability.
+ */
+.constitution-admin-linking-content {
+  position: relative;
+}
+
+.constitution-admin-linking-content::selection,
+.constitution-admin-linking-content *::selection {
+  background: #ffdd00;
+  color: #0b0c0c;
+}
+
+.constitution-admin-article-navigation {
+  border-top: 1px solid #b1b4b6;
+  border-bottom: 1px solid #b1b4b6;
+  padding: 16px 0;
+}
+
+.constitution-admin-article-navigation__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.constitution-admin-article-navigation__next {
+  text-align: right;
+}
+
+.constitution-admin-article-navigation__link {
+  display: inline-flex;
+  gap: 10px;
+  align-items: flex-start;
+  text-decoration: none;
+}
+
+.constitution-admin-article-navigation__link:hover
+  .govuk-body-s {
+  text-decoration: underline;
+}
+
+.constitution-admin-article-navigation__link--next {
+  justify-content: flex-end;
+}
+
+.constitution-admin-article-navigation__direction {
+  font-size: 1.5rem;
+  line-height: 1;
+  font-weight: 700;
+}
+
+@media (max-width: 40.0625em) {
+  .constitution-admin-article-navigation__grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .constitution-admin-article-navigation__next {
+    text-align: left;
+  }
+
+  .constitution-admin-article-navigation__link--next {
+    justify-content: flex-start;
   }
 }

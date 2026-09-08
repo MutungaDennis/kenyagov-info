@@ -1,0 +1,305 @@
+
+/* Amendment Acts */
+.legislation-contents--schedules {
+  margin-top: 12px;
+}
+
+.legislation-amending-act-note {
+  margin-top: 20px;
+}
+
+.legislation-amendment-schedule {
+  margin-top: 48px;
+}
+
+.legislation-amendment-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.legislation-amendment-table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.legislation-amendment-table__law {
+  width: 24%;
+}
+
+.legislation-amendment-table__provision {
+  width: 16%;
+}
+
+.legislation-amendment-cell {
+  vertical-align: top;
+}
+
+.legislation-amendment-cell--law strong,
+.legislation-amendment-cell--law a {
+  display: block;
+}
+
+.legislation-amendment-citation {
+  display: block;
+  margin-top: 4px;
+  color: #505a5f;
+  font-size: 1rem;
+}
+
+.legislation-amendment-text {
+  white-space: pre-wrap;
+  line-height: 1.55;
+}
+
+@media (max-width: 40.0625em) {
+  .legislation-amendment-table,
+  .legislation-amendment-table thead,
+  .legislation-amendment-table tbody,
+  .legislation-amendment-table tr,
+  .legislation-amendment-table th,
+  .legislation-amendment-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .legislation-amendment-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .legislation-amendment-row {
+    border-top: 3px solid #b1b4b6;
+    padding: 14px 0 8px;
+  }
+
+  .legislation-amendment-cell {
+    border-bottom: 0;
+    padding: 4px 0 12px;
+  }
+
+  .legislation-amendment-cell::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 4px;
+    font-weight: 700;
+  }
+
+  .legislation-amendment-cell--law:empty {
+    display: none;
+  }
+}
+
+/* ==========================================================
+   Amendment Schedule
+   ========================================================== */
+
+.legislation-amendment-schedule {
+  margin-top: 48px;
+}
+
+.legislation-amendment-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.legislation-amendment-table {
+  width: 100%;
+  table-layout: fixed;
+}
+
+.legislation-amendment-table__law {
+  width: 23%;
+}
+
+.legislation-amendment-table__provision {
+  width: 14%;
+}
+
+.legislation-amendment-cell {
+  vertical-align: top;
+}
+
+.legislation-amendment-citation {
+  display: block;
+  margin-top: 4px;
+  color: #505a5f;
+  font-size: 0.9em;
+}
+
+.legislation-amendment-html,
+.legislation-amendment-text {
+  font-family: inherit;
+  line-height: 1.5;
+}
+
+.legislation-amendment-text {
+  white-space: pre-wrap;
+}
+
+
+/* ==========================================================
+   Generic legal numbering inside amendment column
+   ========================================================== */
+
+.legislation-amendment-structured {
+  min-width: 0;
+}
+
+.legislation-amendment-prose,
+.legislation-amendment-instruction {
+  margin: 0 0 12px;
+}
+
+.legislation-amendment-line {
+  display: grid;
+  grid-template-columns: 2.5rem minmax(0, 1fr);
+  column-gap: 0.35rem;
+  align-items: start;
+  margin: 0 0 8px;
+}
+
+.legislation-amendment-line__label {
+  white-space: nowrap;
+}
+
+.legislation-amendment-line__body {
+  min-width: 0;
+}
+
+/* Subsection numbering: (1), (2), ... */
+.legislation-amendment-line--subsection {
+  margin-left: 0;
+}
+
+/* Paragraph numbering: (a), (b), (aa), ... */
+.legislation-amendment-line--alpha {
+  margin-left: 1rem;
+}
+
+/* Nested subparagraph numbering: (i), (ii), ... */
+.legislation-amendment-line--roman {
+  margin-left: 3rem;
+}
+
+
+/* ==========================================================
+   Replacement provisions with marginal / side notes
+
+   The third Schedule column contains an internal two-column
+   legal layout:
+       marginal note | provision body
+   ========================================================== */
+
+.legislation-replacement-provision {
+  display: grid;
+  grid-template-columns: minmax(7.5rem, 0.7fr) minmax(0, 2fr);
+  gap: 1rem;
+  align-items: start;
+  margin-top: 12px;
+}
+
+.legislation-replacement-provision__marginal-note {
+  font-size: 0.82em;
+  line-height: 1.3;
+  color: #505a5f;
+  padding-top: 0.15rem;
+}
+
+.legislation-replacement-provision__content {
+  min-width: 0;
+}
+
+.legislation-replacement-provision__opening {
+  display: grid;
+  grid-template-columns: 2.4rem minmax(0, 1fr);
+  column-gap: 0.35rem;
+  margin-bottom: 12px;
+}
+
+.legislation-replacement-provision__number {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.legislation-replacement-provision__text {
+  min-width: 0;
+}
+
+.legislation-replacement-provision__content
+  .legislation-amendment-line--alpha {
+  margin-left: 0;
+}
+
+.legislation-replacement-provision__content
+  .legislation-amendment-line--roman {
+  margin-left: 2rem;
+}
+
+
+/* ==========================================================
+   Mobile
+   ========================================================== */
+
+@media (max-width: 40.0625em) {
+  .legislation-amendment-table,
+  .legislation-amendment-table thead,
+  .legislation-amendment-table tbody,
+  .legislation-amendment-table tr,
+  .legislation-amendment-table th,
+  .legislation-amendment-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .legislation-amendment-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .legislation-amendment-row {
+    border-top: 3px solid #b1b4b6;
+    padding: 16px 0 8px;
+  }
+
+  .legislation-amendment-cell {
+    border-bottom: 0;
+    padding: 4px 0 12px;
+  }
+
+  .legislation-amendment-cell::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 700;
+  }
+
+  .legislation-replacement-provision {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .legislation-replacement-provision__marginal-note {
+    max-width: 18rem;
+    margin-bottom: 4px;
+    padding-left: 12px;
+    border-left: 3px solid #b1b4b6;
+  }
+
+  .legislation-amendment-line--alpha {
+    margin-left: 0.75rem;
+  }
+
+  .legislation-amendment-line--roman {
+    margin-left: 2rem;
+  }
+}
