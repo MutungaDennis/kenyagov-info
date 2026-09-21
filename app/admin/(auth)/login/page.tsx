@@ -1,15 +1,28 @@
 "use client";
 
-import { useState, useRef, useEffect, useTransition, useCallback } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import {
+  Suspense,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import Script from "next/script";
+import {
+  useRouter,
+  useSearchParams,
+} from "next/navigation";
+import type { SupabaseClient } from "@supabase/supabase-js";
+
+import { adminPath } from "@/lib/admin-path";
 import {
   createBrowserClientAsync,
   createClient,
 } from "@/lib/supabase/client";
-import { hasRealSupabasePublicEnv, readSupabasePublicEnv } from "@/lib/supabase/env";
-import { adminPath } from "@/lib/admin-path";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import {
+  hasRealSupabasePublicEnv,
+  readSupabasePublicEnv,
+} from "@/lib/supabase/env";
 
 declare global {
   interface Window {
@@ -18,124 +31,278 @@ declare global {
         container: HTMLElement | string,
         options: {
           sitekey: string;
-          theme?: string;
+          theme?: "light" | "dark" | "auto";
           callback?: (token: string) => void;
           "error-callback"?: () => void;
           "expired-callback"?: () => void;
           "timeout-callback"?: () => void;
         },
-      ): string | undefined;
-      reset(widgetId?: string | HTMLElement): void;
-      remove(widgetId?: string | HTMLElement): void;
-      getResponse(widgetId?: string | HTMLElement): string;
+      ): string;
+
+      reset(
+        widgetId?: string | HTMLElement,
+      ): void;
+
+      remove(
+        widgetId?: string | HTMLElement,
+      ): void;
+
+      getResponse(
+        widgetId?: string | HTMLElement,
+      ): string;
     };
+
     onTurnstileLoad?: () => void;
   }
 }
 
-function mapAuthError(error: {
+type FieldErrors = {
+  email?: boolean;
+  password?: boolean;
+};
+
+type AuthenticationError = {
   message?: string;
   code?: string;
   status?: number;
-} | null): string {
-  const raw = error?.message || "";
-  const code = (error?.code || "").toLowerCase();
-  const lower = raw.toLowerCase();
+} | null;
+
+function mapAuthenticationError(
+  error: AuthenticationError,
+): string {
+  const message =
+    error?.message?.toLowerCase() ?? "";
+
+  const code =
+    error?.code?.toLowerCase() ?? "";
 
   if (
     code === "invalid_credentials" ||
-    lower.includes("invalid login credentials")
+    message.includes(
+      "invalid login credentials",
+    )
   ) {
-    return (
-      "That email or password is not recognised. Check for typos, or use “Forgotten your password?”. " +
-      "If you just set up the project, run: node scripts/ensure-admin-login.mjs (with ADMIN_PASSWORD set)."
-    );
+    return "The email address or password is incorrect.";
   }
-  if (lower.includes("email not confirmed") || code === "email_not_confirmed") {
-    return "Confirm your email in Supabase Authentication before signing in (or run ensure-admin-login.mjs).";
+
+  if (
+    code === "email_not_confirmed" ||
+    message.includes("email not confirmed")
+  ) {
+    return "Confirm your email address before signing in.";
   }
-  if (lower.includes("captcha") || lower.includes("captcha_token")) {
-    return "Security check failed or expired. Complete the checkbox again, then try signing in.";
+
+  if (
+    message.includes("captcha") ||
+    message.includes("captcha_token")
+  ) {
+    return "The security check failed or expired. Complete it again and retry.";
   }
-  if (lower.includes("too many requests") || code === "over_request_rate_limit") {
-    return "Too many sign-in attempts. Wait a few minutes and try again.";
+
+  if (
+    code === "over_request_rate_limit" ||
+    message.includes("too many requests") ||
+    error?.status === 429
+  ) {
+    return "Too many sign-in attempts have been made. Wait a few minutes before trying again.";
   }
-  return raw || "Sign-in failed. Check your email and password, then try again.";
+
+  return "Sign-in was unsuccessful. Check your details and try again.";
 }
 
-export default function AdminLoginPage() {
+function AdminLoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [isPending, startTransition] = useTransition();
 
-  const errorSummaryRef = useRef<HTMLDivElement>(null);
-  const emailInputRef = useRef<HTMLInputElement>(null);
-  const captchaWidgetRef = useRef<HTMLDivElement>(null);
-  const widgetIdRef = useRef<string | null>(null);
-  const supabaseRef = useRef<SupabaseClient | null>(null);
+  const errorSummaryRef =
+    useRef<HTMLDivElement>(null);
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [errors, setErrors] = useState<{ email?: boolean; password?: boolean }>(
-    {},
-  );
-  const [captchaToken, setCaptchaToken] = useState("");
-  const [captchaSolved, setCaptchaSolved] = useState(false);
-  const [turnstileReady, setTurnstileReady] = useState(false);
-  const [clientReady, setClientReady] = useState(false);
+  const emailInputRef =
+    useRef<HTMLInputElement>(null);
 
-  const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "";
-  const captchaRequired = Boolean(siteKey);
+  const captchaContainerRef =
+    useRef<HTMLDivElement>(null);
+
+  const captchaWidgetIdRef =
+    useRef<string | null>(null);
+
+  const supabaseRef =
+    useRef<SupabaseClient | null>(null);
+
+  const [email, setEmail] =
+    useState("");
+
+  const [password, setPassword] =
+    useState("");
+
+  const [fieldErrors, setFieldErrors] =
+    useState<FieldErrors>({});
+
+  const [
+    errorMessage,
+    setErrorMessage,
+  ] = useState<string | null>(null);
+
+  const [
+    successMessage,
+    setSuccessMessage,
+  ] = useState<string | null>(null);
+
+  const [
+    isSubmitting,
+    setIsSubmitting,
+  ] = useState(false);
+
+  const [
+    clientReady,
+    setClientReady,
+  ] = useState(false);
+
+  const [
+    captchaToken,
+    setCaptchaToken,
+  ] = useState("");
+
+  const [
+    captchaSolved,
+    setCaptchaSolved,
+  ] = useState(false);
+
+  const [
+    turnstileReady,
+    setTurnstileReady,
+  ] = useState(false);
+
+  const turnstileSiteKey =
+    process.env
+      .NEXT_PUBLIC_TURNSTILE_SITE_KEY
+      ?.trim() ?? "";
+
+  const captchaRequired =
+    turnstileSiteKey.length > 0;
+
   const canSubmit =
     clientReady &&
-    !isPending &&
-    (!captchaRequired || captchaSolved || Boolean(captchaToken));
+    !isSubmitting &&
+    (!captchaRequired ||
+      captchaSolved ||
+      captchaToken.length > 10);
 
-  // Prefer async client so Worker /api/public-env works when build-time env was missing
+  /*
+   * Initialise the browser Supabase client.
+   */
   useEffect(() => {
     let cancelled = false;
-    (async () => {
+
+    async function initialiseSupabase() {
       try {
-        const client = await createBrowserClientAsync();
-        if (cancelled) return;
-        supabaseRef.current = client;
-        const env = readSupabasePublicEnv();
-        if (!hasRealSupabasePublicEnv(env)) {
-          setErrorMessage(
-            "Supabase is not configured in this environment (missing URL or public key). Check NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY.",
-          );
-          setClientReady(false);
+        const client =
+          await createBrowserClientAsync();
+
+        if (cancelled) {
           return;
         }
+
+        supabaseRef.current = client;
+
+        const environment =
+          readSupabasePublicEnv();
+
+        if (
+          !hasRealSupabasePublicEnv(
+            environment,
+          )
+        ) {
+          setClientReady(false);
+
+          setErrorMessage(
+            "The authentication service is currently unavailable. Please try again later.",
+          );
+
+          return;
+        }
+
         setClientReady(true);
-      } catch (e) {
-        console.error(e);
-        // Fallback sync client
-        supabaseRef.current = createClient();
-        setClientReady(true);
+      } catch (error) {
+        console.error(
+          "Could not initialise Supabase:",
+          error,
+        );
+
+        if (cancelled) {
+          return;
+        }
+
+        try {
+          const fallbackClient =
+            createClient();
+
+          const environment =
+            readSupabasePublicEnv();
+
+          supabaseRef.current =
+            fallbackClient;
+
+          if (
+            hasRealSupabasePublicEnv(
+              environment,
+            )
+          ) {
+            setClientReady(true);
+          } else {
+            setClientReady(false);
+
+            setErrorMessage(
+              "The authentication service is currently unavailable. Please try again later.",
+            );
+          }
+        } catch (fallbackError) {
+          console.error(
+            "Supabase fallback failed:",
+            fallbackError,
+          );
+
+          setClientReady(false);
+
+          setErrorMessage(
+            "The authentication service is currently unavailable. Please try again later.",
+          );
+        }
       }
-    })();
+    }
+
+    void initialiseSupabase();
+
     return () => {
       cancelled = true;
     };
   }, []);
 
+  /*
+   * Show messages passed by the server-side authorization layer.
+   */
   useEffect(() => {
-    const error = searchParams.get("error");
-    const message = searchParams.get("message");
+    const error =
+      searchParams.get("error");
+
+    const message =
+      searchParams.get("message");
 
     if (error === "unauthorized") {
+      setSuccessMessage(null);
+
       setErrorMessage(
-        "You do not have permission to access the admin area. Please sign in with an admin account.",
+        "This account does not have administrator access.",
       );
+
+      setFieldErrors({});
     }
 
     if (message === "password-updated") {
       setErrorMessage(null);
+
       setSuccessMessage(
-        "Your password has been updated successfully. Please sign in.",
+        "Your password has been updated. You can now sign in.",
       );
     }
   }, [searchParams]);
@@ -145,51 +312,117 @@ export default function AdminLoginPage() {
   }, []);
 
   useEffect(() => {
-    if (errorMessage && errorSummaryRef.current) {
+    if (
+      errorMessage &&
+      errorSummaryRef.current
+    ) {
       errorSummaryRef.current.focus();
     }
   }, [errorMessage]);
 
-  const mountTurnstile = useCallback(() => {
-    if (!captchaRequired) {
-      setCaptchaSolved(true);
-      return;
-    }
-    if (!window.turnstile || !captchaWidgetRef.current) return;
-    if (widgetIdRef.current) return;
+  const resetTurnstile =
+    useCallback(() => {
+      setCaptchaToken("");
+      setCaptchaSolved(false);
 
-    captchaWidgetRef.current.innerHTML = "";
+      try {
+        if (
+          captchaWidgetIdRef.current &&
+          window.turnstile
+        ) {
+          window.turnstile.reset(
+            captchaWidgetIdRef.current,
+          );
+        }
+      } catch (error) {
+        console.error(
+          "Could not reset Turnstile:",
+          error,
+        );
+      }
+    }, []);
 
-    try {
-      const id = window.turnstile.render(captchaWidgetRef.current, {
-        sitekey: siteKey,
-        theme: "light",
-        callback: (token: string) => {
-          setCaptchaToken(token);
-          setCaptchaSolved(true);
-        },
-        "error-callback": () => {
-          setCaptchaToken("");
-          setCaptchaSolved(false);
-        },
-        "expired-callback": () => {
-          setCaptchaToken("");
-          setCaptchaSolved(false);
-        },
-        "timeout-callback": () => {
-          setCaptchaToken("");
-          setCaptchaSolved(false);
-        },
-      });
-      widgetIdRef.current = id ?? "mounted";
-      setTurnstileReady(true);
-    } catch (e) {
-      console.error("Turnstile render failed:", e);
-      setErrorMessage(
-        "Security check failed to load. Refresh the page, or try again in a moment.",
-      );
-    }
-  }, [captchaRequired, siteKey]);
+  const mountTurnstile =
+    useCallback(() => {
+      if (!captchaRequired) {
+        setCaptchaSolved(true);
+        return;
+      }
+
+      if (
+        !window.turnstile ||
+        !captchaContainerRef.current ||
+        captchaWidgetIdRef.current
+      ) {
+        return;
+      }
+
+      captchaContainerRef.current.innerHTML =
+        "";
+
+      try {
+        const widgetId =
+          window.turnstile.render(
+            captchaContainerRef.current,
+            {
+              sitekey: turnstileSiteKey,
+              theme: "light",
+
+              callback(token) {
+                setCaptchaToken(token);
+                setCaptchaSolved(true);
+
+                setErrorMessage(
+                  (currentMessage) =>
+                    currentMessage ===
+                    "Complete the security check before signing in."
+                      ? null
+                      : currentMessage,
+                );
+              },
+
+              "error-callback"() {
+                setCaptchaToken("");
+                setCaptchaSolved(false);
+
+                setErrorMessage(
+                  "The security check could not be completed. Refresh it and try again.",
+                );
+              },
+
+              "expired-callback"() {
+                setCaptchaToken("");
+                setCaptchaSolved(false);
+              },
+
+              "timeout-callback"() {
+                setCaptchaToken("");
+                setCaptchaSolved(false);
+              },
+            },
+          );
+
+        captchaWidgetIdRef.current =
+          widgetId;
+
+        setTurnstileReady(true);
+      } catch (error) {
+        console.error(
+          "Turnstile rendering failed:",
+          error,
+        );
+
+        setCaptchaToken("");
+        setCaptchaSolved(false);
+
+        setErrorMessage(
+          "The security check failed to load. Refresh the page and try again.",
+        );
+      }
+    }, [
+      captchaRequired,
+      turnstileSiteKey,
+    ]);
 
   useEffect(() => {
     if (!captchaRequired) {
@@ -199,214 +432,304 @@ export default function AdminLoginPage() {
 
     if (window.turnstile) {
       mountTurnstile();
-      return;
+    } else {
+      window.onTurnstileLoad =
+        mountTurnstile;
     }
-
-    window.onTurnstileLoad = () => {
-      mountTurnstile();
-    };
-
-    const interval = setInterval(() => {
-      if (window.turnstile) {
-        mountTurnstile();
-        clearInterval(interval);
-      }
-    }, 100);
 
     return () => {
-      clearInterval(interval);
+      if (
+        window.onTurnstileLoad ===
+        mountTurnstile
+      ) {
+        delete window.onTurnstileLoad;
+      }
+
       try {
-        if (widgetIdRef.current && window.turnstile) {
-          window.turnstile.remove(widgetIdRef.current);
+        if (
+          captchaWidgetIdRef.current &&
+          window.turnstile
+        ) {
+          window.turnstile.remove(
+            captchaWidgetIdRef.current,
+          );
         }
       } catch {
-        /* ignore */
+        // Widget may already have been removed.
       }
-      widgetIdRef.current = null;
+
+      captchaWidgetIdRef.current = null;
     };
-  }, [captchaRequired, mountTurnstile]);
+  }, [
+    captchaRequired,
+    mountTurnstile,
+  ]);
 
-  useEffect(() => {
-    if (!captchaRequired || captchaSolved) return;
-    const t = setInterval(() => {
-      try {
-        const token =
-          (widgetIdRef.current &&
-            window.turnstile?.getResponse(widgetIdRef.current)) ||
-          window.turnstile?.getResponse(captchaWidgetRef.current as HTMLElement);
-        if (token && token.length > 10) {
-          setCaptchaToken(token);
-          setCaptchaSolved(true);
-        }
-      } catch {
-        /* ignore */
+  function getCaptchaToken(): string {
+    if (!captchaRequired) {
+      return "";
+    }
+
+    if (captchaToken.length > 10) {
+      return captchaToken;
+    }
+
+    try {
+      if (
+        captchaWidgetIdRef.current &&
+        window.turnstile
+      ) {
+        return (
+          window.turnstile.getResponse(
+            captchaWidgetIdRef.current,
+          ) ?? ""
+        );
       }
-    }, 500);
-    return () => clearInterval(t);
-  }, [captchaRequired, captchaSolved]);
 
-  async function handleLogin(event: React.FormEvent<HTMLFormElement>) {
+      if (
+        captchaContainerRef.current &&
+        window.turnstile
+      ) {
+        return (
+          window.turnstile.getResponse(
+            captchaContainerRef.current,
+          ) ?? ""
+        );
+      }
+    } catch {
+      return "";
+    }
+
+    return "";
+  }
+
+  async function handleLogin(
+    event:
+      React.FormEvent<HTMLFormElement>,
+  ) {
     event.preventDefault();
+
+    if (isSubmitting) {
+      return;
+    }
+
     setErrorMessage(null);
-    setErrors({});
+    setSuccessMessage(null);
+    setFieldErrors({});
 
-    const currentErrors: { email?: boolean; password?: boolean } = {};
-    if (!email.trim()) currentErrors.email = true;
-    if (!password) currentErrors.password = true;
+    const normalizedEmail =
+      email.trim().toLowerCase();
 
-    if (Object.keys(currentErrors).length > 0) {
-      setErrors(currentErrors);
-      setErrorMessage("Enter your email address and password to sign in.");
+    const errors: FieldErrors = {};
+
+    if (!normalizedEmail) {
+      errors.email = true;
+    }
+
+    if (!password) {
+      errors.password = true;
+    }
+
+    if (
+      Object.keys(errors).length > 0
+    ) {
+      setFieldErrors(errors);
+
+      setErrorMessage(
+        "Enter your email address and password.",
+      );
+
       return;
     }
 
-    let tokenToUse = captchaToken;
-    if (captchaRequired && !tokenToUse) {
-      try {
-        tokenToUse =
-          (widgetIdRef.current &&
-            window.turnstile?.getResponse(widgetIdRef.current)) ||
-          window.turnstile?.getResponse(
-            captchaWidgetRef.current as HTMLElement,
-          ) ||
-          "";
-      } catch {
-        tokenToUse = "";
-      }
-    }
+    const currentCaptchaToken =
+      getCaptchaToken();
 
-    if (captchaRequired && !tokenToUse) {
-      setErrorMessage("Complete the security check, then try again.");
+    if (
+      captchaRequired &&
+      currentCaptchaToken.length <= 10
+    ) {
+      setErrorMessage(
+        "Complete the security check before signing in.",
+      );
+
       return;
     }
 
-    startTransition(async () => {
+    setIsSubmitting(true);
+
+    try {
       const supabase =
-        supabaseRef.current || (await createBrowserClientAsync());
+        supabaseRef.current ??
+        (await createBrowserClientAsync());
+
       supabaseRef.current = supabase;
 
-      const env = readSupabasePublicEnv();
-      if (!hasRealSupabasePublicEnv(env)) {
-        setErrorMessage(
-          "Supabase public env is missing. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, then restart the dev server.",
-        );
-        return;
-      }
-
-      const signInOpts: {
+      const credentials: {
         email: string;
         password: string;
-        options?: { captchaToken: string };
+        options?: {
+          captchaToken: string;
+        };
       } = {
-        email: email.trim().toLowerCase(),
+        email: normalizedEmail,
         password,
       };
-      // Only send captcha when we have a real token (avoids empty-token noise)
-      if (tokenToUse && tokenToUse.length > 10) {
-        signInOpts.options = { captchaToken: tokenToUse };
-      }
 
-      const { error, data } = await supabase.auth.signInWithPassword(signInOpts);
-
-      if (error || !data.user) {
-        console.error("Supabase AuthApiError:", error);
-        setErrorMessage(mapAuthError(error));
-        setErrors({ email: true, password: true });
-        setCaptchaToken("");
-        setCaptchaSolved(false);
-        try {
-          if (widgetIdRef.current && window.turnstile) {
-            window.turnstile.reset(widgetIdRef.current);
-          }
-        } catch {
-          /* ignore */
-        }
-        return;
-      }
-
-      // Ensure profile row exists (RLS may block insert for non-self; service path is preferred offline)
-      try {
-        const { data: existing } = await supabase
-          .from("profiles")
-          .select("id, is_admin")
-          .eq("id", data.user.id)
-          .maybeSingle();
-
-        if (!existing) {
-          await supabase.from("profiles").insert({
-            id: data.user.id,
-            email: data.user.email,
-            is_admin: false,
-          });
-        }
-      } catch {
-        /* ignore */
-      }
-
-      // Bootstrap: known primary admin email always allowed after successful auth
-      const bootstrapEmail = "dennis.mutunga14@gmail.com";
       if (
-        (data.user.email || "").toLowerCase() === bootstrapEmail.toLowerCase()
+        currentCaptchaToken.length > 10
       ) {
-        window.location.href = adminPath();
-        return;
+        credentials.options = {
+          captchaToken:
+            currentCaptchaToken,
+        };
       }
 
-      try {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("is_admin")
-          .eq("id", data.user.id)
-          .maybeSingle();
-
-        if (!profile?.is_admin) {
-          await supabase.auth.signOut();
-          setErrorMessage(
-            "This account is signed in but not marked as admin. In Supabase, set profiles.is_admin = true for your user, or run: node scripts/ensure-admin-login.mjs",
+      const {
+        data: authentication,
+        error: authenticationError,
+      } =
+        await supabase.auth
+          .signInWithPassword(
+            credentials,
           );
-          setErrors({ email: true, password: true });
-          return;
-        }
-      } catch {
-        await supabase.auth.signOut();
-        setErrorMessage(
-          "Could not verify admin status. Check the profiles table in Supabase (run create_profiles_table.sql if needed).",
+
+      if (
+        authenticationError ||
+        !authentication.user
+      ) {
+        console.error(
+          "Supabase sign-in failed:",
+          authenticationError,
         );
-        setErrors({ email: true, password: true });
+
+        setFieldErrors({
+          email: true,
+          password: true,
+        });
+
+        setErrorMessage(
+          mapAuthenticationError(
+            authenticationError,
+          ),
+        );
+
+        resetTurnstile();
         return;
       }
 
-      window.location.href = adminPath();
-    });
+      /*
+       * Authentication succeeded.
+       *
+       * Do not perform a browser-side profiles lookup here. Client-side
+       * authorization is not the security boundary.
+       *
+       * The following request is independently protected by:
+       *
+       * 1. proxy.ts
+       * 2. app/admin/(protected)/layout.tsx
+       * 3. requireAdmin() in lib/supabase/server.ts
+       *
+       * A full navigation ensures the newly issued Supabase cookies are
+       * attached to the next request.
+       */
+      setFieldErrors({});
+      setErrorMessage(null);
+
+      window.location.assign(
+        adminPath(),
+      );
+    } catch (error) {
+      console.error(
+        "Unexpected sign-in failure:",
+        error,
+      );
+
+      setErrorMessage(
+        "The sign-in service is temporarily unavailable. Please try again.",
+      );
+
+      resetTurnstile();
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   async function handlePasswordResetRequest() {
-    if (!email.trim()) {
-      setErrorMessage(
-        "Enter your email address above, then select Forgotten password.",
-      );
-      setErrors({ email: true });
+    if (isSubmitting) {
       return;
     }
 
-    const supabase =
-      supabaseRef.current || (await createBrowserClientAsync());
-    const { error } = await supabase.auth.resetPasswordForEmail(
-      email.trim().toLowerCase(),
-      {
-        redirectTo: `${window.location.origin}${adminPath("reset-password")}`,
-      },
-    );
+    const normalizedEmail =
+      email.trim().toLowerCase();
 
-    if (error) {
+    if (!normalizedEmail) {
+      setFieldErrors({
+        email: true,
+      });
+
       setErrorMessage(
-        "Could not send password reset email. Check the email address, or set a new password with: node scripts/ensure-admin-login.mjs",
+        "Enter your email address before selecting Forgotten password.",
       );
-    } else {
-      setErrorMessage(null);
+
+      emailInputRef.current?.focus();
+      return;
+    }
+
+    setIsSubmitting(true);
+    setErrorMessage(null);
+    setSuccessMessage(null);
+
+    try {
+      const supabase =
+        supabaseRef.current ??
+        (await createBrowserClientAsync());
+
+      supabaseRef.current = supabase;
+
+      const { error } =
+        await supabase.auth
+          .resetPasswordForEmail(
+            normalizedEmail,
+            {
+              redirectTo:
+                `${window.location.origin}${adminPath(
+                  "reset-password",
+                )}`,
+            },
+          );
+
+      if (error) {
+        console.error(
+          "Password reset request failed:",
+          error,
+        );
+
+        setErrorMessage(
+          "The password reset request could not be completed. Wait a moment and try again.",
+        );
+
+        return;
+      }
+
       router.push(
-        `${adminPath("forgot-password")}?email=${encodeURIComponent(email.trim())}`,
+        `${adminPath(
+          "forgot-password",
+        )}?email=${encodeURIComponent(
+          normalizedEmail,
+        )}`,
       );
+    } catch (error) {
+      console.error(
+        "Unexpected password reset failure:",
+        error,
+      );
+
+      setErrorMessage(
+        "The password reset service is temporarily unavailable. Please try again.",
+      );
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -414,11 +737,20 @@ export default function AdminLoginPage() {
     <div className="govuk-width-container govuk-!-margin-top-6 govuk-!-margin-bottom-8">
       {captchaRequired && (
         <Script
+          id="cloudflare-turnstile"
           src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=onTurnstileLoad"
           strategy="afterInteractive"
           onLoad={() => {
             setTurnstileReady(true);
             mountTurnstile();
+          }}
+          onError={() => {
+            setTurnstileReady(false);
+            setCaptchaSolved(false);
+
+            setErrorMessage(
+              "The security check failed to load. Refresh the page and try again.",
+            );
           }}
         />
       )}
@@ -427,9 +759,15 @@ export default function AdminLoginPage() {
         <div
           className="govuk-notification-banner govuk-notification-banner--success"
           role="alert"
+          aria-labelledby="success-title"
         >
           <div className="govuk-notification-banner__content">
-            <p className="govuk-notification-banner__heading">{successMessage}</p>
+            <h2
+              id="success-title"
+              className="govuk-notification-banner__heading"
+            >
+              {successMessage}
+            </h2>
           </div>
         </div>
       )}
@@ -442,81 +780,192 @@ export default function AdminLoginPage() {
           role="alert"
           aria-labelledby="error-summary-title"
         >
-          <h2 className="govuk-error-summary__title" id="error-summary-title">
+          <h2
+            id="error-summary-title"
+            className="govuk-error-summary__title"
+          >
             There is a problem
           </h2>
+
           <div className="govuk-error-summary__body">
-            <p className="govuk-body">{errorMessage}</p>
+            <p className="govuk-body">
+              {errorMessage}
+            </p>
           </div>
         </div>
       )}
 
-      <h1 className="govuk-heading-xl">Sign in to the admin console</h1>
+      <h1 className="govuk-heading-xl">
+        Sign in to the admin console
+      </h1>
+
       <p className="govuk-body">
-        This area is restricted to authorised administrators only.
+        This area is restricted to
+        authorised CitizenGuide.KE
+        administrators.
       </p>
 
-      <form onSubmit={handleLogin} noValidate>
+      <form
+        onSubmit={handleLogin}
+        noValidate
+      >
         <div
-          className={`govuk-form-group${errors.email ? " govuk-form-group--error" : ""}`}
+          className={`govuk-form-group${
+            fieldErrors.email
+              ? " govuk-form-group--error"
+              : ""
+          }`}
         >
-          <label className="govuk-label" htmlFor="email">
+          <label
+            className="govuk-label"
+            htmlFor="email"
+          >
             Email address
           </label>
-          {errors.email && (
-            <p id="email-error" className="govuk-error-message">
-              <span className="govuk-visually-hidden">Error:</span> Enter your
-              email address
+
+          {fieldErrors.email && (
+            <p
+              id="email-error"
+              className="govuk-error-message"
+            >
+              <span className="govuk-visually-hidden">
+                Error:
+              </span>{" "}
+              Enter a valid email address
             </p>
           )}
+
           <input
             ref={emailInputRef}
-            className={`govuk-input${errors.email ? " govuk-input--error" : ""}`}
             id="email"
             name="email"
             type="email"
-            autoComplete="email"
+            inputMode="email"
+            autoComplete="username"
+            autoCapitalize="none"
+            spellCheck={false}
+            className={`govuk-input${
+              fieldErrors.email
+                ? " govuk-input--error"
+                : ""
+            }`}
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            aria-describedby={errors.email ? "email-error" : undefined}
+            onChange={(event) => {
+              setEmail(
+                event.target.value,
+              );
+
+              if (fieldErrors.email) {
+                setFieldErrors(
+                  (current) => ({
+                    ...current,
+                    email: false,
+                  }),
+                );
+              }
+            }}
+            aria-invalid={
+              fieldErrors.email
+                ? "true"
+                : undefined
+            }
+            aria-describedby={
+              fieldErrors.email
+                ? "email-error"
+                : undefined
+            }
+            disabled={isSubmitting}
           />
         </div>
 
         <div
-          className={`govuk-form-group${errors.password ? " govuk-form-group--error" : ""}`}
+          className={`govuk-form-group${
+            fieldErrors.password
+              ? " govuk-form-group--error"
+              : ""
+          }`}
         >
-          <label className="govuk-label" htmlFor="password">
+          <label
+            className="govuk-label"
+            htmlFor="password"
+          >
             Password
           </label>
-          {errors.password && (
-            <p id="password-error" className="govuk-error-message">
-              <span className="govuk-visually-hidden">Error:</span> Enter your
-              password
+
+          {fieldErrors.password && (
+            <p
+              id="password-error"
+              className="govuk-error-message"
+            >
+              <span className="govuk-visually-hidden">
+                Error:
+              </span>{" "}
+              Enter your password
             </p>
           )}
+
           <input
-            className={`govuk-input${errors.password ? " govuk-input--error" : ""}`}
             id="password"
             name="password"
             type="password"
             autoComplete="current-password"
+            className={`govuk-input${
+              fieldErrors.password
+                ? " govuk-input--error"
+                : ""
+            }`}
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            aria-describedby={errors.password ? "password-error" : undefined}
+            onChange={(event) => {
+              setPassword(
+                event.target.value,
+              );
+
+              if (
+                fieldErrors.password
+              ) {
+                setFieldErrors(
+                  (current) => ({
+                    ...current,
+                    password: false,
+                  }),
+                );
+              }
+            }}
+            aria-invalid={
+              fieldErrors.password
+                ? "true"
+                : undefined
+            }
+            aria-describedby={
+              fieldErrors.password
+                ? "password-error"
+                : undefined
+            }
+            disabled={isSubmitting}
           />
         </div>
 
         {captchaRequired && (
           <div className="govuk-form-group">
-            <label className="govuk-label" htmlFor="turnstile-widget">
+            <label
+              className="govuk-label"
+              htmlFor="turnstile-widget"
+            >
               Security check
             </label>
-            <div id="turnstile-widget" ref={captchaWidgetRef} />
+
+            <div
+              id="turnstile-widget"
+              ref={
+                captchaContainerRef
+              }
+            />
+
             <p className="govuk-hint">
               {captchaSolved
                 ? "Security check complete."
                 : turnstileReady
-                  ? "Select the checkbox above to continue."
+                  ? "Complete the security check to continue."
                   : "Loading security check…"}
             </p>
           </div>
@@ -529,34 +978,72 @@ export default function AdminLoginPage() {
           disabled={!canSubmit}
           aria-disabled={!canSubmit}
         >
-          {isPending
+          {isSubmitting
             ? "Signing in…"
             : !clientReady
               ? "Connecting…"
-              : canSubmit
-                ? "Sign in"
-                : "Complete security check to sign in"}
+              : captchaRequired &&
+                  !captchaSolved
+                ? "Complete security check to sign in"
+                : "Sign in"}
         </button>
 
         <p className="govuk-body">
           <button
             type="button"
             className="govuk-link"
-            style={{
-              background: "none",
-              border: "none",
-              padding: 0,
-              cursor: "pointer",
-              font: "inherit",
-              color: "#1d70b8",
-              textDecoration: "underline",
+            disabled={
+              isSubmitting ||
+              !clientReady
+            }
+            onClick={() => {
+              void handlePasswordResetRequest();
             }}
-            onClick={handlePasswordResetRequest}
+            style={{
+              appearance: "none",
+              background: "none",
+              border: 0,
+              color: "#1d70b8",
+              cursor:
+                isSubmitting ||
+                !clientReady
+                  ? "not-allowed"
+                  : "pointer",
+              font: "inherit",
+              padding: 0,
+              textDecoration:
+                "underline",
+            }}
           >
             Forgotten your password?
           </button>
         </p>
       </form>
     </div>
+  );
+}
+
+function LoginPageFallback() {
+  return (
+    <div className="govuk-width-container govuk-!-margin-top-6 govuk-!-margin-bottom-8">
+      <h1 className="govuk-heading-xl">
+        Sign in to the admin console
+      </h1>
+
+      <p className="govuk-body">
+        Loading the secure sign-in
+        service…
+      </p>
+    </div>
+  );
+}
+
+export default function AdminLoginPage() {
+  return (
+    <Suspense
+      fallback={<LoginPageFallback />}
+    >
+      <AdminLoginForm />
+    </Suspense>
   );
 }

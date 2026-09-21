@@ -1,0 +1,20 @@
+/* Scoped Documents reading styles. GOV.UK typography remains authoritative. */
+.cg-document-actions { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-start; }
+.cg-document-contents { max-width: 46rem; }
+.cg-document-contents > li { margin-bottom: 12px; }
+.cg-document-contents__nested { margin: 8px 0 8px 20px; }
+.cg-document-contents__nested li { margin-bottom: 7px; }
+.cg-document-source-text { max-width: 42rem; }
+.cg-document-source-text .govuk-body { margin-bottom: 18px; }
+.cg-document-paragraph-number { font-weight: 700; }
+.cg-document-source-list { margin: -6px 0 20px 24px; }
+.cg-document-source-list li { display: grid; grid-template-columns: 2.5rem minmax(0,1fr); column-gap: 8px; margin-bottom: 8px; }
+.cg-document-source-marker { font-variant-numeric: tabular-nums; }
+.cg-document-section { scroll-margin-top: 24px; }
+@media (max-width: 40.0525em) {
+  .cg-document-actions { display: block; }
+  .cg-document-actions .govuk-button { display: block; width: 100%; margin-right: 0; }
+  .cg-document-contents__nested { margin-left: 12px; padding-left: 12px; border-left: 3px solid #b1b4b6; }
+  .cg-document-source-list { margin-left: 0; }
+  .cg-document-source-list li { grid-template-columns: 2.1rem minmax(0,1fr); }
+}

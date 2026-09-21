@@ -1,61 +1,99 @@
 /**
- * Public admin URL prefix (obscurity layer — still use strong passwords + is_admin).
+ * Public admin URL configuration.
  *
- * Production default is a non-guessable path. Override with NEXT_PUBLIC_ADMIN_BASE_PATH
- * on Cloudflare if you rotate it. Local `next dev` keeps /admin for convenience
- * unless you set the env var.
+ * Development:
+ *   /admin
+ *
+ * Production:
+ *   /cg-ke-a5wkqciyjpg940u3
+ *
+ * The hidden production path reduces unsolicited traffic. It is not the
+ * authorization mechanism; protected routes must still call requireAdmin().
  */
 
-/** Baked-in production path (also set this on Cloudflare for consistency). */
-export const DEFAULT_PRODUCTION_ADMIN_BASE = "/cg-ke-a5wkqciyjpg940u3";
+export const DEFAULT_PRODUCTION_ADMIN_BASE =
+  "/cg-ke-a5wkqciyjpg940u3";
 
-const DEV_FALLBACK = "/admin";
+const DEVELOPMENT_ADMIN_BASE = "/admin";
 
-function normalizeBase(raw: string): string {
-  let p = raw.trim();
-  if (!p.startsWith("/")) p = `/${p}`;
-  p = p.replace(/\/+$/, "");
-  if (!p || p === "/") {
-    return isProd() ? DEFAULT_PRODUCTION_ADMIN_BASE : DEV_FALLBACK;
-  }
-  return p;
-}
-
-function isProd(): boolean {
-  // OpenNext / Cloudflare production builds set NODE_ENV=production
+function isProduction(): boolean {
   return process.env.NODE_ENV === "production";
 }
 
-/** Public URL prefix admins use in the browser. */
-export function getAdminBasePath(): string {
-  const fromEnv = process.env.NEXT_PUBLIC_ADMIN_BASE_PATH?.trim();
-  if (fromEnv) return normalizeBase(fromEnv);
+function normalizeBasePath(value: string): string {
+  let pathname = value.trim();
 
-  // Production: never expose well-known /admin
-  if (isProd()) return DEFAULT_PRODUCTION_ADMIN_BASE;
+  if (!pathname.startsWith("/")) {
+    pathname = `/${pathname}`;
+  }
 
-  return DEV_FALLBACK;
+  pathname = pathname.replace(/\/+$/, "");
+
+  if (!pathname || pathname === "/") {
+    return isProduction()
+      ? DEFAULT_PRODUCTION_ADMIN_BASE
+      : DEVELOPMENT_ADMIN_BASE;
+  }
+
+  return pathname;
 }
 
-/** Join base + subpath, e.g. adminPath('login') → /cg-…/login */
+/**
+ * Returns the public admin URL prefix for the current environment.
+ */
+export function getAdminBasePath(): string {
+  const configuredPath =
+    process.env.NEXT_PUBLIC_ADMIN_BASE_PATH?.trim();
+
+  if (configuredPath) {
+    return normalizeBasePath(configuredPath);
+  }
+
+  return isProduction()
+    ? DEFAULT_PRODUCTION_ADMIN_BASE
+    : DEVELOPMENT_ADMIN_BASE;
+}
+
+/**
+ * Constructs a public admin URL.
+ *
+ * Examples:
+ *   adminPath()        -> /admin locally
+ *   adminPath("login") -> /admin/login locally
+ *
+ * In production the secret prefix is used instead.
+ */
 export function adminPath(subpath = ""): string {
   const base = getAdminBasePath();
-  const sub = subpath.replace(/^\/+/, "").replace(/\/+$/, "");
-  if (!sub) return base;
-  return `${base}/${sub}`;
+  const normalizedSubpath = subpath
+    .trim()
+    .replace(/^\/+/, "")
+    .replace(/\/+$/, "");
+
+  return normalizedSubpath
+    ? `${base}/${normalizedSubpath}`
+    : base;
 }
 
+/**
+ * True when pathname is under the public admin prefix for this environment.
+ */
 export function isAdminPublicPath(pathname: string): boolean {
   const base = getAdminBasePath();
+
   return pathname === base || pathname.startsWith(`${base}/`);
 }
 
-/** Internal Next.js app folder paths under app/admin */
+/**
+ * True for the internal Next.js app/admin filesystem route.
+ */
 export function isAdminFilesystemPath(pathname: string): boolean {
   return pathname === "/admin" || pathname.startsWith("/admin/");
 }
 
-/** True when public path is not /admin — bare /admin must 404. */
+/**
+ * True when production/custom URLs should hide the internal /admin route.
+ */
 export function isCustomAdminPathEnabled(): boolean {
-  return getAdminBasePath() !== DEV_FALLBACK;
+  return getAdminBasePath() !== DEVELOPMENT_ADMIN_BASE;
 }

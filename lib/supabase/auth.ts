@@ -1,137 +1,311 @@
-import { createServerClient } from '@supabase/ssr'
-import { NextResponse, type NextRequest } from 'next/server'
+import { isAdminUserId } from "@/lib/supabase/admin-access";
+import { createServerClient } from "@supabase/ssr";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import {
+  NextResponse,
+  type NextRequest,
+} from "next/server";
 
-/**
- * Proxy / session handler for Supabase auth + admin role checks.
- * - Refreshes Supabase auth cookies (called from root proxy.ts).
- * - Protects /admin routes: must be authenticated + have is_admin=true in profiles.
- * - No more hardcoded emails. Role lives in the database.
- */
-export async function updateSession(request: NextRequest) {
-  const currentPath = request.nextUrl.pathname
+import {
+  adminPath,
+  getAdminBasePath,
+  isAdminFilesystemPath,
+  isAdminPublicPath,
+  isCustomAdminPathEnabled,
+} from "@/lib/admin-path";
 
-  // Forward pathname to server components via request headers.
-  // This lets requireAdmin() in layouts reliably know we are on /admin/login
-  // and avoid self-redirect loops.
-  const forwardedHeaders = new Headers(request.headers)
-  forwardedHeaders.set('x-pathname', currentPath)
+function copyResponseCookies(
+  source: NextResponse,
+  target: NextResponse,
+): NextResponse {
+  source.cookies.getAll().forEach((cookie) => {
+    target.cookies.set(cookie);
+  });
 
-  let supabaseResponse = NextResponse.next({
+  return target;
+}
+
+
+
+function getRelativeAdminPath(
+  pathname: string,
+): string {
+  const base = getAdminBasePath();
+
+  if (pathname === base) {
+    return "";
+  }
+
+  if (pathname.startsWith(`${base}/`)) {
+    return pathname.slice(base.length + 1);
+  }
+
+  return "";
+}
+
+function isAdminAuthenticationPage(
+  pathname: string,
+): boolean {
+  const relativePath =
+    getRelativeAdminPath(pathname);
+
+  return (
+    relativePath === "login" ||
+    relativePath === "forgot-password" ||
+    relativePath === "reset-password"
+  );
+}
+
+function jsonError(
+  message: string,
+  status: number,
+): NextResponse {
+  return NextResponse.json(
+    {
+      error: message,
+    },
+    {
+      status,
+      headers: {
+        "Cache-Control": "no-store",
+      },
+    },
+  );
+}
+
+export async function updateSession(
+  request: NextRequest,
+): Promise<NextResponse> {
+  const pathname = request.nextUrl.pathname;
+
+  const isAdminApiRoute =
+    pathname === "/api/admin" ||
+    pathname.startsWith("/api/admin/");
+
+  /*
+   * The real app/admin route is available locally but must not be publicly
+   * accessible in production.
+   */
+  if (
+    !isAdminApiRoute &&
+    isCustomAdminPathEnabled() &&
+    isAdminFilesystemPath(pathname)
+  ) {
+    return new NextResponse("Not Found", {
+      status: 404,
+      headers: {
+        "Cache-Control": "no-store",
+        "Content-Type":
+          "text/plain; charset=utf-8",
+        "X-Robots-Tag":
+          "noindex, nofollow, noarchive",
+      },
+    });
+  }
+
+  const isAdminPage =
+    isAdminPublicPath(pathname);
+
+  if (!isAdminPage && !isAdminApiRoute) {
+    return NextResponse.next();
+  }
+
+  const forwardedHeaders = new Headers(
+    request.headers,
+  );
+
+  forwardedHeaders.set(
+    "x-pathname",
+    pathname,
+  );
+
+  let response = NextResponse.next({
     request: {
       headers: forwardedHeaders,
     },
-  })
+  });
 
-  // Soft-resolve so edge middleware does not crash when env is briefly missing
   const supabaseUrl =
-    process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() ||
-    'https://placeholder.supabase.co'
-  const supabaseAnonKey =
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim() ||
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.trim() ||
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsYWNlaG9sZGVyIiwicm9sZSI6ImFub24iLCJpYXQiOjAsImV4cCI6MH0.placeholder'
+    process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
 
-  const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
-    cookies: {
-      getAll() {
-        return request.cookies.getAll()
+  const supabasePublicKey =
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.trim() ||
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
+
+  if (!supabaseUrl || !supabasePublicKey) {
+    console.error(
+      "Admin authentication is unavailable because Supabase public environment variables are missing.",
+    );
+
+    if (isAdminApiRoute) {
+      return jsonError(
+        "Authentication service unavailable",
+        503,
+      );
+    }
+
+    return new NextResponse(
+      "Authentication service unavailable",
+      {
+        status: 503,
+        headers: {
+          "Cache-Control": "no-store",
+          "Content-Type":
+            "text/plain; charset=utf-8",
+        },
       },
-      setAll(cookiesToSet) {
-        cookiesToSet.forEach(({ name, value }) =>
-          request.cookies.set(name, value)
-        )
-        supabaseResponse = NextResponse.next({
-          request: {
-            headers: forwardedHeaders,
-          },
-        })
-        cookiesToSet.forEach(({ name, value, options }) =>
-          supabaseResponse.cookies.set(name, value, options)
-        )
+    );
+  }
+
+  const supabase = createServerClient(
+    supabaseUrl,
+    supabasePublicKey,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+
+        setAll(cookiesToSet) {
+          /*
+           * Make refreshed cookies visible to the remaining request pipeline.
+           */
+          cookiesToSet.forEach(
+            ({ name, value }) => {
+              request.cookies.set(name, value);
+            },
+          );
+
+          response = NextResponse.next({
+            request: {
+              headers: forwardedHeaders,
+            },
+          });
+
+          /*
+           * Return refreshed cookies to the browser.
+           */
+          cookiesToSet.forEach(
+            ({ name, value, options }) => {
+              response.cookies.set(
+                name,
+                value,
+                options,
+              );
+            },
+          );
+        },
       },
     },
-  })
+  );
 
-  // Always validate the user server-side (secure)
   const {
     data: { user },
-  } = await supabase.auth.getUser()
+    error: userError,
+  } = await supabase.auth.getUser();
 
-  const isAdminRoute = currentPath.startsWith('/admin')
-  const isLoginRoute = currentPath === '/admin/login'
-  const isForgotRoute = currentPath === '/admin/forgot-password'
-  const isResetRoute = currentPath === '/admin/reset-password'
+  const authenticated =
+    !userError && Boolean(user);
 
-  // Early handling for login / forgot / reset pages to prevent any loops.
-  // Serve the page unless the user is a confirmed admin (then bounce to dashboard).
-  if (isLoginRoute || isForgotRoute || isResetRoute) {
-    if (user) {
-      // Bootstrap (temporary) primary admin
-      const isPrimaryAdmin = user.email === 'dennis.mutunga14@gmail.com'
-      const isAdmin = isPrimaryAdmin || await safeIsAdmin(supabase, user.id)
-      if (isAdmin) {
-        return NextResponse.redirect(new URL('/admin', request.url))
-      } else {
-        // Ensure non-admin sessions are cleared before serving the login screen
-        try {
-          await supabase.auth.signOut()
-        } catch {}
-      }
+  /*
+   * API requests must receive JSON errors, never page redirects.
+   *
+   * The API route will perform its own authoritative authorization check
+   * through requireAdminApi(). Here we validate/refresh the session early.
+   */
+  if (isAdminApiRoute) {
+    if (!authenticated || !user) {
+      return copyResponseCookies(
+        response,
+        jsonError("Unauthorized", 401),
+      );
     }
-    // Always serve the auth page (no redirect to itself)
-    return supabaseResponse
-  }
 
-  // 1. Unauthenticated users trying to access admin (except login/reset flows) → login
-  if (isAdminRoute && !isLoginRoute && !isForgotRoute && !isResetRoute && !user) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/admin/login'
-    url.searchParams.set('redirectedFrom', currentPath)
-    return NextResponse.redirect(url)
-  }
+    const isAdmin =
+  await isAdminUserId(user.id);
 
-  // 2. If we have a user on an admin route (non-login), verify they are actually an admin
-  if (isAdminRoute && !isLoginRoute && !isForgotRoute && !isResetRoute && user) {
-    // Bootstrap (temporary): primary admin always allowed
-    if (user.email === 'dennis.mutunga14@gmail.com') {
-      // fall through to allow
-    } else {
-      const isAdmin = await safeIsAdmin(supabase, user.id)
-
-      if (!isAdmin) {
-        // Not an admin — clear session and send away
-        try { await supabase.auth.signOut() } catch {}
-        return NextResponse.redirect(new URL('/', request.url))
-      }
+    if (!isAdmin) {
+      return copyResponseCookies(
+        response,
+        jsonError("Forbidden", 403),
+      );
     }
+
+    return response;
   }
 
-  // (auth page handling moved to early return above to prevent loops)
+  const isAuthenticationPage =
+    isAdminAuthenticationPage(pathname);
 
-  // Legacy /protected handling (kept for compatibility)
-  if (currentPath.startsWith('/protected') && !user) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/admin/login'
-    return NextResponse.redirect(url)
+  /*
+   * Auth pages remain available to signed-out users.
+   */
+  if (isAuthenticationPage) {
+    if (!authenticated || !user) {
+      return response;
+    }
+
+    const isAdmin =
+  await isAdminUserId(user.id);
+
+    if (isAdmin) {
+      return copyResponseCookies(
+        response,
+        NextResponse.redirect(
+          new URL(
+            adminPath(),
+            request.url,
+          ),
+        ),
+      );
+    }
+
+    await supabase.auth.signOut();
+
+    return response;
   }
 
-  return supabaseResponse
-}
+  /*
+   * Protected admin page without a valid session.
+   */
+  if (!authenticated || !user) {
+    const loginUrl = new URL(
+      adminPath("login"),
+      request.url,
+    );
 
-/**
- * Safe helper to check is_admin without crashing on missing table/row/RLS errors.
- */
-async function safeIsAdmin(supabase: any, userId: string): Promise<boolean> {
-  try {
-    const { data: profile, error } = await supabase
-      .from('profiles')
-      .select('is_admin')
-      .eq('id', userId)
-      .single()
+    loginUrl.searchParams.set(
+      "redirectedFrom",
+      pathname,
+    );
 
-    if (error) return false
-    return !!profile?.is_admin
-  } catch {
-    return false
+    return copyResponseCookies(
+      response,
+      NextResponse.redirect(loginUrl),
+    );
   }
+
+    const isAdmin =
+  await isAdminUserId(user.id);
+
+  if (!isAdmin) {
+    await supabase.auth.signOut();
+
+    const loginUrl = new URL(
+      adminPath("login"),
+      request.url,
+    );
+
+    loginUrl.searchParams.set(
+      "error",
+      "unauthorized",
+    );
+
+    return copyResponseCookies(
+      response,
+      NextResponse.redirect(loginUrl),
+    );
+  }
+
+  return response;
 }

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
-import "./admin.css";
+// import "@/app/admin.css";
+
 
 export const dynamic = "force-dynamic";
 

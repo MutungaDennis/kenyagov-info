@@ -1,14 +1,75 @@
 import type { NextConfig } from "next";
 import path from "path";
-import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
+
 import withBundleAnalyzer from "@next/bundle-analyzer";
+import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
+
+const DEFAULT_PRODUCTION_ADMIN_BASE =
+  "/cg-ke-a5wkqciyjpg940u3";
+
+function normalizeAdminBase(value: string): string {
+  let base = value.trim();
+
+  if (!base.startsWith("/")) {
+    base = `/${base}`;
+  }
+
+  base = base.replace(/\/+$/, "");
+
+  return base;
+}
+
+/**
+ * Resolve the production-only public admin URL.
+ *
+ * Local development continues using the real /admin route and therefore
+ * requires no rewrite.
+ */
+function getProductionAdminBase(): string | null {
+  if (process.env.NODE_ENV !== "production") {
+    return null;
+  }
+
+  const configured =
+    process.env.NEXT_PUBLIC_ADMIN_BASE_PATH?.trim();
+
+  if (!configured) {
+    return DEFAULT_PRODUCTION_ADMIN_BASE;
+  }
+
+  const normalized = normalizeAdminBase(configured);
+
+  /*
+   * Never permit the internal filesystem route to become the public
+   * production admin route.
+   */
+  if (
+    normalized === "/admin" ||
+    normalized.startsWith("/admin/")
+  ) {
+    throw new Error(
+      "NEXT_PUBLIC_ADMIN_BASE_PATH must not be /admin in production.",
+    );
+  }
+
+  if (normalized === "/") {
+    throw new Error(
+      "NEXT_PUBLIC_ADMIN_BASE_PATH must not be the site root.",
+    );
+  }
+
+  return normalized;
+}
+
+const productionAdminBase =
+  getProductionAdminBase();
 
 const nextConfig: NextConfig = {
-  // Tell Next.js to leave pdfjs-dist alone and resolve it from node_modules
+  // Resolve pdfjs-dist from node_modules at runtime.
   serverExternalPackages: ["pdfjs-dist"],
 
-   // ==========================================
-  // ALLOW SUPABASE STORAGE IMAGES
+  // ==========================================
+  // SUPABASE STORAGE IMAGES
   // ==========================================
   images: {
     remotePatterns: [
@@ -21,8 +82,9 @@ const nextConfig: NextConfig = {
     ],
   },
 
-  // Keep compile-only / unused packages out of the OpenNext Worker (gzip limit).
-  // Free plan = 3 MiB gzip; every extra traced module risks deploy failure.
+  // ==========================================
+  // OPENNEXT/CLOUDFLARE WORKER SIZE
+  // ==========================================
   outputFileTracingExcludes: {
     "*": [
       "**/node_modules/sass/**/*",
@@ -58,84 +120,171 @@ const nextConfig: NextConfig = {
       "**/node_modules/esbuild/**/*",
       "**/node_modules/webpack/**/*",
       "**/node_modules/typescript/**/*",
-      // Replaced / unused in Worker (local scripts only)
       "**/node_modules/lucide-react/**/*",
       "**/node_modules/date-fns/**/*",
       "**/node_modules/zod/**/*",
-      // Never ship local tooling / seed scripts into the Worker
       "**/scripts/**/*",
       "**/app/_archive/**/*",
     ],
   },
 
-  // Tree-shake barrel packages (keeps Worker under CF Free 3 MiB gzip)
   experimental: {
-    optimizePackageImports: ["@portabletext/react"],
+    optimizePackageImports: [
+      "@portabletext/react",
+    ],
   },
 
   webpack: (config) => {
     config.resolve.alias = {
       ...config.resolve.alias,
-      // Maps 'govuk-frontend' to the folder containing the assets
-      "govuk-frontend": path.resolve(__dirname, "node_modules/govuk-frontend/dist/govuk"),
+      "govuk-frontend": path.resolve(
+        __dirname,
+        "node_modules/govuk-frontend/dist/govuk",
+      ),
     };
+
     return config;
   },
 
   turbopack: {
     resolveAlias: {
-      "govuk-frontend": path.resolve(__dirname, "node_modules/govuk-frontend/dist/govuk"),
+      "govuk-frontend": path.resolve(
+        __dirname,
+        "node_modules/govuk-frontend/dist/govuk",
+      ),
     },
   },
 
   // ==========================================
-  // SECURITY HEADERS FOR WEBMCP ORIGIN ISOLATION
+  // SECURITY HEADERS
   // ==========================================
   async headers() {
-    return [
+    const rules = [
       {
-        // Enforces isolation on all routes to unlock WebMCP capabilities safely
         source: "/:path*",
         headers: [
           {
             key: "Origin-Agent-Cluster",
-            value: "?1", // Expressly forces origin-keyed processes
+            value: "?1",
           },
           {
             key: "Permissions-Policy",
-            value: "tools=(self)", // Explicitly allows WebMCP tools in top-level/same-origin contexts
+            value: "tools=(self)",
+          },
+        ],
+      },
+      {
+        /*
+         * The internal admin path should not be indexed, even in local or
+         * accidental upstream responses. proxy.ts returns 404 for this path
+         * in production.
+         */
+        source: "/admin/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value:
+              "private, no-store, no-cache, must-revalidate",
+          },
+          {
+            key: "Pragma",
+            value: "no-cache",
+          },
+          {
+            key: "Expires",
+            value: "0",
+          },
+          {
+            key: "X-Robots-Tag",
+            value:
+              "noindex, nofollow, noarchive, nosnippet",
+          },
+          {
+            key: "Referrer-Policy",
+            value: "same-origin",
+          },
+          {
+            key: "X-Content-Type-Options",
+            value: "nosniff",
+          },
+          {
+            key: "X-Frame-Options",
+            value: "DENY",
           },
         ],
       },
     ];
+
+    if (productionAdminBase) {
+      rules.push({
+        source: `${productionAdminBase}/:path*`,
+        headers: [
+          {
+            key: "Cache-Control",
+            value:
+              "private, no-store, no-cache, must-revalidate",
+          },
+          {
+            key: "Pragma",
+            value: "no-cache",
+          },
+          {
+            key: "Expires",
+            value: "0",
+          },
+          {
+            key: "X-Robots-Tag",
+            value:
+              "noindex, nofollow, noarchive, nosnippet",
+          },
+          {
+            key: "Referrer-Policy",
+            value: "same-origin",
+          },
+          {
+            key: "X-Content-Type-Options",
+            value: "nosniff",
+          },
+          {
+            key: "X-Frame-Options",
+            value: "DENY",
+          },
+        ],
+      });
+    }
+
+    return rules;
   },
 
-  // Secret admin path → internal app/admin.
-  // Middleware was removed (CF Free Worker gzip limit); these rewrites are the
-  // primary way /cg-… maps to app/admin. Keep in sync with lib/admin-path.ts.
+  // ==========================================
+  // ADMIN ROUTING
+  // ==========================================
   async rewrites() {
-    const fromEnv = process.env.NEXT_PUBLIC_ADMIN_BASE_PATH?.trim();
-    const secret =
-      fromEnv && fromEnv !== "/admin"
-        ? fromEnv.replace(/\/$/, "")
-        : process.env.NODE_ENV === "production"
-          ? "/cg-ke-a5wkqciyjpg940u3"
-          : null;
+    /*
+     * Request order in production:
+     *
+     * 1. proxy.ts examines the original public URL.
+     * 2. /admin is rejected by proxy.ts.
+     * 3. The secret path is authenticated by proxy.ts.
+     * 4. This rewrite maps the secret path to app/admin internally.
+     *
+     * In development no rewrite is needed because /admin is the accepted
+     * public development route.
+     */
+    if (!productionAdminBase) {
+      return [];
+    }
 
-    const adminRewrites =
-      !secret || secret === "/admin"
-        ? []
-        : (() => {
-            const base = secret.startsWith("/") ? secret : `/${secret}`;
-            return [
-              { source: base, destination: "/admin" },
-              { source: `${base}/:path*`, destination: "/admin/:path*" },
-            ];
-          })();
-
-    // Category pages are real routes at app/services/categories/[slug].
-    // No rewrite needed; middleware consolidates ?category= onto those paths.
-    return adminRewrites;
+    return [
+      {
+        source: productionAdminBase,
+        destination: "/admin",
+      },
+      {
+        source: `${productionAdminBase}/:path*`,
+        destination: "/admin/:path*",
+      },
+    ];
   },
 
   // ==========================================
@@ -143,655 +292,688 @@ const nextConfig: NextConfig = {
   // ==========================================
   async redirects() {
     return [
-      // Unified site search (legacy /search/all → GOV.UK-style /search; query string preserved)
       {
-        source: '/search/all',
-        destination: '/search',
+        source: "/search/all",
+        destination: "/search",
         permanent: true,
       },
 
-      // ==========================================
-      // GOVERNMENT STRUCTURE REORGANIZATION
-      // ==========================================
-      
-      // Old root-level arms → Now under /government/
+      // Government structure
       {
-        source: '/executive',
-        destination: '/government/presidency',
+        source: "/executive",
+        destination: "/government/presidency",
         permanent: true,
       },
       {
-        source: '/executive/:path*',
-        destination: '/government/presidency',
+        source: "/executive/:path*",
+        destination: "/government/presidency",
         permanent: true,
       },
       {
-        source: '/legislature',
-        destination: '/government/legislature',
+        source: "/legislature",
+        destination: "/government/legislature",
         permanent: true,
       },
       {
-        source: '/legislature/:path*',
-        destination: '/government/legislature/:path*',
+        source: "/legislature/:path*",
+        destination:
+          "/government/legislature/:path*",
         permanent: true,
       },
       {
-        source: '/judiciary',
-        destination: '/government/judiciary',
+        source: "/judiciary",
+        destination: "/government/judiciary",
         permanent: true,
       },
       {
-        source: '/judiciary/:path*',
-        destination: '/government/judiciary/:path*',
+        source: "/judiciary/:path*",
+        destination:
+          "/government/judiciary/:path*",
         permanent: true,
       },
       {
-        source: '/counties',
-        destination: '/government/counties',
+        source: "/counties",
+        destination: "/government/counties",
         permanent: true,
       },
       {
-        source: '/counties/:path*',
-        destination: '/government/counties/:path*',
-        permanent: true,
-      },
-
-      // ==========================================
-      // INSTITUTIONS REORGANIZATION
-      // ==========================================
-      
-      // Old /institutions → Now /government/institutions
-      {
-        source: '/institutions',
-        destination: '/government/institutions',
-        permanent: true,
-      },
-      {
-        source: '/institutions/:slug',
-        destination: '/government/institutions/:slug',
-        permanent: true,
-      },
-      // Old institution subpages → Now just the main profile
-      {
-        source: '/institutions/:slug/leadership',
-        destination: '/government/institutions/:slug',
-        permanent: true,
-      },
-      {
-        source: '/institutions/:slug/services',
-        destination: '/government/institutions/:slug',
-        permanent: true,
-      },
-      {
-        source: '/institutions/:slug/locations',
-        destination: '/government/institutions/:slug',
-        permanent: true,
-      },
-      {
-        source: '/institutions/:slug/publications',
-        destination: '/government/institutions/:slug',
-        permanent: true,
-      },
-      {
-        source: '/institutions/:slug/tenders',
-        destination: '/government/institutions/:slug',
-        permanent: true,
-      },
-      {
-        source: '/institutions/:slug/tools',
-        destination: '/government/institutions/:slug',
-        permanent: true,
-      },
-      {
-        source: '/institutions/:slug/data',
-        destination: '/government/institutions/:slug',
+        source: "/counties/:path*",
+        destination:
+          "/government/counties/:path*",
         permanent: true,
       },
 
-      // ==========================================
-      // LEADERS/OFFICIALS → PEOPLE
-      // ==========================================
-      
-      // Old /leaders → Now /government/people
+      // Institutions
       {
-        source: '/leaders',
-        destination: '/government/people',
+        source: "/institutions",
+        destination:
+          "/government/institutions",
         permanent: true,
       },
       {
-        source: '/leaders/:category/:id',
-        destination: '/government/people/:id',
-        permanent: true,
-      },
-      // Old /officials → Now /government/people
-      {
-        source: '/officials',
-        destination: '/government/people',
+        source: "/institutions/:slug",
+        destination:
+          "/government/institutions/:slug",
         permanent: true,
       },
       {
-        source: '/officials/:id',
-        destination: '/government/people/:id',
-        permanent: true,
-      },
-
-      // ==========================================
-      // INDEPENDENT BODIES → COMMISSIONS
-      // ==========================================
-      
-      {
-        source: '/independent-bodies',
-        destination: '/government/commissions',
+        source:
+          "/institutions/:slug/leadership",
+        destination:
+          "/government/institutions/:slug",
         permanent: true,
       },
       {
-        source: '/independent-bodies/:slug',
-        destination: '/government/institutions/:slug',
-        permanent: true,
-      },
-
-      // ==========================================
-      // POLITICS → ELECTIONS
-      // ==========================================
-      
-      {
-        source: '/politics',
-        destination: '/elections',
+        source: "/institutions/:slug/services",
+        destination:
+          "/government/institutions/:slug",
         permanent: true,
       },
       {
-        source: '/politics/general',
-        destination: '/elections/general-elections',
+        source:
+          "/institutions/:slug/locations",
+        destination:
+          "/government/institutions/:slug",
         permanent: true,
       },
       {
-        source: '/politics/by-elections',
-        destination: '/elections/by-elections',
+        source:
+          "/institutions/:slug/publications",
+        destination:
+          "/government/institutions/:slug",
         permanent: true,
       },
       {
-        source: '/politics/referendums',
-        destination: '/elections/referendums',
+        source: "/institutions/:slug/tenders",
+        destination:
+          "/government/institutions/:slug",
         permanent: true,
       },
       {
-        source: '/politics/voter-registration',
-        destination: '/elections/voter-registration',
+        source: "/institutions/:slug/tools",
+        destination:
+          "/government/institutions/:slug",
         permanent: true,
       },
       {
-        source: '/politics/political-parties',
-        destination: '/elections/political-parties',
-        permanent: true,
-      },
-      {
-        source: '/politics/political-parties/:slug',
-        destination: '/elections/political-parties/:slug',
-        permanent: true,
-      },
-      {
-        source: '/politics/votes/:slug',
-        destination: '/elections/results/:slug',
-        permanent: true,
-      },
-      {
-        source: '/politics/coalitions',
-        destination: '/elections/coalitions',
-        permanent: true,
-      },
-      {
-        source: '/politics/polling-stations',
-        destination: '/elections/polling-stations',
-        permanent: true,
-      },
-      {
-        source: '/politics/polling-stations/:slug',
-        destination: '/elections/polling-stations/:slug',
-        permanent: true,
-      },
-      {
-        source: '/politics/registered-voters',
-        destination: '/elections/registered-voters',
-        permanent: true,
-      },
-      {
-        source: '/politics/registered-voters/:slug',
-        destination: '/elections/registered-voters/:slug',
-        permanent: true,
-      },
-      {
-        source: '/politics/iebc-offices',
-        destination: '/elections/iebc-offices',
-        permanent: true,
-      },
-      {
-        source: '/politics/about',
-        destination: '/elections/about',
-        permanent: true,
-      },
-      {
-        source: '/politics/:path*',
-        destination: '/elections/:path*',
+        source: "/institutions/:slug/data",
+        destination:
+          "/government/institutions/:slug",
         permanent: true,
       },
 
-      // ==========================================
-      // PRESIDENTIAL VISITS REORGANIZATION
-      // ==========================================
-      
+      // Leaders and officials
       {
-        source: '/executive/presidency/international-visits',
-        destination: '/government/presidential-visits',
+        source: "/leaders",
+        destination: "/government/people",
         permanent: true,
       },
       {
-        source: '/executive/presidency/international-visits/:slug',
-        destination: '/government/presidential-visits/:slug',
+        source: "/leaders/:category/:id",
+        destination: "/government/people/:id",
         permanent: true,
       },
       {
-        source: '/international-visits',
-        destination: '/government/presidential-visits',
+        source: "/officials",
+        destination: "/government/people",
         permanent: true,
       },
       {
-        source: '/international-visits/:slug',
-        destination: '/government/presidential-visits/:slug',
+        source: "/officials/:id",
+        destination: "/government/people/:id",
         permanent: true,
       },
 
-      // ==========================================
-      // WARDS REORGANIZATION
-      // ==========================================
-      
+      // Independent bodies
       {
-        source: '/counties/wards/:slug',
-        destination: '/government/counties/wards/:slug/about',
+        source: "/independent-bodies",
+        destination:
+          "/government/commissions",
+        permanent: true,
+      },
+      {
+        source: "/independent-bodies/:slug",
+        destination:
+          "/government/institutions/:slug",
         permanent: true,
       },
 
-      // ==========================================
-      // SHORTHAND / ALIAS PATHS (common bookmarks)
-      // ==========================================
+      // Politics to elections
+      {
+        source: "/politics",
+        destination: "/elections",
+        permanent: true,
+      },
+      {
+        source: "/politics/general",
+        destination:
+          "/elections/general-elections",
+        permanent: true,
+      },
+      {
+        source: "/politics/by-elections",
+        destination: "/elections/by-elections",
+        permanent: true,
+      },
+      {
+        source: "/politics/referendums",
+        destination: "/elections/referendums",
+        permanent: true,
+      },
+      {
+        source:
+          "/politics/voter-registration",
+        destination:
+          "/elections/voter-registration",
+        permanent: true,
+      },
+      {
+        source:
+          "/politics/political-parties",
+        destination:
+          "/elections/political-parties",
+        permanent: true,
+      },
+      {
+        source:
+          "/politics/political-parties/:slug",
+        destination:
+          "/elections/political-parties/:slug",
+        permanent: true,
+      },
+      {
+        source: "/politics/votes/:slug",
+        destination: "/elections/results/:slug",
+        permanent: true,
+      },
+      {
+        source: "/politics/coalitions",
+        destination: "/elections/coalitions",
+        permanent: true,
+      },
+      {
+        source:
+          "/politics/polling-stations",
+        destination:
+          "/elections/polling-stations",
+        permanent: true,
+      },
+      {
+        source:
+          "/politics/polling-stations/:slug",
+        destination:
+          "/elections/polling-stations/:slug",
+        permanent: true,
+      },
+      {
+        source:
+          "/politics/registered-voters",
+        destination:
+          "/elections/registered-voters",
+        permanent: true,
+      },
+      {
+        source:
+          "/politics/registered-voters/:slug",
+        destination:
+          "/elections/registered-voters/:slug",
+        permanent: true,
+      },
+      {
+        source: "/politics/iebc-offices",
+        destination: "/elections/iebc-offices",
+        permanent: true,
+      },
+      {
+        source: "/politics/about",
+        destination: "/elections/about",
+        permanent: true,
+      },
+      {
+        source: "/politics/:path*",
+        destination: "/elections/:path*",
+        permanent: true,
+      },
 
+      // Presidential visits
       {
-        source: '/cabinet',
-        destination: '/government/cabinet',
+        source:
+          "/executive/presidency/international-visits",
+        destination:
+          "/government/presidential-visits",
         permanent: true,
       },
       {
-        source: '/presidency',
-        destination: '/government/presidency',
+        source:
+          "/executive/presidency/international-visits/:slug",
+        destination:
+          "/government/presidential-visits/:slug",
         permanent: true,
       },
       {
-        source: '/commissions',
-        destination: '/government/commissions',
+        source: "/international-visits",
+        destination:
+          "/government/presidential-visits",
         permanent: true,
       },
       {
-        source: '/people',
-        destination: '/government/people',
-        permanent: true,
-      },
-      {
-        source: '/people/:slug',
-        destination: '/government/people/:slug',
-        permanent: true,
-      },
-      {
-        source: '/government/officials',
-        destination: '/government/people',
-        permanent: true,
-      },
-      {
-        source: '/government/officials/:slug',
-        destination: '/government/people/:slug',
-        permanent: true,
-      },
-      {
-        source: '/devolution',
-        destination: '/government/counties/devolution',
+        source: "/international-visits/:slug",
+        destination:
+          "/government/presidential-visits/:slug",
         permanent: true,
       },
 
-      // ==========================================
-      // CIVIC / SERVICE URLS (2026 information architecture)
-      // permanent: true → HTTP 308 so search engines transfer ranking
-      // ==========================================
-
-      // GOV.UK-style browse → topics hub
+      // Wards
       {
-        source: '/browse',
-        destination: '/topics',
-        permanent: true,
-      },
-      {
-        source: '/browse/:path*',
-        destination: '/topics/:path*',
+        source: "/counties/wards/:slug",
+        destination:
+          "/government/counties/wards/:slug/about",
         permanent: true,
       },
 
-      // Service discovery aliases
+      // Government shorthand
       {
-        source: '/a-z',
-        destination: '/services/a-z',
+        source: "/cabinet",
+        destination: "/government/cabinet",
         permanent: true,
       },
       {
-        source: '/services-a-z',
-        destination: '/services/a-z',
+        source: "/presidency",
+        destination: "/government/presidency",
         permanent: true,
       },
       {
-        source: '/popular-services',
-        destination: '/services/popular',
+        source: "/commissions",
+        destination:
+          "/government/commissions",
         permanent: true,
       },
       {
-        source: '/services/popular-services',
-        destination: '/services/popular',
+        source: "/people",
+        destination: "/government/people",
+        permanent: true,
+      },
+      {
+        source: "/people/:slug",
+        destination:
+          "/government/people/:slug",
+        permanent: true,
+      },
+      {
+        source: "/government/officials",
+        destination: "/government/people",
+        permanent: true,
+      },
+      {
+        source:
+          "/government/officials/:slug",
+        destination:
+          "/government/people/:slug",
+        permanent: true,
+      },
+      {
+        source: "/devolution",
+        destination:
+          "/government/counties/devolution",
         permanent: true,
       },
 
-      // Digital government / portals
+      // Browse and service discovery
       {
-        source: '/e-citizen',
-        destination: '/ecitizen',
+        source: "/browse",
+        destination: "/topics",
         permanent: true,
       },
       {
-        source: '/eCitizen',
-        destination: '/ecitizen',
+        source: "/browse/:path*",
+        destination: "/topics/:path*",
         permanent: true,
       },
       {
-        source: '/huduma',
-        destination: '/huduma-centres',
+        source: "/a-z",
+        destination: "/services/a-z",
         permanent: true,
       },
       {
-        source: '/huduma-centre',
-        destination: '/huduma-centres',
+        source: "/services-a-z",
+        destination: "/services/a-z",
         permanent: true,
       },
       {
-        source: '/huduma-centers',
-        destination: '/huduma-centres',
+        source: "/popular-services",
+        destination: "/services/popular",
         permanent: true,
       },
       {
-        source: '/huduma-centres/find',
-        destination: '/huduma-centres/locations',
+        source:
+          "/services/popular-services",
+        destination: "/services/popular",
+        permanent: true,
+      },
+
+      // Digital government and portals
+      {
+        source: "/e-citizen",
+        destination: "/ecitizen",
+        permanent: true,
+      },
+      {
+        source: "/eCitizen",
+        destination: "/ecitizen",
+        permanent: true,
+      },
+      {
+        source: "/huduma",
+        destination: "/huduma-centres",
+        permanent: true,
+      },
+      {
+        source: "/huduma-centre",
+        destination: "/huduma-centres",
+        permanent: true,
+      },
+      {
+        source: "/huduma-centers",
+        destination: "/huduma-centres",
+        permanent: true,
+      },
+      {
+        source: "/huduma-centres/find",
+        destination:
+          "/huduma-centres/locations",
         permanent: true,
       },
 
       // Civic explainers
       {
-        source: '/how-government-works-in-kenya',
-        destination: '/how-government-works',
+        source:
+          "/how-government-works-in-kenya",
+        destination:
+          "/how-government-works",
         permanent: true,
       },
-      {
-        source: '/county-vs-national-government',
-        destination: '/county-vs-national',
-        permanent: true,
-      },
-      {
-        source: '/public-money',
-        destination: '/how-public-money-works',
-        permanent: true,
-      },
-      {
-        source: '/public-finance',
-        destination: '/how-public-money-works',
-        permanent: true,
-      },
-      {
-        source: '/find-representatives',
-        destination: '/find-your-representatives',
-        permanent: true,
-      },
-      {
-        source: '/find-my-representatives',
-        destination: '/find-your-representatives',
-        permanent: true,
-      },
-      {
-        source: '/my-representatives',
-        destination: '/find-your-representatives',
-        permanent: true,
-      },
-      {
-        source: '/contact-gov',
-        destination: '/contact-government',
-        permanent: true,
-      },
-      {
-        source: '/contact-the-government',
-        destination: '/contact-government',
-        permanent: true,
-      },
-      {
-        source: '/complaints',
-        destination: '/complain-about-government',
-        permanent: true,
-      },
-      {
-        source: '/complain',
-        destination: '/complain-about-government',
-        permanent: true,
-      },
-      {
-        source: '/ati',
-        destination: '/access-to-information',
-        permanent: true,
-      },
-      {
-        source: '/access-to-info',
-        destination: '/access-to-information',
-        permanent: true,
-      },
-      {
-        source: '/gazette',
-        destination: '/kenya-gazette',
-        permanent: true,
-      },
-      {
-        source: '/official-notices',
-        destination: '/kenya-gazette',
-        permanent: true,
-      },
-      {
-        source: '/kenya-gazette-notices',
-        destination: '/kenya-gazette',
-        permanent: true,
-      },
-      {
-        source: '/scams-and-phishing',
-        destination: '/scams',
-        permanent: true,
-      },
-      {
-        source: '/fake-websites',
-        destination: '/scams',
-        permanent: true,
-      },
-      {
-        source: '/emergency',
-        destination: '/emergency-and-safety',
-        permanent: true,
-      },
-      {
-        source: '/emergencies',
-        destination: '/emergency-and-safety',
-        permanent: true,
-      },
-
-      // Trust / about aliases
-      {
-        source: '/editorial',
-        destination: '/editorial-policy',
-        permanent: true,
-      },
-      {
-        source: '/style-guide',
-        destination: '/content-style-guide',
-        permanent: true,
-      },
-      {
-        source: '/writing-style',
-        destination: '/content-style-guide',
-        permanent: true,
-      },
-      {
-        source: '/corrections-policy',
-        destination: '/corrections',
-        permanent: true,
-      },
-      {
-        source: '/legal-disclaimer',
-        destination: '/disclaimer',
-        permanent: true,
-      },
-      {
-        source: '/contact-us',
-        destination: '/contact',
-        permanent: true,
-      },
-      {
-        source: '/contact-site',
-        destination: '/contact',
-        permanent: true,
-      },
-
-      // Life-event guide aliases
-      {
-        source: '/guides/having-a-baby-in-kenya',
-        destination: '/guides/having-a-baby',
-        permanent: true,
-      },
-      {
-        source: '/guides/death-registration',
-        destination: '/guides/registering-a-death',
-        permanent: true,
-      },
-      {
-        source: '/guides/register-a-death',
-        destination: '/guides/registering-a-death',
-        permanent: true,
-      },
-      {
-        source: '/guides/start-a-business',
-        destination: '/guides/starting-a-business',
-        permanent: true,
-      },
-      {
-        source: '/how-to',
-        destination: '/guides',
-        permanent: true,
-      },
-      {
-        source: '/how-to/:path*',
-        destination: '/guides/:path*',
-        permanent: true,
-      },
-
-      // Society shorthand
-      {
-        source: '/culture',
-        destination: '/society-and-culture',
-        permanent: true,
-      },
-      {
-        source: '/society',
-        destination: '/society-and-culture',
-        permanent: true,
-      },
-      // Placeholder removed until trade/industry expo data is available
-      {
-        source: '/national-events/trade-and-industry-expositions',
-        destination: '/national-events#agricultural-and-trade-expositions',
-        permanent: true,
-      },
-      {
-        source: '/national-events/dsw',
-        destination: '/national-events/devolution-sensitisation-week',
-        permanent: true,
-      },
-
-      // ==========================================
-      // FLATTENED IA (2026) — old nested paths → short paths
-      // Prefer Cloudflare Redirect Rules for 0 Worker CPU; these are backup.
-      // ==========================================
-      {
-        source: '/society-and-culture/national-events',
-        destination: '/national-events',
-        permanent: true,
-      },
-      {
-        source: '/society-and-culture/national-events/:path*',
-        destination: '/national-events/:path*',
-        permanent: true,
-      },
-      {
-        source: '/society-and-culture/national-symbols',
-        destination: '/national-symbols',
-        permanent: true,
-      },
-      {
-        source: '/society-and-culture/religion-and-faith',
-        destination: '/religion-and-faith',
-        permanent: true,
-      },
-      // Legacy trade expos under old prefix
       {
         source:
-          '/society-and-culture/national-events/trade-and-industry-expositions',
-        destination: '/national-events#agricultural-and-trade-expositions',
+          "/county-vs-national-government",
+        destination: "/county-vs-national",
         permanent: true,
       },
       {
-        source: '/society-and-culture/national-events/dsw',
-        destination: '/national-events/devolution-sensitisation-week',
+        source: "/public-money",
+        destination:
+          "/how-public-money-works",
+        permanent: true,
+      },
+      {
+        source: "/public-finance",
+        destination:
+          "/how-public-money-works",
+        permanent: true,
+      },
+      {
+        source: "/find-representatives",
+        destination:
+          "/find-your-representatives",
+        permanent: true,
+      },
+      {
+        source: "/find-my-representatives",
+        destination:
+          "/find-your-representatives",
+        permanent: true,
+      },
+      {
+        source: "/my-representatives",
+        destination:
+          "/find-your-representatives",
+        permanent: true,
+      },
+      {
+        source: "/contact-gov",
+        destination: "/contact-government",
+        permanent: true,
+      },
+      {
+        source: "/contact-the-government",
+        destination: "/contact-government",
+        permanent: true,
+      },
+      {
+        source: "/complaints",
+        destination:
+          "/complain-about-government",
+        permanent: true,
+      },
+      {
+        source: "/complain",
+        destination:
+          "/complain-about-government",
+        permanent: true,
+      },
+      {
+        source: "/ati",
+        destination:
+          "/access-to-information",
+        permanent: true,
+      },
+      {
+        source: "/access-to-info",
+        destination:
+          "/access-to-information",
+        permanent: true,
+      },
+      {
+        source: "/gazette",
+        destination: "/kenya-gazette",
+        permanent: true,
+      },
+      {
+        source: "/official-notices",
+        destination: "/kenya-gazette",
+        permanent: true,
+      },
+      {
+        source: "/kenya-gazette-notices",
+        destination: "/kenya-gazette",
+        permanent: true,
+      },
+      {
+        source: "/scams-and-phishing",
+        destination: "/scams",
+        permanent: true,
+      },
+      {
+        source: "/fake-websites",
+        destination: "/scams",
+        permanent: true,
+      },
+      {
+        source: "/emergency",
+        destination: "/emergency-and-safety",
+        permanent: true,
+      },
+      {
+        source: "/emergencies",
+        destination: "/emergency-and-safety",
         permanent: true,
       },
 
-      // ==========================================
-      // CONSTITUTION — legacy flat article paths
-      // (only if older crawlers used /constitution/article/N)
-      // ==========================================
+      // Trust and about pages
       {
-        source: '/constitution/articles/:article',
-        destination: '/constitution/article/:article',
+        source: "/editorial",
+        destination: "/editorial-policy",
+        permanent: true,
+      },
+      {
+        source: "/style-guide",
+        destination: "/content-style-guide",
+        permanent: true,
+      },
+      {
+        source: "/writing-style",
+        destination: "/content-style-guide",
+        permanent: true,
+      },
+      {
+        source: "/corrections-policy",
+        destination: "/corrections",
+        permanent: true,
+      },
+      {
+        source: "/legal-disclaimer",
+        destination: "/disclaimer",
+        permanent: true,
+      },
+      {
+        source: "/contact-us",
+        destination: "/contact",
+        permanent: true,
+      },
+      {
+        source: "/contact-site",
+        destination: "/contact",
         permanent: true,
       },
 
-      // Counties directory moved off /all
+      // Life-event guides
       {
-        source: '/government/counties/all',
-        destination: '/government/counties',
+        source:
+          "/guides/having-a-baby-in-kenya",
+        destination: "/guides/having-a-baby",
+        permanent: true,
+      },
+      {
+        source:
+          "/guides/death-registration",
+        destination:
+          "/guides/registering-a-death",
+        permanent: true,
+      },
+      {
+        source: "/guides/register-a-death",
+        destination:
+          "/guides/registering-a-death",
+        permanent: true,
+      },
+      {
+        source: "/guides/start-a-business",
+        destination:
+          "/guides/starting-a-business",
+        permanent: true,
+      },
+      {
+        source: "/how-to",
+        destination: "/guides",
+        permanent: true,
+      },
+      {
+        source: "/how-to/:path*",
+        destination: "/guides/:path*",
         permanent: true,
       },
 
-      // County Assemblies moved under /government/counties
+      // Society and national events
       {
-        source: '/government/county-assemblies',
-        destination: '/government/counties/county-assemblies',
+        source: "/culture",
+        destination: "/society-and-culture",
         permanent: true,
       },
       {
-        source: '/government/county-assemblies/:path*',
-        destination: '/government/counties/county-assemblies/:path*',
+        source: "/society",
+        destination: "/society-and-culture",
+        permanent: true,
+      },
+      {
+        source:
+          "/national-events/trade-and-industry-expositions",
+        destination:
+          "/national-events#agricultural-and-trade-expositions",
+        permanent: true,
+      },
+      {
+        source: "/national-events/dsw",
+        destination:
+          "/national-events/devolution-sensitisation-week",
+        permanent: true,
+      },
+      {
+        source:
+          "/society-and-culture/national-events",
+        destination: "/national-events",
+        permanent: true,
+      },
+      {
+        source:
+          "/society-and-culture/national-events/:path*",
+        destination:
+          "/national-events/:path*",
+        permanent: true,
+      },
+      {
+        source:
+          "/society-and-culture/national-symbols",
+        destination: "/national-symbols",
+        permanent: true,
+      },
+      {
+        source:
+          "/society-and-culture/religion-and-faith",
+        destination: "/religion-and-faith",
+        permanent: true,
+      },
+      {
+        source:
+          "/society-and-culture/national-events/trade-and-industry-expositions",
+        destination:
+          "/national-events#agricultural-and-trade-expositions",
+        permanent: true,
+      },
+      {
+        source:
+          "/society-and-culture/national-events/dsw",
+        destination:
+          "/national-events/devolution-sensitisation-week",
+        permanent: true,
+      },
+
+      // Constitution
+      {
+        source:
+          "/constitution/articles/:article",
+        destination:
+          "/constitution/article/:article",
+        permanent: true,
+      },
+
+      // County directories
+      {
+        source:
+          "/government/counties/all",
+        destination: "/government/counties",
+        permanent: true,
+      },
+      {
+        source:
+          "/government/county-assemblies",
+        destination:
+          "/government/counties/county-assemblies",
+        permanent: true,
+      },
+      {
+        source:
+          "/government/county-assemblies/:path*",
+        destination:
+          "/government/counties/county-assemblies/:path*",
         permanent: true,
       },
     ];
   },
 };
 
-// ✅ CONDITIONALLY WRAP WITH BUNDLE ANALYZER
-   export default process.env.ANALYZE === "true" 
-     ? withBundleAnalyzer({ enabled: true })(nextConfig) 
-     : nextConfig;
+initOpenNextCloudflareForDev();
 
-   initOpenNextCloudflareForDev();
+export default process.env.ANALYZE === "true"
+  ? withBundleAnalyzer({
+      enabled: true,
+    })(nextConfig)
+  : nextConfig;
