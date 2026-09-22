@@ -6,7 +6,7 @@ import { adminPath } from "@/lib/admin-path";
 import GovUKBackLink from "@/components/govuk/BackLink";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import ActionDropdown from "@/components/govuk/ActionDropdown";
-import DeleteModal from "@/components/govuk/DeleteModal";
+import { INSTITUTION_STATUS_OPTIONS, isInstitutionHistorical } from "@/lib/institutions/fields";
 
 type Institution = {
   id: string;
@@ -19,6 +19,7 @@ type Institution = {
   arm_of_government?: string | null;
   mtef_sector?: string | null;
   is_active: boolean;
+  status?: string | null;
   description?: string | null;
 };
 
@@ -35,16 +36,12 @@ export default function AdminInstitutionsPage() {
   const [q, setQ] = useState("");
   const [selectedMainCategory, setSelectedMainCategory] = useState("All");
   const [selectedSubCategory, setSelectedSubCategory] = useState("All");
+  const [lifecycleStatus, setLifecycleStatus] = useState("");
   const [showInactive, setShowInactive] = useState(false);
 
   const [armOptions, setArmOptions] = useState<string[]>([]);
   const [typeOptions, setTypeOptions] = useState<string[]>([]);
 
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [institutionToDelete, setInstitutionToDelete] = useState<{
-    id: string;
-    name: string;
-  } | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
 
   // Distinct filter options across the full catalogue (not just the current page)
@@ -78,13 +75,14 @@ export default function AdminInstitutionsPage() {
       params.set("limit", String(PAGE_SIZE));
       params.set("offset", String(offset));
       if (q.trim()) params.set("q", q.trim());
+      if (lifecycleStatus) params.set("status", lifecycleStatus);
       if (selectedMainCategory !== "All") {
         params.set("arm", selectedMainCategory);
       }
       if (selectedSubCategory !== "All") {
         params.set("type", selectedSubCategory);
       }
-      // Default: active only. Checkbox “Show inactive” loads everyone.
+      // Default: active only. Checkbox “Include unpublished records” loads everyone.
       if (!showInactive) params.set("active", "1");
 
       const res = await fetch(`/api/admin/institutions?${params}`, {
@@ -105,10 +103,11 @@ export default function AdminInstitutionsPage() {
     } finally {
       setLoading(false);
     }
-  }, [offset, q, selectedMainCategory, selectedSubCategory, showInactive]);
+  }, [offset, q, selectedMainCategory, selectedSubCategory, showInactive, lifecycleStatus]);
 
   useEffect(() => {
-    fetchInstitutions();
+    const timer = window.setTimeout(() => { void fetchInstitutions(); }, 0);
+    return () => window.clearTimeout(timer);
   }, [fetchInstitutions]);
 
   const mainCategories = useMemo(
@@ -134,6 +133,7 @@ export default function AdminInstitutionsPage() {
     setSelectedMainCategory("All");
     setSelectedSubCategory("All");
     setShowInactive(false);
+    setLifecycleStatus("");
     setOffset(0);
   };
 
@@ -162,36 +162,6 @@ export default function AdminInstitutionsPage() {
       await fetchInstitutions();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to update status");
-    }
-  };
-
-  const openDeleteModal = (id: string, name: string) => {
-    setInstitutionToDelete({ id, name });
-    setDeleteModalOpen(true);
-  };
-
-  const confirmDelete = async () => {
-    if (!institutionToDelete) return;
-    setError(null);
-    try {
-      const res = await fetch(
-        `/api/admin/institutions/${institutionToDelete.id}`,
-        { method: "DELETE", credentials: "include" },
-      );
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || "Delete failed");
-      setActionMessage(`Deleted “${institutionToDelete.name}”.`);
-      // If last item on page deleted, step back a page when possible
-      if (institutions.length <= 1 && offset >= PAGE_SIZE) {
-        setOffset(Math.max(0, offset - PAGE_SIZE));
-      } else {
-        await fetchInstitutions();
-      }
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Delete failed");
-    } finally {
-      setDeleteModalOpen(false);
-      setInstitutionToDelete(null);
     }
   };
 
@@ -304,6 +274,13 @@ export default function AdminInstitutionsPage() {
             </div>
           </div>
 
+          <div className="govuk-form-group">
+            <label className="govuk-label" htmlFor="lifecycle-status">Lifecycle status</label>
+            <select id="lifecycle-status" className="govuk-select" value={lifecycleStatus} onChange={event => { setLifecycleStatus(event.target.value); setOffset(0); }}>
+              <option value="">All lifecycle statuses</option>{INSTITUTION_STATUS_OPTIONS.map(status => <option key={status} value={status}>{status}</option>)}
+            </select>
+            <p className="govuk-hint">Keep former, dissolved and renamed institutions published for historical context. Edit a record to add dated names, operational periods and successor links. Institution records cannot be deleted.</p>
+          </div>
           <div className="govuk-checkboxes govuk-!-margin-bottom-4">
             <div className="govuk-checkboxes__item">
               <input
@@ -375,7 +352,7 @@ export default function AdminInstitutionsPage() {
                     Level
                   </th>
                   <th className="govuk-table__header" scope="col">
-                    Status
+                    Publication and lifecycle
                   </th>
                   <th className="govuk-table__header" scope="col">
                     Actions
@@ -413,12 +390,14 @@ export default function AdminInstitutionsPage() {
                           ? "Published"
                           : "Unpublished"}
                       </span>
+                      <p className="govuk-body-s govuk-!-margin-top-2 govuk-!-margin-bottom-0">{isInstitutionHistorical(inst.status) ? "Historical: " : ""}{inst.status || "Active"}</p>
+                      <p className="govuk-body-s govuk-!-margin-top-2 govuk-!-margin-bottom-0">{isInstitutionHistorical(inst.status) ? "Historical: " : ""}{inst.status || "Active"}</p>
                     </td>
                     <td className="govuk-table__cell">
                       <ActionDropdown
                         actions={[
                           {
-                            label: "Edit",
+                            label: "Edit details and history",
                             href: adminPath(`institutions/${inst.id}/edit`),
                           },
                           {
@@ -432,12 +411,6 @@ export default function AdminInstitutionsPage() {
                                 : "Publish",
                             onClick: () =>
                               toggleActive(inst.id, inst.is_active !== false),
-                          },
-                          {
-                            label: "Delete",
-                            destructive: true,
-                            onClick: () =>
-                              openDeleteModal(inst.id, inst.name),
                           },
                         ]}
                       />
@@ -472,14 +445,6 @@ export default function AdminInstitutionsPage() {
             </button>
           </div>
         )}
-
-        <DeleteModal
-          isOpen={deleteModalOpen}
-          onClose={() => setDeleteModalOpen(false)}
-          onConfirm={confirmDelete}
-          title="Delete institution"
-          message={`Delete "${institutionToDelete?.name}"? This cannot be undone.`}
-        />
       </main>
     </div>
   );

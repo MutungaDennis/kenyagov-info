@@ -2,14 +2,18 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { adminPath } from "@/lib/admin-path";
+import { requireAdmin } from "@/lib/supabase/server";
+import AdminSidebar from "@/components/admin/AdminSidebar";
+import styles from "@/components/admin/admin-shell.module.css";
 
 export const dynamic = "force-dynamic";
 
-export default function AdminAuthLayout({
+export default async function AdminProtectedLayout({
   children,
 }: {
   children: ReactNode;
 }) {
+  await requireAdmin();
   return (
     <div className="admin-service">
       <a href="#main-content" className="govuk-skip-link">
@@ -19,7 +23,7 @@ export default function AdminAuthLayout({
       <header className="admin-service-header">
         <div className="admin-service-header__inner">
           <Link
-            href={adminPath("login")}
+            href={adminPath()}
             className="admin-service-header__brand"
           >
             <span className="admin-service-header__name">
@@ -31,19 +35,22 @@ export default function AdminAuthLayout({
             </span>
           </Link>
 
-          <a
+          <Link
             href="/"
             className="govuk-link govuk-link--inverse"
             style={{ color: "#ffffff" }}
           >
             Back to public site
-          </a>
+          </Link>
         </div>
       </header>
 
-      <main className="admin-auth-main" id="main-content">
+      <div className={styles.shell}>
+      <AdminSidebar />
+      <main className={styles.main} id="main-content">
         {children}
       </main>
+      </div>
     </div>
   );
 }

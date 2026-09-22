@@ -1,264 +1,464 @@
 // app/privacy/page.tsx
+
+import type { Metadata } from "next";
 import Link from "next/link";
-import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-import PrintPageButton from "@/components/govuk/PrintPageButton";
+import PageIntro from "@/components/site/PageIntro";
+import RelatedNav from "@/components/site/RelatedNav";
 
 export const revalidate = 86400;
+
+export const metadata: Metadata = {
+  title: "Privacy policy",
+  description:
+    "How CitizenGuide.KE collects, uses and protects personal data, and your rights under Kenya's data protection law.",
+};
 
 export default function PrivacyPage() {
   return (
     <>
-    
-      <GovUKBreadcrumbs
-        items={[
+      <PageIntro
+        breadcrumbs={[
           { text: "Home", href: "/" },
-          { text: "Privacy policy", href: "/privacy" },
+          { text: "Privacy policy" },
         ]}
+        title="Privacy policy"
+        lead="This policy explains what personal data CitizenGuide.KE collects, how we use it and your data protection rights."
+        showPrint
       />
 
-      
-        <div className="govuk-grid-row">
-          <div className="govuk-grid-column-two-thirds">
-            
-            <h1 className="govuk-heading-xl">Privacy policy</h1>
-            
-            <p className="govuk-body-l">
-              This policy explains how CitizenGuide.KE collects and uses your personal information. We follow the Kenya Data Protection Act, 2019.
-            </p>
-
-            <PrintPageButton />
-
-            <div className="govuk-inset-text">
-              <p className="govuk-body">
-                CitizenGuide.KE is an independent website. It is not part of the Government of Kenya.
-              </p>
-            </div>
-
-            <hr className="govuk-section-break govuk-section-break--l govuk-section-break--visible" />
-
-            {/* What information we collect */}
-            <h2 className="govuk-heading-l">What information we collect</h2>
-            <p className="govuk-body">
-              You can browse most of this website without giving us any personal information.
-            </p>
-            <p className="govuk-body">
-              We only collect personal information if you choose to give it to us, for example when you:
-            </p>
-            <ul className="govuk-list govuk-list--bullet">
-              <li>fill in the contact form</li>
-              <li>send us feedback</li>
-              <li>report an error or broken link</li>
-            </ul>
-            <p className="govuk-body">
-              When you contact us, we may collect:
-            </p>
-            <ul className="govuk-list govuk-list--bullet">
-              <li>your name (if you provide it)</li>
-              <li>your email address (if you provide it)</li>
-              <li>the content of your message</li>
-            </ul>
-
-            <h3 className="govuk-heading-m">Automatic information</h3>
-            <p className="govuk-body">
-              Like most websites, we collect some information automatically when you visit. This includes:
-            </p>
-            <ul className="govuk-list govuk-list--bullet">
-              <li>the pages you visit</li>
-              <li>how long you spend on each page</li>
-              <li>the type of device and browser you use</li>
-              <li>your approximate location (country or region level)</li>
-            </ul>
-            <p className="govuk-body">
-              This information is anonymous. It does not identify you personally. We use it to understand how people use the website so we can improve it.
-            </p>
-
-            <hr className="govuk-section-break govuk-section-break--l govuk-section-break--visible" />
-
-            {/* Why we collect information */}
-            <h2 className="govuk-heading-l">Why we collect information</h2>
-            <p className="govuk-body">
-              We use the information we collect to:
-            </p>
-            <ul className="govuk-list govuk-list--bullet">
-              <li>respond to your messages and feedback</li>
-              <li>fix errors and improve the website</li>
-              <li>understand how people use the site</li>
-              <li>keep the website secure</li>
-            </ul>
-            <p className="govuk-body">
-              We do not use your information for advertising or marketing.
-            </p>
-
-            <hr className="govuk-section-break govuk-section-break--l govuk-section-break--visible" />
-
-            {/* Cookies */}
-            <h2 className="govuk-heading-l">Cookies</h2>
-            <p className="govuk-body">
-              We use cookies to make the website work and to collect anonymous information about how it is used.
-            </p>
-            <p className="govuk-body">
-              Read our{' '}
-              <Link href="/cookies" className="govuk-link">
-                cookies policy
-              </Link>
-              {' '}to find out what cookies we use and how to manage them.
-            </p>
-
-            <hr className="govuk-section-break govuk-section-break--l govuk-section-break--visible" />
-
-            {/* How long we keep your information */}
-            <h2 className="govuk-heading-l">How long we keep your information</h2>
-            <p className="govuk-body">
-              We only keep your personal information for as long as we need it to respond to your message or improve the website. After that, we delete it.
-            </p>
-            <p className="govuk-body">
-              Anonymous usage data (such as page views and browser types) may be kept for longer to help us understand trends over time.
-            </p>
-
-            <hr className="govuk-section-break govuk-section-break--l govuk-section-break--visible" />
-
-            {/* Sharing your information */}
-            <h2 className="govuk-heading-l">Sharing your information</h2>
-            <p className="govuk-body">
-              We do not sell, rent, or share your personal information with other organisations, except where required by law.
-            </p>
-            <p className="govuk-body">
-              We may use third-party services to help us run the website, such as hosting providers or analytics tools. These services are contractually required to keep your information secure and confidential.
-            </p>
-
-            <hr className="govuk-section-break govuk-section-break--l govuk-section-break--visible" />
-
-            {/* Links to other websites */}
-            <h2 className="govuk-heading-l">Links to other websites</h2>
-            <p className="govuk-body">
-              This website contains links to other websites, including official government portals such as the{' '}
-              <a 
-                href="https://www.ecitizen.go.ke" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="govuk-link"
-              >
-                eCitizen portal
-                <svg 
-                  xmlns="http://www.w3.org/2000/svg" 
-                  width="14" 
-                  height="14" 
-                  viewBox="0 0 24 24" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  strokeWidth="2" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                  focusable="false"
-                  style={{ marginLeft: '4px', verticalAlign: 'middle', display: 'inline-block' }}
-                >
-                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                  <polyline points="15 3 21 3 21 9" />
-                  <line x1="10" y1="14" x2="21" y2="3" />
-                </svg>
-                <span className="govuk-visually-hidden"> (opens in a new tab)</span>
-              </a>
-              .
-            </p>
-            <p className="govuk-body">
-              This privacy policy only applies to CitizenGuide.KE. When you click a link to another website, you should read that website's privacy policy.
-            </p>
-
-            <hr className="govuk-section-break govuk-section-break--l govuk-section-break--visible" />
-
-            {/* Your rights */}
-            <h2 className="govuk-heading-l">Your rights</h2>
-            <p className="govuk-body">
-              Under the Kenya Data Protection Act, 2019, you have the right to:
-            </p>
-            <ul className="govuk-list govuk-list--bullet">
-              <li>ask what personal information we hold about you</li>
-              <li>ask us to correct inaccurate information</li>
-              <li>ask us to delete your personal information</li>
-              <li>object to how we use your information</li>
-              <li>withdraw consent at any time (where we have asked for your consent)</li>
-            </ul>
-            <p className="govuk-body">
-              To make a request, please contact us using the details below.
-            </p>
-
-            <hr className="govuk-section-break govuk-section-break--l govuk-section-break--visible" />
-
-            {/* Contact us */}
-            <h2 className="govuk-heading-l">Contact us</h2>
-            <p className="govuk-body">
-              If you have questions about this privacy policy, want to access your personal information, or want to make a complaint, please contact us:
-            </p>
-            <ul className="govuk-list govuk-list--spaced">
-              <li>
-                <Link href="/contact" className="govuk-link">
-                  Contact us using our form
-                </Link>
-              </li>
-              <li>
-                Email us at{' '}
-                <a href="mailto:info@citizenguide.ke" className="govuk-link">
-                  info@citizenguide.ke
-                </a>
-              </li>
-            </ul>
-            <p className="govuk-body">
-              We will respond to your request as soon as possible, and within 30 days.
-            </p>
-
-            <hr className="govuk-section-break govuk-section-break--l govuk-section-break--visible" />
-
-            {/* Changes to this policy */}
-            <h2 className="govuk-heading-l">Changes to this policy</h2>
-            <p className="govuk-body">
-              We may update this privacy policy from time to time. Any changes will be posted on this page.
-            </p>
-            <p className="govuk-body">
-              Last updated: 2 July 2026
-            </p>
-
+      <div className="govuk-grid-row">
+        <div className="govuk-grid-column-two-thirds">
+          <div className="govuk-inset-text">
+            CitizenGuide.KE is an independent civic information platform. It is
+            not a Government of Kenya website.
           </div>
 
-          {/* Sidebar */}
-          <div className="govuk-grid-column-one-third">
-            <aside className="govuk-!-display-none-print" role="complementary">
-              <h2 className="govuk-heading-m">Related pages</h2>
-              <nav role="navigation">
-                <ul className="govuk-list govuk-list--spaced">
-                  <li>
-                    <Link href="/cookies" className="govuk-link">
-                      Cookies policy
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="/terms" className="govuk-link">
-                      Terms and conditions
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="/accessibility" className="govuk-link">
-                      Accessibility statement
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="/about" className="govuk-link">
-                      About CitizenGuide.KE
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="/contact" className="govuk-link">
-                      Contact us
-                    </Link>
-                  </li>
-                </ul>
-              </nav>
-            </aside>
-          </div>
+          <p className="govuk-body">
+            We are committed to handling personal data responsibly and in
+            accordance with applicable Kenyan data protection law, including
+            the Data Protection Act, 2019.
+          </p>
+
+          <h2 className="govuk-heading-l">
+            Who is responsible for your data
+          </h2>
+
+          <p className="govuk-body">
+            CitizenGuide.KE is operated by Citizen Guide Africa Limited.
+          </p>
+
+          <p className="govuk-body">
+            Where Citizen Guide Africa Limited determines why and how personal
+            data is processed through CitizenGuide.KE, it is the data
+            controller for that information.
+          </p>
+
+          <p className="govuk-body">
+            If you have a question about how we use your personal data, you can{" "}
+            <Link href="/contact" className="govuk-link">
+              contact us
+            </Link>
+            .
+          </p>
+
+          <h2 className="govuk-heading-l">
+            What personal data we collect
+          </h2>
+
+          <p className="govuk-body">
+            You can browse most of CitizenGuide.KE without giving us your name
+            or contact details.
+          </p>
+
+          <h3 className="govuk-heading-m">
+            Information you give us
+          </h3>
+
+          <p className="govuk-body">
+            We may collect personal data when you choose to contact us, send
+            feedback or report a correction.
+          </p>
+
+          <p className="govuk-body">
+            Depending on how you contact us, this may include:
+          </p>
+
+          <ul className="govuk-list govuk-list--bullet">
+            <li>your name, if you provide it</li>
+            <li>your email address or other contact details</li>
+            <li>the information contained in your message</li>
+            <li>
+              any supporting information or documents you choose to provide
+            </li>
+          </ul>
+
+          <p className="govuk-body">
+            Do not send us sensitive personal information unless it is
+            necessary for us to deal with your request.
+          </p>
+
+          <h3 className="govuk-heading-m">
+            Technical and usage information
+          </h3>
+
+          <p className="govuk-body">
+            When you use CitizenGuide.KE, some technical information may be
+            collected automatically by our systems or service providers.
+          </p>
+
+          <p className="govuk-body">
+            This may include:
+          </p>
+
+          <ul className="govuk-list govuk-list--bullet">
+            <li>pages you visit and how you use the website</li>
+            <li>the date and time of your visit</li>
+            <li>your browser and device type</li>
+            <li>technical information such as your IP address</li>
+            <li>an approximate location derived from technical information</li>
+            <li>information about errors, performance and security events</li>
+          </ul>
+
+          <p className="govuk-body">
+            Where possible, we use aggregated or de-identified information to
+            understand how people use CitizenGuide.KE.
+          </p>
+
+          <h2 className="govuk-heading-l">
+            Personal data in public records
+          </h2>
+
+          <p className="govuk-body">
+            CitizenGuide.KE collects, organises and links information from
+            publicly available civic and government sources. These may include
+            the Kenya Gazette, legislation, parliamentary records, court
+            records and publications from public bodies.
+          </p>
+
+          <p className="govuk-body">
+            Public records may contain personal data. For example, they may
+            identify public officers, elected representatives, judicial
+            officers, company officers or other people named in an official
+            record.
+          </p>
+
+          <p className="govuk-body">
+            The fact that information is publicly available does not mean that
+            we treat it as having no data protection considerations. We aim to
+            process and present personal data from public records lawfully,
+            fairly and in a way that is relevant to CitizenGuide.KE&apos;s
+            civic information purpose.
+          </p>
+
+          <p className="govuk-body">
+            We may retain links between people, institutions and public records
+            where those relationships are supported by the source material.
+          </p>
+
+          <p className="govuk-body">
+            If you believe personal data about you has been published
+            incorrectly, attributed to the wrong person or presented without
+            appropriate context, you can{" "}
+            <Link href="/corrections" className="govuk-link">
+              report a correction
+            </Link>{" "}
+            or{" "}
+            <Link href="/contact" className="govuk-link">
+              contact us
+            </Link>
+            .
+          </p>
+
+          <h2 className="govuk-heading-l">
+            Why we use personal data
+          </h2>
+
+          <p className="govuk-body">
+            We only use personal data where we have a reason to do so and a
+            lawful basis under applicable data protection law.
+          </p>
+
+          <p className="govuk-body">
+            Depending on the circumstances, we may use personal data to:
+          </p>
+
+          <ul className="govuk-list govuk-list--bullet">
+            <li>respond to questions, feedback and correction requests</li>
+            <li>operate, maintain and improve CitizenGuide.KE</li>
+            <li>understand how the website is being used</li>
+            <li>detect and prevent misuse, fraud or security threats</li>
+            <li>
+              organise and present information from public and civic records
+            </li>
+            <li>comply with legal and regulatory obligations</li>
+          </ul>
+
+          <h3 className="govuk-heading-m">
+            Our lawful bases
+          </h3>
+
+          <p className="govuk-body">
+            The lawful basis we rely on depends on why the information is being
+            processed. This may include:
+          </p>
+
+          <ul className="govuk-list govuk-list--bullet">
+            <li>
+              <strong>consent</strong>, where you have given us permission for
+              a particular use
+            </li>
+            <li>
+              <strong>legitimate interests</strong>, where processing is
+              necessary for operating, securing or improving CitizenGuide.KE
+              and those interests are not overridden by your rights
+            </li>
+            <li>
+              <strong>legal obligation</strong>, where we need to process
+              information to comply with the law
+            </li>
+            <li>
+              other lawful grounds available under Kenyan data protection law
+              where they apply to the circumstances
+            </li>
+          </ul>
+
+          <h2 className="govuk-heading-l">
+            Cookies and analytics
+          </h2>
+
+          <p className="govuk-body">
+            CitizenGuide.KE may use cookies and similar technologies that are
+            necessary for the website to work, remember choices you make or
+            help us understand how the website is used.
+          </p>
+
+          <p className="govuk-body">
+            We do not use personal data collected through CitizenGuide.KE for
+            third-party behavioural advertising.
+          </p>
+
+          <p className="govuk-body">
+            Read our{" "}
+            <Link href="/cookies" className="govuk-link">
+              cookies policy
+            </Link>{" "}
+            for more information about the cookies and similar technologies we
+            use and the choices available to you.
+          </p>
+
+          <h2 className="govuk-heading-l">
+            Who we share personal data with
+          </h2>
+
+          <p className="govuk-body">
+            We do not sell or rent your personal data.
+          </p>
+
+          <p className="govuk-body">
+            We may use trusted service providers to help us operate
+            CitizenGuide.KE. These may include providers of:
+          </p>
+
+          <ul className="govuk-list govuk-list--bullet">
+            <li>website hosting and infrastructure</li>
+            <li>database and content management services</li>
+            <li>website analytics</li>
+            <li>email and communications services</li>
+            <li>security, monitoring and error reporting</li>
+          </ul>
+
+          <p className="govuk-body">
+            Where these providers process personal data on our behalf, we take
+            appropriate steps to require them to protect it and use it only for
+            the purposes for which it was provided.
+          </p>
+
+          <p className="govuk-body">
+            We may also disclose personal data where required or permitted by
+            law, including where necessary to respond to a lawful request from
+            a court, regulator or other authorised public body.
+          </p>
+
+          <h2 className="govuk-heading-l">
+            Transfers outside Kenya
+          </h2>
+
+          <p className="govuk-body">
+            Some of the service providers we use may process or store
+            information outside Kenya.
+          </p>
+
+          <p className="govuk-body">
+            Where personal data is transferred outside Kenya, we take
+            appropriate steps to ensure that the transfer is made in accordance
+            with applicable Kenyan data protection requirements and that the
+            information remains appropriately protected.
+          </p>
+
+          <h2 className="govuk-heading-l">
+            How long we keep personal data
+          </h2>
+
+          <p className="govuk-body">
+            We keep personal data only for as long as it is reasonably
+            necessary for the purpose for which it was collected, including
+            where we need to retain it for legal, security, operational or
+            record-keeping purposes.
+          </p>
+
+          <p className="govuk-body">
+            Different types of information may therefore be kept for different
+            periods.
+          </p>
+
+          <p className="govuk-body">
+            Information contained in public records may remain available for
+            longer where retaining the record continues to serve a lawful civic
+            or public information purpose.
+          </p>
+
+          <h2 className="govuk-heading-l">
+            How we protect personal data
+          </h2>
+
+          <p className="govuk-body">
+            We use appropriate technical and organisational measures to protect
+            personal data against unauthorised access, alteration, disclosure,
+            loss or destruction.
+          </p>
+
+          <p className="govuk-body">
+            No website or online service can guarantee absolute security. We
+            review our safeguards as CitizenGuide.KE and the technologies we
+            use develop.
+          </p>
+
+          <h2 className="govuk-heading-l">
+            Your data protection rights
+          </h2>
+
+          <p className="govuk-body">
+            Kenyan data protection law gives you rights over your personal
+            data. Depending on the circumstances, you may have the right to:
+          </p>
+
+          <ul className="govuk-list govuk-list--bullet">
+            <li>be informed about how your personal data is being used</li>
+            <li>ask for access to personal data we hold about you</li>
+            <li>ask us to correct inaccurate or misleading personal data</li>
+            <li>ask for personal data to be deleted where the law allows</li>
+            <li>object to certain uses of your personal data</li>
+            <li>ask us to restrict certain processing</li>
+            <li>request data portability where applicable</li>
+            <li>
+              withdraw consent where we rely on your consent to process
+              personal data
+            </li>
+          </ul>
+
+          <p className="govuk-body">
+            Some rights are subject to legal conditions and exceptions. For
+            example, a request to delete personal data does not necessarily
+            require the removal of information that must or may lawfully remain
+            in an official or historical public record.
+          </p>
+
+          <p className="govuk-body">
+            To exercise a data protection right,{" "}
+            <Link href="/contact" className="govuk-link">
+              contact us
+            </Link>{" "}
+            and tell us what you are requesting. We may need to verify your
+            identity before acting on a request.
+          </p>
+
+          <h2 className="govuk-heading-l">
+            Complaints
+          </h2>
+
+          <p className="govuk-body">
+            If you are concerned about how CitizenGuide.KE has handled your
+            personal data, please contact us first so that we can look into the
+            matter.
+          </p>
+
+          <p className="govuk-body">
+            You also have the right to make a complaint to Kenya&apos;s Office
+            of the Data Protection Commissioner (ODPC).
+          </p>
+
+          <h2 className="govuk-heading-l">
+            Links to other websites
+          </h2>
+
+          <p className="govuk-body">
+            CitizenGuide.KE links to government websites and other external
+            sources. This privacy policy applies only to CitizenGuide.KE.
+          </p>
+
+          <p className="govuk-body">
+            When you follow a link to another website, that website is
+            responsible for its own privacy practices. You should read its
+            privacy information to understand how it handles your personal
+            data.
+          </p>
+
+          <h2 className="govuk-heading-l">
+            Changes to this policy
+          </h2>
+
+          <p className="govuk-body">
+            We may update this privacy policy when CitizenGuide.KE, our data
+            practices or applicable law changes.
+          </p>
+
+          <p className="govuk-body">
+            The latest version will always be published on this page. If we
+            make a significant change, we may also provide a notice elsewhere
+            on the website.
+          </p>
+
+          <h2 className="govuk-heading-l">
+            Contact us
+          </h2>
+
+          <p className="govuk-body">
+            If you have a question about this policy, want to exercise a data
+            protection right or want to raise a concern about your personal
+            data,{" "}
+            <Link href="/contact" className="govuk-link">
+              contact CitizenGuide.KE
+            </Link>
+            .
+          </p>
+
+          <p className="govuk-body">
+            You can also email{" "}
+            <a
+              href="mailto:privacy@citizenguide.ke"
+              className="govuk-link"
+            >
+              privacy@citizenguide.ke
+            </a>
+            .
+          </p>
+
+          <p className="govuk-body govuk-!-margin-top-8">
+            <strong>Last updated:</strong> 9 September 2026
+          </p>
         </div>
-      
-    
-  
+
+        <RelatedNav
+          links={[
+            { text: "Cookies policy", href: "/cookies" },
+            { text: "Terms and conditions", href: "/terms" },
+            { text: "Disclaimer", href: "/disclaimer" },
+            { text: "Copyright and content notices", href: "/copyright" },
+            { text: "Accessibility statement", href: "/accessibility" },
+            { text: "Contact this website", href: "/contact" },
+          ]}
+        />
+      </div>
     </>
-);
+  );
 }

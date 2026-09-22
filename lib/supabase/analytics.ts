@@ -1,12 +1,13 @@
 "use server";
 
-import { createClient } from "./server";
+import { createClient, requireAdmin } from "./server";
 
 /**
  * Admin-only: recent page views for the analytics dashboard.
  * Keep the row limit low so Free-tier Worker CPU stays under budget.
  */
 export async function getPageViews() {
+  await requireAdmin();
   const supabase = await createClient();
 
   const { data, error } = await supabase

@@ -95,7 +95,7 @@ export default async function WardsPage({
     // BUILD CORE DATA AND TOTAL COUNT QUERIES
     // ============================================
     let baseQuery = supabase
-      .from("wards")
+      .rpc("search_wards_scoped", { q: q || "" }, { count: "exact" })
       .select(
         `
       id,
@@ -105,8 +105,7 @@ export default async function WardsPage({
       county_name,
       constituency_name,
       registered_voters_2022
-    `,
-        { count: "exact" }
+    `
       )
       .eq("is_active", true);
 
@@ -114,12 +113,6 @@ export default async function WardsPage({
     if (constituency)
       baseQuery = baseQuery.eq("constituency_name", constituency);
 
-    if (q) {
-      const safe = q.replace(/[%_,]/g, " ").slice(0, 80);
-      baseQuery = baseQuery.or(
-        `name.ilike.%${safe}%,constituency_name.ilike.%${safe}%,county_name.ilike.%${safe}%`
-      );
-    }
 
     const res = await baseQuery
       .order("county_name", { ascending: true })
@@ -127,7 +120,7 @@ export default async function WardsPage({
       .order("name", { ascending: true })
       .range(fromOffset, toOffset);
 
-    wards = res.data;
+    wards = Array.isArray(res.data) ? res.data : [];
     count = res.count;
     if (res.error) error = res.error;
   } catch (e) {

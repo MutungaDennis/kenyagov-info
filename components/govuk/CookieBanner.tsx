@@ -3,50 +3,35 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { ANALYTICS_CONSENT_EVENT } from '@/components/analytics/GoogleAnalytics';
 
 type ConsentStatus = 'hidden' | 'unanswered' | 'accepted-message' | 'rejected-message';
-
-function updateAnalyticsConsent(granted: boolean) {
-  if (typeof window === 'undefined') return;
-  const gtag = (window as Window & { gtag?: (...args: unknown[]) => void }).gtag;
-  if (!gtag) return;
-
-  gtag('consent', 'update', {
-    ad_storage: granted ? 'granted' : 'denied',
-    ad_user_data: granted ? 'granted' : 'denied',
-    ad_personalization: granted ? 'granted' : 'denied',
-    analytics_storage: granted ? 'granted' : 'denied',
-  });
-}
 
 /**
  * GOV.UK Cookie banner — markup aligned with the Design System component.
  * @see https://design-system.service.gov.uk/components/cookie-banner/
  */
 export default function CookieBanner() {
-  const [consentStatus, setConsentStatus] = useState<ConsentStatus>('hidden');
+  const [consentStatus, setConsentStatus] =
+    useState<ConsentStatus>('unanswered');
 
   useEffect(() => {
     const savedConsent = localStorage.getItem('cookie-consent');
-    if (savedConsent === 'accepted') {
-      updateAnalyticsConsent(true);
-      setConsentStatus('hidden');
-    } else if (savedConsent === 'rejected') {
-      setConsentStatus('hidden');
-    } else if (!savedConsent) {
-      setConsentStatus('unanswered');
+    if (savedConsent === 'accepted' || savedConsent === 'rejected') {
+      const frame = requestAnimationFrame(() => setConsentStatus('hidden'));
+      return () => cancelAnimationFrame(frame);
     }
   }, []);
 
   const handleAccept = () => {
     localStorage.setItem('cookie-consent', 'accepted');
-    updateAnalyticsConsent(true);
+    window.dispatchEvent(new Event(ANALYTICS_CONSENT_EVENT));
     setConsentStatus('accepted-message');
   };
 
   const handleReject = () => {
     localStorage.setItem('cookie-consent', 'rejected');
-    updateAnalyticsConsent(false);
+    window.dispatchEvent(new Event(ANALYTICS_CONSENT_EVENT));
     setConsentStatus('rejected-message');
   };
 

@@ -39,8 +39,8 @@ export async function generateMetadata({
         name_titles, national_honours, bio, image_url, category,
         current_organization, current_party, current_county, current_constituency,
         leader_roles!leader_roles_leader_id_fkey (
-          title, organization, constituency, county, party, status,
-          term_start_date, term_end_date
+          id, title, organization, constituency, county, party, status,
+          term_start_date, term_end_date, display_priority
         )
       `,
       )
@@ -53,14 +53,12 @@ export async function generateMetadata({
       const name = displayNameWithTitles(leader) || displayName(leader);
       const roleTitle =
         role?.title || leader.title || leader.category || "Government official";
-      const org =
-        role?.organization || leader.current_organization || null;
-      const place =
-        role?.constituency ||
-        role?.county ||
-        leader.current_constituency ||
-        leader.current_county ||
-        null;
+      const org = role
+        ? role.organization || null
+        : leader.current_organization || null;
+      const place = role
+        ? role.constituency || role.county || null
+        : leader.current_constituency || leader.current_county || null;
 
       const headline = [roleTitle, org, place].filter(Boolean).join(" · ");
       const description = (
@@ -73,11 +71,17 @@ export async function generateMetadata({
         typeof leader.image_url === "string" && leader.image_url.trim()
           ? leader.image_url.trim()
           : null;
+      const roleDescription = [
+        `${name}: ${headline}.`,
+        description,
+      ]
+        .join(" ")
+        .slice(0, 300);
 
       return buildPageMetadata({
         title: name,
         description:
-          description ||
+          roleDescription ||
           `${name} is listed on ${SITE_NAME}. ${isCurrent ? "Current" : "Former"} role: ${roleTitle}.`,
         path: `/government/people/${leader.slug || slug}`,
         image,

@@ -135,6 +135,7 @@ export default async function CabinetPage() {
               <h1 className="govuk-heading-xl govuk-!-margin-bottom-4">
                 The Cabinet
               </h1>
+              <div className="govuk-inset-text"><h2 className="govuk-heading-m"><Link className="govuk-link" href="/government/cabinet/briefs">Cabinet briefs and decisions</Link></h2><p className="govuk-body govuk-!-margin-bottom-0">Read published Cabinet meeting briefs and search by topic, year or publication type.</p></div>
 
               <p className="govuk-body-m govuk-!-margin-bottom-8">
                 Read biographies and responsibilities of the Executive leadership,

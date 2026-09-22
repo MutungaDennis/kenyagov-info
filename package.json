@@ -8,7 +8,7 @@
     "build": "node scripts/cf-clean.mjs && opennextjs-cloudflare build && node scripts/minify-worker.mjs && node scripts/check-worker-size.mjs",
     "build:next": "next build --webpack",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "generate:og": "node scripts/generate-og-image.mjs",
     "cf:build": "node scripts/cf-clean.mjs && opennextjs-cloudflare build && node scripts/minify-worker.mjs && node scripts/check-worker-size.mjs",
     "preview": "pnpm run cf:build && opennextjs-cloudflare preview",
@@ -19,7 +19,9 @@
     "postinstall": "node scripts/patch-opennext-windows.mjs",
     "studio:deploy": "sanity deploy",
     "studio:dev": "sanity dev",
-    "studio:schema": "sanity schema deploy"
+    "studio:schema": "sanity schema deploy",
+    "typecheck": "tsc --noEmit --incremental false",
+    "test": "vitest run"
   },
   "dependencies": {
     "@opennextjs/cloudflare": "^1.20.1",
@@ -47,6 +49,7 @@
     "next": "16.2.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "sanitize-html": "^2.17.7",
     "tailwindcss": "^4.2.4",
     "use-debounce": "^10.1.1"
   },
@@ -56,10 +59,12 @@
     "@types/node": "^20.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "@types/sanitize-html": "^2.16.1",
     "eslint": "^9.0.0",
     "eslint-config-next": "16.2.4",
     "sanity": "^6.10.1",
     "typescript": "^5.0.0",
+    "vitest": "^5.0.1",
     "wrangler": "^4.110.0",
     "zod": "^4.4.3"
   }

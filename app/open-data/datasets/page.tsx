@@ -158,6 +158,7 @@ export default async function OpenDataDatasetsPage({ searchParams }: PageProps) 
                           {n.toLocaleString()} records
                         </span>
                       )}
+                      {!ds.exportEndpoint && <span className="govuk-tag govuk-tag--grey govuk-!-margin-left-2">Summary only</span>}
                       {ds.formats.length > 0 && (
                         <span className="govuk-!-margin-left-2">
                           · {ds.formats.map((f) => f.toUpperCase()).join(", ")}

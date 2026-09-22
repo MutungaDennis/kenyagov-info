@@ -55,7 +55,7 @@ export const dynamic = "force-dynamic";
 
 // Explicit FK — multiple relationships exist between leaders and leader_roles
 const LEADER_ROLES_EMBED = `leader_roles!leader_roles_leader_id_fkey (
-  id, title, organization, status, term_start_date, term_end_date
+  id, title, organization, status, term_start_date, term_end_date, display_priority
 )`;
 
 const LEADER_LIST_SELECT = `id, slug, full_name, first_name, other_names, surname, title,
@@ -249,7 +249,7 @@ export async function GET(request: NextRequest) {
     const retrySelect = `id, slug, full_name, first_name, other_names, surname, title,
        current_party, current_constituency, current_county, current_organization,
        level, image_url, is_active, status, updated_at,
-       leader_roles!leader_id ( id, title, organization, status, term_start_date, term_end_date )`;
+       leader_roles!leader_id ( id, title, organization, status, term_start_date, term_end_date, display_priority )`;
     let qRetry = auth.supabase
       .from("leaders")
       .select(retrySelect, { count: "exact" })
@@ -330,7 +330,7 @@ export async function GET(request: NextRequest) {
       const { data: roleRows } = await auth.supabase
         .from("leader_roles")
         .select(
-          "id, leader_id, title, organization, status, term_start_date, term_end_date",
+          "id, leader_id, title, organization, status, term_start_date, term_end_date, display_priority",
         )
         .in("leader_id", ids);
       for (const r of roleRows || []) {

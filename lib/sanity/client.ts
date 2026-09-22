@@ -490,13 +490,12 @@ export async function searchSanityContent(query: string, limit = 25) {
   if (!query || query.trim().length < 2) return [];
 
   const term = query.toLowerCase().trim();
-  const words = term.split(/\s+/).filter(w => w.length > 2);
-
-  // Build a more tolerant filter: match on any significant word (prefix) in titles or rich text.
-  // This gives broader candidates even for typos/misspellings, then JS fuzzy filters/ranks them.
-  const wordFilters = words.length > 0 
-    ? words.map(w => `lower(title) match "${w}*" || lower(name) match "${w}*" || pt::text(officialText) match "${w}*" || pt::text(amplifiedText) match "${w}*" || pt::text(content) match "${w}*"`).join(' || ')
-    : `lower(title) match $term + "*" || pt::text(officialText) match $term + "*" || pt::text(content) match $term + "*"`;
+  const words = (term.match(/[\p{L}\p{N}]+/gu) || []).filter(word => word.length > 2).slice(0, 8);
+  const wordParams = Object.fromEntries(words.map((word, index) => [`word${index}`, (word.length >= 6 ? word.slice(0, 3) : word) + "*"]));
+  // Only parameter names enter GROQ; user text is always bound as a value.
+  const wordFilters = words.length ? words.map((_, index) =>
+    `lower(title) match $word${index} || lower(name) match $word${index} || pt::text(officialText) match $word${index} || pt::text(content) match $word${index}`
+  ).join(' || ') : 'lower(title) match $term || lower(name) match $term';
 
   // Comprehensive GROQ across entire Sanity schema.
   // Covers guides, services, news, pages, constitution (parts/articles), acts/laws, institutionContent,
@@ -553,16 +552,16 @@ export async function searchSanityContent(query: string, limit = 25) {
         _type == "constitutionArticle" => "/constitution",
         _type == "actOfParliament" => "/acts/parliament",
         _type == "page" => "/",
-        _type == "institutionContent" => "/institutions",
+        _type == "institutionContent" => "/government/institutions",
         _type == "presidentialTrip" => "/executive/presidency/international-visits",
         _type == "courtPronouncement" => "/judiciary",
         _type == "reportMandate" => "/documents",
-        _type == "governmentMinistry" => "/executive/ministries",
+        _type == "governmentMinistry" => "/government/institutions",
         _type == "governmentCategory" => "/services",
         "/"
       )
     } | order(_score desc, _createdAt desc) [0...$limit]
     `,
-    { term, limit }
+    { term, limit: Math.max(1, Math.min(limit, 100)), ...wordParams }
   );
 }

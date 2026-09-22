@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdminApi } from "@/lib/admin-api";
-import { createSanityWriteClient } from "@/lib/sanity/createSanityClient";
+import { createSanityWriteClient } from "@/lib/sanity/createSanityWriteClient";
 import {
   applyServicePhrasesToBlocks,
   type ServiceLinkPhrase,

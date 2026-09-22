@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSanityWriteClient } from "@/lib/sanity/createSanityClient";
+import { createSanityWriteClient } from "@/lib/sanity/createSanityWriteClient";
 
 const sanity = createSanityWriteClient();
 

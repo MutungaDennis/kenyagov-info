@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSanityWriteClient } from "@/lib/sanity/createSanityClient";
+import { createSanityWriteClient } from "@/lib/sanity/createSanityWriteClient";
 import { portableTextToPlain } from "@/lib/hansard/speech";
 
 const sanity = createSanityWriteClient();

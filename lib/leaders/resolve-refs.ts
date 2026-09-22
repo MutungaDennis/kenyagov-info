@@ -9,6 +9,7 @@ import {
   normalizeLeaderLevel,
   uuidOrOmit,
 } from "@/lib/leaders/role-normalize";
+import { normalizeDisplayPriority } from "@/lib/leaders/display-priority";
 
 export type ResolvedRoleRefs = {
   title: string | null;
@@ -283,6 +284,7 @@ export async function insertRoleWithFallback(
 
     if (/schema cache|column|does not exist/i.test(msg)) {
       const optional = [
+        "display_priority",
         "entry_type",
         "position_id",
         "institution_id",
@@ -369,6 +371,7 @@ export async function updateRoleWithFallback(
 
     if (/schema cache|column|does not exist/i.test(msg)) {
       const optional = [
+        "display_priority",
         "entry_type",
         "position_id",
         "institution_id",
@@ -407,6 +410,7 @@ export async function prepareRoleInsert(
   leaderId: string,
   body: Record<string, unknown>,
 ): Promise<Record<string, unknown>> {
+  const displayPriority = normalizeDisplayPriority(body.display_priority);
   const resolved = await resolveRolePayload(supabase, body);
   const title = String(resolved.title || "").trim();
   if (!title) {
@@ -417,6 +421,7 @@ export async function prepareRoleInsert(
 
   const row = buildLeaderRoleRow({
     leaderId,
+    display_priority: displayPriority,
     title,
     organization: resolved.organization,
     constituency: resolved.constituency,

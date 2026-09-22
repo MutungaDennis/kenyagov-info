@@ -1,10 +1,11 @@
 'use client';
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import { useParams } from "next/navigation";
 import { createBrowserClientAsync } from "@/lib/supabase/client";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
+import PublicSchools from "@/components/schools/PublicSchools";
 import {
   isInstitutionEarmarked,
   isInstitutionHistorical,
@@ -52,6 +53,10 @@ type Institution = {
   status?: string | null;
   status_effective_date?: string | null;
   parent_institution_id?: string | null;
+  predecessor_institution_id?: string | null;
+  successor_institution_id?: string | null;
+  former_names?: string[] | null;
+  lifecycle_change_reason?: string | null;
 };
 
 type LinkedInstitution = {
@@ -90,12 +95,13 @@ type NameRow = {
   end_date: string | null;
 };
 
-export default function InstitutionProfileClient() {
+export default function InstitutionProfileClient({ people }: { people?: ReactNode }) {
   const params = useParams();
   const slug = params.slug as string;
 
   const [institution, setInstitution] = useState<Institution | null>(null);
   const [parentChain, setParentChain] = useState<LinkedInstitution[]>([]);
+  const [predecessors, setPredecessors] = useState<LinkedInstitution[]>([]);
   const [successors, setSuccessors] = useState<LinkedInstitution[]>([]); // Changed to array for splits
   const [segments, setSegments] = useState<SegmentRow[]>([]);
   const [relationships, setRelationships] = useState<RelRow[]>([]);
@@ -125,12 +131,13 @@ export default function InstitutionProfileClient() {
             .from("institutions")
             .select(`*, institution_leaders (*), institution_locations (*)`)
             .eq("slug", slug)
+            .eq("is_active", true)
             .maybeSingle();
 
           if (historical.data) {
             instData = historical.data as Institution;
           } else {
-            const basic = await supabase.from("institutions").select("*").eq("slug", slug).maybeSingle();
+            const basic = await supabase.from("institutions").select("*").eq("slug", slug).eq("is_active", true).maybeSingle();
             if (basic.error || !basic.data) throw withJoins.error || historical.error || basic.error || new Error("Not found");
             instData = basic.data as Institution;
           }
@@ -148,7 +155,8 @@ export default function InstitutionProfileClient() {
           seen.add(parentId);
           const { data: parentData } = await supabase
             .from("institutions")
-            .select("id, slug, name, short_name")
+            .select("id, slug, name, short_name, parent_institution_id")
+            .eq("is_active", true)
             .eq("id", parentId)
             .maybeSingle();
           if (!parentData) break;
@@ -161,9 +169,16 @@ export default function InstitutionProfileClient() {
         const { data: succs } = await supabase
           .from("institutions")
           .select("id, slug, name, short_name")
-          .eq("predecessor_institution_id", instData.id)
+          .eq("is_active", true)
+          .or(`predecessor_institution_id.eq.${instData.id},id.eq.${instData.successor_institution_id || instData.id}`)
+          .neq("id", instData.id)
           .order("name");
         if (succs) setSuccessors(succs as LinkedInstitution[]);
+        const { data: previous } = await supabase.from("institutions")
+          .select("id,slug,name,short_name").eq("is_active", true)
+          .or(`successor_institution_id.eq.${instData.id},id.eq.${instData.predecessor_institution_id || instData.id}`)
+          .neq("id", instData.id).order("name");
+        setPredecessors((previous || []) as LinkedInstitution[]);
 
         // Lifecycle segments / lineage / dated names (tables optional until migration)
         const [segRes, relRes, nameRes] = await Promise.all([
@@ -312,6 +327,7 @@ export default function InstitutionProfileClient() {
             
             <span className="govuk-caption-l">{institution.institution_type || "Public body"}</span>
             <h1 className="govuk-heading-xl">{institution.name}</h1>
+            {["directorate-primary-education", "directorate-secondary-education"].includes(slug) && <PublicSchools fixedDirectorate={slug} />}
 
             {earmarked && (
               <div className="govuk-warning-text">
@@ -358,6 +374,9 @@ export default function InstitutionProfileClient() {
               </div>
             )}
 
+            {historical && <div className="govuk-inset-text"><p className="govuk-body govuk-!-margin-bottom-0">This page is retained for historical reference, including officials who served here. Its contact details and responsibilities may no longer be current.{institution.lifecycle_change_reason && <> {institution.lifecycle_change_reason}</>}</p></div>}
+            {!historical && predecessors.length > 0 && <p className="govuk-body-s govuk-!-margin-bottom-4">Earlier organisations: {predecessors.map((previous, index) => <span key={previous.id}>{index > 0 && "; "}<Link className="govuk-link" href={`/government/institutions/${previous.slug}`}>{previous.name}</Link></span>)}</p>}
+            {!!institution.former_names?.length && <p className="govuk-body-s">Former names: {institution.former_names.join("; ")}</p>}
             {nameHistory.length > 0 && (
               <p className="govuk-body">
                 <strong>Also known as / formerly: </strong>
@@ -386,6 +405,7 @@ export default function InstitutionProfileClient() {
               </Link>
             </p>
 
+            {people}
             {(institution.current_head || institution.head_title || institution.board_chair) && (
               <>
                 <h2 className="govuk-heading-l govuk-!-margin-top-9">Leadership</h2>

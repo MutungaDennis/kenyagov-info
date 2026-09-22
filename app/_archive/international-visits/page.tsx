@@ -165,7 +165,7 @@ export default function InternationalVisitsPage() {
   const hasActiveFilters = searchTerm !== "" || selectedRegion !== "";
 
   return (
-    <div className="govuk-width-container" style={{ fontFamily: '"GDS Transport", arial, sans-serif' }}>
+    <div className="govuk-width-container" style={{ fontFamily: 'Arial, sans-serif' }}>
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },

@@ -1,0 +1,7 @@
+.people { list-style: none; padding: 0; margin: 0; }
+.person { display: flex; gap: 18px; padding: 20px 0; border-bottom: 1px solid #b1b4b6; align-items: flex-start; }
+.portrait, .placeholder { width: 72px; height: 88px; object-fit: cover; flex-shrink: 0; background: #f3f2f1; }
+.placeholder { display: grid; place-items: center; font-size: 24px; color: #505a5f; }
+.details { min-width: 0; overflow-wrap: anywhere; }
+.details li + li { margin-top: 12px; }
+@media (max-width: 480px) { .person { gap: 12px; } .portrait, .placeholder { width: 52px; height: 65px; } }

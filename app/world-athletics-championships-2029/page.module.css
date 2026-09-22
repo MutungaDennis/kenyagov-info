@@ -1,0 +1,97 @@
+.topicList {
+  margin-bottom: 0;
+}
+
+.topicItem {
+  border-top: 1px solid #b1b4b6;
+  margin-bottom: 0;
+}
+
+.topicItem:last-child {
+  border-bottom: 1px solid #b1b4b6;
+}
+
+.topicLink {
+  display: block;
+  padding: 20px 0;
+  color: #1d70b8;
+  text-decoration: none;
+}
+
+.topicLink:hover .topicTitle {
+  color: #003078;
+  text-decoration-thickness: 3px;
+}
+
+.topicLink:focus {
+  background-color: #ffdd00;
+  box-shadow: 0 -2px #ffdd00, 0 4px #0b0c0c;
+  color: #0b0c0c;
+  outline: 3px solid transparent;
+}
+
+.topicLink:focus .topicTitle {
+  color: #0b0c0c;
+  text-decoration: none;
+}
+
+.topicHeading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 15px;
+  font-family: Arial, sans-serif;
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1.31579;
+}
+
+.topicTitle {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.1578em;
+}
+
+.chevron {
+  flex: 0 0 auto;
+  font-size: 28px;
+  line-height: 1;
+}
+
+.topicDescription {
+  display: block;
+  margin-top: 5px;
+  color: #0b0c0c;
+  font-family: Arial, sans-serif;
+  font-size: 19px;
+  font-weight: 400;
+  line-height: 1.31579;
+}
+
+@media (max-width: 40.0525em) {
+  .topicLink {
+    padding: 15px 0;
+  }
+
+  .topicHeading,
+  .topicDescription {
+    font-size: 16px;
+    line-height: 1.25;
+  }
+
+  .chevron {
+    font-size: 24px;
+  }
+}
+
+@media print {
+  .topicLink,
+  .topicLink:visited,
+  .topicDescription {
+    color: #000;
+  }
+
+  .chevron {
+    display: none;
+  }
+}

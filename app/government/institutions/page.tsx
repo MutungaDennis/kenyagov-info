@@ -1,9 +1,13 @@
 'use client';
 
 import Link from "next/link";
+import { isInstitutionHistorical } from "@/lib/institutions/fields";
+import { enrichInstitutionHistory, type HistoricalLink } from "@/lib/institutions/directory-history";
 import { useState, useMemo, useEffect } from "react";
 import { createBrowserClientAsync } from "@/lib/supabase/client";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
+import PublicSchools from "@/components/schools/PublicSchools";
+import { matchesSearch as matchesText } from "@/lib/search/match";
 
 type Institution = {
   id: string;
@@ -21,6 +25,11 @@ type Institution = {
   aliases?: string[] | null;
   former_names?: string[] | null;
   status?: string | null;
+  predecessor_institution_id?: string | null;
+  successor_institution_id?: string | null;
+  name_history?: { name: string; end_date: string | null }[] | null;
+  previousInstitutions?: HistoricalLink[];
+  historySearchNames?: string[];
   is_active?: boolean | null;
 };
 
@@ -56,33 +65,21 @@ const isRoot = (inst: Institution): boolean =>
 function buildFullHierarchy(
   all: Institution[],
   rootFilter: (inst: Institution) => boolean,
-  searchTerm: string
+  searchTerm: string,
+  visibleIds: Set<string>
 ): InstitutionNode[] {
   const term = searchTerm.toLowerCase().trim();
   
-  const matchesSearch = (inst: Institution): boolean => {
-    if (!term) return true;
-    const hay = [
-      inst.name, inst.short_name, inst.official_name, inst.description,
-      inst.institution_type, inst.institution_category, inst.status,
-      ...(Array.isArray(inst.aliases) ? inst.aliases : []),
-      ...(Array.isArray(inst.former_names) ? inst.former_names : []),
-    ].filter(Boolean).map((s) => String(s).toLowerCase());
-    
-    if (hay.some((s) => s.includes(term))) return true;
-    
-    const children = all.filter(c => c.parent_institution_id === inst.id || c.supervising_ministry_id === inst.id);
-    return children.some(matchesSearch);
-  };
+  const matchesSearch = (inst: Institution) => !term || visibleIds.has(inst.id);
+  const childrenByParent = new Map<string, Institution[]>();
+  for (const inst of all) {
+    const parent = inst.parent_institution_id || inst.supervising_ministry_id;
+    if (parent) childrenByParent.set(parent, [...(childrenByParent.get(parent) || []), inst]);
+  }
 
   const getDescendants = (parentId: string, assignedInTree: Set<string>): InstitutionNode[] => {
-    return all
-      .filter((inst) => {
-        if (assignedInTree.has(inst.id)) return false;
-        const isDirectChild = inst.parent_institution_id === parentId;
-        const isSupervisedChild = !inst.parent_institution_id && inst.supervising_ministry_id === parentId;
-        return isDirectChild || isSupervisedChild;
-      })
+    return (childrenByParent.get(parentId) || [])
+      .filter(inst => !assignedInTree.has(inst.id))
       .filter((inst) => !term || matchesSearch(inst))
       .map((inst) => {
         assignedInTree.add(inst.id);
@@ -116,17 +113,25 @@ function buildFullHierarchy(
   });
 }
 
-function countActiveNodes(nodes: InstitutionNode[]): number {
+function countNodes(nodes: InstitutionNode[]): number {
   let count = 0;
   for (const node of nodes) {
-    if (!node.status || node.status.toLowerCase() === 'active') count += 1;
-    if (node.children) count += countActiveNodes(node.children);
+    count += 1;
+    if (node.children) count += countNodes(node.children);
   }
   return count;
 }
 
+function InstitutionHistory({ institution }: { institution: Institution }) {
+  return <>
+    {isInstitutionHistorical(institution.status) && <p className="govuk-body-s institution-history"><strong className="govuk-tag govuk-tag--grey">Historical</strong> {institution.status}</p>}
+    {!!institution.former_names?.length && <p className="govuk-body-s institution-history">Former names: {institution.former_names.join("; ")}</p>}
+    {!!institution.previousInstitutions?.length && <p className="govuk-body-s institution-history">Earlier organisations: {institution.previousInstitutions.map((previous, index) => <span key={previous.id}>{index > 0 && "; "}<Link className="govuk-link" href={`/government/institutions/${previous.slug}`}>{previous.name}</Link></span>)}</p>}
+  </>;
+}
+
 // Recursive nested list using native GOV.UK <details> for progressive disclosure
-const NestedInstitutionList = ({ nodes, isSearchActive }: { nodes: InstitutionNode[]; isSearchActive: boolean }) => {
+const NestedInstitutionList = ({ nodes, isSearchActive, onBrowse }: { nodes: InstitutionNode[]; isSearchActive: boolean; onBrowse: (slug: string) => void }) => {
   return (
     <ul className="govuk-list govuk-!-margin-bottom-0">
       {nodes.map((node) => {
@@ -139,21 +144,27 @@ const NestedInstitutionList = ({ nodes, isSearchActive }: { nodes: InstitutionNo
             {node.short_name && (
               <span className="govuk-body-s govuk-!-margin-left-1 govuk-text-secondary">({node.short_name})</span>
             )}
-            {node.status && node.status.toLowerCase() !== 'active' && (
+            {["directorate-primary-education", "directorate-secondary-education"].includes(node.slug) && (
+              <p className="govuk-body-s govuk-!-margin-top-1 govuk-!-margin-bottom-2">
+                <button type="button" className="govuk-button govuk-!-margin-top-2 govuk-!-margin-bottom-1" onClick={() => onBrowse(node.slug)} aria-controls="directorate-school-browser">Browse public schools under this directorate →</button>
+              </p>
+            )}
+            {node.status && node.status.toLowerCase() !== 'active' && !isInstitutionHistorical(node.status) && (
               <span className="govuk-tag govuk-tag--grey govuk-!-font-size-14 govuk-!-margin-left-1">
                 {node.status}
               </span>
             )}
             
+            <InstitutionHistory institution={node} />
             {hasChildren && (
               <details className="govuk-details govuk-!-margin-top-2 govuk-!-margin-bottom-2" open={isSearchActive}>
                 <summary className="govuk-details__summary">
                   <span className="govuk-details__summary-text">
-                    {node.children!.length} subordinate {node.children!.length === 1 ? 'entity' : 'entities'}
+                    View {node.children!.length} {node.children!.length === 1 ? 'institution' : 'institutions'} under {node.short_name || node.name}
                   </span>
                 </summary>
-                <div className="govuk-details__text">
-                  <NestedInstitutionList nodes={node.children!} isSearchActive={isSearchActive} />
+                <div className="govuk-details__text institution-children">
+                  <NestedInstitutionList nodes={node.children!} isSearchActive={isSearchActive} onBrowse={onBrowse} />
                 </div>
               </details>
             )}
@@ -165,7 +176,11 @@ const NestedInstitutionList = ({ nodes, isSearchActive }: { nodes: InstitutionNo
 };
 
 export default function GovernmentInstitutionsPage() {
-  const [allInstitutions, setAllInstitutions] = useState<Institution[]>([]);
+  const [publishedInstitutions, setPublishedInstitutions] = useState<Institution[]>([]);
+  const [includeHistorical, setIncludeHistorical] = useState(false);
+  const enrichedInstitutions = useMemo(() => enrichInstitutionHistory(publishedInstitutions), [publishedInstitutions]);
+  const historicalCount = enrichedInstitutions.filter(inst => isInstitutionHistorical(inst.status)).length;
+  const allInstitutions = useMemo(() => enrichedInstitutions.filter(inst => includeHistorical || !isInstitutionHistorical(inst.status)), [enrichedInstitutions, includeHistorical]);
   const [searchTerm, setSearchTerm] = useState("");
   // Default: all categories expanded
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(ALL_CATEGORY_SLUGS));
@@ -173,6 +188,54 @@ export default function GovernmentInstitutionsPage() {
   const [expandAllNested, setExpandAllNested] = useState(false);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'accordion' | 'table'>('accordion');
+
+  const [includeSchools, setIncludeSchools] = useState(false);
+  const [schoolCount, setSchoolCount] = useState<number | null>(null);
+  const [schoolMatches, setSchoolMatches] = useState<number | null>(null);
+  const [selectedDirectorate, setSelectedDirectorate] = useState("");
+  const [schoolBrowserVersion, setSchoolBrowserVersion] = useState(0);
+  const [loadError, setLoadError] = useState("");
+  const browseSchools = (slug: string) => {
+    setSelectedDirectorate(slug);
+    setSchoolBrowserVersion(version => version + 1);
+    const url = new URL(window.location.href);
+    url.searchParams.set("schools", "show"); url.searchParams.set("directorate", slug);
+    url.hash = "directorate-school-browser";
+    window.history.pushState(null, "", url);
+    window.setTimeout(() => document.getElementById("directorate-school-browser")?.focus(), 0);
+  };
+  useEffect(() => {
+    const readUrl = () => {
+      const params = new URLSearchParams(window.location.search);
+      const slug = params.get("directorate") || "";
+      const query = (params.get("q") || "").slice(0, 120);
+      setSearchTerm(query);
+      setIncludeHistorical(params.get("historical") === "include");
+      if (query) { setExpandedCategories(new Set(ALL_CATEGORY_SLUGS)); setExpandAllNested(true); }
+      setSelectedDirectorate(params.get("schools") === "show" && ["directorate-primary-education", "directorate-secondary-education"].includes(slug) ? slug : "");
+    };
+    const timer = window.setTimeout(readUrl, 0);
+    window.addEventListener("popstate", readUrl);
+    return () => { window.clearTimeout(timer); window.removeEventListener("popstate", readUrl); };
+  }, []);
+  useEffect(() => {
+    let cancelled = false;
+    const timer = window.setTimeout(async () => {
+      try {
+        const db = await createBrowserClientAsync();
+        const request = db.from("education_schools").select("id", { count: "exact", head: true }).eq("ownership", "public").eq("is_published", true).in("main_tier", ["primary", "junior", "senior_secondary"]);
+        const { count, error } = await request;
+        if (!cancelled && !error) setSchoolCount(count);
+        if (includeSchools && searchTerm.trim()) {
+          const responses = await Promise.all(["directorate-primary-education", "directorate-secondary-education"].map(directorate =>
+            db.rpc("search_public_schools", { q: searchTerm, directorate, page_size: 1 })
+          ));
+          if (!cancelled) setSchoolMatches(responses.some(result => result.error) ? null : responses.reduce((total, result) => total + Number(result.data?.total || 0), 0));
+        } else if (!cancelled) setSchoolMatches(count);
+      } catch { if (!cancelled) setSchoolMatches(null); }
+    }, 250);
+    return () => { cancelled = true; window.clearTimeout(timer); };
+  }, [includeSchools, searchTerm]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -187,28 +250,45 @@ export default function GovernmentInstitutionsPage() {
           .select(
             `id, slug, name, short_name, official_name, institution_type, institution_category,
              arm_of_government, government_level, parent_institution_id, supervising_ministry_id,
-             description, aliases, former_names, status, is_active`
+             description, aliases, former_names, status, is_active, predecessor_institution_id, successor_institution_id,
+             name_history:institution_name_history(name,end_date)`
           )
           .eq("is_active", true)
           .order("name")
           .range(from, from + pageSize - 1);
 
-        if (error || !data || data.length < pageSize) {
+        if (error) { setLoadError("Institutions could not be loaded. Refresh this page to try again."); break; }
+        if (!data || data.length < pageSize) {
           if (data) all.push(...data);
           break;
         }
         all.push(...data);
         from += data.length;
       }
-      setAllInstitutions(all);
+      setPublishedInstitutions(all);
       setLoading(false);
     };
-    fetchData();
+    fetchData().catch(() => { setLoadError("Institutions could not be loaded. Refresh this page to try again."); setLoading(false); });
   }, []);
 
   const globalActiveCount = useMemo(() => {
-    return allInstitutions.filter(i => !i.status || i.status.toLowerCase() === 'active').length;
+    return allInstitutions.length;
   }, [allInstitutions]);
+
+  const visibleInstitutionIds = useMemo(() => {
+    const byId = new Map(allInstitutions.map(inst => [inst.id, inst]));
+    const ids = new Set<string>();
+    for (const inst of allInstitutions) {
+      if (!matchesText(searchTerm, inst.name, inst.short_name, inst.official_name, inst.description, inst.institution_type, inst.aliases, inst.former_names, inst.historySearchNames)) continue;
+      let current: Institution | undefined = inst;
+      const chain = new Set<string>();
+      while (current && !chain.has(current.id)) {
+        chain.add(current.id); ids.add(current.id);
+        current = byId.get(current.parent_institution_id || current.supervising_ministry_id || "");
+      }
+    }
+    return ids;
+  }, [allInstitutions, searchTerm]);
 
   const categoryGroups = useMemo((): CategoryGroup[] => {
     if (allInstitutions.length === 0) return [];
@@ -305,7 +385,7 @@ export default function GovernmentInstitutionsPage() {
     ];
 
     categories.forEach((cat) => {
-      const roots = buildFullHierarchy(allInstitutions, cat.filter, term);
+      const roots = buildFullHierarchy(allInstitutions, cat.filter, term, visibleInstitutionIds);
       
       const uniqueRoots = roots.filter((r) => {
         if (assigned.has(r.id)) return false;
@@ -319,7 +399,7 @@ export default function GovernmentInstitutionsPage() {
       });
 
       if (uniqueRoots.length > 0) {
-        const activeRootCount = uniqueRoots.filter((r) => !r.status || r.status.toLowerCase() === "active").length;
+        const rootCount = uniqueRoots.length;
         
         // Detect if this category should use the top-level parent's name as title
         const topLevelParent = uniqueRoots.length === 1 ? uniqueRoots[0] : null;
@@ -335,8 +415,8 @@ export default function GovernmentInstitutionsPage() {
         
         // Count reflects what's actually rendered
         const displayCount = useParentAsTitle && topLevelParent
-          ? countActiveNodes(topLevelParent.children || [])
-          : activeRootCount;
+          ? countNodes(topLevelParent.children || [])
+          : rootCount;
         
         // Title becomes the parent's name when applicable
         const displayTitle = useParentAsTitle && topLevelParent
@@ -356,13 +436,13 @@ export default function GovernmentInstitutionsPage() {
     });
 
     if (term) {
-      const leftovers = allInstitutions.filter((i) => !assigned.has(i.id));
+      const leftovers = allInstitutions.filter((i) => !assigned.has(i.id) && matchesText(term, i.name, i.short_name, i.official_name, i.description, i.institution_type, i.aliases, i.former_names, i.historySearchNames));
       if (leftovers.length) {
         groups.push({
           title: "Additional Search Matches",
           slug: "search-other",
           description: "Institutions matching your search that are part of larger hierarchies above.",
-          count: leftovers.filter((i) => !i.status || i.status.toLowerCase() === "active").length,
+          count: leftovers.length,
           institutions: leftovers.map((i) => ({ ...i })),
           showCount: true,
         });
@@ -370,19 +450,11 @@ export default function GovernmentInstitutionsPage() {
     }
 
     return groups;
-  }, [allInstitutions, searchTerm]);
+  }, [allInstitutions, searchTerm, visibleInstitutionIds]);
 
   const displayedActiveCount = useMemo(() => {
-    return categoryGroups.reduce((sum, group) => sum + countActiveNodes(group.institutions), 0);
-  }, [categoryGroups]);
-
-  // Auto-expand categories and nested details when searching
-  useEffect(() => {
-    if (searchTerm.trim()) {
-      setExpandedCategories(new Set(ALL_CATEGORY_SLUGS));
-      setExpandAllNested(true);
-    }
-  }, [searchTerm]);
+    return allInstitutions.filter(i => matchesText(searchTerm, i.name, i.short_name, i.official_name, i.description, i.institution_type, i.aliases, i.former_names, i.historySearchNames)).length;
+  }, [allInstitutions, searchTerm]);
 
   const toggleCategory = (slug: string) => {
     setExpandedCategories(prev => {
@@ -422,19 +494,21 @@ export default function GovernmentInstitutionsPage() {
         { text: "Institutions", href: "/government/institutions" },
       ]} />
 
-      <main className="govuk-main-wrapper" id="main-content" role="main">
+      <main className="govuk-main-wrapper institution-directory" id="main-content" role="main">
+<header className="institution-directory-heading">            <h1 className="govuk-heading-xl govuk-!-margin-bottom-4">
+              Departments, agencies and public institutions
+            </h1>
+            <p className="govuk-body">Understand Kenya’s government, from ministries and county bodies to the public schools they oversee.</p><p className="govuk-body-s">Current organisations are shown first. Historical records preserve the names, responsibilities and people who served before.</p></header>
         <div className="govuk-grid-row">
           {/* LEFT SIDEBAR */}
           <div className="govuk-grid-column-one-third">
-            <h1 className="govuk-heading-xl govuk-!-margin-bottom-4">
-              Departments, agencies and public bodies
-            </h1>
+<h2 className="govuk-heading-m">Explore the directory</h2>
             
             <div className="govuk-inset-text govuk-!-margin-bottom-4">
               <p className="govuk-body govuk-!-font-weight-bold govuk-!-margin-bottom-0">
                 {searchTerm.trim()
-                  ? `${displayedActiveCount} active institutions matching`
-                  : `${globalActiveCount} active institutions published`}
+                  ? `${displayedActiveCount.toLocaleString()} government institutions matching`
+                  : `${globalActiveCount.toLocaleString()} government institutions`}
               </p>
               {searchTerm.trim() && (
                 <p className="govuk-body govuk-!-margin-top-1 govuk-!-margin-bottom-0">
@@ -442,6 +516,23 @@ export default function GovernmentInstitutionsPage() {
                 </p>
               )}
             </div>
+            <p className="govuk-body-s">+ {schoolCount == null ? "Loading count of" : schoolCount.toLocaleString()} public primary, junior and secondary schools</p>
+            <div className="govuk-checkboxes govuk-checkboxes--small govuk-!-margin-bottom-4"><div className="govuk-checkboxes__item">
+              <input className="govuk-checkboxes__input" id="include-school-count" type="checkbox" checked={includeSchools} onChange={event => setIncludeSchools(event.target.checked)} />
+              <label className="govuk-label govuk-checkboxes__label" htmlFor="include-school-count">Include public schools in count</label>
+            </div></div>
+            {includeSchools && <p className="govuk-body-s" role="status">{schoolMatches == null ? "School count unavailable" : `${((searchTerm.trim() ? displayedActiveCount : globalActiveCount) + schoolMatches).toLocaleString()} institutions including ${schoolMatches.toLocaleString()} public schools${searchTerm.trim() ? " matching your search" : ""}`}</p>}
+            <div className="govuk-checkboxes govuk-checkboxes--small govuk-!-margin-bottom-5"><div className="govuk-checkboxes__item">
+              <input id="include-historical" className="govuk-checkboxes__input" type="checkbox" checked={includeHistorical} aria-describedby="history-hint" onChange={event => {
+                setIncludeHistorical(event.target.checked);
+                const url = new URL(window.location.href);
+                if (event.target.checked) url.searchParams.set("historical", "include"); else url.searchParams.delete("historical");
+                window.history.replaceState(null, "", url);
+              }} />
+              <label className="govuk-label govuk-checkboxes__label" htmlFor="include-historical">Include historical and former institutions</label>
+              <div id="history-hint" className="govuk-hint govuk-checkboxes__hint">{historicalCount.toLocaleString()} published historical records, including dissolved, renamed and merged bodies.</div>
+            </div></div>
+            <nav aria-label="Institution categories"><h2 className="govuk-heading-s">Browse by government area</h2><ul className="govuk-list">{categoryGroups.map(group => <li key={group.slug}><a className="govuk-link" href={`#institutions-${group.slug}`} onClick={() => setExpandedCategories(previous => new Set([...previous, group.slug]))}>{group.title}</a></li>)}</ul></nav>
           </div>
 
           {/* RIGHT CONTENT */}
@@ -451,7 +542,7 @@ export default function GovernmentInstitutionsPage() {
                 Search institutions
               </label>
               <div className="govuk-hint" id="search-hint">
-                Search by name, type, or description
+                Search this directory by name, abbreviation, type or responsibility. Browse schools through their education directorate.
               </div>
               <input
                 className="govuk-input govuk-!-width-full"
@@ -459,11 +550,22 @@ export default function GovernmentInstitutionsPage() {
                 name="search-institutions"
                 type="search"
                 aria-describedby="search-hint"
-                placeholder="e.g. Ministry of Health, IEBC, Nairobi County..."
+                placeholder="e.g. Ministry of Health, IEBC, teacher education"
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                maxLength={120}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  const url = new URL(window.location.href);
+                  if (e.target.value) url.searchParams.set("q", e.target.value); else url.searchParams.delete("q");
+                  window.history.replaceState(null, "", url);
+                  if (e.target.value.trim()) {
+                    setExpandedCategories(new Set(ALL_CATEGORY_SLUGS));
+                    setExpandAllNested(true);
+                  }
+                }}
               />
             </div>
+            {searchTerm && <button type="button" className="govuk-button govuk-button--secondary" onClick={() => { setSearchTerm(""); const url = new URL(window.location.href); url.searchParams.delete("q"); window.history.replaceState(null, "", url); }}>Clear institution search</button>}
 
             <div className="institutions-controls govuk-!-margin-bottom-6">
               <div className="institutions-controls__left">
@@ -498,6 +600,11 @@ export default function GovernmentInstitutionsPage() {
               )}
             </div>
 
+            <div id="directorate-school-browser" tabIndex={-1}>
+              {selectedDirectorate && <PublicSchools key={`${selectedDirectorate}:${schoolBrowserVersion}`} fixedDirectorate={selectedDirectorate} autoOpen viewMode={viewMode} />}
+            </div>
+            {loadError && <p className="govuk-body" role="alert">{loadError}</p>}
+            <h2 className="govuk-heading-m">Government bodies and their responsibilities</h2>
             {categoryGroups.length === 0 ? (
               <div className="govuk-inset-text">
                 <p className="govuk-body">No institutions found matching your search criteria.</p>
@@ -509,8 +616,8 @@ export default function GovernmentInstitutionsPage() {
                   const shouldExpandNested = searchTerm.trim().length > 0 || expandAllNested;
                   
                   return (
-                    <div key={group.slug} className={`govuk-accordion__section ${isExpanded ? 'govuk-accordion__section--expanded' : ''}`}>
-                      <div className="govuk-accordion__section-header" onClick={() => toggleCategory(group.slug)} role="button" tabIndex={0} aria-expanded={isExpanded}>
+                    <div id={`institutions-${group.slug}`} key={group.slug} className={`govuk-accordion__section ${isExpanded ? 'govuk-accordion__section--expanded' : ''}`}>
+                      <div className="govuk-accordion__section-header" onClick={() => toggleCategory(group.slug)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); toggleCategory(group.slug); } }} role="button" tabIndex={0} aria-expanded={isExpanded}>
                         <h2 className="govuk-accordion__section-heading">
                           <span className="govuk-accordion__section-heading-text">
                             {group.title}
@@ -532,6 +639,7 @@ export default function GovernmentInstitutionsPage() {
                           key={`list-${shouldExpandNested}-${searchTerm.trim()}-${group.slug}`}
                           nodes={group.institutions} 
                           isSearchActive={shouldExpandNested}
+                          onBrowse={browseSchools}
                         />
                       </div>
                     </div>
@@ -571,7 +679,7 @@ export default function GovernmentInstitutionsPage() {
                               {group.title}
                               {group.showCount && (
                                 <span className="govuk-body-s govuk-text-secondary govuk-!-margin-left-2">
-                                  ({group.count} active institutions)
+                                  ({group.count} institutions)
                                 </span>
                               )}
                             </h3>
@@ -589,9 +697,11 @@ export default function GovernmentInstitutionsPage() {
                                 <Link href={`/government/institutions/${node.slug}`} className="govuk-link govuk-link--no-visited-state">
                                   {node.name}
                                 </Link>
+                                {["directorate-primary-education", "directorate-secondary-education"].includes(node.slug) && <div><button type="button" className="govuk-button govuk-!-margin-top-2 govuk-!-margin-bottom-0" onClick={() => browseSchools(node.slug)}>Browse public schools →</button></div>}
                                 {node.short_name && (
                                   <span className="govuk-body-s govuk-!-margin-left-1 govuk-text-secondary">({node.short_name})</span>
                                 )}
+                                <InstitutionHistory institution={node} />
                               </td>
                               <td className="govuk-table__cell">{node.institution_type || "—"}</td>
                               <td className="govuk-table__cell">{node.arm_of_government || "—"}</td>
@@ -610,6 +720,23 @@ export default function GovernmentInstitutionsPage() {
       </main>
 
       <style>{`
+        .institution-directory-heading { border-bottom: 4px solid #00703c; margin-bottom: 32px; padding-bottom: 16px; max-width: 100%; }
+        .institution-directory-heading h1 { max-width: 900px; }
+        .institution-directory .govuk-grid-column-one-third, .institution-directory .govuk-grid-column-two-thirds { min-width: 0; }
+        .institution-directory .govuk-table-responsive { overflow-x: auto; }
+        .institution-directory .govuk-table { min-width: 540px; }
+        .institution-history { color: #505a5f; margin: 6px 0 10px; line-height: 1.5; }
+        .institution-directory .govuk-link, .institution-directory .govuk-details__summary-text { overflow-wrap: anywhere; }
+        .institution-directory nav li { padding: 5px 0; }
+        .institution-directory .govuk-accordion__section-content > ul > li { padding: 12px 0; border-bottom: 1px solid #d8dde0; }
+        @media(max-width: 640px) { .institution-directory-heading h1 { font-size: 32px; line-height: 1.15; } .institution-directory .govuk-button { white-space: normal; } }
+
+        .institution-children { margin-left: 12px; padding-left: 24px !important; border-left: 3px solid #b1b4b6 !important; }
+        .institution-children .institution-children { border-left-color: #00703c !important; }
+        #directorate-school-browser { scroll-margin-top: 24px; }
+        .institution-directory .govuk-accordion__section { scroll-margin-top: 20px; }
+        .institution-directory .govuk-accordion__section-header:focus-visible { outline: 3px solid #ffdd00; }
+        @media (max-width: 640px) { .institution-children { margin-left: 4px; padding-left: 12px !important; } }
         .institutions-controls {
           display: flex;
           justify-content: space-between;
@@ -682,13 +809,13 @@ export default function GovernmentInstitutionsPage() {
           transform: translateY(1px);
         }
 
-        .govuk-accordion {
+        .institution-directory .govuk-accordion {
           border-bottom: 1px solid #b1b4b6;
         }
-        .govuk-accordion__section {
+        .institution-directory .govuk-accordion__section {
           border-top: 1px solid #b1b4b6;
         }
-        .govuk-accordion__section-header {
+        .institution-directory .govuk-accordion__section-header {
           padding: 15px 0;
           display: flex;
           justify-content: space-between;
@@ -696,25 +823,25 @@ export default function GovernmentInstitutionsPage() {
           gap: 15px;
           cursor: pointer;
         }
-        .govuk-accordion__section-header:hover .govuk-accordion__section-heading-text {
+        .institution-directory .govuk-accordion__section-header:hover .govuk-accordion__section-heading-text {
           text-decoration: underline;
         }
-        .govuk-accordion__section-heading {
+        .institution-directory .govuk-accordion__section-heading {
           margin: 0;
           font-size: 19px;
           font-weight: 700;
           line-height: 1.3;
           flex-grow: 1;
         }
-        .govuk-accordion__section-heading-text {
+        .institution-directory .govuk-accordion__section-heading-text {
           display: inline;
         }
-        .govuk-accordion__section-heading-count {
+        .institution-directory .govuk-accordion__section-heading-count {
           font-weight: 400;
           color: #505a5f;
           margin-left: 5px;
         }
-        .govuk-accordion__section-toggle {
+        .institution-directory .govuk-accordion__section-toggle {
           background: transparent;
           border: 2px solid #1d70b8;
           border-radius: 4px;
@@ -730,23 +857,23 @@ export default function GovernmentInstitutionsPage() {
           white-space: nowrap;
           transition: all 0.2s ease;
         }
-        .govuk-accordion__section-toggle:hover {
+        .institution-directory .govuk-accordion__section-toggle:hover {
           background: #1d70b8;
           color: #ffffff;
         }
-        .govuk-accordion__section-toggle:hover .govuk-accordion-nav__chevron {
+        .institution-directory .govuk-accordion__section-toggle:hover .govuk-accordion-nav__chevron {
           background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath fill='%23ffffff' d='M10 14l-6-6h12z'/%3E%3C/svg%3E");
         }
-        .govuk-accordion__section-toggle:focus {
+        .institution-directory .govuk-accordion__section-toggle:focus {
           outline: 3px solid #ffdd00;
           outline-offset: 2px;
           background: #1d70b8;
           color: #ffffff;
         }
-        .govuk-accordion__section-toggle:focus .govuk-accordion-nav__chevron {
+        .institution-directory .govuk-accordion__section-toggle:focus .govuk-accordion-nav__chevron {
           background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath fill='%23ffffff' d='M10 14l-6-6h12z'/%3E%3C/svg%3E");
         }
-        .govuk-accordion-nav__chevron {
+        .institution-directory .govuk-accordion-nav__chevron {
           display: inline-block;
           width: 20px;
           height: 20px;
@@ -755,20 +882,20 @@ export default function GovernmentInstitutionsPage() {
           background-position: center;
           transition: transform 0.3s ease;
         }
-        .govuk-accordion__section--expanded .govuk-accordion-nav__chevron {
+        .institution-directory .govuk-accordion__section--expanded .govuk-accordion-nav__chevron {
           transform: rotate(180deg);
         }
-        .govuk-accordion__section-content {
+        .institution-directory .govuk-accordion__section-content {
           padding: 15px 0 30px 0;
           display: none;
         }
-        .govuk-accordion__section--expanded .govuk-accordion__section-content {
+        .institution-directory .govuk-accordion__section--expanded .govuk-accordion__section-content {
           display: block;
         }
 
         /* GOV.UK Details Component Styling */
-        .govuk-details {
-          font-family: "GDS Transport", arial, sans-serif;
+        .institution-directory .govuk-details {
+          font-family: Arial, sans-serif;
           -webkit-font-smoothing: antialiased;
           -moz-osx-font-smoothing: grayscale;
           font-weight: 400;
@@ -779,38 +906,38 @@ export default function GovernmentInstitutionsPage() {
           margin-bottom: 15px;
           display: block;
         }
-        .govuk-details__summary {
+        .institution-directory .govuk-details__summary {
           display: inline-block;
           margin-bottom: 5px;
         }
-        .govuk-details__summary-text {
+        .institution-directory .govuk-details__summary-text {
           color: #1d70b8;
           cursor: pointer;
         }
-        .govuk-details__summary-text:hover {
+        .institution-directory .govuk-details__summary-text:hover {
           color: #003078;
         }
-        .govuk-details__summary:focus {
+        .institution-directory .govuk-details__summary:focus {
           outline: 3px solid #ffdd00;
           background-color: #ffdd00;
           box-shadow: 0 -2px #ffdd00, 0 4px #0b0c0c;
           color: #0b0c0c;
           text-decoration: none;
         }
-        .govuk-details__text {
+        .institution-directory .govuk-details__text {
           padding-top: 15px;
           padding-bottom: 15px;
           padding-left: 20px;
           border-left: 4px solid #1d70b8;
         }
-        .govuk-details[open] .govuk-details__summary {
+        .institution-directory .govuk-details[open] .govuk-details__summary {
           margin-bottom: 10px;
         }
 
-        .govuk-table__row--section-header {
+        .institution-directory .govuk-table__row--section-header {
           background: #f3f2f1;
         }
-        .govuk-table__row--section-header td {
+        .institution-directory .govuk-table__row--section-header td {
           padding: 12px 15px;
           border-top: 2px solid #0b0c0c;
           border-bottom: 2px solid #0b0c0c;
@@ -841,11 +968,11 @@ export default function GovernmentInstitutionsPage() {
             width: 100%;
           }
 
-          .govuk-accordion__section-header {
+          .institution-directory .govuk-accordion__section-header {
             flex-direction: column;
             align-items: flex-start;
           }
-          .govuk-accordion__section-toggle {
+          .institution-directory .govuk-accordion__section-toggle {
             margin-top: 10px;
             width: 100%;
             justify-content: flex-start;

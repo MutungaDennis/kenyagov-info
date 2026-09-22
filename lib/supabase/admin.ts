@@ -7,6 +7,7 @@
  * - Create the profile row for an existing auth user
  */
 
+import "server-only";
 import { createClient } from '@supabase/supabase-js';
 
 function getAdminClient() {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { requireAdminApi } from "@/lib/admin-api";
 import { normalizeVerificationStatus } from "@/lib/verification";
 
 // ✅ UUID validation helper
@@ -21,6 +21,10 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = await requireAdminApi();
+  if (!auth.ok) return auth.response;
+  const supabase = auth.supabase;
+
   const { id } = await params;
 
   if (!id || id === "undefined" || id.length < 10) {
@@ -28,7 +32,6 @@ export async function GET(
   }
 
   try {
-    const supabase = await createClient();
     const { data, error } = await supabase
       .from("mcas")
       .select("*")
@@ -51,6 +54,10 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = await requireAdminApi();
+  if (!auth.ok) return auth.response;
+  const supabase = auth.supabase;
+
   const { id } = await params;
 
   if (!id || id === "undefined" || id.length < 10) {
@@ -58,7 +65,6 @@ export async function PUT(
   }
 
   try {
-    const supabase = await createClient();
     const body = await request.json();
 
     // Partial updates (e.g. { status: "Unpublished" }) must NOT wipe other columns
@@ -194,6 +200,10 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = await requireAdminApi();
+  if (!auth.ok) return auth.response;
+  const supabase = auth.supabase;
+
   const { id } = await params;
 
   if (!id || id === "undefined" || id.length < 10) {
@@ -201,7 +211,6 @@ export async function DELETE(
   }
 
   try {
-    const supabase = await createClient();
     const { error } = await supabase.from("mcas").delete().eq("id", id);
 
     if (error) {

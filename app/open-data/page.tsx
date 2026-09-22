@@ -96,6 +96,15 @@ export default async function OpenDataPage() {
 
       <div className="govuk-grid-row">
         <div className="govuk-grid-column-two-thirds">
+          <section aria-labelledby="available-downloads-heading" className="govuk-!-margin-bottom-8">
+            <h2 id="available-downloads-heading" className="govuk-heading-m">Available downloads</h2>
+            <p className="govuk-body">Download the existing published extracts in CSV or JSON: open, non-proprietary formats that do not require paid software or an account. More datasets will be added after review.</p>
+            <ul className="govuk-list govuk-list--spaced">{OPEN_DATASETS.filter(dataset => dataset.exportEndpoint).map(dataset => <li key={dataset.slug}>
+              <Link className="govuk-link govuk-!-font-weight-bold" href={`/open-data/${dataset.slug}`}>{dataset.title}</Link>
+              <span className="govuk-body-s"> — <a className="govuk-link" href={`${dataset.exportEndpoint}?format=csv`} aria-label={`Download ${dataset.title} as CSV`}>CSV</a> · <a className="govuk-link" href={`${dataset.exportEndpoint}?format=json`} aria-label={`Download ${dataset.title} as JSON`}>JSON</a></span>
+            </li>)}</ul>
+            <p className="govuk-body-s">Read each dataset’s sources, coverage and limitations before reuse. <Link className="govuk-link" href="/open-data/standards">Formats, API filters and reuse terms</Link>.</p>
+          </section>
           <section aria-labelledby="collections-heading">
             <h2 className="govuk-heading-m" id="collections-heading">
               Collections

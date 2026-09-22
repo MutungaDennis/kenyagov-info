@@ -206,18 +206,8 @@ export async function PATCH(request: NextRequest, context: Ctx) {
   );
 }
 
-export async function DELETE(_request: NextRequest, context: Ctx) {
+export async function DELETE(_request: NextRequest, _context: Ctx) {
   const auth = await requireAdminApi();
   if (!auth.ok) return auth.response;
-  const { id } = await context.params;
-
-  const { error } = await auth.supabase
-    .from("institutions")
-    .delete()
-    .eq("id", id);
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-  return NextResponse.json({ success: true });
+  return NextResponse.json({ error: "Institution records are retained to preserve officials' service history. Edit its lifecycle status and successor, or unpublish the record instead." }, { status: 409 });
 }

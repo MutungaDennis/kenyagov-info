@@ -288,6 +288,9 @@ export const OPEN_DATASETS: OpenDataset[] = [
     fields: [
       { name: "name", description: "Official name" },
       { name: "short_name", description: "Abbreviation" },
+      { name: "description", description: "Recorded responsibilities or description" },
+      { name: "slug", description: "Stable public profile URL segment" },
+      { name: "status", description: "Lifecycle status; published former organisations are retained" },
       { name: "institution_type", description: "Type (ministry, commission, etc.)" },
       { name: "government_level", description: "National or county" },
       { name: "arm_of_government", description: "Executive, Legislature, Judiciary, Independent, etc." },
@@ -299,7 +302,7 @@ export const OPEN_DATASETS: OpenDataset[] = [
     slug: "leaders",
     title: "Leaders and office holders",
     shortDescription:
-      "Current leaders linked to roles, parties and constituencies where recorded.",
+      "Published office-holder records, including former people, with recorded affiliations.",
     description:
       "Compiled list of public office holders used across CitizenGuide (including Hansard speaker matching). Treat as a living directory: appointments change; verify against official sources for legal use.",
     theme: "leadership",
@@ -327,6 +330,7 @@ export const OPEN_DATASETS: OpenDataset[] = [
       { name: "title", description: "Honorific or office title" },
       { name: "current_party", description: "Party where recorded" },
       { name: "current_constituency", description: "Constituency where recorded" },
+      { name: "current_county", description: "County where recorded" },
       { name: "current_organization", description: "Organisation or role context" },
     ],
     scaleNote: "Hundreds to thousands of rows",

@@ -20,6 +20,13 @@ export async function GET() {
       updateFrequency: d.updateFrequency,
       licence: d.licence,
       formats: d.formats,
+      downloadStatus: d.exportEndpoint ? "available" : "summary-only",
+      fields: d.fields,
+      distributions: d.exportEndpoint ? d.formats.map(format => ({
+        format,
+        mediaType: format === "csv" ? "text/csv" : "application/json",
+        downloadUrl: `${d.exportEndpoint}?format=${format}`,
+      })) : [],
       endpoint: d.exportEndpoint || null,
       page: `/open-data/${d.slug}`,
       sourceSystem: d.sourceSystem,
@@ -63,6 +70,7 @@ export async function GET() {
     },
     {
       headers: {
+        "Access-Control-Allow-Origin": "*",
         "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
       },
     },

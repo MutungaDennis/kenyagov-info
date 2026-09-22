@@ -1,0 +1,2656 @@
+{
+  "migration": "20260921124140_rls_alignment_and_access_regression",
+  "regression": "passed before commit; fixtures rolled back",
+  "protected_app_tables": 132,
+  "public_counts": [
+    {
+      "table_name": "admin_boundary_units",
+      "visible_rows": 8
+    },
+    {
+      "table_name": "cabinet_brief_sources",
+      "visible_rows": 3
+    },
+    {
+      "table_name": "cabinet_briefs",
+      "visible_rows": 3
+    },
+    {
+      "table_name": "census_years",
+      "visible_rows": 1
+    },
+    {
+      "table_name": "coalitions",
+      "visible_rows": 0
+    },
+    {
+      "table_name": "constituencies",
+      "visible_rows": 294
+    },
+    {
+      "table_name": "constitution_article_institutions",
+      "visible_rows": 0
+    },
+    {
+      "table_name": "constitution_article_people",
+      "visible_rows": 0
+    },
+    {
+      "table_name": "constitution_articles",
+      "visible_rows": 264
+    },
+    {
+      "table_name": "constitution_chapters",
+      "visible_rows": 18
+    },
+    {
+      "table_name": "constitution_inline_links",
+      "visible_rows": 9
+    },
+    {
+      "table_name": "constitution_parts",
+      "visible_rows": 44
+    },
+    {
+      "table_name": "constitution_schedules",
+      "visible_rows": 6
+    },
+    {
+      "table_name": "constitutions",
+      "visible_rows": 1
+    },
+    {
+      "table_name": "counties",
+      "visible_rows": 47
+    },
+    {
+      "table_name": "county_flagship_projects",
+      "visible_rows": 21
+    },
+    {
+      "table_name": "county_me_indicators",
+      "visible_rows": 0
+    },
+    {
+      "table_name": "county_revenue_projections",
+      "visible_rows": 0
+    },
+    {
+      "table_name": "county_sector_programmes",
+      "visible_rows": 0
+    },
+    {
+      "table_name": "county_sub_counties",
+      "visible_rows": 0
+    },
+    {
+      "table_name": "departments",
+      "visible_rows": 0
+    },
+    {
+      "table_name": "diplomatic_accreditations",
+      "visible_rows": 65
+    },
+    {
+      "table_name": "diplomatic_extensions",
+      "visible_rows": 61
+    },
+    {
+      "table_name": "document_categories",
+      "visible_rows": 10
+    },
+    {
+      "table_name": "document_files",
+      "visible_rows": 2
+    },
+    {
+      "table_name": "document_inline_links",
+      "visible_rows": 0
+    },
+    {
+      "table_name": "document_institution_links",
+      "visible_rows": 0
+    },
+    {
+      "table_name": "document_relationships",
+      "visible_rows": 0
+    },
+    {
+      "table_name": "document_sections",
+      "visible_rows": 1205
+    },
+    {
+      "table_name": "document_series",
+      "visible_rows": 5
+    },
+    {
+      "table_name": "document_topic_links",
+      "visible_rows": 14
+    },
+    {
+      "table_name": "document_topics",
+      "visible_rows": 27
+    },
+    {
+      "table_name": "document_types",
+      "visible_rows": 72
+    },
+    {
+      "table_name": "document_versions",
+      "visible_rows": 0
+    },
+    {
+      "table_name": "documents",
+      "visible_rows": 20
+    },
+    {
+      "table_name": "education_counties",
+      "visible_rows": 47
+    },
+    {
+      "table_name": "education_data_sources",
+      "visible_rows": 4
+    },
+    {
+      "table_name": "education_school_aliases",
+      "visible_rows": 17
+    },
+    {
+      "table_name": "education_school_identifiers",
+      "visible_rows": 29542
+    },
+    {
+      "table_name": "education_school_offerings",
+      "visible_rows": 29545
+    },
+    {
+      "table_name": "education_school_source_records",
+      "visible_rows": 29569
+    },
+    {
+      "table_name": "education_schools",
+      "visible_rows": 29545
+    },
+    {
+      "table_name": "education_sub_counties",
+      "visible_rows": 293
+    },
+    {
+      "table_name": "epra_enforcement_log",
+      "visible_rows": 0
+    },
+    {
+      "table_name": "epra_international_trends",
+      "visible_rows": 6
+    },
+    {
+      "table_name": "epra_lpg_prices",
+      "visible_rows": 0
+    },
+    {
+      "table_name": "epra_nairobi_breakdown",
+      "visible_rows": 6
+    },
+    {
+      "table_name": "epra_price_cycles",
+      "visible_rows": 6
+    },
+    {
+      "table_name": "epra_town_prices",
+      "visible_rows": 1338
+    },
+    {
+      "table_name": "gazette_corrigenda_entries",
+      "visible_rows": 0
+    },
+    {
+      "table_name": "gazette_inline_links",
+      "visible_rows": 10
+    },
+    {
+      "table_name": "gazette_issue_sections",
+      "visible_rows": 3
+    },
+    {
+      "table_name": "gazette_issues",
+      "visible_rows": 12
+    },
+    {
+      "table_name": "gazette_notice_institutions",
+      "visible_rows": 0
+    },
+    {
+      "table_name": "gazette_notice_people",
+      "visible_rows": 0
+    },
+    {
+      "table_name": "gazette_notice_relationships",
+      "visible_rows": 0
+    },
+    {
+      "table_name": "gazette_notices",
+      "visible_rows": 1107
+    },
+    {
+      "table_name": "government_entities",
+      "visible_rows": 0
+    },
+    {
+      "table_name": "government_levels",
+      "visible_rows": 4
+    },
+    {
+      "table_name": "government_structure",
+      "visible_rows": 0
+    },
+    {
+      "table_name": "independent_bodies",
+      "visible_rows": 15
+    },
+    {
+      "table_name": "institution_budgets",
+      "visible_rows": 0
+    },
+    {
+      "table_name": "institution_documents",
+      "visible_rows": 0
+    },
+    {
+      "table_name": "institution_leaders",
+      "visible_rows": 136
+    },
+    {
+      "table_name": "institution_lifecycle_segments",
+      "visible_rows": 0
+    },
+    {
+      "table_name": "institution_locations",
+      "visible_rows": 23
+    },
+    {
+      "table_name": "institution_name_history",
+      "visible_rows": 0
+    },
+    {
+      "table_name": "institution_relationships",
+      "visible_rows": 0
+    },
+    {
+      "table_name": "institution_services",
+      "visible_rows": 0
+    },
+    {
+      "table_name": "institutions",
+      "visible_rows": 1510
+    },
+    {
+      "table_name": "kenya_counties",
+      "visible_rows": 47
+    },
+    {
+      "table_name": "knbs_ethnicity_census",
+      "visible_rows": 146
+    },
+    {
+      "table_name": "knbs_religion_census",
+      "visible_rows": 45
+    },
+    {
+      "table_name": "leader_categories",
+      "visible_rows": 10
+    },
+    {
+      "table_name": "leader_name_title_options",
+      "visible_rows": 10
+    },
+    {
+      "table_name": "leader_national_honour_options",
+      "visible_rows": 1
+    },
+    {
+      "table_name": "leader_roles",
+      "visible_rows": 680
+    },
+    {
+      "table_name": "leaders",
+      "visible_rows": 525
+    },
+    {
+      "table_name": "legal_citations",
+      "visible_rows": 1
+    },
+    {
+      "table_name": "legal_document_relationships",
+      "visible_rows": 3
+    },
+    {
+      "table_name": "legal_documents",
+      "visible_rows": 4
+    },
+    {
+      "table_name": "legal_provision_relationships",
+      "visible_rows": 0
+    },
+    {
+      "table_name": "legal_provisions",
+      "visible_rows": 430
+    },
+    {
+      "table_name": "legislation_amendment_blocks",
+      "visible_rows": 3
+    },
+    {
+      "table_name": "legislation_amendment_groups",
+      "visible_rows": 49
+    },
+    {
+      "table_name": "legislation_amendment_items",
+      "visible_rows": 252
+    },
+    {
+      "table_name": "legislation_change_impacts",
+      "visible_rows": 3
+    },
+    {
+      "table_name": "legislation_changes",
+      "visible_rows": 11
+    },
+    {
+      "table_name": "legislation_documents",
+      "visible_rows": 3
+    },
+    {
+      "table_name": "legislation_inline_links",
+      "visible_rows": 0
+    },
+    {
+      "table_name": "legislation_provision_display_notes",
+      "visible_rows": 60
+    },
+    {
+      "table_name": "legislation_provisions",
+      "visible_rows": 97
+    },
+    {
+      "table_name": "legislation_source_snapshots",
+      "visible_rows": 1
+    },
+    {
+      "table_name": "legislation_versions",
+      "visible_rows": 1
+    },
+    {
+      "table_name": "mca_social_media",
+      "visible_rows": 0
+    },
+    {
+      "table_name": "mca_terms",
+      "visible_rows": 459
+    },
+    {
+      "table_name": "mcas",
+      "visible_rows": 459
+    },
+    {
+      "table_name": "official_relationships",
+      "visible_rows": 0
+    },
+    {
+      "table_name": "officials",
+      "visible_rows": 38
+    },
+    {
+      "table_name": "party_documents",
+      "visible_rows": 0
+    },
+    {
+      "table_name": "party_history",
+      "visible_rows": 0
+    },
+    {
+      "table_name": "party_leadership",
+      "visible_rows": 0
+    },
+    {
+      "table_name": "political_parties",
+      "visible_rows": 91
+    },
+    {
+      "table_name": "polling_stations_2022",
+      "visible_rows": 45931
+    },
+    {
+      "table_name": "positions",
+      "visible_rows": 79
+    },
+    {
+      "table_name": "presidential_speech_relationships",
+      "visible_rows": 0
+    },
+    {
+      "table_name": "presidential_speech_sources",
+      "visible_rows": 129
+    },
+    {
+      "table_name": "presidential_speech_topics",
+      "visible_rows": 555
+    },
+    {
+      "table_name": "presidential_speeches",
+      "visible_rows": 127
+    },
+    {
+      "table_name": "presidents",
+      "visible_rows": 3
+    },
+    {
+      "table_name": "public_officials",
+      "visible_rows": 8
+    },
+    {
+      "table_name": "schools",
+      "visible_rows": 0
+    },
+    {
+      "table_name": "search_expansions",
+      "visible_rows": 16
+    },
+    {
+      "table_name": "site_status",
+      "visible_rows": 1
+    },
+    {
+      "table_name": "speech_topics",
+      "visible_rows": 19
+    },
+    {
+      "table_name": "speech_types",
+      "visible_rows": 15
+    },
+    {
+      "table_name": "ward_health_facilities",
+      "visible_rows": 0
+    },
+    {
+      "table_name": "ward_leadership",
+      "visible_rows": 0
+    },
+    {
+      "table_name": "ward_projects",
+      "visible_rows": 0
+    },
+    {
+      "table_name": "ward_schools",
+      "visible_rows": 0
+    },
+    {
+      "table_name": "wards",
+      "visible_rows": 1450
+    }
+  ],
+  "security": {
+    "result": {
+      "lints": [
+        {
+          "name": "rls_disabled_in_public",
+          "title": "RLS Disabled in Public",
+          "level": "ERROR",
+          "facing": "EXTERNAL",
+          "categories": [
+            "SECURITY"
+          ],
+          "description": "Detects cases where row level security (RLS) has not been enabled on tables in schemas exposed to PostgREST",
+          "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0013_rls_disabled_in_public",
+          "count": 1,
+          "findings": [
+            {
+              "detail": "Table \\`public.spatial_ref_sys\\` is public, but RLS has not been enabled.",
+              "metadata": {
+                "name": "spatial_ref_sys",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.536Z"
+            }
+          ]
+        },
+        {
+          "name": "extension_in_public",
+          "title": "Extension in Public",
+          "level": "WARN",
+          "facing": "EXTERNAL",
+          "categories": [
+            "SECURITY"
+          ],
+          "description": "Detects extensions installed in the \\`public\\` schema.",
+          "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0014_extension_in_public",
+          "count": 1,
+          "findings": [
+            {
+              "detail": "Extension \\`postgis\\` is installed in the public schema. Move it to another schema.",
+              "metadata": {
+                "name": "postgis",
+                "type": "extension",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.536Z"
+            }
+          ]
+        },
+        {
+          "name": "anon_security_definer_function_executable",
+          "title": "Public Can Execute SECURITY DEFINER Function",
+          "level": "WARN",
+          "facing": "EXTERNAL",
+          "categories": [
+            "SECURITY"
+          ],
+          "description": "Detects `SECURITY DEFINER` functions that are callable without signing in. Revoke `EXECUTE`, switch the function to `SECURITY INVOKER`, or move it out of your exposed API schema if it is not meant to be public.",
+          "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable",
+          "count": 3,
+          "findings": [
+            {
+              "detail": "Function `public.st_estimatedextent(text, text)` can be executed by the `anon` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/st_estimatedextent`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+              "metadata": {
+                "name": "st_estimatedextent",
+                "schema": "public",
+                "language": "c",
+                "arguments": "text, text",
+                "security_definer": true
+              },
+              "observed_at": "2026-09-21T12:41:59.536Z"
+            },
+            {
+              "detail": "Function `public.st_estimatedextent(text, text, text)` can be executed by the `anon` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/st_estimatedextent`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+              "metadata": {
+                "name": "st_estimatedextent",
+                "schema": "public",
+                "language": "c",
+                "arguments": "text, text, text",
+                "security_definer": true
+              },
+              "observed_at": "2026-09-21T12:41:59.536Z"
+            },
+            {
+              "detail": "Function `public.st_estimatedextent(text, text, text, boolean)` can be executed by the `anon` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/st_estimatedextent`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+              "metadata": {
+                "name": "st_estimatedextent",
+                "schema": "public",
+                "language": "c",
+                "arguments": "text, text, text, boolean",
+                "security_definer": true
+              },
+              "observed_at": "2026-09-21T12:41:59.536Z"
+            }
+          ]
+        },
+        {
+          "name": "authenticated_security_definer_function_executable",
+          "title": "Signed-In Users Can Execute SECURITY DEFINER Function",
+          "level": "WARN",
+          "facing": "EXTERNAL",
+          "categories": [
+            "SECURITY"
+          ],
+          "description": "Detects `SECURITY DEFINER` functions that are callable by signed-in users. Revoke `EXECUTE`, switch the function to `SECURITY INVOKER`, or move it out of your exposed API schema if signed-in users should not call it.",
+          "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable",
+          "count": 3,
+          "findings": [
+            {
+              "detail": "Function `public.st_estimatedextent(text, text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/st_estimatedextent`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+              "metadata": {
+                "name": "st_estimatedextent",
+                "schema": "public",
+                "language": "c",
+                "arguments": "text, text",
+                "security_definer": true
+              },
+              "observed_at": "2026-09-21T12:41:59.536Z"
+            },
+            {
+              "detail": "Function `public.st_estimatedextent(text, text, text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/st_estimatedextent`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+              "metadata": {
+                "name": "st_estimatedextent",
+                "schema": "public",
+                "language": "c",
+                "arguments": "text, text, text",
+                "security_definer": true
+              },
+              "observed_at": "2026-09-21T12:41:59.536Z"
+            },
+            {
+              "detail": "Function `public.st_estimatedextent(text, text, text, boolean)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/st_estimatedextent`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+              "metadata": {
+                "name": "st_estimatedextent",
+                "schema": "public",
+                "language": "c",
+                "arguments": "text, text, text, boolean",
+                "security_definer": true
+              },
+              "observed_at": "2026-09-21T12:41:59.536Z"
+            }
+          ]
+        },
+        {
+          "name": "auth_leaked_password_protection",
+          "title": "Leaked Password Protection Disabled",
+          "level": "WARN",
+          "facing": "EXTERNAL",
+          "categories": [
+            "SECURITY"
+          ],
+          "description": "Leaked password protection is currently disabled.",
+          "remediation": "https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection",
+          "count": 1,
+          "findings": [
+            {
+              "detail": "Supabase Auth prevents the use of compromised passwords by checking against HaveIBeenPwned.org. Enable this feature to enhance security.",
+              "metadata": {
+                "type": "auth",
+                "entity": "Auth"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "performance": {
+    "result": {
+      "lints": [
+        {
+          "name": "unindexed_foreign_keys",
+          "title": "Unindexed foreign keys",
+          "level": "INFO",
+          "facing": "EXTERNAL",
+          "categories": [
+            "PERFORMANCE"
+          ],
+          "description": "Identifies foreign key constraints without a covering index, which can impact database performance.",
+          "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0001_unindexed_foreign_keys",
+          "count": 86,
+          "findings": [
+            {
+              "detail": "Table \\`public.admin_boundary_units\\` has a foreign key \\`admin_boundary_units_constituency_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "admin_boundary_units",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "admin_boundary_units_constituency_id_fkey",
+                "fkey_columns": [
+                  3
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.admin_boundary_units\\` has a foreign key \\`admin_boundary_units_county_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "admin_boundary_units",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "admin_boundary_units_county_id_fkey",
+                "fkey_columns": [
+                  4
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.admin_boundary_units\\` has a foreign key \\`admin_boundary_units_parent_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "admin_boundary_units",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "admin_boundary_units_parent_id_fkey",
+                "fkey_columns": [
+                  2
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.client_feedback\\` has a foreign key \\`client_feedback_related_entity_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "client_feedback",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "client_feedback_related_entity_id_fkey",
+                "fkey_columns": [
+                  9
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.constitution_article_people\\` has a foreign key \\`constitution_article_people_leader_role_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "constitution_article_people",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "constitution_article_people_leader_role_id_fkey",
+                "fkey_columns": [
+                  5
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.constitution_articles\\` has a foreign key \\`constitution_articles_chapter_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "constitution_articles",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "constitution_articles_chapter_id_fkey",
+                "fkey_columns": [
+                  3
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.constitution_articles\\` has a foreign key \\`constitution_articles_part_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "constitution_articles",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "constitution_articles_part_id_fkey",
+                "fkey_columns": [
+                  4
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.constitution_inline_links\\` has a foreign key \\`constitution_inline_links_leader_role_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "constitution_inline_links",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "constitution_inline_links_leader_role_id_fkey",
+                "fkey_columns": [
+                  6
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.constitution_inline_links\\` has a foreign key \\`constitution_inline_links_mca_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "constitution_inline_links",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "constitution_inline_links_mca_id_fkey",
+                "fkey_columns": [
+                  5
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.constitution_parts\\` has a foreign key \\`constitution_parts_constitution_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "constitution_parts",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "constitution_parts_constitution_id_fkey",
+                "fkey_columns": [
+                  2
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.county_me_indicators\\` has a foreign key \\`county_me_indicators_county_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "county_me_indicators",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "county_me_indicators_county_id_fkey",
+                "fkey_columns": [
+                  2
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.county_revenue_projections\\` has a foreign key \\`county_revenue_projections_county_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "county_revenue_projections",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "county_revenue_projections_county_id_fkey",
+                "fkey_columns": [
+                  2
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.county_sector_programmes\\` has a foreign key \\`county_sector_programmes_county_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "county_sector_programmes",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "county_sector_programmes_county_id_fkey",
+                "fkey_columns": [
+                  2
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.county_sub_counties\\` has a foreign key \\`county_sub_counties_county_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "county_sub_counties",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "county_sub_counties_county_id_fkey",
+                "fkey_columns": [
+                  2
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.departments\\` has a foreign key \\`departments_entity_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "departments",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "departments_entity_id_fkey",
+                "fkey_columns": [
+                  4
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.document_admin_activity\\` has a foreign key \\`document_admin_activity_document_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "document_admin_activity",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "document_admin_activity_document_id_fkey",
+                "fkey_columns": [
+                  2
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.document_admin_activity\\` has a foreign key \\`document_admin_activity_document_section_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "document_admin_activity",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "document_admin_activity_document_section_id_fkey",
+                "fkey_columns": [
+                  3
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.document_files\\` has a foreign key \\`document_files_document_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "document_files",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "document_files_document_id_fkey",
+                "fkey_columns": [
+                  2
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.document_files\\` has a foreign key \\`document_files_version_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "document_files",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "document_files_version_id_fkey",
+                "fkey_columns": [
+                  3
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.document_inline_links\\` has a foreign key \\`document_inline_links_document_section_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "document_inline_links",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "document_inline_links_document_section_id_fkey",
+                "fkey_columns": [
+                  2
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.document_inline_links\\` has a foreign key \\`document_inline_links_target_document_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "document_inline_links",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "document_inline_links_target_document_id_fkey",
+                "fkey_columns": [
+                  6
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.document_inline_links\\` has a foreign key \\`document_inline_links_target_legal_document_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "document_inline_links",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "document_inline_links_target_legal_document_id_fkey",
+                "fkey_columns": [
+                  7
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.document_inline_links\\` has a foreign key \\`document_inline_links_target_legal_provision_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "document_inline_links",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "document_inline_links_target_legal_provision_id_fkey",
+                "fkey_columns": [
+                  8
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.document_relationships\\` has a foreign key \\`document_relationships_source_document_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "document_relationships",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "document_relationships_source_document_id_fkey",
+                "fkey_columns": [
+                  2
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.document_relationships\\` has a foreign key \\`document_relationships_target_document_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "document_relationships",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "document_relationships_target_document_id_fkey",
+                "fkey_columns": [
+                  3
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.document_relationships\\` has a foreign key \\`document_relationships_target_legal_document_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "document_relationships",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "document_relationships_target_legal_document_id_fkey",
+                "fkey_columns": [
+                  4
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.document_relationships\\` has a foreign key \\`document_relationships_target_legal_provision_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "document_relationships",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "document_relationships_target_legal_provision_id_fkey",
+                "fkey_columns": [
+                  5
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.document_sections\\` has a foreign key \\`document_sections_parent_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "document_sections",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "document_sections_parent_id_fkey",
+                "fkey_columns": [
+                  3
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.education_school_aliases\\` has a foreign key \\`education_school_aliases_source_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "education_school_aliases",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "education_school_aliases_source_id_fkey",
+                "fkey_columns": [
+                  5
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.education_school_identifiers\\` has a foreign key \\`education_school_identifiers_school_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "education_school_identifiers",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "education_school_identifiers_school_id_fkey",
+                "fkey_columns": [
+                  2
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.education_school_identifiers\\` has a foreign key \\`education_school_identifiers_source_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "education_school_identifiers",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "education_school_identifiers_source_id_fkey",
+                "fkey_columns": [
+                  6
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.education_school_offerings\\` has a foreign key \\`education_school_offerings_source_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "education_school_offerings",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "education_school_offerings_source_id_fkey",
+                "fkey_columns": [
+                  10
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.education_school_source_records\\` has a foreign key \\`education_school_source_records_school_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "education_school_source_records",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "education_school_source_records_school_id_fkey",
+                "fkey_columns": [
+                  2
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.education_schools\\` has a foreign key \\`education_schools_county_code_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "education_schools",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "education_schools_county_code_fkey",
+                "fkey_columns": [
+                  37
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.education_schools\\` has a foreign key \\`education_schools_sub_county_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "education_schools",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "education_schools_sub_county_id_fkey",
+                "fkey_columns": [
+                  38
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.gazette_inline_links\\` has a foreign key \\`gazette_inline_links_leader_role_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "gazette_inline_links",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "gazette_inline_links_leader_role_id_fkey",
+                "fkey_columns": [
+                  6
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.gazette_notice_institutions\\` has a foreign key \\`gazette_notice_institutions_institution_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "gazette_notice_institutions",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "gazette_notice_institutions_institution_id_fkey",
+                "fkey_columns": [
+                  3
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.gazette_notice_people\\` has a foreign key \\`gazette_notice_people_institution_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "gazette_notice_people",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "gazette_notice_people_institution_id_fkey",
+                "fkey_columns": [
+                  9
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.gazette_notice_people\\` has a foreign key \\`gazette_notice_people_leader_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "gazette_notice_people",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "gazette_notice_people_leader_id_fkey",
+                "fkey_columns": [
+                  3
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.gazette_notice_people\\` has a foreign key \\`gazette_notice_people_leader_role_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "gazette_notice_people",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "gazette_notice_people_leader_role_id_fkey",
+                "fkey_columns": [
+                  5
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.gazette_notice_people\\` has a foreign key \\`gazette_notice_people_mca_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "gazette_notice_people",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "gazette_notice_people_mca_id_fkey",
+                "fkey_columns": [
+                  4
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.government_entities\\` has a foreign key \\`government_entities_level_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "government_entities",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "government_entities_level_id_fkey",
+                "fkey_columns": [
+                  6
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.government_entities\\` has a foreign key \\`government_entities_parent_entity_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "government_entities",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "government_entities_parent_entity_id_fkey",
+                "fkey_columns": [
+                  7
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.government_structure\\` has a foreign key \\`government_structure_child_entity_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "government_structure",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "government_structure_child_entity_id_fkey",
+                "fkey_columns": [
+                  3
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.government_structure\\` has a foreign key \\`government_structure_parent_entity_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "government_structure",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "government_structure_parent_entity_id_fkey",
+                "fkey_columns": [
+                  2
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.institution_budgets\\` has a foreign key \\`institution_budgets_institution_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "institution_budgets",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "institution_budgets_institution_id_fkey",
+                "fkey_columns": [
+                  2
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.institution_documents\\` has a foreign key \\`institution_documents_institution_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "institution_documents",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "institution_documents_institution_id_fkey",
+                "fkey_columns": [
+                  2
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.institution_leaders\\` has a foreign key \\`institution_leaders_institution_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "institution_leaders",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "institution_leaders_institution_id_fkey",
+                "fkey_columns": [
+                  2
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.institution_locations\\` has a foreign key \\`institution_locations_institution_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "institution_locations",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "institution_locations_institution_id_fkey",
+                "fkey_columns": [
+                  2
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.institution_services\\` has a foreign key \\`institution_services_institution_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "institution_services",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "institution_services_institution_id_fkey",
+                "fkey_columns": [
+                  2
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.institutions\\` has a foreign key \\`institutions_parent_institution_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "institutions",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "institutions_parent_institution_id_fkey",
+                "fkey_columns": [
+                  34
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.institutions\\` has a foreign key \\`institutions_reports_to_institution_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "institutions",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "institutions_reports_to_institution_id_fkey",
+                "fkey_columns": [
+                  36
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.institutions\\` has a foreign key \\`institutions_supervising_ministry_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "institutions",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "institutions_supervising_ministry_id_fkey",
+                "fkey_columns": [
+                  35
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.knbs_ethnicity_census\\` has a foreign key \\`knbs_ethnicity_census_parent_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "knbs_ethnicity_census",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "knbs_ethnicity_census_parent_id_fkey",
+                "fkey_columns": [
+                  6
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.knbs_religion_census\\` has a foreign key \\`knbs_religion_census_county_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "knbs_religion_census",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "knbs_religion_census_county_id_fkey",
+                "fkey_columns": [
+                  3
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.leader_roles\\` has a foreign key \\`leader_roles_institution_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "leader_roles",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "leader_roles_institution_id_fkey",
+                "fkey_columns": [
+                  36
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.leader_roles\\` has a foreign key \\`leader_roles_successor_leader_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "leader_roles",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "leader_roles_successor_leader_id_fkey",
+                "fkey_columns": [
+                  19
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.legal_citations\\` has a foreign key \\`legal_citations_source_provision_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "legal_citations",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "legal_citations_source_provision_id_fkey",
+                "fkey_columns": [
+                  4
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.legal_citations\\` has a foreign key \\`legal_citations_target_document_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "legal_citations",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "legal_citations_target_document_id_fkey",
+                "fkey_columns": [
+                  5
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.legal_document_relationships\\` has a foreign key \\`legal_document_relationships_target_document_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "legal_document_relationships",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "legal_document_relationships_target_document_id_fkey",
+                "fkey_columns": [
+                  3
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.legal_provision_relationships\\` has a foreign key \\`legal_provision_relationships_target_provision_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "legal_provision_relationships",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "legal_provision_relationships_target_provision_id_fkey",
+                "fkey_columns": [
+                  3
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.legislation_amendment_blocks\\` has a foreign key \\`legislation_amendment_blocks_parent_block_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "legislation_amendment_blocks",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "legislation_amendment_blocks_parent_block_id_fkey",
+                "fkey_columns": [
+                  10
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.legislation_amendment_groups\\` has a foreign key \\`legislation_amendment_groups_schedule_provision_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "legislation_amendment_groups",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "legislation_amendment_groups_schedule_provision_id_fkey",
+                "fkey_columns": [
+                  3
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.legislation_changes\\` has a foreign key \\`legislation_changes_related_legal_document_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "legislation_changes",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "legislation_changes_related_legal_document_id_fkey",
+                "fkey_columns": [
+                  6
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.legislation_changes\\` has a foreign key \\`legislation_changes_related_legal_provision_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "legislation_changes",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "legislation_changes_related_legal_provision_id_fkey",
+                "fkey_columns": [
+                  7
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.legislation_documents\\` has a foreign key \\`legislation_documents_enabling_provision_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "legislation_documents",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "legislation_documents_enabling_provision_id_fkey",
+                "fkey_columns": [
+                  21
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.legislation_documents\\` has a foreign key \\`legislation_documents_parent_act_document_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "legislation_documents",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "legislation_documents_parent_act_document_id_fkey",
+                "fkey_columns": [
+                  20
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.legislation_inline_links\\` has a foreign key \\`legislation_inline_links_target_document_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "legislation_inline_links",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "legislation_inline_links_target_document_id_fkey",
+                "fkey_columns": [
+                  9
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.legislation_inline_links\\` has a foreign key \\`legislation_inline_links_target_provision_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "legislation_inline_links",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "legislation_inline_links_target_provision_id_fkey",
+                "fkey_columns": [
+                  10
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.legislation_provisions\\` has a foreign key \\`legislation_provisions_parent_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "legislation_provisions",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "legislation_provisions_parent_id_fkey",
+                "fkey_columns": [
+                  4
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.mca_terms\\` has a foreign key \\`mca_terms_party_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "mca_terms",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "mca_terms_party_id_fkey",
+                "fkey_columns": [
+                  6
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.mca_terms\\` has a foreign key \\`mca_terms_successor_mca_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "mca_terms",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "mca_terms_successor_mca_id_fkey",
+                "fkey_columns": [
+                  11
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.mca_terms\\` has a foreign key \\`mca_terms_ward_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "mca_terms",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "mca_terms_ward_id_fkey",
+                "fkey_columns": [
+                  7
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.mcas\\` has a foreign key \\`fk_mcas_successor\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "mcas",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "fk_mcas_successor",
+                "fkey_columns": [
+                  23
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.official_relationships\\` has a foreign key \\`official_relationships_primary_official_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "official_relationships",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "official_relationships_primary_official_id_fkey",
+                "fkey_columns": [
+                  2
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.official_relationships\\` has a foreign key \\`official_relationships_related_official_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "official_relationships",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "official_relationships_related_official_id_fkey",
+                "fkey_columns": [
+                  3
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.party_documents\\` has a foreign key \\`party_documents_party_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "party_documents",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "party_documents_party_id_fkey",
+                "fkey_columns": [
+                  2
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.party_history\\` has a foreign key \\`party_history_party_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "party_history",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "party_history_party_id_fkey",
+                "fkey_columns": [
+                  2
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.party_leadership\\` has a foreign key \\`party_leadership_party_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "party_leadership",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "party_leadership_party_id_fkey",
+                "fkey_columns": [
+                  2
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.political_parties\\` has a foreign key \\`fk_coalition\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "political_parties",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "fk_coalition",
+                "fkey_columns": [
+                  15
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.presidential_speech_relationships\\` has a foreign key \\`presidential_speech_relationships_related_speech_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "presidential_speech_relationships",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "presidential_speech_relationships_related_speech_id_fkey",
+                "fkey_columns": [
+                  2
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.site_status\\` has a foreign key \\`site_status_updated_by_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "site_status",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "site_status_updated_by_fkey",
+                "fkey_columns": [
+                  6
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.ward_health_facilities\\` has a foreign key \\`ward_health_facilities_ward_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "ward_health_facilities",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "ward_health_facilities_ward_id_fkey",
+                "fkey_columns": [
+                  2
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.ward_leadership\\` has a foreign key \\`ward_leadership_ward_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "ward_leadership",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "ward_leadership_ward_id_fkey",
+                "fkey_columns": [
+                  2
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.ward_projects\\` has a foreign key \\`ward_projects_ward_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "ward_projects",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "ward_projects_ward_id_fkey",
+                "fkey_columns": [
+                  2
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Table \\`public.ward_schools\\` has a foreign key \\`ward_schools_ward_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+              "metadata": {
+                "name": "ward_schools",
+                "type": "table",
+                "schema": "public",
+                "fkey_name": "ward_schools_ward_id_fkey",
+                "fkey_columns": [
+                  2
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            }
+          ]
+        },
+        {
+          "name": "unused_index",
+          "title": "Unused Index",
+          "level": "INFO",
+          "facing": "EXTERNAL",
+          "categories": [
+            "PERFORMANCE"
+          ],
+          "description": "Detects if an index has never been used and may be a candidate for removal.",
+          "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0005_unused_index",
+          "count": 91,
+          "findings": [
+            {
+              "detail": "Index \\`idx_page_views_path\\` on table \\`public.page_views\\` has not been used",
+              "metadata": {
+                "name": "page_views",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`idx_leader_roles_county_id\\` on table \\`public.leader_roles\\` has not been used",
+              "metadata": {
+                "name": "leader_roles",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`idx_page_views_referrer\\` on table \\`public.page_views\\` has not been used",
+              "metadata": {
+                "name": "page_views",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`idx_institutions_aliases_trgm\\` on table \\`public.institutions\\` has not been used",
+              "metadata": {
+                "name": "institutions",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`idx_institutions_common_misspellings_trgm\\` on table \\`public.institutions\\` has not been used",
+              "metadata": {
+                "name": "institutions",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`idx_institutions_former_names_trgm\\` on table \\`public.institutions\\` has not been used",
+              "metadata": {
+                "name": "institutions",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`idx_officials_full_name_trgm\\` on table \\`public.officials\\` has not been used",
+              "metadata": {
+                "name": "officials",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`idx_officials_search_vector\\` on table \\`public.officials\\` has not been used",
+              "metadata": {
+                "name": "officials",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`idx_counties_search_vector\\` on table \\`public.counties\\` has not been used",
+              "metadata": {
+                "name": "counties",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`idx_leaders_legacy_id\\` on table \\`public.leaders\\` has not been used",
+              "metadata": {
+                "name": "leaders",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`idx_leaders_search_vector\\` on table \\`public.leaders\\` has not been used",
+              "metadata": {
+                "name": "leaders",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`institutions_status_effective_date_idx\\` on table \\`public.institutions\\` has not been used",
+              "metadata": {
+                "name": "institutions",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`idx_officials_county\\` on table \\`public.officials\\` has not been used",
+              "metadata": {
+                "name": "officials",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`idx_officials_constituency\\` on table \\`public.officials\\` has not been used",
+              "metadata": {
+                "name": "officials",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`idx_officials_party\\` on table \\`public.officials\\` has not been used",
+              "metadata": {
+                "name": "officials",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`idx_officials_active\\` on table \\`public.officials\\` has not been used",
+              "metadata": {
+                "name": "officials",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`idx_entities_type\\` on table \\`public.government_entities\\` has not been used",
+              "metadata": {
+                "name": "government_entities",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`idx_positions_entity\\` on table \\`public.positions\\` has not been used",
+              "metadata": {
+                "name": "positions",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`education_schools_name_trgm_idx\\` on table \\`public.education_schools\\` has not been used",
+              "metadata": {
+                "name": "education_schools",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`idx_mca_terms_mca_id\\` on table \\`public.mca_terms\\` has not been used",
+              "metadata": {
+                "name": "mca_terms",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`idx_mca_terms_term_number\\` on table \\`public.mca_terms\\` has not been used",
+              "metadata": {
+                "name": "mca_terms",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`idx_constituencies_slug\\` on table \\`public.constituencies\\` has not been used",
+              "metadata": {
+                "name": "constituencies",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`idx_search_queries_query\\` on table \\`public.search_queries\\` has not been used",
+              "metadata": {
+                "name": "search_queries",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`idx_search_queries_created_at\\` on table \\`public.search_queries\\` has not been used",
+              "metadata": {
+                "name": "search_queries",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`idx_leader_roles_parliamentary_term\\` on table \\`public.leader_roles\\` has not been used",
+              "metadata": {
+                "name": "leader_roles",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`constitution_articles_title_trgm_idx\\` on table \\`public.constitution_articles\\` has not been used",
+              "metadata": {
+                "name": "constitution_articles",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`idx_constituencies_office_location\\` on table \\`public.constituencies\\` has not been used",
+              "metadata": {
+                "name": "constituencies",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`idx_lpg_lookup\\` on table \\`public.epra_lpg_prices\\` has not been used",
+              "metadata": {
+                "name": "epra_lpg_prices",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`idx_international_trends_lookup\\` on table \\`public.epra_international_trends\\` has not been used",
+              "metadata": {
+                "name": "epra_international_trends",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`idx_leader_roles_election_year\\` on table \\`public.leader_roles\\` has not been used",
+              "metadata": {
+                "name": "leader_roles",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`idx_active_officials\\` on table \\`public.public_officials\\` has not been used",
+              "metadata": {
+                "name": "public_officials",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`idx_diplomatic_ext_direction\\` on table \\`public.diplomatic_extensions\\` has not been used",
+              "metadata": {
+                "name": "diplomatic_extensions",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`idx_diplomatic_ext_precedence\\` on table \\`public.diplomatic_extensions\\` has not been used",
+              "metadata": {
+                "name": "diplomatic_extensions",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`idx_polling_stations_2022_name_trgm\\` on table \\`public.polling_stations_2022\\` has not been used",
+              "metadata": {
+                "name": "polling_stations_2022",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`idx_polling_stations_2022_reg_centre_trgm\\` on table \\`public.polling_stations_2022\\` has not been used",
+              "metadata": {
+                "name": "polling_stations_2022",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`idx_institutions_is_regulator\\` on table \\`public.institutions\\` has not been used",
+              "metadata": {
+                "name": "institutions",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`idx_leader_roles_leader_status\\` on table \\`public.leader_roles\\` has not been used",
+              "metadata": {
+                "name": "leader_roles",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`idx_institutions_core_services_gin\\` on table \\`public.institutions\\` has not been used",
+              "metadata": {
+                "name": "institutions",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`idx_institutions_social_media_gin\\` on table \\`public.institutions\\` has not been used",
+              "metadata": {
+                "name": "institutions",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`gazette_issues_year_issue_idx\\` on table \\`public.gazette_issues\\` has not been used",
+              "metadata": {
+                "name": "gazette_issues",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`gazette_issues_date_idx\\` on table \\`public.gazette_issues\\` has not been used",
+              "metadata": {
+                "name": "gazette_issues",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`constitution_inline_links_document_idx\\` on table \\`public.constitution_inline_links\\` has not been used",
+              "metadata": {
+                "name": "constitution_inline_links",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`constitution_inline_links_provision_idx\\` on table \\`public.constitution_inline_links\\` has not been used",
+              "metadata": {
+                "name": "constitution_inline_links",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`constitution_inline_links_target_url_idx\\` on table \\`public.constitution_inline_links\\` has not been used",
+              "metadata": {
+                "name": "constitution_inline_links",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`idx_flagship_county\\` on table \\`public.county_flagship_projects\\` has not been used",
+              "metadata": {
+                "name": "county_flagship_projects",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`institution_lifecycle_segments_institution_id_idx\\` on table \\`public.institution_lifecycle_segments\\` has not been used",
+              "metadata": {
+                "name": "institution_lifecycle_segments",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`institution_relationships_type_idx\\` on table \\`public.institution_relationships\\` has not been used",
+              "metadata": {
+                "name": "institution_relationships",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`idx_gazette_inline_links_mca\\` on table \\`public.gazette_inline_links\\` has not been used",
+              "metadata": {
+                "name": "gazette_inline_links",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`idx_gazette_inline_links_institution\\` on table \\`public.gazette_inline_links\\` has not been used",
+              "metadata": {
+                "name": "gazette_inline_links",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`legal_citations_target_provision_idx\\` on table \\`public.legal_citations\\` has not been used",
+              "metadata": {
+                "name": "legal_citations",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`constitution_article_people_mca_idx\\` on table \\`public.constitution_article_people\\` has not been used",
+              "metadata": {
+                "name": "constitution_article_people",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`constitution_article_institutions_institution_idx\\` on table \\`public.constitution_article_institutions\\` has not been used",
+              "metadata": {
+                "name": "constitution_article_institutions",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`constitution_inline_links_institution_idx\\` on table \\`public.constitution_inline_links\\` has not been used",
+              "metadata": {
+                "name": "constitution_inline_links",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`constitution_inline_links_leader_idx\\` on table \\`public.constitution_inline_links\\` has not been used",
+              "metadata": {
+                "name": "constitution_inline_links",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`legislation_documents_county_idx\\` on table \\`public.legislation_documents\\` has not been used",
+              "metadata": {
+                "name": "legislation_documents",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`legislation_documents_chamber_idx\\` on table \\`public.legislation_documents\\` has not been used",
+              "metadata": {
+                "name": "legislation_documents",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`legislation_provisions_search_idx\\` on table \\`public.legislation_provisions\\` has not been used",
+              "metadata": {
+                "name": "legislation_provisions",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`legislation_provisions_heading_trgm_idx\\` on table \\`public.legislation_provisions\\` has not been used",
+              "metadata": {
+                "name": "legislation_provisions",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`legislation_inline_links_provision_idx\\` on table \\`public.legislation_inline_links\\` has not been used",
+              "metadata": {
+                "name": "legislation_inline_links",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`legislation_changes_type_idx\\` on table \\`public.legislation_changes\\` has not been used",
+              "metadata": {
+                "name": "legislation_changes",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`legislation_amendment_items_target_provision_idx\\` on table \\`public.legislation_amendment_items\\` has not been used",
+              "metadata": {
+                "name": "legislation_amendment_items",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`legislation_change_impacts_provision_idx\\` on table \\`public.legislation_change_impacts\\` has not been used",
+              "metadata": {
+                "name": "legislation_change_impacts",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`legislation_amendment_groups_target_idx\\` on table \\`public.legislation_amendment_groups\\` has not been used",
+              "metadata": {
+                "name": "legislation_amendment_groups",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`legislation_provision_display_notes_provision_idx\\` on table \\`public.legislation_provision_display_notes\\` has not been used",
+              "metadata": {
+                "name": "legislation_provision_display_notes",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`legal_documents_year_idx\\` on table \\`public.legal_documents\\` has not been used",
+              "metadata": {
+                "name": "legal_documents",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`legislation_documents_status_idx\\` on table \\`public.legislation_documents\\` has not been used",
+              "metadata": {
+                "name": "legislation_documents",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`legislation_documents_assent_date_idx\\` on table \\`public.legislation_documents\\` has not been used",
+              "metadata": {
+                "name": "legislation_documents",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`legal_documents_title_trgm_idx\\` on table \\`public.legal_documents\\` has not been used",
+              "metadata": {
+                "name": "legal_documents",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`legal_documents_short_title_trgm_idx\\` on table \\`public.legal_documents\\` has not been used",
+              "metadata": {
+                "name": "legal_documents",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`legal_documents_citation_trgm_idx\\` on table \\`public.legal_documents\\` has not been used",
+              "metadata": {
+                "name": "legal_documents",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`legislation_documents_admin_review_idx\\` on table \\`public.legislation_documents\\` has not been used",
+              "metadata": {
+                "name": "legislation_documents",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`legislation_admin_activity_document_idx\\` on table \\`public.legislation_admin_activity\\` has not been used",
+              "metadata": {
+                "name": "legislation_admin_activity",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`legislation_admin_activity_provision_idx\\` on table \\`public.legislation_admin_activity\\` has not been used",
+              "metadata": {
+                "name": "legislation_admin_activity",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`presidential_speeches_search_idx\\` on table \\`public.presidential_speeches\\` has not been used",
+              "metadata": {
+                "name": "presidential_speeches",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`schools_name_search_idx\\` on table \\`public.schools\\` has not been used",
+              "metadata": {
+                "name": "schools",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`schools_coordinates_idx\\` on table \\`public.schools\\` has not been used",
+              "metadata": {
+                "name": "schools",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`schools_county_idx\\` on table \\`public.schools\\` has not been used",
+              "metadata": {
+                "name": "schools",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`schools_ward_idx\\` on table \\`public.schools\\` has not been used",
+              "metadata": {
+                "name": "schools",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`documents_institution_idx\\` on table \\`public.documents\\` has not been used",
+              "metadata": {
+                "name": "documents",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`documents_series_idx\\` on table \\`public.documents\\` has not been used",
+              "metadata": {
+                "name": "documents",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`documents_title_trgm_idx\\` on table \\`public.documents\\` has not been used",
+              "metadata": {
+                "name": "documents",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`document_topic_links_topic_idx\\` on table \\`public.document_topic_links\\` has not been used",
+              "metadata": {
+                "name": "document_topic_links",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`documents_search_gin_idx\\` on table \\`public.documents\\` has not been used",
+              "metadata": {
+                "name": "documents",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`document_sections_search_gin_idx\\` on table \\`public.document_sections\\` has not been used",
+              "metadata": {
+                "name": "document_sections",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`idx_document_types_category_id\\` on table \\`public.document_types\\` has not been used",
+              "metadata": {
+                "name": "document_types",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`presidential_speeches_type_latest_idx\\` on table \\`public.presidential_speeches\\` has not been used",
+              "metadata": {
+                "name": "presidential_speeches",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`presidential_speeches_country_idx\\` on table \\`public.presidential_speeches\\` has not been used",
+              "metadata": {
+                "name": "presidential_speeches",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`cabinet_briefs_brief_date_idx\\` on table \\`public.cabinet_briefs\\` has not been used",
+              "metadata": {
+                "name": "cabinet_briefs",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`cabinet_briefs_publication_label_idx\\` on table \\`public.cabinet_briefs\\` has not been used",
+              "metadata": {
+                "name": "cabinet_briefs",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`cabinet_briefs_published_date_idx\\` on table \\`public.cabinet_briefs\\` has not been used",
+              "metadata": {
+                "name": "cabinet_briefs",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            },
+            {
+              "detail": "Index \\`cabinet_briefs_search_vector_idx\\` on table \\`public.cabinet_briefs\\` has not been used",
+              "metadata": {
+                "name": "cabinet_briefs",
+                "type": "table",
+                "schema": "public"
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            }
+          ]
+        },
+        {
+          "name": "duplicate_index",
+          "title": "Duplicate Index",
+          "level": "WARN",
+          "facing": "EXTERNAL",
+          "categories": [
+            "PERFORMANCE"
+          ],
+          "description": "Detects cases where two ore more identical indexes exist.",
+          "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0009_duplicate_index",
+          "count": 1,
+          "findings": [
+            {
+              "detail": "Table \\`public.gazette_notices\\` has identical indexes {gazette_notices_notice_number_idx,idx_notices_number}. Drop all except one of them",
+              "metadata": {
+                "name": "gazette_notices",
+                "type": "table",
+                "schema": "public",
+                "indexes": [
+                  "gazette_notices_notice_number_idx",
+                  "idx_notices_number"
+                ]
+              },
+              "observed_at": "2026-09-21T12:41:59.899Z"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

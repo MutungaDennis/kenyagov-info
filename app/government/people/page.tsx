@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { matchesSearch } from "@/lib/search/match";
+import { fetchDirectoryPages } from "@/lib/search/fetch-pages";
 import { useState, useEffect, useMemo, Suspense } from "react";
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
@@ -168,7 +170,7 @@ function PeopleDirectoryContent() {
         const supabase = await createBrowserClientAsync();
 
         // 1. Fetch Active Leaders from Database
-        const { data: leadersData, error: leadersError } = await supabase
+        const { data: leadersData, error: leadersError } = await fetchDirectoryPages((from, to) => supabase
           .from("leaders")
           .select(
             `
@@ -177,15 +179,15 @@ function PeopleDirectoryContent() {
             current_county, current_party,
             leader_roles!leader_roles_leader_id_fkey (
               id, title, organization, constituency, county, party,
-              status, term_start_date, term_end_date
+              status, term_start_date, term_end_date, display_priority
             )
           `
           )
           .eq("is_active", true)
-          .order("surname", { ascending: true });
+          .order("surname", { ascending: true }).order("id").range(from, to));
 
         // 2. Fetch Published MCAs from Database
-        const { data: mcasData, error: mcasError } = await supabase
+        const { data: mcasData, error: mcasError } = await fetchDirectoryPages((from, to) => supabase
           .from("mcas")
           .select(`
             id, slug, first_name, other_names, surname, bio, image_url, 
@@ -195,7 +197,7 @@ function PeopleDirectoryContent() {
             political_parties (name, abbreviation)
           `)
           .eq("status", "Active") // Only fetch active MCAs for the main directory
-          .order("surname", { ascending: true });
+          .order("surname", { ascending: true }).order("id").range(from, to));
 
         if (leadersError) throw leadersError;
         if (mcasError) throw mcasError;
@@ -238,6 +240,7 @@ function PeopleDirectoryContent() {
                 status: mca.status || "Active",
                 term_start_date: mca.term_start_date,
                 term_end_date: mca.term_end_date,
+                display_priority: null,
               }],
             };
           });
@@ -302,28 +305,10 @@ function PeopleDirectoryContent() {
         const roleCounties = (l.leader_roles || []).map((r) => r.county || "").filter(Boolean);
         const roleParties = (l.leader_roles || []).map((r) => r.party || "").filter(Boolean);
 
-        return (
-          name.includes(term) ||
-          withTitles.includes(term) ||
-          (l.first_name || "").toLowerCase().includes(term) ||
-          (l.other_names || "").toLowerCase().includes(term) ||
-          (l.surname || "").toLowerCase().includes(term) ||
-          (l.full_name || "").toLowerCase().includes(term) ||
-          (l.current_organization || "").toLowerCase().includes(term) ||
-          (l.current_constituency || "").toLowerCase().includes(term) ||
-          (l.current_county || "").toLowerCase().includes(term) ||
-          (l.current_party || "").toLowerCase().includes(term) ||
-          (l.category || "").toLowerCase().includes(term) ||
-          (l.title || "").toLowerCase().includes(term) ||
-          (l.bio || "").toLowerCase().includes(term) ||
-          primary.label.toLowerCase().includes(term) ||
-          primary.summaryBits.some((b) => b.toLowerCase().includes(term)) ||
-          orgs.some((o) => o.toLowerCase().includes(term)) ||
-          roleTitles.some((t) => t.toLowerCase().includes(term)) ||
-          roleConstituencies.some((c) => c.toLowerCase().includes(term)) ||
-          roleCounties.some((c) => c.toLowerCase().includes(term)) ||
-          roleParties.some((p) => p.toLowerCase().includes(term))
-        );
+        return matchesSearch(term, name, withTitles, l.first_name, l.other_names, l.surname, l.full_name,
+          l.current_organization, l.current_constituency, l.current_county, l.current_party, l.category,
+          l.title, l.bio, primary.label, primary.summaryBits, orgs, roleTitles, roleConstituencies, roleCounties, roleParties);
+
       });
     }
 

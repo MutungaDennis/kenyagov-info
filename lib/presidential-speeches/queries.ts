@@ -684,7 +684,7 @@ export async function searchPublicPresidentialSpeeches(
   }
 
   let query = supabase
-    .from("presidential_speeches")
+    .rpc("search_presidential_speeches_scoped", { q: params.q?.trim() || "" }, { count: "exact" })
     .select(
       `
         id,
@@ -709,10 +709,7 @@ export async function searchPublicPresidentialSpeeches(
           slug,
           name
         )
-      `,
-      {
-        count: "exact",
-      },
+      `
     )
     .eq("is_published", true);
 
@@ -762,19 +759,6 @@ export async function searchPublicPresidentialSpeeches(
     query = query.eq(
       "county",
       params.county,
-    );
-  }
-
-  const searchTerm = params.q?.trim().replace(/\s+/g, " ");
-
-  if (searchTerm) {
-    query = query.textSearch(
-      "search_vector",
-      searchTerm,
-      {
-        config: "english",
-        type: "websearch",
-      },
     );
   }
 

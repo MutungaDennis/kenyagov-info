@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { matchesSearch as matchesText } from "@/lib/search/match";
 import type { CountyLeadershipRow } from "@/lib/counties/leadership";
 
 type SortField =
@@ -57,11 +58,7 @@ export default function GovernorsDirectoryClient({
     const q = searchTerm.trim().toLowerCase();
     return rows
       .filter((r) => {
-        const matchesSearch =
-          !q ||
-          r.countyName.toLowerCase().includes(q) ||
-          (r.governor?.displayName || "").toLowerCase().includes(q) ||
-          (r.deputyGovernor?.displayName || "").toLowerCase().includes(q);
+        const matchesSearch = matchesText(q, r.countyName, r.governor?.displayName, r.deputyGovernor?.displayName, r.governor?.party, r.region);
 
         const matchesParty =
           !selectedParty ||

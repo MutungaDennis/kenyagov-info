@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSanityWriteClient } from "@/lib/sanity/createSanityClient";
+import { createSanityWriteClient } from "@/lib/sanity/createSanityWriteClient";
 import { normalizeSpeechForSanity } from "@/lib/hansard/speech";
 import type { PresidingRole } from "@/lib/hansard/stats";
 

@@ -19,7 +19,7 @@ export async function createClient(): Promise<SupabaseClient> {
   const {
     url: supabaseUrl,
     key: supabasePublicKey,
-  } = resolveSupabasePublicEnv(true);
+  } = resolveSupabasePublicEnv(false);
 
   return createServerClient(
     supabaseUrl,

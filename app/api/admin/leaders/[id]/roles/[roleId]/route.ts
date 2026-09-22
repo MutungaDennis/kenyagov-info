@@ -12,6 +12,7 @@ import {
   uuidOrOmit,
 } from "@/lib/leaders/role-normalize";
 import { syncLeaderSnapshotFromActiveRoles } from "@/lib/leaders/sync-current";
+import { normalizeDisplayPriority } from "@/lib/leaders/display-priority";
 
 export const dynamic = "force-dynamic";
 
@@ -29,8 +30,26 @@ export async function PATCH(request: NextRequest, context: Ctx) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
+  let displayPriority: number | null | undefined;
+  if ("display_priority" in body) {
+    try {
+      displayPriority = normalizeDisplayPriority(body.display_priority);
+    } catch (error) {
+      return NextResponse.json(
+        {
+          error:
+            error instanceof Error ? error.message : "Invalid public prominence",
+        },
+        { status: 400 },
+      );
+    }
+  }
+
   const resolved = await resolveRolePayload(auth.supabase, body);
   const patch: Record<string, unknown> = {};
+  if ("display_priority" in body) {
+    patch.display_priority = displayPriority ?? null;
+  }
 
   if ("title" in body || "position_id" in body) {
     patch.title = resolved.title;

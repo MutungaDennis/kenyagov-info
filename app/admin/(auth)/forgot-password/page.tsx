@@ -4,9 +4,14 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { adminPath } from "@/lib/admin-path";
-import { createClient } from "@/lib/supabase/client";
+import { createBrowserClientAsync } from "@/lib/supabase/client";
+
+import Turnstile, { useTurnstileConfig } from "@/components/security/Turnstile";
 
 export default function AdminForgotPasswordPage() {
+  const config = useTurnstileConfig();
+  const [token, setToken] = useState("");
+  const [resetKey, setResetKey] = useState(0);
   const searchParams = useSearchParams();
   const initialEmail = searchParams.get("email") || "";
 
@@ -15,7 +20,7 @@ export default function AdminForgotPasswordPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  const supabase = createClient();
+
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -27,9 +32,16 @@ export default function AdminForgotPasswordPage() {
       return;
     }
 
+    if (!config || (config.enabled && !token)) {
+      setErrorMessage("Complete the security check first.");
+      return;
+    }
     startTransition(async () => {
+      try {
+      const supabase = await createBrowserClientAsync();
       const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: `${window.location.origin}/admin/reset-password`,
+        redirectTo: `${window.location.origin}/auth/callback`,
+        captchaToken: token || undefined,
       });
 
       if (error) {
@@ -39,6 +51,9 @@ export default function AdminForgotPasswordPage() {
           "If an account exists for this email, a password reset link has been sent. Please check your inbox (and spam folder)."
         );
       }
+      } catch {
+        setErrorMessage("The password reset service is unavailable. Please try again.");
+      } finally { setToken(""); setResetKey(value => value + 1); }
     });
   }
 
@@ -93,9 +108,10 @@ export default function AdminForgotPasswordPage() {
             />
           </div>
 
+          <Turnstile onToken={setToken} resetKey={resetKey} />
           <button
             type="submit"
-            disabled={isPending}
+            disabled={isPending || !config || (config.enabled && !token)}
             className="govuk-button"
             style={{
               backgroundColor: "#00703c",
@@ -114,7 +130,7 @@ export default function AdminForgotPasswordPage() {
       )}
 
       <div style={{ marginTop: "32px" }}>
-        <Link href={adminPath()} className="govuk-link" style={{ fontSize: "19px" }}>
+        <Link href={adminPath("login")} className="govuk-link" style={{ fontSize: "19px" }}>
           ← Back to sign in
         </Link>
       </div>

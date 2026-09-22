@@ -10,6 +10,8 @@
  *   positions / government_levels tables
  */
 
+import { normalizeDisplayPriority } from "@/lib/leaders/display-priority";
+
 export const LEADER_LEVELS = ["national", "county", "ward"] as const;
 export type LeaderLevel = (typeof LEADER_LEVELS)[number];
 
@@ -113,6 +115,7 @@ export function uuidOrOmit(v: unknown): string | null {
  * Strips invalid UUID FKs.
  */
 export function buildLeaderRoleRow(input: {
+  display_priority?: number | string | null;
   leaderId: string;
   title: string;
   organization?: string | null;
@@ -158,6 +161,7 @@ export function buildLeaderRoleRow(input: {
   }
 
   const row: Record<string, unknown> = {
+    display_priority: normalizeDisplayPriority(input.display_priority),
     leader_id: input.leaderId,
     title,
     organization: input.organization || null,

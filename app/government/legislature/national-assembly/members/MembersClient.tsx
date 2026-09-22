@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
+import { matchesSearch as matchesText } from "@/lib/search/match";
 import { useSearchParams } from "next/navigation";
 type Member = {
   id: string;
@@ -74,10 +75,7 @@ export default function MembersClient() {
   const filteredMembers = useMemo(() => {
     return sortedMembers.filter((member) => {
       const formattedName = formatName(member.name);
-      const matchesSearch =
-        formattedName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (member.seat || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (member.party || "").toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesSearch = matchesText(searchTerm, formattedName, member.seat, member.party);
 
       const matchesParty = !selectedParty || member.party === selectedParty;
       const matchesType = !selectedType || member.type === selectedType;
@@ -87,9 +85,6 @@ export default function MembersClient() {
   }, [sortedMembers, searchTerm, selectedParty, selectedType]);
 
   // Reset page index safely to page 1 whenever search criteria boundaries shift
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, selectedParty, selectedType]);
 
   // Calculate mathematical boundary slices for active page pagination windowing
   const totalMembers = filteredMembers.length;
@@ -103,6 +98,7 @@ export default function MembersClient() {
   const hasActiveFilters = searchTerm !== "" || selectedParty !== "" || selectedType !== "";
 
   const clearAllFilters = () => {
+    setCurrentPage(1);
     setSearchTerm("");
     setSelectedParty("");
     setSelectedType("");
@@ -171,7 +167,7 @@ export default function MembersClient() {
                   type="search"
                   placeholder="Name, constituency or party..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
                 />
               </div>
             </div>
@@ -185,7 +181,7 @@ export default function MembersClient() {
                   className="govuk-select govuk-!-width-full" 
                   id="party-select"
                   value={selectedParty}
-                  onChange={(e) => setSelectedParty(e.target.value)}
+                  onChange={(e) => { setSelectedParty(e.target.value); setCurrentPage(1); }}
                 >
                   <option value="">All Parties</option>
                   {parties.map((p) => (
@@ -206,7 +202,7 @@ export default function MembersClient() {
                   className="govuk-select govuk-!-width-full" 
                   id="type-select"
                   value={selectedType}
-                  onChange={(e) => setSelectedType(e.target.value)}
+                  onChange={(e) => { setSelectedType(e.target.value); setCurrentPage(1); }}
                 >
                   <option value="">All Types</option>
                   <option value="Constituency">Constituency MP</option>
@@ -225,7 +221,7 @@ export default function MembersClient() {
                 {searchTerm && (
                   <button 
                     type="button"
-                    onClick={() => setSearchTerm("")}
+                    onClick={() => { setSearchTerm(""); setCurrentPage(1); }}
                     style={{ background: '#fff', border: '1px solid #1d70b8', padding: '4px 8px', cursor: 'pointer', fontSize: '14px', display: 'inline-flex', alignItems: 'center', borderRadius: '4px' }}
                   >
                     Search: &ldquo;{searchTerm}&rdquo; <span style={{ marginLeft: '8px', color: '#d4351c', fontWeight: 'bold' }}>&times;</span>
@@ -234,7 +230,7 @@ export default function MembersClient() {
                 {selectedParty && (
                   <button 
                     type="button"
-                    onClick={() => setSelectedParty("")}
+                    onClick={() => { setSelectedParty(""); setCurrentPage(1); }}
                     style={{ background: '#fff', border: '1px solid #1d70b8', padding: '4px 8px', cursor: 'pointer', fontSize: '14px', display: 'inline-flex', alignItems: 'center', borderRadius: '4px' }}
                   >
                     Party: {selectedParty} <span style={{ marginLeft: '8px', color: '#d4351c', fontWeight: 'bold' }}>&times;</span>
@@ -243,7 +239,7 @@ export default function MembersClient() {
                 {selectedType && (
                   <button 
                     type="button"
-                    onClick={() => setSelectedType("")}
+                    onClick={() => { setSelectedType(""); setCurrentPage(1); }}
                     style={{ background: '#fff', border: '1px solid #1d70b8', padding: '4px 8px', cursor: 'pointer', fontSize: '14px', display: 'inline-flex', alignItems: 'center', borderRadius: '4px' }}
                   >
                     Type: {selectedType} <span style={{ marginLeft: '8px', color: '#d4351c', fontWeight: 'bold' }}>&times;</span>

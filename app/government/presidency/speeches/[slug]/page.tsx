@@ -1,3 +1,5 @@
+
+import { safeHtml } from "@/lib/safe-html";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -339,7 +341,7 @@ export default async function PresidentialSpeechPage({
                   className="cg-document-content"
                   dangerouslySetInnerHTML={{
                     __html:
-                      publication.bodyHtml,
+                      safeHtml(publication.bodyHtml),
                   }}
                 />
               ) : publication.bodyText ? (

@@ -35,14 +35,6 @@ export function createSanityClient(options?: {
     token:
       options?.token === null
         ? undefined
-        : options?.token ?? process.env.SANITY_API_TOKEN,
-  });
-}
-
-/** Write-capable client (mutations). useCdn: false */
-export function createSanityWriteClient(): SanityClient {
-  return createSanityClient({
-    useCdn: false,
-    token: process.env.SANITY_API_TOKEN,
+        : options?.token,
   });
 }

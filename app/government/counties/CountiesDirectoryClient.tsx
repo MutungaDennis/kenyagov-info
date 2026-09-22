@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
+import { matchesSearch as matchesText } from "@/lib/search/match";
 
 type County = {
   slug: string;
@@ -44,9 +45,7 @@ export default function AllCountiesClient({ initialCounties }: { initialCounties
   const filteredCounties = useMemo(() => {
     return initialCounties
       .filter((county) => {
-        const matchesSearch = 
-          county.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (county.headquarters || "").toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesSearch = matchesText(searchTerm, county.name, county.headquarters, county.region, county.code);
 
         const matchesRegion = 
           selectedRegion === "All Regions" || 

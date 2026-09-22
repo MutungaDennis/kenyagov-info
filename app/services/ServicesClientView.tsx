@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import Link from "next/link";
+import { matchesSearch } from "@/lib/search/match";
 import { useSearchParams, useRouter } from "next/navigation";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 
@@ -27,38 +28,6 @@ interface ServicesClientViewProps {
   categories: GovernmentCategoryFilter[];
   pathCategorySlug?: string;
 }
-
-/**
- * Lightweight client-side fuzzy search to handle common typos and near matches.
- * Handles: exact matches, missing end characters, missing start characters, and transposed adjacent characters.
- */
-const isFuzzyMatch = (text: string, query: string) => {
-  const queryWords = query.toLowerCase().split(/\s+/).filter(Boolean);
-  if (queryWords.length === 0) return true;
-  
-  const lowerText = text.toLowerCase();
-
-  return queryWords.every(qWord => {
-    // 1. Exact substring match
-    if (lowerText.includes(qWord)) return true;
-    
-    // 2. Near match: allow 1 missing character at the end (e.g., "licens" -> "license")
-    if (qWord.length >= 4 && lowerText.includes(qWord.slice(0, -1))) return true;
-    
-    // 3. Near match: allow 1 missing character at the beginning (e.g., "icense" -> "license")
-    if (qWord.length >= 4 && lowerText.includes(qWord.slice(1))) return true;
-
-    // 4. Near match: allow 1 transposed character (e.g., "lciense" -> "license")
-    if (qWord.length >= 5) {
-      for (let i = 1; i < qWord.length - 1; i++) {
-        const swapped = qWord.slice(0, i - 1) + qWord[i] + qWord[i - 1] + qWord.slice(i + 1);
-        if (lowerText.includes(swapped)) return true;
-      }
-    }
-    
-    return false;
-  });
-};
 
 export default function ServicesClientView({
   initialServices,
@@ -96,8 +65,7 @@ export default function ServicesClientView({
     if (searchQuery.trim() !== "") {
       results = results.filter(
         (service) =>
-          isFuzzyMatch(service.title, searchQuery) ||
-          isFuzzyMatch(service.summary, searchQuery)
+          matchesSearch(searchQuery, service.title, service.summary, service.providingBody)
       );
     }
 

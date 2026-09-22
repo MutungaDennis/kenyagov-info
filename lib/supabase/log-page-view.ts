@@ -3,18 +3,16 @@
  * Uses anon Supabase client + RLS insert policy.
  */
 import { createBrowserClientAsync } from "@/lib/supabase/client";
+import { isAdminFilesystemPath, isAdminPublicPath } from "@/lib/admin-path";
 
 export async function logPageViewClient(
   path: string,
   referrer?: string | null,
 ): Promise<void> {
-  const adminBase =
-    process.env.NEXT_PUBLIC_ADMIN_BASE_PATH?.replace(/\/$/, "") || "/admin";
   if (
     !path ||
-    path.startsWith("/admin") ||
-    path === adminBase ||
-    path.startsWith(`${adminBase}/`) ||
+    isAdminFilesystemPath(path) ||
+    isAdminPublicPath(path) ||
     path.includes(".")
   ) {
     return;

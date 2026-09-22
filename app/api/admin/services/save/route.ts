@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdminApi, slugify } from "@/lib/admin-api";
-import { createSanityWriteClient } from "@/lib/sanity/createSanityClient";
-import { paragraphsToPortableText } from "@/lib/constitution/portable-text";
+import { createSanityWriteClient } from "@/lib/sanity/createSanityWriteClient";
+import { textToPortableText as paragraphsToPortableText } from "@/lib/portable-text";
 
 function randomKey(): string {
   return Math.random().toString(36).slice(2, 10);
@@ -33,7 +33,7 @@ function toBodyBlocks(body: unknown, bodyParagraphs: unknown): unknown[] {
   }
   if (Array.isArray(bodyParagraphs) && bodyParagraphs.length > 0) {
     return paragraphsToPortableText(
-      bodyParagraphs.map((p) => String(p || "")),
+      bodyParagraphs.map((p) => String(p || "")).join("\n\n"),
     ) as unknown[];
   }
   if (typeof body === "string" && body.trim()) {

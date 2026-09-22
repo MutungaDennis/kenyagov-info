@@ -1,4 +1,6 @@
 "use client";
+import { safeHtml } from "@/lib/safe-html";
+
 
 import {
   FormEvent,
@@ -1250,8 +1252,8 @@ export default function InlineConstitutionLinker({
           }
           dangerouslySetInnerHTML={{
             __html:
-              article.body_html ||
-              `<p>${article.body_text}</p>`,
+              safeHtml(article.body_html ||
+              `<p>${article.body_text}</p>`),
           }}
         />
       ) : (

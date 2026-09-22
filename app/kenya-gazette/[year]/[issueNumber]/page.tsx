@@ -1,3 +1,5 @@
+
+import { safeHtml } from "@/lib/safe-html";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -546,7 +548,7 @@ export default async function GazetteIssuePage({
                         className={`gazette-issue-section gazette-issue-section--${section.section_type}`}
                         dangerouslySetInnerHTML={{
                           __html:
-                            section.content_html,
+                            safeHtml(section.content_html),
                         }}
                       />
 

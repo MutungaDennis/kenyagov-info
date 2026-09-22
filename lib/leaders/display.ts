@@ -2,6 +2,7 @@
  * Display helpers for leaders + roles (public & admin).
  */
 
+import { storedDisplayPriority } from "@/lib/leaders/display-priority";
 import {
   formatNameTitlesPrefix,
   formatNationalHonoursSuffix,
@@ -10,6 +11,7 @@ import {
 } from "@/lib/leaders/titles-social";
 
 export type LeaderRoleLike = {
+  display_priority?: number | string | null;
   id?: string;
   title?: string | null;
   organization?: string | null;
@@ -136,7 +138,7 @@ function isOpenEnded(role: LeaderRoleLike): boolean {
   return !role.term_end_date;
 }
 
-function isRoleCurrent(role: LeaderRoleLike): boolean {
+export function isRoleCurrent(role: LeaderRoleLike): boolean {
   // End date is the strongest signal: filled end date ⇒ not current
   if (role.term_end_date) return false;
   if (statusIsEnded(role.status)) return false;
@@ -193,7 +195,27 @@ function getRolePriority(title: string | null | undefined): number {
   return 5; // Default fallback
 }
 
-/** Current role (prioritized by elective status, then open-ended term preferred), or most recently ended role. */
+function stableRoleTieBreak(a: LeaderRoleLike, b: LeaderRoleLike): number {
+  return String(a.title || "").localeCompare(String(b.title || "")) ||
+    String(a.id || "").localeCompare(String(b.id || "")) ||
+    String(a.organization || "").localeCompare(String(b.organization || ""));
+}
+
+/** Shared ordering for concurrent current roles: explicit, automatic, date, stable ID. */
+export function compareCurrentRoles(a: LeaderRoleLike, b: LeaderRoleLike): number {
+  const ap = storedDisplayPriority(a.display_priority);
+  const bp = storedDisplayPriority(b.display_priority);
+  if (ap !== bp) {
+    if (ap === null) return 1;
+    if (bp === null) return -1;
+    return ap - bp;
+  }
+  return getRolePriority(b.title) - getRolePriority(a.title) ||
+    String(b.term_start_date || "").localeCompare(String(a.term_start_date || "")) ||
+    stableRoleTieBreak(a, b);
+}
+
+/** Primary current position, or the most recently ended position when none is current. */
 export function resolvePrimaryRole(roles: LeaderRoleLike[] | null | undefined): {
   role: LeaderRoleLike | null;
   isCurrent: boolean;
@@ -206,17 +228,7 @@ export function resolvePrimaryRole(roles: LeaderRoleLike[] | null | undefined): 
 
   const current = list
     .filter(isRoleCurrent)
-    .sort((a, b) => {
-      const scoreA = getRolePriority(a.title);
-      const scoreB = getRolePriority(b.title);
-      
-      if (scoreB !== scoreA) {
-        return scoreB - scoreA; // Higher priority first
-      }
-      
-      // Tie-breaker: most recent start date
-      return String(b.term_start_date || "").localeCompare(String(a.term_start_date || ""));
-    });
+    .sort(compareCurrentRoles);
     
   if (current.length) {
     return {
@@ -230,7 +242,9 @@ export function resolvePrimaryRole(roles: LeaderRoleLike[] | null | undefined): 
   list.sort((a, b) => {
     const ae = a.term_end_date || a.term_start_date || "";
     const be = b.term_end_date || b.term_start_date || "";
-    return be.localeCompare(ae);
+    return be.localeCompare(ae) ||
+      String(b.term_start_date || "").localeCompare(String(a.term_start_date || "")) ||
+      stableRoleTieBreak(a, b);
   });
   const last = list[0];
   return {
@@ -263,17 +277,18 @@ export function formatTermRange(
   return `${fmt(start!)} – ${fmt(end!)}`;
 }
 
-export function sortRolesChronologically(
-  roles: LeaderRoleLike[] | null | undefined,
-): LeaderRoleLike[] {
+export function sortRolesChronologically<T extends LeaderRoleLike>(
+  roles: T[] | null | undefined,
+): T[] {
   return [...(roles || [])].sort((a, b) => {
     const aActive = isRoleCurrent(a);
     const bActive = isRoleCurrent(b);
     if (aActive && !bActive) return -1;
     if (!aActive && bActive) return 1;
+    if (aActive && bActive) return compareCurrentRoles(a, b);
     const as = a.term_start_date || "";
     const bs = b.term_start_date || "";
-    return bs.localeCompare(as);
+    return bs.localeCompare(as) || stableRoleTieBreak(a, b);
   });
 }
 

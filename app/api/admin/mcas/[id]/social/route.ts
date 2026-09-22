@@ -1,14 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { requireAdminApi } from "@/lib/admin-api";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = await requireAdminApi();
+  if (!auth.ok) return auth.response;
+  const supabase = auth.supabase;
+
   const { id } = await params;
 
   try {
-    const supabase = await createClient();
     const { data, error } = await supabase
       .from("mca_social_media")
       .select("*")
@@ -31,10 +34,13 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = await requireAdminApi();
+  if (!auth.ok) return auth.response;
+  const supabase = auth.supabase;
+
   const { id } = await params;
 
   try {
-    const supabase = await createClient();
     const body = await request.json();
 
     const { data, error } = await supabase
@@ -59,6 +65,10 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = await requireAdminApi();
+  if (!auth.ok) return auth.response;
+  const supabase = auth.supabase;
+
   const { id } = await params;
   const { searchParams } = new URL(request.url);
   const socialId = searchParams.get("socialId");
@@ -68,7 +78,6 @@ export async function DELETE(
   }
 
   try {
-    const supabase = await createClient();
     const { error } = await supabase
       .from("mca_social_media")
       .delete()

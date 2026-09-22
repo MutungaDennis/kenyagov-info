@@ -1,3 +1,5 @@
+
+import { safeHtml } from "@/lib/safe-html";
 import Link from "next/link";
 import type {
   LegislationAmendmentGroup,
@@ -123,7 +125,7 @@ function AmendmentSchedule({
                       <div
                         className="legislation-amendment-html"
                         dangerouslySetInnerHTML={{
-                          __html: item.amendment_html,
+                          __html: safeHtml(item.amendment_html),
                         }}
                       />
                     ) : (

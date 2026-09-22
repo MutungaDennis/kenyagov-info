@@ -181,9 +181,7 @@ export async function searchPublicCabinetBriefs(
 
   let query =
     supabase
-      .from(
-        "cabinet_briefs",
-      )
+      .rpc("search_cabinet_briefs_scoped", { q: searchText || "" }, { count: "exact" })
       .select(
         `
           id,
@@ -201,42 +199,12 @@ export async function searchPublicCabinetBriefs(
           topics,
           word_count,
           reading_time_minutes
-        `,
-        {
-          count: "exact",
-        },
+        `
       )
       .eq(
         "is_published",
         true,
       );
-
-  if (searchText) {
-    const safeSearch =
-      searchText
-        .replace(
-          /[%_,()]/g,
-          " ",
-        )
-        .replace(
-          /\s+/g,
-          " ",
-        )
-        .trim();
-
-    if (safeSearch) {
-      query =
-        query.or(
-          [
-            `title.ilike.%${safeSearch}%`,
-            `short_title.ilike.%${safeSearch}%`,
-            `summary.ilike.%${safeSearch}%`,
-            `excerpt.ilike.%${safeSearch}%`,
-            `body_text.ilike.%${safeSearch}%`,
-          ].join(","),
-        );
-    }
-  }
 
   if (
     publicationLabel
@@ -280,7 +248,7 @@ export async function searchPublicCabinetBriefs(
     // if two records have
     // the same brief date.
     .order(
-      "created_at",
+      "id",
       {
         ascending: false,
       },
@@ -307,7 +275,7 @@ export async function searchPublicCabinetBriefs(
   }
 
   const rows: CabinetBriefFinderRow[] =
-    (data ?? []).map(
+    (Array.isArray(data) ? data : []).map(
       (row: any) => ({
         id: row.id,
         slug: row.slug,

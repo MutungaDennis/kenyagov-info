@@ -2,6 +2,15 @@ import Link from "next/link";
 import { adminPath } from "@/lib/admin-path";
 
 const TASKS = [
+  { segment: "services", title: "Public services", body: "Manage service pages, topics and related links.", group: "Government directory" },
+  { segment: "documents", title: "Documents", body: "Manage publications, files, versions and relationships.", group: "Law & Constitution" },
+  { segment: "gazette", title: "Kenya Gazette", body: "Manage Gazette issues, notices and their linked institutions.", group: "Law & Constitution" },
+  {
+    segment: "schools",
+    title: "Schools",
+    body: "Manage public and private school records, ownership, education level and contact details.",
+    group: "Government directory",
+  },
   {
     segment: "institutions",
     title: "Institutions",

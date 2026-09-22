@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { adminPath } from "@/lib/admin-path";
 import DeleteModal from "@/components/govuk/DeleteModal";
+import { resolvePrimaryRole } from "@/lib/leaders/display";
 
 // 🚀 Import the IndexNow helper
 import {
@@ -33,6 +34,7 @@ type Leader = {
     status?: string | null;
     term_start_date?: string | null;
     term_end_date?: string | null;
+    display_priority?: number | string | null;
   }> | null;
 };
 
@@ -376,11 +378,7 @@ export default function OfficialsAdminPage() {
               </thead>
               <tbody className="govuk-table__body">
                 {leaders.map((row) => {
-                  const activeRole = row.leader_roles?.find(
-                    (r) =>
-                      String(r.status || "").toLowerCase() === "active" ||
-                      !r.term_end_date,
-                  );
+                  const activeRole = resolvePrimaryRole(row.leader_roles).role;
                   const title = activeRole?.title || row.title || "—";
                   const org =
                     activeRole?.organization ||

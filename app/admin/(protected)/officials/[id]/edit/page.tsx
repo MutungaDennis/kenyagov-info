@@ -7,9 +7,12 @@ import { adminPath } from "@/lib/admin-path";
 import {
   displayNameWithTitles,
   formatTermRange,
+  isRoleCurrent,
+  sortRolesChronologically,
   type AcademicQualification,
   type LeaderRoleLike,
 } from "@/lib/leaders/display";
+import { normalizeDisplayPriority } from "@/lib/leaders/display-priority";
 import {
   ENTRY_TYPES,
   SENATE_NOMINATION_CATEGORIES,
@@ -114,6 +117,7 @@ type RoleForm = {
   nomination_category: string;
   official_email: string;
   office_location: string;
+  display_priority: string;
   set_as_current: boolean;
 };
 
@@ -186,6 +190,7 @@ const emptyRole: RoleForm = {
   nomination_category: "",
   official_email: "",
   office_location: "",
+  display_priority: "",
   set_as_current: true,
 };
 
@@ -624,13 +629,7 @@ export default function EditOfficialPage({
       setSnapOrgResults([]);
       setSnapOrgSearchOpen(false);
       const roleList = Array.isArray(d.leader_roles) ? d.leader_roles : [];
-      setRoles(
-        [...roleList].sort((a, b) =>
-          String(b.term_start_date || "").localeCompare(
-            String(a.term_start_date || ""),
-          ),
-        ),
-      );
+      setRoles(sortRolesChronologically(roleList));
 
       let quals: AcademicQualification[] = [];
       if (Array.isArray(d.academic_qualifications)) {
@@ -1026,9 +1025,9 @@ export default function EditOfficialPage({
         ) || "",
       official_email: role.official_email || "",
       office_location: role.office_location || "",
-      set_as_current:
-        !role.term_end_date ||
-        String(role.status || "").toLowerCase() === "active",
+      display_priority:
+        role.display_priority == null ? "" : String(role.display_priority),
+      set_as_current: isRoleCurrent(role),
     });
     // After setRoleForm base, fill free-text fallbacks for unmatched refs
     setRoleForm((prev) => {
@@ -1278,6 +1277,9 @@ export default function EditOfficialPage({
     setRoleSaving(true);
     setError(null);
     try {
+      const displayPriority = normalizeDisplayPriority(
+        roleForm.display_priority,
+      );
       // Free-text geography for pre-devolution / former seats
       const partyText =
         roleForm.party_name.trim() ||
@@ -1334,6 +1336,7 @@ export default function EditOfficialPage({
           : null,
         official_email: roleForm.official_email.trim() || null,
         office_location: roleForm.office_location.trim() || null,
+        display_priority: displayPriority,
         set_as_current: roleForm.set_as_current,
       };
 
@@ -3211,6 +3214,34 @@ export default function EditOfficialPage({
               </div>
             </div>
 
+            <div className="govuk-form-group">
+              <label className="govuk-label" htmlFor="role_display_priority">
+                Public prominence
+              </label>
+              <div className="govuk-hint" id="role_display_priority-hint">
+                Priority 1 is shown first. Leave empty for automatic ordering.
+                Equal priorities use the normal role and date ordering.
+              </div>
+              <input
+                id="role_display_priority"
+                className="govuk-input govuk-input--width-5"
+                type="number"
+                min="1"
+                max="999"
+                step="1"
+                inputMode="numeric"
+                aria-describedby="role_display_priority-hint"
+                value={roleForm.display_priority}
+                onChange={(event) =>
+                  setRoleForm({
+                    ...roleForm,
+                    display_priority: event.target.value,
+                  })
+                }
+                placeholder="Automatic"
+              />
+            </div>
+
             <div className="govuk-checkboxes govuk-!-margin-bottom-4">
               <div className="govuk-checkboxes__item">
                 <input
@@ -3281,6 +3312,9 @@ export default function EditOfficialPage({
                     Status
                   </th>
                   <th className="govuk-table__header" scope="col">
+                    Public prominence
+                  </th>
+                  <th className="govuk-table__header" scope="col">
                     Actions
                   </th>
                 </tr>
@@ -3317,8 +3351,7 @@ export default function EditOfficialPage({
                     <td className="govuk-table__cell">
                       <span
                         className={`govuk-tag ${
-                          String(role.status || "").toLowerCase() ===
-                            "active" || !role.term_end_date
+                          isRoleCurrent(role)
                             ? "govuk-tag--green"
                             : "govuk-tag--grey"
                         }`}
@@ -3326,6 +3359,11 @@ export default function EditOfficialPage({
                         {role.status ||
                           (role.term_end_date ? "Ended" : "Active")}
                       </span>
+                    </td>
+                    <td className="govuk-table__cell">
+                      {role.display_priority == null
+                        ? "Automatic"
+                        : String(role.display_priority)}
                     </td>
                     <td className="govuk-table__cell">
                       <button

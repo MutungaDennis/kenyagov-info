@@ -25,8 +25,9 @@ export default function DatasetDownloads({ exportEndpoint, title }: Props) {
     <div className="govuk-!-margin-bottom-6">
       <h2 className="govuk-heading-m">Download full dataset</h2>
       <p className="govuk-body">
-        Full extracts are for research and reuse. Large files (especially polling
-        stations) may take a moment to generate.
+        CSV and JSON are non-proprietary, machine-readable formats. No account is
+        needed. Downloads contain all matching published records; large files may
+        take a moment to generate.
       </p>
       <div className="govuk-button-group">
         <a href={csv} className="govuk-button govuk-button--secondary" download>

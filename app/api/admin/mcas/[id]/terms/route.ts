@@ -1,14 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { requireAdminApi } from "@/lib/admin-api";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = await requireAdminApi();
+  if (!auth.ok) return auth.response;
+  const supabase = auth.supabase;
+
   const { id } = await params;
 
   try {
-    const supabase = await createClient();
     const { data, error } = await supabase
       .from("mca_terms")
       .select(`
@@ -48,7 +51,7 @@ function normalizeTermDates(body: Record<string, unknown>) {
 
 /** Mirror current term dates onto mcas for /government/people display */
 async function syncMcaSnapshotFromTerms(
-  supabase: Awaited<ReturnType<typeof createClient>>,
+  supabase: import("@supabase/supabase-js").SupabaseClient,
   mcaId: string,
 ) {
   const { data: terms } = await supabase
@@ -83,10 +86,13 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = await requireAdminApi();
+  if (!auth.ok) return auth.response;
+  const supabase = auth.supabase;
+
   const { id } = await params;
 
   try {
-    const supabase = await createClient();
     const body = normalizeTermDates(await request.json());
 
     if (!body.start_date) {
@@ -124,10 +130,13 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = await requireAdminApi();
+  if (!auth.ok) return auth.response;
+  const supabase = auth.supabase;
+
   const { id } = await params;
 
   try {
-    const supabase = await createClient();
     const body = await request.json();
     const { termId, ...rest } = body;
     const updateData = normalizeTermDates(rest);
@@ -173,6 +182,10 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = await requireAdminApi();
+  if (!auth.ok) return auth.response;
+  const supabase = auth.supabase;
+
   const { id } = await params;
   const { searchParams } = new URL(request.url);
   const termId = searchParams.get("termId");
@@ -182,7 +195,6 @@ export async function DELETE(
   }
 
   try {
-    const supabase = await createClient();
     const { error } = await supabase
       .from("mca_terms")
       .delete()

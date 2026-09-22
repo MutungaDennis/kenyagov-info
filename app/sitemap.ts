@@ -13,6 +13,37 @@ export const revalidate = 3600;
 
 const BASE_URL = 'https://www.citizenguide.ke';
 
+const WORLD_ATHLETICS_PATHS = [
+  '',
+  '/about',
+  '/athlete-eligibility',
+  '/athlete-qualification',
+  '/championship-dates',
+  '/championships-explained',
+  '/combined-events',
+  '/competition-rounds',
+  '/competition-training-venues',
+  '/countries-athletes',
+  '/dates-venues',
+  '/entries-start-lists',
+  '/events-competition-format',
+  '/field-events',
+  '/host-cities',
+  '/kasarani-stadium',
+  '/kenya-team',
+  '/kenya-world-athletics',
+  '/medals-records-results',
+  '/nairobi-selection',
+  '/national-team-selection',
+  '/official-announcements',
+  '/organizers',
+  '/participating-countries',
+  '/road-events',
+  '/road-events-ceremonies',
+  '/track-events',
+  '/why-nairobi-2029-matters',
+] as const;
+
 interface SitemapEntry {
   url: string;
   lastModified?: Date | string;
@@ -354,6 +385,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/government/legislature`, changeFrequency: 'weekly', priority: 0.8 },
     { url: `${BASE_URL}/government/counties`, changeFrequency: 'weekly', priority: 0.8 },
     { url: `${BASE_URL}/government/presidential-visits`, changeFrequency: 'weekly', priority: 0.7 },
+    { url: `${BASE_URL}/government/cabinet-decisions`, changeFrequency: 'weekly', priority: 0.65 },
+    { url: `${BASE_URL}/government/executive-orders`, changeFrequency: 'weekly', priority: 0.65 },
+    { url: `${BASE_URL}/government/publications`, changeFrequency: 'weekly', priority: 0.65 },
+    { url: `${BASE_URL}/government/speeches`, changeFrequency: 'weekly', priority: 0.65 },
+    { url: `${BASE_URL}/government/consultations`, changeFrequency: 'weekly', priority: 0.65 },
 
     { url: `${BASE_URL}/elections`, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${BASE_URL}/elections/general-elections`, changeFrequency: 'weekly', priority: 0.85 },
@@ -429,6 +465,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/support`, changeFrequency: 'monthly', priority: 0.4 },
     { url: `${BASE_URL}/sitemap`, changeFrequency: 'monthly', priority: 0.4 },
   ];
+
+  staticUrls.push(
+    ...WORLD_ATHLETICS_PATHS.map((path) => ({
+      url: `${BASE_URL}/world-athletics-championships-2029${path}`,
+      changeFrequency: 'monthly' as const,
+      priority: path === '' ? 0.8 : 0.65,
+    })),
+  );
 
   const topicSlugs = await getAllTopicSlugs();
   const topicUrls: SitemapEntry[] = topicSlugs.map((slug) => ({

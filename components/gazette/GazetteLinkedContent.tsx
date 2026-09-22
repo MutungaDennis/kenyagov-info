@@ -1,3 +1,5 @@
+
+import { safeHtml } from "@/lib/safe-html";
 import { createClient } from "@/lib/supabase/server";
 
 type Props = {
@@ -112,7 +114,7 @@ export default async function GazetteLinkedContent({
       id="gazette-notice-content"
       className="gazette-notice-content govuk-body-l govuk-!-font-size-19"
       style={{ lineHeight: "1.6" }}
-      dangerouslySetInnerHTML={{ __html: renderedHtml }}
+      dangerouslySetInnerHTML={{ __html: safeHtml(renderedHtml) }}
     />
   );
 }

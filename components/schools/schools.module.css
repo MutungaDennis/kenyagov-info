@@ -1,0 +1,9 @@
+.directory { border-top: 4px solid #00703c; padding: 24px 0; margin-bottom: 30px; scroll-margin-top: 24px; }
+.heading { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.eyebrow { display: block; font-size: 14px; color: #00703c; font-weight: 700; margin-bottom: 8px; }
+.filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-top: 20px; }
+.filters select { width: 100%; min-width: 0; max-width: 100%; }
+.results li { padding: 18px 0; border-bottom: 1px solid #b1b4b6; }
+.pagination { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 12px; margin-top: 24px; }
+.tableScroll { overflow-x: auto; }
+@media (max-width: 640px) { .filters { grid-template-columns: 1fr; } .heading { display: block; } .pagination button { font-size: 16px; } }

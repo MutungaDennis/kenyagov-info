@@ -176,6 +176,9 @@ export async function updateSession(
             },
           );
 
+          // Forward the refreshed cookies, not the original request header.
+          forwardedHeaders.set("cookie", request.cookies.toString());
+
           response = NextResponse.next({
             request: {
               headers: forwardedHeaders,
@@ -241,6 +244,8 @@ export async function updateSession(
    * Auth pages remain available to signed-out users.
    */
   if (isAuthenticationPage) {
+    // Recovery must remain reachable after the callback establishes a session.
+    if (getRelativeAdminPath(pathname) === "reset-password") return response;
     if (!authenticated || !user) {
       return response;
     }

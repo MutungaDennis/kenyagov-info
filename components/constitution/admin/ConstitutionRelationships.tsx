@@ -1,4 +1,6 @@
 "use client";
+import { safeHtml } from "@/lib/safe-html";
+
 
 import {
   FormEvent,
@@ -2481,7 +2483,7 @@ export default function ConstitutionRelationships({
           }}
           dangerouslySetInnerHTML={{
             __html:
-              html,
+              safeHtml(html),
           }}
         />
       </div>

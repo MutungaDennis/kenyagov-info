@@ -1,4 +1,4 @@
-import { createSanityWriteClient } from "@/lib/sanity/createSanityClient";
+import { createSanityWriteClient } from "@/lib/sanity/createSanityWriteClient";
 import { getSanityStudioUrl } from "@/lib/sanity/studioUrl";
 import HansardHub, {
   type HansardSittingRow,

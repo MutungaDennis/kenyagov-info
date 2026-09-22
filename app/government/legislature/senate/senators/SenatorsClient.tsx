@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
+import { matchesSearch as matchesText } from "@/lib/search/match";
 import { useSearchParams } from "next/navigation";
 type Senator = {
   id: string;
@@ -32,7 +33,6 @@ export default function SenatorsClient() {
   const [searchTerm, setSearchTerm] = useState(initialSearch);
   const [selectedParty, setSelectedParty] = useState(initialParty);
   const [selectedType, setSelectedType] = useState(initialType);
-  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     let cancelled = false;
@@ -72,10 +72,7 @@ export default function SenatorsClient() {
   const filteredSenators = useMemo(() => {
     return sortedSenators.filter((sen) => {
       const formattedName = formatName(sen.name);
-      const matchesSearch =
-        formattedName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (sen.seat || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (sen.party || "").toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesSearch = matchesText(searchTerm, formattedName, sen.seat, sen.party);
 
       const matchesParty = !selectedParty || sen.party === selectedParty;
       const matchesType = !selectedType || sen.type === selectedType;
@@ -84,9 +81,6 @@ export default function SenatorsClient() {
     });
   }, [sortedSenators, searchTerm, selectedParty, selectedType]);
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, selectedParty, selectedType]);
 
   const totalSenators = filteredSenators.length;
   const hasActiveFilters = searchTerm !== "" || selectedParty !== "" || selectedType !== "";

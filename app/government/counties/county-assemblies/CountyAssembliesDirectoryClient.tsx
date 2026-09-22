@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { matchesSearch as matchesText } from "@/lib/search/match";
 import {
   assemblyDisplayName,
   assemblyInstitutionHref,
@@ -54,11 +55,7 @@ export default function CountyAssembliesDirectoryClient({
     return initialCounties
       .filter((county) => {
         const assemblyName = assemblyDisplayName(county.name).toLowerCase();
-        const matchesSearch =
-          !q ||
-          county.name.toLowerCase().includes(q) ||
-          assemblyName.includes(q) ||
-          (county.headquarters || "").toLowerCase().includes(q);
+        const matchesSearch = matchesText(q, county.name, assemblyName, county.headquarters, county.region);
 
         const matchesRegion =
           selectedRegion === "All Regions" || county.region === selectedRegion;

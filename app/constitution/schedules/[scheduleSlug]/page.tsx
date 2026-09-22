@@ -1,3 +1,5 @@
+
+import { safeHtml } from "@/lib/safe-html";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -98,7 +100,7 @@ export default async function SchedulePage({
       <article
         className="constitution-schedule-reading"
         dangerouslySetInnerHTML={{
-          __html: schedule.body_html,
+          __html: safeHtml(schedule.body_html),
         }}
       />
 

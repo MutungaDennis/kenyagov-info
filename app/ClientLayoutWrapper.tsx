@@ -11,11 +11,11 @@ import GovUKReportProblem from "@/components/govuk/ReportProblem";
 import GovUKPhaseBanner from "@/components/govuk/PhaseBanner";
 import CookieBanner from "@/components/govuk/CookieBanner";
 import { logPageViewClient } from "@/lib/supabase/log-page-view";
+import { isAdminFilesystemPath, isAdminPublicPath } from "@/lib/admin-path";
 
 export function ClientLayoutWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const adminBase = process.env.NEXT_PUBLIC_ADMIN_BASE_PATH?.replace(/\/$/, "") || "/admin";
-  const isAdminRoute = !!pathname && (pathname === adminBase || pathname.startsWith(`${adminBase}/`) || pathname.startsWith("/admin"));
+  const isAdminRoute = !!pathname && (isAdminFilesystemPath(pathname) || isAdminPublicPath(pathname));
   const isHome = pathname === "/";
 
   // GOV.UK: mark JS support on body

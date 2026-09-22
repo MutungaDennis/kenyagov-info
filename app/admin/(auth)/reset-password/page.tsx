@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { adminPath } from "@/lib/admin-path";
-import { createClient } from "@/lib/supabase/client";
+import { createBrowserClientAsync } from "@/lib/supabase/client";
 
 export default function AdminResetPasswordPage() {
   const router = useRouter();
@@ -13,7 +13,7 @@ export default function AdminResetPasswordPage() {
   const [success, setSuccess] = useState(false);
   const [isPending, startTransition] = useTransition();
 
-  const supabase = createClient();
+
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -30,6 +30,10 @@ export default function AdminResetPasswordPage() {
     }
 
     startTransition(async () => {
+      try {
+      const supabase = await createBrowserClientAsync();
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) { setErrorMessage("This reset link has expired. Request a new link."); return; }
       // Supabase recovery flow — at this point the user should have a valid recovery session
       // from clicking the email link. updateUser will set the new password.
       const { error } = await supabase.auth.updateUser({
@@ -39,12 +43,14 @@ export default function AdminResetPasswordPage() {
       if (error) {
         setErrorMessage(error.message || "Failed to update password. The link may have expired.");
       } else {
+        await supabase.auth.signOut({ scope: "local" });
         setSuccess(true);
         // Give the user a moment then redirect to login
         setTimeout(() => {
           router.push(`${adminPath('login')}?message=password-updated`);
         }, 1600);
       }
+      } catch { setErrorMessage("Unable to update your password. Please try again."); }
     });
   }
 
@@ -140,7 +146,7 @@ export default function AdminResetPasswordPage() {
       )}
 
       <div style={{ marginTop: "24px", textAlign: "center" }}>
-        <a href={adminPath()} className="govuk-link" style={{ fontSize: "16px" }}>
+        <a href={adminPath("login")} className="govuk-link" style={{ fontSize: "16px" }}>
           Back to sign in
         </a>
       </div>

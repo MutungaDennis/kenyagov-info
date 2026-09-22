@@ -5,7 +5,6 @@ import {
   hasRealSupabasePublicEnv,
   readSupabasePublicEnv,
   resolveSupabasePublicEnv,
-  SUPABASE_BUILD_PLACEHOLDER,
 } from "@/lib/supabase/env";
 
 let browserClient: SupabaseClient | null = null;
@@ -76,7 +75,7 @@ export async function createBrowserClientAsync(): Promise<SupabaseClient> {
   }
 
   if (!hasRealSupabasePublicEnv(env)) {
-    env = SUPABASE_BUILD_PLACEHOLDER;
+    throw new Error("Supabase public configuration is unavailable.");
   }
 
   const cacheKey = clientCacheKey(env.url, env.key);

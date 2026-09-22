@@ -1,4 +1,6 @@
 "use client";
+import { safeHtml } from "@/lib/safe-html";
+
 
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
@@ -597,7 +599,7 @@ export default function InlineGazetteLinker({ noticeId }: Props) {
               onKeyUp={captureSelection}
               className="gazette-notice-content govuk-body govuk-!-padding-4"
               style={{ border: "1px solid #b1b4b6", maxHeight: "32rem", overflowY: "auto" }}
-              dangerouslySetInnerHTML={{ __html: html }}
+              dangerouslySetInnerHTML={{ __html: safeHtml(html) }}
             />
           </div>
 

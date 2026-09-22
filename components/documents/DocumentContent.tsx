@@ -1,3 +1,5 @@
+
+import { safeHtml } from "@/lib/safe-html";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
@@ -119,7 +121,7 @@ export function DocumentReadingText({
               <div
                 className="cg-document-source-text govuk-body"
                 dangerouslySetInnerHTML={{
-                  __html: formatStructuredSourceHtml(section.body_html),
+                  __html: safeHtml(formatStructuredSourceHtml(section.body_html)),
                 }}
               />
             ) : section.body_text ? (

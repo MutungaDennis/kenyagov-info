@@ -6,6 +6,7 @@ import "govuk-frontend/govuk-frontend.min.css";
 import "@/app/globals.css";
 
 import { ClientLayoutWrapper } from "./ClientLayoutWrapper";
+import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
 import {
   DEFAULT_DESCRIPTION,
   DEFAULT_OG_IMAGE,
@@ -209,19 +210,14 @@ export default function RootLayout({
   return (
     <html lang="en-KE" className="govuk-template">
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
+        <Script
+          id="cookie-consent-bootstrap"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{if(localStorage.getItem('cookie-consent'))document.documentElement.classList.add('app-cookie-consent-set')}catch(e){}",
+          }}
         />
-
-        <link
-          href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap"
-          rel="stylesheet"
-        />
-
         {/*
           Use next/script rather than a raw <script> element.
           beforeInteractive places this in the initial document early enough
@@ -279,43 +275,7 @@ export default function RootLayout({
         className="govuk-template__body"
         suppressHydrationWarning
       >
-        <Script
-          id="google-consent-mode"
-          strategy="afterInteractive"
-        >
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('consent', 'default', {
-              'ad_storage': 'denied',
-              'ad_user_data': 'denied',
-              'ad_personalization': 'denied',
-              'analytics_storage': 'denied'
-            });
-          `}
-        </Script>
-
-        <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-GG9GWN5J48"
-          strategy="afterInteractive"
-        />
-
-        <Script
-          id="google-analytics-config"
-          strategy="afterInteractive"
-        >
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'G-GG9GWN5J48');
-          `}
-        </Script>
-
-        <Script
-          src="https://challenges.cloudflare.com/turnstile/v0/api.js"
-          strategy="afterInteractive"
-        />
+        <GoogleAnalytics />
 
         <ClientLayoutWrapper>
           {children}

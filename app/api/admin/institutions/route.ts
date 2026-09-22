@@ -65,6 +65,7 @@ export async function GET(request: NextRequest) {
   const q = searchParams.get("q")?.trim() || "";
   const arm = searchParams.get("arm")?.trim() || "";
   const type = searchParams.get("type")?.trim() || "";
+  const lifecycleStatus = searchParams.get("status")?.trim() || "";
   const activeOnly = searchParams.get("active") === "1";
   const wantFacets = searchParams.get("facets") === "1";
 
@@ -184,6 +185,7 @@ export async function GET(request: NextRequest) {
     if (type.length >= 1) {
       qy = qy.eq("institution_type", type);
     }
+    if (lifecycleStatus) qy = qy.eq("status", lifecycleStatus);
     if (activeOnly) {
       qy = qy.eq("is_active", true);
     }

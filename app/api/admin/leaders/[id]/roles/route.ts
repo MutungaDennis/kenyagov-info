@@ -5,6 +5,7 @@ import {
   prepareRoleInsert,
 } from "@/lib/leaders/resolve-refs";
 import { syncLeaderSnapshotFromActiveRoles } from "@/lib/leaders/sync-current";
+import { sortRolesChronologically } from "@/lib/leaders/display";
 
 export const dynamic = "force-dynamic";
 
@@ -25,7 +26,7 @@ export async function GET(_request: NextRequest, context: Ctx) {
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
-  return NextResponse.json({ data: data || [] });
+  return NextResponse.json({ data: sortRolesChronologically(data || []) });
 }
 
 /**

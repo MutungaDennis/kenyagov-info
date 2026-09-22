@@ -1,4 +1,6 @@
 "use client";
+import { safeHtml } from "@/lib/safe-html";
+
 
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 
@@ -265,7 +267,7 @@ export function LegislationProvisionLinker({
       <div
         ref={previewRef}
         className="admin-legislation-link-preview"
-        dangerouslySetInnerHTML={{ __html: bodyHtml }}
+        dangerouslySetInnerHTML={{ __html: safeHtml(bodyHtml) }}
       />
 
       <form onSubmit={save}>

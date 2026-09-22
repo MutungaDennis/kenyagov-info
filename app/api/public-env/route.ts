@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getTurnstilePublicConfig } from "@/lib/turnstile-config";
 
 export const dynamic = "force-dynamic";
 
@@ -15,10 +16,10 @@ export async function GET() {
     "";
 
   return NextResponse.json(
-    { supabaseUrl, supabaseAnonKey },
+    { supabaseUrl, supabaseAnonKey, turnstile: getTurnstilePublicConfig() },
     {
       headers: {
-        "Cache-Control": "public, max-age=60",
+        "Cache-Control": "no-store",
       },
     },
   );

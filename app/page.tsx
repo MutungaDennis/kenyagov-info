@@ -165,25 +165,25 @@ export default function Home() {
               <div className="govuk-!-margin-bottom-3">
                 <h3 className="govuk-heading-s govuk-!-margin-bottom-1">
                   <Link
-                    href="/government/legislature/hansard/national-assembly"
+                    href="/world-athletics-championships-2029"
                     className="govuk-link"
                   >
-                    National Assembly Hansard
+                    World Athletics Championships 2029
                   </Link>
                 </h3>
                 <p className="govuk-body govuk-!-margin-0">
-                  Searchable sitting records.
+                  Explore the championships, events, venues and official updates.
                 </p>
               </div>
 
               <div>
                 <h3 className="govuk-heading-s govuk-!-margin-bottom-1">
-                  <Link href="/scams" className="govuk-link">
-                    Scams and fake websites
+                  <Link href="/emergency-safety" className="govuk-link">
+                    Emergency and safety
                   </Link>
                 </h3>
                 <p className="govuk-body govuk-!-margin-0">
-                  Spot unofficial sites that mimic government services.
+                  Find emergency contacts, safety information and preparedness guidance.
                 </p>
               </div>
             </div>
@@ -463,17 +463,7 @@ export default function Home() {
                   National symbols, heritage and public holidays.
                 </p>
               </li>
-              <li>
-                <Link
-                  href="/contact-government"
-                  className="govuk-link govuk-!-font-weight-bold"
-                >
-                  Contact government
-                </Link>
-                <p className="govuk-body govuk-!-margin-top-1">
-                  Official channels for ministries, counties and services.
-                </p>
-              </li>
+
             </ul>
           </div>
         </div>

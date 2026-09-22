@@ -1,3 +1,5 @@
+
+import { safeHtml } from "@/lib/safe-html";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
@@ -267,7 +269,7 @@ export default async function CabinetBriefPage({
                     className="cabinet-brief-content"
                     dangerouslySetInnerHTML={{
                       __html:
-                        brief.bodyHtml,
+                        safeHtml(brief.bodyHtml),
                     }}
                   />
                 ) : brief.bodyText ? (

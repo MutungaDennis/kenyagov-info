@@ -8,19 +8,9 @@ export async function proxy(
   return updateSession(request);
 }
 
-/**
- * These values must remain statically analysable by Next.js.
- *
- * If the production admin URL changes, update both:
- *
- * 1. lib/admin-path.ts
- * 2. this matcher
- * 3. NEXT_PUBLIC_ADMIN_BASE_PATH in Cloudflare
- */
+/** The broad matcher supports configured admin prefixes without manual edits. */
 export const config = {
-  matcher: [
-    "/admin/:path*",
-    "/api/admin/:path*",
-    "/cg-ke-a5wkqciyjpg940u3/:path*",
-  ],
+  // Match configurable admin prefixes too. updateSession returns immediately
+  // for public routes, without contacting Supabase.
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };

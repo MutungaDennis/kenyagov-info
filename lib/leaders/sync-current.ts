@@ -15,7 +15,7 @@ export async function syncLeaderSnapshotFromActiveRoles(
   const { data: roles, error } = await supabase
     .from("leader_roles")
     .select(
-      "id, title, organization, constituency, county, ward, party, level, term_start_date, term_end_date, status",
+      "id, title, organization, constituency, county, ward, party, level, term_start_date, term_end_date, status, display_priority",
     )
     .eq("leader_id", leaderId);
 

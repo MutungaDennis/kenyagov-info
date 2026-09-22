@@ -1,8 +1,9 @@
 "use client";
 
+import Turnstile, { resetTurnstileForm } from "@/components/security/Turnstile";
+
 import Link from "next/link";
 import { useState, useRef, useEffect, useTransition } from "react";
-import Script from "next/script";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import { createSupportIntent } from "./actions";
 
@@ -22,7 +23,6 @@ export default function SupportPage() {
 
   return (
     <>
-      {/* Turnstile script loaded once globally in ClientLayoutWrapper to prevent duplicate loads */}
 
       <GovUKBreadcrumbs
         items={[
@@ -204,15 +204,7 @@ export default function SupportPage() {
               />
             </div>
 
-            {process.env.NEXT_PUBLIC_TURNSTILE_ENABLED === "true" && (
-              <div className="govuk-form-group">
-                <div
-                  className="cf-turnstile"
-                  data-sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
-                  data-theme="light"
-                />
-              </div>
-            )}
+            <Turnstile />
 
             {/* Submit Actions Layer */}
             <div className="govuk-button-group">
@@ -235,13 +227,6 @@ export default function SupportPage() {
 
                   const formData = new FormData(currentForm);
                   const turnstileToken = formData.get("cf-turnstile-response") as string;
-                  const turnstileOn =
-                    process.env.NEXT_PUBLIC_TURNSTILE_ENABLED === "true";
-
-                  if (turnstileOn && !turnstileToken) {
-                    setSubmissionState({ error: "Security check is initializing. Please wait a moment and try again." });
-                    return;
-                  }
 
                   // Append dynamic explicit states tracked via React properties
                   formData.append("currency", currency);
@@ -251,6 +236,7 @@ export default function SupportPage() {
                       formData,
                       turnstileToken || "",
                     );
+                    resetTurnstileForm(currentForm);
                     if (result.success && result.checkoutUrl) {
                       // Redirect the supporter directly to the secure checkout handler path loop
                       window.location.href = result.checkoutUrl;

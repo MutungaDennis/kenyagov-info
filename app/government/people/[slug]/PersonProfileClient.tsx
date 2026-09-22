@@ -13,6 +13,7 @@ import {
   formatRoleHeadline,
   formatTermRange,
   isHansardEligible,
+  isRoleCurrent,
   parseAcademicQualifications,
   resolvePrimaryRole,
   sortRolesChronologically,
@@ -98,7 +99,7 @@ export default function PersonProfileClient() {
             leader_roles!leader_roles_leader_id_fkey (
               id, title, organization, constituency, county, ward, party,
               term_start_date, term_end_date, status, official_email,
-              office_location, committees
+              office_location, committees, display_priority
             )
           `
           )
@@ -117,7 +118,7 @@ export default function PersonProfileClient() {
               leader_roles (
                 id, title, organization, constituency, county, ward, party,
                 term_start_date, term_end_date, status, official_email,
-                office_location, committees
+                office_location, committees, display_priority
               )
             `
             )
@@ -208,6 +209,7 @@ export default function PersonProfileClient() {
               official_email: mcaData.official_email || null,
               office_location: mcaData.ward_office_location || null,
               committees: mcaData.committees || [],
+              display_priority: null,
             }],
           };
 
@@ -300,8 +302,12 @@ export default function PersonProfileClient() {
     displayRoleTitle = `Woman Representative for ${countyName}`;
   }
 
-  const orgName = primaryRole?.organization || person.current_organization || null;
-  const party = primaryRole?.party || person.current_party || null;
+  const orgName = primaryRole
+    ? primaryRole.organization || null
+    : person.current_organization || null;
+  const party = primaryRole
+    ? primaryRole.party || null
+    : person.current_party || null;
   
   // 2. Hide redundant geographic details for elected representatives (since they are now in the title)
   const electedTitles = ["member of parliament", "senator", "member of county assembly", "governor", "woman representative", "county woman representative"];
@@ -337,8 +343,9 @@ export default function PersonProfileClient() {
 
   const otherActiveRoles = roles.filter((r) => {
     if (!primaryRole) return false;
+    if (r === primaryRole) return false;
     if (r.id && primaryRole.id && r.id === primaryRole.id) return false;
-    return !r.term_end_date && String(r.status || "").toLowerCase() !== "ended";
+    return isRoleCurrent(r);
   });
 
   // Check if we actually need to show the summary list (only if there are non-redundant extra details)

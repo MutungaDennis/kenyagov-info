@@ -52,7 +52,7 @@ export async function getLatestCabinetBriefs(limit = 3): Promise<CabinetBriefLis
     .select(LIST_COLUMNS)
     .eq("is_published", true)
     .order("brief_date", { ascending: false })
-    .order("created_at", { ascending: false })
+    .order("id", { ascending: false })
     .limit(limit);
 
   if (error) {
@@ -60,7 +60,7 @@ export async function getLatestCabinetBriefs(limit = 3): Promise<CabinetBriefLis
     return [];
   }
 
-  return (data ?? []).map(mapListItem);
+  return (Array.isArray(data) ? data : []).map(mapListItem);
 }
 
 export async function getCabinetBriefs(filters: CabinetBriefFilters = {}): Promise<CabinetBriefsResult> {
@@ -71,16 +71,10 @@ export async function getCabinetBriefs(filters: CabinetBriefFilters = {}): Promi
   const to = from + pageSize - 1;
 
   let query = supabase
-    .from("cabinet_briefs")
-    .select(LIST_COLUMNS, { count: "exact" })
+    .rpc("search_cabinet_briefs_scoped", { q: filters.query?.trim() || "" }, { count: "exact" })
+    .select(LIST_COLUMNS)
     .eq("is_published", true);
 
-  if (filters.query?.trim()) {
-    const term = filters.query.trim().replace(/[%_,()]/g, " ");
-    query = query.or(
-      `title.ilike.%${term}%,short_title.ilike.%${term}%,summary.ilike.%${term}%,body_text.ilike.%${term}%`,
-    );
-  }
 
   if (filters.label?.trim()) query = query.eq("publication_label", filters.label.trim());
   if (filters.year) {
@@ -91,7 +85,7 @@ export async function getCabinetBriefs(filters: CabinetBriefFilters = {}): Promi
 
   const { data, error, count } = await query
     .order("brief_date", { ascending: false })
-    .order("created_at", { ascending: false })
+    .order("id", { ascending: false })
     .range(from, to);
 
   if (error) {
@@ -101,7 +95,7 @@ export async function getCabinetBriefs(filters: CabinetBriefFilters = {}): Promi
 
   const total = count ?? 0;
   return {
-    items: (data ?? []).map(mapListItem),
+    items: (Array.isArray(data) ? data : []).map(mapListItem),
     total,
     page,
     pageSize,
@@ -194,9 +188,9 @@ export async function getCabinetBriefFilterOptions() {
     return { labels: [] as string[], years: [] as number[] };
   }
 
-  const labels = Array.from(new Set((data ?? []).map((row: any) => row.publication_label).filter(Boolean))).sort();
+  const labels = Array.from(new Set((Array.isArray(data) ? data : []).map((row: any) => row.publication_label).filter(Boolean))).sort();
   const years = Array.from(
-    new Set((data ?? []).map((row: any) => Number(String(row.brief_date).slice(0, 4))).filter(Number.isFinite)),
+    new Set((Array.isArray(data) ? data : []).map((row: any) => Number(String(row.brief_date).slice(0, 4))).filter(Number.isFinite)),
   ).sort((a, b) => b - a);
 
   return { labels, years };

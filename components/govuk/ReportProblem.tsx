@@ -1,5 +1,7 @@
 'use client';
 
+import Turnstile, { resetTurnstileForm } from "@/components/security/Turnstile";
+
 import { usePathname } from "next/navigation";
 import { useState, useRef, useEffect, useTransition } from "react";
 import { handleFeedbackSubmission } from "@/app/feedback/actions";
@@ -34,24 +36,7 @@ export default function GovUKReportProblem() {
     }
   }, [submissionState]);
 
-  useEffect(() => {
-    if (process.env.NEXT_PUBLIC_TURNSTILE_ENABLED !== "true") return;
-    if (!isOpen || typeof window === "undefined" || !window.turnstile) return;
 
-    const timer = setTimeout(() => {
-      try {
-        // Re-render when the form becomes visible; ignore if already mounted
-        window.turnstile?.render(".cf-turnstile", {
-          sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "",
-          theme: "light",
-        });
-      } catch {
-        // already rendered
-      }
-    }, 150);
-
-    return () => clearTimeout(timer);
-  }, [isOpen]);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -80,15 +65,7 @@ export default function GovUKReportProblem() {
       return;
     }
 
-    const turnstileOn =
-      process.env.NEXT_PUBLIC_TURNSTILE_ENABLED === "true";
-    if (turnstileOn && !implicitToken) {
-      setSubmissionState({
-        error: "Security check is initializing. Please try again in a moment.",
-        errorType: "security",
-      });
-      return;
-    }
+
 
     formData.append("page_path", pathname);
 
@@ -98,6 +75,7 @@ export default function GovUKReportProblem() {
         implicitToken || "",
       );
 
+      resetTurnstileForm(targetForm);
       if (result.success) {
         setSubmissionState({ success: true });
         targetForm.reset();
@@ -112,15 +90,6 @@ export default function GovUKReportProblem() {
             "We could not save your report. Please try again later.",
           errorType: "server",
         });
-
-        try {
-          const widget = targetForm.querySelector(".cf-turnstile");
-          if (widget && window.turnstile) {
-            window.turnstile.reset(widget as HTMLElement);
-          }
-        } catch {
-          // ignore reset errors
-        }
       }
     });
   }
@@ -227,15 +196,7 @@ export default function GovUKReportProblem() {
               />
             </div>
 
-            {process.env.NEXT_PUBLIC_TURNSTILE_ENABLED === "true" && (
-              <div className="govuk-form-group">
-                <div
-                  className="cf-turnstile"
-                  data-sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
-                  data-theme="light"
-                />
-              </div>
-            )}
+            <Turnstile />
 
             <div className="govuk-button-group">
               <button

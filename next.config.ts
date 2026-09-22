@@ -26,7 +26,7 @@ function normalizeAdminBase(value: string): string {
  * requires no rewrite.
  */
 function getProductionAdminBase(): string | null {
-  if (process.env.NODE_ENV !== "production") {
+  if (process.env.NODE_ENV !== "production" && !process.env.NEXT_PUBLIC_ADMIN_BASE_PATH?.trim()) {
     return null;
   }
 

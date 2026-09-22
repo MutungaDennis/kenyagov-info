@@ -7,19 +7,20 @@
   --app-brand-green: #047857;
   --app-brand-green-dark: #065f46;
   --app-brand-red: #ce1126;
-  --font-public-sans: "Public Sans", sans-serif;
+  --font-public-sans: Arial, sans-serif;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: "Public Sans", sans-serif;
+  --font-sans: Arial, sans-serif;
 }
 
 /* 
   Font adaptation for non-UK site:
   We cannot use the official GDS Transport font (license + branding restrictions).
-  Public Sans is used as the closest accessible sans-serif alternative.
+  Arial is used as GOV.UK Frontend's system fallback, avoiding licensed font
+  files and a render-blocking third-party font request.
   
   We scope the override to the template root and body rather than * to avoid fighting
   GOV.UK component-specific font rules and to let the Design System's typography scale
@@ -40,6 +41,17 @@ textarea,
 select,
 a {
   font-family: inherit;
+}
+
+/* Override GOV.UK's licensed GDS Transport references with the system stack. */
+[class^="govuk-"],
+[class*=" govuk-"] {
+  font-family: var(--font-public-sans) !important;
+}
+
+/* Set before first paint for returning visitors; avoids a hydration shift. */
+.app-cookie-consent-set .govuk-cookie-banner {
+  display: none;
 }
 
 /* Flush site to top of viewport (replaces former layout inline styles) */

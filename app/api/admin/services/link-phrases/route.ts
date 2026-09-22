@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdminApi } from "@/lib/admin-api";
-import { createSanityWriteClient } from "@/lib/sanity/createSanityClient";
+import { createSanityWriteClient } from "@/lib/sanity/createSanityWriteClient";
 import { SEED_SERVICE_LINK_PHRASES } from "@/lib/services/seed-link-phrases";
 
 const LIST_QUERY = `*[_type == "serviceLinkPhrase"] | order(sortOrder asc, phrase asc) {

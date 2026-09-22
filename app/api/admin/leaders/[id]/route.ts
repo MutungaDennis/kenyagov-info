@@ -240,7 +240,7 @@ export async function GET(_request: NextRequest, context: Ctx) {
       leader_roles (
         id, title, organization, constituency, county, ward, party,
         term_start_date, term_end_date, status, entry_type,
-        official_email, office_location, committees
+        official_email, office_location, committees, display_priority
       )`,
     )
     .eq("id", id)

@@ -1,3 +1,5 @@
+
+import { safeHtml } from "@/lib/safe-html";
 import {
   getPublicConstitutionInlineLinks,
 } from "@/lib/constitution/get-public-inline-links";
@@ -105,7 +107,7 @@ export default async function ConstitutionArticleContent({
       className="constitution-article-body"
       dangerouslySetInnerHTML={{
         __html:
-          html,
+          safeHtml(html),
       }}
     />
   );

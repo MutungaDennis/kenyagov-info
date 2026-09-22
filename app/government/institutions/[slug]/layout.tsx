@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { createPublicClient } from "@/lib/supabase/public";
 import { buildPageMetadata, SITE_NAME, SITE_URL } from "@/lib/seo";
 import { JsonLd } from "@/components/JsonLd";
+import { getPublicSchool } from "@/lib/schools/queries";
+import { schoolLevelLabel } from "@/lib/schools/types";
 
 type Props = {
   children: React.ReactNode;
@@ -25,7 +27,7 @@ export async function generateMetadata({
       .select(
         "slug, name, short_name, official_name, description, mandate, institution_type, institution_category, status",
       )
-      .eq("slug", slug)
+      .eq("slug", slug).eq("is_active", true)
       .maybeSingle();
 
     if (data) {
@@ -87,8 +89,15 @@ export async function generateMetadata({
         keywords,
       });
     }
+    const school = await getPublicSchool(slug);
+    if (school) return buildPageMetadata({
+      title: school.official_name,
+      description: `${school.official_name}: a public ${schoolLevelLabel(school.main_tier).toLowerCase()} institution in ${school.county || "Kenya"}. Governance, location, contacts and recorded school information.`,
+      path: `/government/institutions/${school.slug}`,
+      keywords: [school.official_name, "Kenya public schools", school.county || "Kenya"],
+    });
   } catch {
-    /* fall through */
+    /* The page reports data-source failures; metadata remains conservative. */
   }
 
   return buildPageMetadata({
@@ -113,7 +122,7 @@ export default async function InstitutionSlugLayout({
       .select(
         "name, short_name, official_name, description, mandate, email, phone, physical_address, headquarters, website_url, established_date, institution_type, institution_category, parent_institution_id, slug",
       )
-      .eq("slug", slug)
+      .eq("slug", slug).eq("is_active", true)
       .maybeSingle();
 
     if (inst) {
@@ -124,7 +133,7 @@ export default async function InstitutionSlugLayout({
         const { data: p } = await supabase
           .from("institutions")
           .select("name, slug")
-          .eq("id", inst.parent_institution_id)
+          .eq("id", inst.parent_institution_id).eq("is_active", true)
           .maybeSingle();
         if (p?.name && p?.slug) parent = { name: p.name, slug: p.slug };
       }
