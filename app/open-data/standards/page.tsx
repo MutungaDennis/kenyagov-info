@@ -90,7 +90,7 @@ export default function OpenDataStandardsPage() {
             <li>CSV uses UTF-8, stable field names and quoted cells. Missing values are blank; zero remains zero. JSON preserves nulls, numbers and text identifiers.</li>
             <li>Import identifier columns as text to preserve leading zeros. CSV text that could be interpreted as a spreadsheet formula is prefixed with an apostrophe; JSON preserves the original string.</li>
             <li>Ward exports accept <code>county</code>, <code>constituency</code> and <code>q</code>. Polling-station exports also accept <code>ward</code>. Use exact place names and URL-encode values.</li>
-            <li>Example: <a className="govuk-link" href="/api/data/exports/wards?format=json&amp;county=Nairobi">Nairobi wards as JSON</a>.</li>
+            <li>Example: <a className="govuk-link" href="/api/data/exports/wards?format=json&amp;county=Nairobi%20County">Nairobi wards as JSON</a>.</li>
             <li>Downloads fetch all matching pages, rather than the first 1,000 records. Failed downloads return an error instead of a successful partial extract.</li>
             <li>Response headers include <code>X-Total-Count</code> and <code>X-Generated-At</code>. Generation time is not the date the underlying information was verified.</li>
             <li>These are live extracts, not versioned statistical releases. Records can change while a large download is being generated. Retain your downloaded file when citing it.</li>

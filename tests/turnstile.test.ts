@@ -15,8 +15,16 @@ describe("Turnstile verification", () => {
   afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); });
   it("cannot be disabled in production", async () => {
     expect(getTurnstilePublicConfig().enabled).toBe(true);
+    expect(getTurnstilePublicConfig("localhost").enabled).toBe(true);
     expect(await verifyTurnstileToken("")).toBe(false);
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+  it("skips the widget only for local development hosts", () => {
+    vi.stubEnv("NODE_ENV", "development");
+    vi.stubEnv("NEXT_PUBLIC_TURNSTILE_ENABLED", "true");
+    for (const hostname of ["localhost", "127.0.0.1", "[::1]"]) expect(getTurnstilePublicConfig(hostname).enabled).toBe(false);
+    expect(getTurnstilePublicConfig("localhost.example.org").enabled).toBe(true);
+    expect(getTurnstilePublicConfig("citizenguide.ke").enabled).toBe(true);
   });
   it("rejects production test keys without a network request", async () => {
     vi.stubEnv("TURNSTILE_SECRET_KEY", "1x0000000000000000000000000000000AA");

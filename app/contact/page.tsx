@@ -1,5 +1,7 @@
 'use client';
 
+import Turnstile, { resetTurnstileForm } from "@/components/security/Turnstile";
+
 import Link from "next/link";
 import { useState, useRef, useEffect, useTransition, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
@@ -80,15 +82,7 @@ function ContactPageContent() {
       return;
     }
 
-    const turnstileOn =
-      process.env.NEXT_PUBLIC_TURNSTILE_ENABLED === "true";
-    if (turnstileOn && !implicitToken) {
-      setSubmissionState({
-        error: "Security check is initializing. Please try again in a moment.",
-        errorType: "security",
-      });
-      return;
-    }
+
 
     startTransition(async () => {
       const result = await handleContactMessage(
@@ -96,6 +90,7 @@ function ContactPageContent() {
         implicitToken || "",
       );
 
+      resetTurnstileForm(targetForm);
       if (result.success) {
         setSubmissionState({ success: true });
         setMessageValue("");
@@ -110,14 +105,6 @@ function ContactPageContent() {
           error: result.error || "Could not send your message.",
           errorType: isValidationError ? "validation" : "server",
         });
-
-        try {
-          // @ts-ignore
-          if ((window as any).turnstile) {
-            const widget = targetForm.querySelector(".cf-turnstile");
-            if (widget) (window as any).turnstile.reset(widget);
-          }
-        } catch (e) {}
       }
     });
   }
@@ -285,17 +272,7 @@ function ContactPageContent() {
                 onChange={(e) => setMessageValue(e.target.value)}
                 rows={8}
               />
-
-              {/* Cloudflare Turnstile — off unless NEXT_PUBLIC_TURNSTILE_ENABLED=true */}
-              {process.env.NEXT_PUBLIC_TURNSTILE_ENABLED === "true" && (
-                <div className="govuk-form-group">
-                  <div
-                    className="cf-turnstile"
-                    data-sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
-                    data-theme="light"
-                  />
-                </div>
-              )}
+              <Turnstile />
 
               <div className="govuk-button-group">
                 <button type="submit" disabled={isPending} className="govuk-button">

@@ -4,7 +4,7 @@ import { collectExportRows, rowsToCsv } from "./export-format";
 
 // Only the five previously published exports. Never accept a table/column from the URL.
 const EXPORTS = {
-  counties: { table: "counties", fields: ["code", "name", "region", "headquarters", "population", "area_km2", "governor_name", "senator_name"] },
+  counties: { table: "counties", fields: ["code", "name", "region", "headquarters", "population", "area_km2"] },
   institutions: { table: "institutions", fields: ["name", "short_name", "institution_type", "government_level", "arm_of_government", "description", "slug", "status"] },
   leaders: { table: "leaders", fields: ["full_name", "title", "current_party", "current_constituency", "current_county", "current_organization"] },
   wards: { table: "wards", fields: ["ward_code", "name", "constituency_name", "county_name", "registered_voters_2022"] },

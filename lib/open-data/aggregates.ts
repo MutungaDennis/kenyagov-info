@@ -3,6 +3,7 @@
  * Never load full polling-station or multi-MB tables for HTML.
  */
 
+import { collectExportRows } from "./export-format";
 import { createPublicClient } from "@/lib/supabase/public";
 import { createSanityClient } from "@/lib/sanity/createSanityClient";
 import type { ChartSpec } from "@/components/open-data/charts/types";
@@ -63,7 +64,7 @@ async function countTable(
   activeOnly = true,
 ): Promise<number> {
   const supabase = createPublicClient();
-  let q = supabase.from(table).select("id", { count: "exact", head: true });
+  const q = supabase.from(table).select("id", { count: "exact", head: true });
   if (activeOnly) {
     // Some tables use is_active; ignore filter errors by retrying without
     const withActive = await q.eq("is_active", true);
@@ -97,7 +98,7 @@ export async function getHubCounts(): Promise<Record<string, number>> {
       countTable("wards"),
       countTable("constituencies"),
       countTable("institutions"),
-      countTable("leaders", false),
+      countTable("leaders"),
       countTable("polling_stations_2022"),
       countTable("political_parties", false),
       countTable("coalitions", false),
@@ -135,7 +136,20 @@ export async function getHubCounts(): Promise<Record<string, number>> {
   }
 }
 
-export async function getDatasetSummary(
+async function summaryRows(table: string, columns: string) {
+  const db = createPublicClient();
+  const data = await collectExportRows(async (from, to) => {
+    const result = await db.from(table).select(columns).eq("is_active", true).order("id").range(from, to);
+    return { data: result.data as Record<string, unknown>[] | null, error: result.error };
+  });
+  return { data, count: data.length };
+}
+
+export async function getDatasetSummary(slug: string): Promise<DatasetSummary | null> {
+  try { return await loadDatasetSummary(slug); } catch { return null; }
+}
+
+async function loadDatasetSummary(
   slug: string,
 ): Promise<DatasetSummary | null> {
   const computedAt = new Date().toISOString();
@@ -261,10 +275,7 @@ export async function getDatasetSummary(
 
     case "wards": {
       // Light columns only — ~1.4k rows is acceptable for aggregate page
-      const { data, count } = await supabase
-        .from("wards")
-        .select("name, county_name, registered_voters_2022", { count: "exact" })
-        .eq("is_active", true);
+      const { data, count } = await summaryRows("wards", "name,county_name,registered_voters_2022");
 
       const rows = (data || []) as Record<string, unknown>[];
       const byCountyVoters = new Map<string, number>();
@@ -319,10 +330,7 @@ export async function getDatasetSummary(
       const total = await countTable("polling_stations_2022");
 
       // Proxy insight from wards (light) rather than scanning all stations
-      const { data: wardRows } = await supabase
-        .from("wards")
-        .select("county_name, registered_voters_2022")
-        .eq("is_active", true);
+      const { data: wardRows } = await summaryRows("wards", "county_name,registered_voters_2022");
 
       const byCounty = new Map<string, number>();
       for (const w of wardRows || []) {
@@ -363,12 +371,7 @@ export async function getDatasetSummary(
     }
 
     case "institutions": {
-      const { data, count } = await supabase
-        .from("institutions")
-        .select("name, institution_type, government_level, arm_of_government", {
-          count: "exact",
-        })
-        .eq("is_active", true);
+      const { data, count } = await summaryRows("institutions", "name,institution_type,government_level,arm_of_government");
 
       const rows = (data || []) as Record<string, unknown>[];
       const byArm = countMap(rows, "arm_of_government");
@@ -421,12 +424,7 @@ export async function getDatasetSummary(
     }
 
     case "leaders": {
-      const { data, count } = await supabase
-        .from("leaders")
-        .select(
-          "full_name, title, current_party, current_constituency, current_organization, current_county",
-          { count: "exact" },
-        );
+      const { data, count } = await summaryRows("leaders", "full_name,title,current_party,current_constituency,current_organization,current_county");
 
       const rows = (data || []) as Record<string, unknown>[];
       const byParty = countMap(rows, "current_party");

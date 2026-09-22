@@ -176,7 +176,7 @@ const nextConfig: NextConfig = {
       {
         /*
          * The internal admin path should not be indexed, even in local or
-         * accidental upstream responses. proxy.ts returns 404 for this path
+         * accidental upstream responses. middleware.ts returns 404 for this path
          * in production.
          */
         source: "/admin/:path*",
@@ -263,9 +263,9 @@ const nextConfig: NextConfig = {
     /*
      * Request order in production:
      *
-     * 1. proxy.ts examines the original public URL.
-     * 2. /admin is rejected by proxy.ts.
-     * 3. The secret path is authenticated by proxy.ts.
+     * 1. middleware.ts examines the original public URL.
+     * 2. /admin is rejected by middleware.ts.
+     * 3. The secret path is authenticated by middleware.ts.
      * 4. This rewrite maps the secret path to app/admin internally.
      *
      * In development no rewrite is needed because /admin is the accepted

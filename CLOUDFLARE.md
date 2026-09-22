@@ -1,5 +1,8 @@
 # Deploy CitizenGuide.KE on Cloudflare (OpenNext)
 
+For the September 2026 build failure, current dashboard settings and localhost
+Turnstile behavior, see [deployment fix and required configuration](docs/cloudflare-deployment-fix.md).
+
 This app is a **Next.js 16 App Router** project. On Cloudflare we use the official
 **[OpenNext Cloudflare](https://opennext.js.org/cloudflare)** adapter.
 
@@ -219,36 +222,22 @@ Custom domain: Workers & Pages → your worker → **Domains & Routes** → add 
 > OpenNext build (configured in this repo). If you only run Next, wrangler fails with  
 > `Could not find compiled Open Next config`.
 
-### Worker size limits (critical)
+### Worker size limits
 
-| Plan | Max Worker size (gzip) |
-|------|-------------------------|
-| Workers **Free** | **3 MiB** |
-| Workers **Paid** (~$5/mo) | **10 MiB** |
+Since 4 September 2026, both Workers Free and Paid allow **64 MiB uncompressed**.
+The old 3 MiB / 10 MiB gzip limits no longer apply. See the
+[Cloudflare announcement](https://developers.cloudflare.com/changelog/post/2026-09-04-increased-worker-size-limit/).
 
-This repo is tuned for **Workers Free** after stripping Studio / PDF / AI packages
-from the production dependency graph, moving large datasets to `public/data/*.json`,
-and **removing Next middleware** (the middleware runtime alone was ~90 KiB gzip).
-`pnpm run build` minifies the handler then runs a size gate
-(`scripts/check-worker-size.mjs`) and fails if gzip would exceed 3 MiB.
+The build minifies the handler and runs Wrangler's actual deployment dry run.
+The size check uses the uncompressed Total Upload measurement, fails on packaging
+errors, and does not publish anything. Gzip size is informational.
 
-**Required Cloudflare Redirect Rule (replaces middleware host redirect):**  
-`citizenguide.ke/*` → `https://www.citizenguide.ke/$1` (308). Without this, apex and
-www both serve content (duplicate host for SEO).
+Admin session middleware remains enabled. Keep large datasets in static assets
+and heavy offline processing outside the Worker to control memory and CPU costs.
+Other plan limits, including CPU time and subrequests, still apply.
 
-**If deploy still fails with code 10027:** enable
-[Workers Paid](https://dash.cloudflare.com/?to=/:account/workers/plans)
-(**recommended**, ~$5/mo, **10 MiB** limit).
-
-### Free plan reality check (OpenNext + Next.js 16)
-
-A full App Router site (admin + public + APIs) often lands **just over 3 MiB gzip**
-even after aggressive stripping. OpenNext **always** ships a middleware runtime
-(~200 KiB raw) for asset routing even when you delete `middleware.ts`.
-
-If you are within ~50 KiB of the limit after every cut, **Workers Paid is the
-sustainable fix** — further Free-tier squeezing risks breaking admin/search features
-for diminishing returns.
+Configure the canonical hostname redirect from citizenguide.ke to
+www.citizenguide.ke in Cloudflare if it is not already present.
 
 ### Production dependency policy (size)
 
@@ -264,7 +253,7 @@ instead of `lucide-react`. Dates use `Intl.DateTimeFormat` instead of `date-fns`
 **Large static datasets** (EOP timelines, MPs list, cabinet bios, etc.) live under
 `public/data/*.json` and are loaded at runtime via `lib/data/load-static-json.ts`
 (or client `fetch`). Do **not** re-import those arrays into TypeScript modules —
-that embeds them in `handler.mjs` and will re-break the Free 3 MiB limit.
+that embeds them in `handler.mjs` and increases Worker startup and memory costs.
 Regenerate JSON with `pnpm exec tsx scripts/extract-public-data.mjs` only when
 editing the source of truth (keep a temporary full `.ts` or edit the JSON).
 

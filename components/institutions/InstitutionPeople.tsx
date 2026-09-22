@@ -36,6 +36,7 @@ function PeopleCards({ people, current = false }: { people: InstitutionService[]
 
 export default async function InstitutionPeople({ institutionId, status }: { institutionId: string; status: string | null }) {
   const db = createPublicClient();
+  let services: InstitutionService[];
   try {
     const roles: Role[] = [];
     for (let offset = 0; ; offset += 1000) {
@@ -49,34 +50,41 @@ export default async function InstitutionPeople({ institutionId, status }: { ins
     }
     const legacyResult = await db.from("institution_leaders").select("id,name,title,start_date,end_date,is_current,profile_url,image_url").eq("institution_id", institutionId).order("start_date", { ascending: false });
     if (legacyResult.error) throw legacyResult.error;
-    const names = new Set(roles.filter(role => role.person).map(role => (role.person!.full_name || "").trim().toLowerCase()));
-    const services: InstitutionService[] = roles.filter(role => role.person).map(role => ({
+    const peopleByName = new Map<string, Person | null>();
+    for (const role of roles) {
+      if (!role.person?.full_name) continue;
+      const name = role.person.full_name.trim().toLowerCase();
+      const previous = peopleByName.get(name);
+      peopleByName.set(name, previous === undefined || previous?.id === role.person.id ? role.person : null);
+    }
+    services = roles.filter(role => role.person).map(role => ({
       id: role.id, personId: role.person!.id, name: displayNameWithTitles(role.person!), href: role.person!.slug ? `/government/people/${role.person!.slug}` : null,
       image: safePortrait(role.person!.image_url), title: role.title, start: role.term_start_date, end: role.term_end_date, status: role.status, priority: role.display_priority ?? role.rank_order,
     }));
     for (const legacy of (legacyResult.data || []) as Legacy[]) {
-      if (names.has(legacy.name.trim().toLowerCase())) continue;
-      services.push({ id: legacy.id, personId: `legacy-${legacy.name.trim().toLowerCase()}`, name: legacy.name,
-        href: /^\/government\/people\/[a-z0-9-]+$/.test(legacy.profile_url || "") ? legacy.profile_url : null,
+      const person = peopleByName.get(legacy.name.trim().toLowerCase());
+      if (person && services.some(service => service.personId === person.id && service.title.toLowerCase() === legacy.title.toLowerCase() && service.start === legacy.start_date && service.end === legacy.end_date)) continue;
+      services.push({ id: legacy.id, personId: person?.id || `legacy-${legacy.name.trim().toLowerCase()}`, name: person ? displayNameWithTitles(person) : legacy.name,
+        href: person?.slug ? `/government/people/${person.slug}` : /^\/government\/people\/[a-z0-9-]+$/.test(legacy.profile_url || "") ? legacy.profile_url : null,
         image: safePortrait(legacy.image_url), title: legacy.title, start: legacy.start_date, end: legacy.end_date,
         status: legacy.is_current === true ? "Active" : legacy.is_current === false ? "Former" : null, priority: null });
     }
-    const historical = isInstitutionHistorical(status);
-    const today = new Date().toLocaleDateString("en-CA", { timeZone: "Africa/Nairobi" });
-    const groups = groupInstitutionPeople(services, historical, today);
-    return <section aria-labelledby="institution-people-heading" className="govuk-!-margin-top-8 govuk-!-margin-bottom-8">
-      <h2 id="institution-people-heading" className="govuk-heading-l">People who serve this institution</h2>
-      <p className="govuk-body-s">Roles and dates recorded against this institution. Open a profile to see the person’s wider service history.</p>
-      {!historical && <><h3 className="govuk-heading-m">Current people <span className="govuk-caption-m">{groups.current.length} recorded</span></h3>
-        {groups.current.length ? <PeopleCards people={groups.current} current /> : <p className="govuk-body">No current office holders are recorded here yet.</p>}</>}
-      {groups.former.length > 0 && <details className="govuk-details" open={historical}>
-        <summary className="govuk-details__summary"><span className="govuk-details__summary-text">Former people and service history ({groups.former.length})</span></summary>
-        <div className="govuk-details__text"><PeopleCards people={groups.former} /></div>
-      </details>}
-      {groups.other.length > 0 && <details className="govuk-details"><summary className="govuk-details__summary"><span className="govuk-details__summary-text">Upcoming, suspended or unconfirmed roles ({groups.other.length})</span></summary><div className="govuk-details__text"><PeopleCards people={groups.other} /></div></details>}
-      {historical && !services.length && <p className="govuk-body">No service history has been recorded for this institution yet.</p>}
-    </section>;
   } catch {
     return <section className="govuk-inset-text"><h2 className="govuk-heading-m">People and service history</h2><p className="govuk-body">These records could not be loaded. Refresh this page to try again.</p></section>;
   }
+  const historical = isInstitutionHistorical(status);
+  const today = new Date().toLocaleDateString("en-CA", { timeZone: "Africa/Nairobi" });
+  const groups = groupInstitutionPeople(services, historical, today);
+  return <section aria-labelledby="institution-people-heading" className="govuk-!-margin-top-8 govuk-!-margin-bottom-8">
+    <h2 id="institution-people-heading" className="govuk-heading-l">People who serve this institution</h2>
+    <p className="govuk-body-s">Roles and dates recorded against this institution. Open a profile to see the person’s wider service history.</p>
+    {!historical && <><h3 className="govuk-heading-m">Current people <span className="govuk-caption-m">{groups.current.length} recorded</span></h3>
+      {groups.current.length ? <PeopleCards people={groups.current} current /> : <p className="govuk-body">No current office holders are recorded here yet.</p>}</>}
+    {groups.former.length > 0 && <details className="govuk-details" open={historical}>
+      <summary className="govuk-details__summary"><span className="govuk-details__summary-text">Former people and service history ({groups.former.length})</span></summary>
+      <div className="govuk-details__text"><PeopleCards people={groups.former} /></div>
+    </details>}
+    {groups.other.length > 0 && <details className="govuk-details"><summary className="govuk-details__summary"><span className="govuk-details__summary-text">Upcoming, suspended or unconfirmed roles ({groups.other.length})</span></summary><div className="govuk-details__text"><PeopleCards people={groups.other} /></div></details>}
+    {historical && !services.length && <p className="govuk-body">No service history has been recorded for this institution yet.</p>}
+  </section>;
 }

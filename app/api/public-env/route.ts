@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
  * at build time (common on Cloudflare if vars are runtime-only).
  * Anon/publishable keys are designed to be public (protect data with RLS).
  */
-export async function GET() {
+export async function GET(request: Request) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() || "";
   const supabaseAnonKey =
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim() ||
@@ -16,7 +16,7 @@ export async function GET() {
     "";
 
   return NextResponse.json(
-    { supabaseUrl, supabaseAnonKey, turnstile: getTurnstilePublicConfig() },
+    { supabaseUrl, supabaseAnonKey, turnstile: getTurnstilePublicConfig(new URL(request.url).hostname) },
     {
       headers: {
         "Cache-Control": "no-store",

@@ -48,7 +48,7 @@ export async function createClient(): Promise<SupabaseClient> {
           } catch {
             /*
              * Cookie writes can fail while rendering Server Components.
-             * proxy.ts refreshes sessions before rendering protected pages.
+             * middleware.ts refreshes sessions before rendering protected pages.
              */
           }
         },

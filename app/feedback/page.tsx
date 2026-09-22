@@ -1,5 +1,7 @@
 "use client";
 
+import Turnstile, { resetTurnstileForm } from "@/components/security/Turnstile";
+
 import Link from "next/link";
 import { useState, useRef, useEffect, useTransition } from "react";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
@@ -62,15 +64,7 @@ export default function GeneralFeedbackPage() {
       return;
     }
 
-    const turnstileOn =
-      process.env.NEXT_PUBLIC_TURNSTILE_ENABLED === "true";
-    if (turnstileOn && !implicitToken) {
-      setSubmissionState({
-        error: "Security check is initializing. Please try again in a moment.",
-        errorType: "security",
-      });
-      return;
-    }
+
 
     startTransition(async () => {
       const result = await handleGeneralFeedback(
@@ -78,6 +72,7 @@ export default function GeneralFeedbackPage() {
         implicitToken || "",
       );
 
+      resetTurnstileForm(targetForm);
       if (result.success) {
         setSubmissionState({ success: true, recordId: result.recordId });
         setFeedbackValue("");
@@ -90,13 +85,6 @@ export default function GeneralFeedbackPage() {
         });
 
         // Reset Turnstile widget
-        try {
-          // @ts-ignore
-          if ((window as any).turnstile) {
-            const widget = targetForm.querySelector(".cf-turnstile");
-            if (widget) (window as any).turnstile.reset(widget);
-          }
-        } catch (e) {}
       }
     });
   }
@@ -233,15 +221,7 @@ export default function GeneralFeedbackPage() {
               />
             </div>
 
-            {process.env.NEXT_PUBLIC_TURNSTILE_ENABLED === "true" && (
-              <div className="govuk-form-group">
-                <div
-                  className="cf-turnstile"
-                  data-sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
-                  data-theme="light"
-                />
-              </div>
-            )}
+            <Turnstile />
 
             <div className="govuk-button-group">
               <button

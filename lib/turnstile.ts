@@ -5,7 +5,11 @@ export { isTurnstileEnabled } from "@/lib/turnstile-config";
 
 /** Public forms verify here; Supabase verifies authentication CAPTCHA tokens. */
 export async function verifyTurnstileToken(token: string): Promise<boolean> {
-  if (!isTurnstileEnabled()) return true;
+  const requestHeaders = await headers();
+  const requestHost = requestHeaders.get("host") || "";
+  let hostname = "";
+  try { hostname = new URL(`http://${requestHost}`).hostname; } catch { /* unknown host stays protected */ }
+  if (!isTurnstileEnabled(hostname)) return true;
   const secret = process.env.TURNSTILE_SECRET_KEY?.trim();
   if (!secret || (process.env.NODE_ENV === "production" && isTurnstileTestKey(secret))) {
     console.error("Turnstile requires a production secret key.");
@@ -13,7 +17,6 @@ export async function verifyTurnstileToken(token: string): Promise<boolean> {
   }
   if (typeof token !== "string" || !token.trim() || token.length > 2048) return false;
   try {
-    const requestHeaders = await headers();
     const payload = new URLSearchParams({ secret, response: token });
     const remoteIp = requestHeaders.get("cf-connecting-ip");
     if (remoteIp) payload.set("remoteip", remoteIp);
