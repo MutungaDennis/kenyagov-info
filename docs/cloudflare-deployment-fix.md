@@ -2,7 +2,7 @@
 
 The attached build failed after Next.js compilation because OpenNext 1.20.1 does not support Next.js 16's Node-only `proxy.ts`. The application now uses `middleware.ts`, which preserves Supabase session checks using the supported Edge middleware convention. Next.js emits a deprecation warning; do not migrate this file back until the adapter supports Node middleware.
 
-Worker preview also exposed [OpenNext issue #1380](https://github.com/opennextjs/opennextjs-cloudflare/issues/1380): Next's middleware manifest reader bypasses the adapter's bundled manifest loader and throws on every public request. `scripts/patch-worker-manifest.mjs` routes that one call through the existing loader, retaining the manifest and middleware behavior. Both build commands run this after minification. The patch stops the build if the expected upstream code changes, so review it when upgrading Next/OpenNext. It does not edit dependencies or application middleware.
+Worker preview also exposed [OpenNext issue #1380](https://github.com/opennextjs/opennextjs-cloudflare/issues/1380): Next's middleware manifest reader bypasses the adapter's bundled manifest loader and throws on every public request. `scripts/patch-worker-manifest.mjs` routes that one call through the existing loader, retaining the manifest and middleware behavior. Both build commands run this before minification. The patch uses the TypeScript JavaScript parser, so whitespace, minified names and require wrappers do not determine whether it works. It recognizes an already-fixed reader and preserves middleware semantics. The patch stops the build if the expected upstream code changes, so review it when upgrading Next/OpenNext. It does not edit dependencies or application middleware.
 
 The compatibility date is `2026-07-15`, supported by the installed Wrangler runtime. A newer date initially prevented local Worker startup; only advance it together with a tested runtime update.
 
@@ -44,3 +44,11 @@ Validation completed: 125 unit tests passed (the admin-route test file passed on
 The public build preflight was also checked with an empty CI environment and the committed Wrangler public defaults. OpenNext preview populated the static assets cache and returned 200 for the homepage, open-data page, institutions directory and public configuration without the earlier cache-write warnings.
 
 The final build-preflight scripts passed syntax checks, unit tests and TypeScript. A repeat ESLint run stalled while loading the Next.js rule configuration on Windows and was stopped; the earlier application-file lint check passed.
+
+## Linux CI follow-up: manifest patch and cache
+
+The later failure occurred because pnpm did not expose esbuild as a top-level dependency in CI. Minification was skipped, while the original patch expected only minified text. The minifier now resolves Wrangler's declared esbuild dependency and uses its cross-platform JavaScript API; it no longer attempts to execute an esbuild native binary with Node. Failures stop the build instead of silently skipping a required step. The structural manifest patch runs before minification and is tested against both output formats.
+
+Cleanup now retains `.next/cache` and `.next/dev` while removing stale production artifacts. In Cloudflare, enable **Settings > Build > Build cache**. Cloudflare automatically persists `.next/cache` for Next.js: [build-cache documentation](https://developers.cloudflare.com/workers/ci-cd/builds/build-caching/). A first build or cleared/expired cache can still show the no-cache warning; this is not a deployment failure.
+
+Keep `middleware.ts`: the installed OpenNext adapter and its current compatibility documentation do not support Node middleware (`proxy.ts`). The deprecation warning is non-fatal and should not be hidden or fixed by changing to an unsupported runtime. A generic ?Compiled with warnings? line also does not fail the build; inspect the accompanying details if new warnings appear.

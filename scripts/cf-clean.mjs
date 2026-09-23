@@ -13,7 +13,6 @@ const root = process.cwd();
 
 /** @type {{ name: string, required: boolean }[]} */
 const dirs = [
-  { name: ".next", required: true },
   { name: ".open-next", required: true },
   { name: ".wrangler", required: false },
   { name: ".wrangler-dry", required: false },
@@ -35,6 +34,10 @@ function exists(p) {
 }
 
 function tryRm(p) {
+  const target = path.resolve(p);
+  if (!target.startsWith(root + path.sep) || fs.lstatSync(target, { throwIfNoEntry: false })?.isSymbolicLink()) {
+    throw new Error(`Refusing to recursively remove an unsafe build path: ${target}`);
+  }
   fs.rmSync(p, {
     recursive: true,
     force: true,
@@ -76,6 +79,9 @@ function windowsPurge(p) {
 function removeDir(label, required) {
   const p = path.join(root, label);
   if (!exists(p)) return;
+  if (!path.resolve(p).startsWith(root + path.sep) || fs.lstatSync(p).isSymbolicLink()) {
+    throw new Error(`Refusing to clean an unsafe build path: ${p}`);
+  }
 
   for (let i = 1; i <= 4; i++) {
     try {
@@ -156,6 +162,15 @@ for (const ent of fs.readdirSync(root, { withFileTypes: true })) {
   }
 }
 
+// Retain the framework cache restored by Cloudflare. Also leave the isolated
+// Next 16 development output alone when building alongside a dev server.
+const nextDir = path.join(root, ".next");
+if (exists(nextDir)) {
+  if (fs.lstatSync(nextDir).isSymbolicLink()) throw new Error(".next must not be a symlink");
+  for (const entry of fs.readdirSync(nextDir)) {
+    if (entry !== "cache" && entry !== "dev") removeDir(path.join(".next", entry), true);
+  }
+}
 for (const dir of dirs) {
   removeDir(dir.name, dir.required);
 }
