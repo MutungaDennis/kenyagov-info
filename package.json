@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "next dev --webpack",
     "build": "node scripts/cf-clean.mjs && opennextjs-cloudflare build && node scripts/minify-worker.mjs && node scripts/patch-worker-manifest.mjs && node scripts/check-worker-size.mjs",
-    "build:next": "next build --webpack",
+    "build:next": "node scripts/build-next.mjs",
     "start": "next start",
     "lint": "eslint .",
     "generate:og": "node scripts/generate-og-image.mjs",

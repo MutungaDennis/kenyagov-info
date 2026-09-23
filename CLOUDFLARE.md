@@ -213,7 +213,7 @@ Custom domain: Workers & Pages → your worker → **Domains & Routes** → add 
 | Setting | Value |
 |---------|--------|
 | **Build command** | `pnpm run build` (runs OpenNext; same as `pnpm run cf:build`) |
-| **Deploy command** | `npx wrangler deploy` |
+| **Deploy command** | `pnpm run deploy:only` |
 | **Root directory** | `/` (repo root) |
 | **Package manager** | `pnpm` (enable if asked) |
 
@@ -291,7 +291,7 @@ Also in [Sanity Manage → API → CORS origins](https://www.sanity.io/manage): 
 | Setting | Value |
 |---------|--------|
 | Build command | `pnpm run build` |
-| Deploy command | `npx wrangler deploy` |
+| Deploy command | `pnpm run deploy:only` |
 | Node | 20 or 22 |
 | Clear build cache | After dependency-slimming commits, clear CF build cache once |
 
