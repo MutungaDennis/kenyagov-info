@@ -1232,20 +1232,42 @@ iframe {
 }
 .autocomplete-wrapper {
   position: relative;
+  width: 100%;
 }
+
 .autocomplete-form {
   display: flex;
+  flex-wrap: nowrap;      /* keep icon on the same row */
+  align-items: stretch;
+  width: 100%;
+  gap: 0;
 }
-.autocomplete-input {
-  flex: 1;
+
+/* Input grows; must shrink on narrow screens */
+.autocomplete-form .autocomplete-input,
+.autocomplete-form .govuk-input.autocomplete-input {
+  flex: 1 1 auto;
+  min-width: 0;           /* critical for mobile typing */
+  width: auto !important; /* override .govuk-input { width: 100% } */
+  max-width: none;
   border-right: none;
   border-radius: 0;
+  box-sizing: border-box;
 }
-.autocomplete-button {
-  margin: 0;
+
+/* Icon button fixed on the right */
+.autocomplete-form .autocomplete-button,
+.autocomplete-form .govuk-button.autocomplete-button {
+  flex: 0 0 auto;
+  width: auto !important; /* override .govuk-button { width: 100% } on mobile */
+  min-width: 44px;
+  margin: 0 !important;
   border-radius: 0;
   background: #00703c;
+  align-self: stretch;
+  box-sizing: border-box;
 }
+
 .autocomplete-suggestions {
   position: absolute;
   z-index: 9999;
@@ -1256,23 +1278,27 @@ iframe {
   border: 1px solid #b1b4b6;
   width: 100%;
   max-width: 100%;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
   margin: 0;
   padding: 0;
   list-style: none;
   overflow: hidden;
 }
+
 .autocomplete-suggestions li:hover,
 .autocomplete-suggestions li:focus {
   background-color: #f3f2f1 !important;
 }
+
 .autocomplete-input-compact {
   height: 32px;
   font-size: 13px;
 }
+
 .autocomplete-button-compact {
   height: 32px;
   width: 36px;
+  min-width: 36px;
   font-size: 12px;
 }
 .print-button {
