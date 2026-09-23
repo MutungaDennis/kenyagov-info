@@ -44,12 +44,13 @@ export default function PrivacyPage() {
           </h2>
 
           <p className="govuk-body">
-            CitizenGuide.KE is operated by Citizen Guide Africa Limited.
+            This privacy notice explains how the team behind CitizenGuide.KE
+            handles your personal data.
           </p>
 
           <p className="govuk-body">
-            Where Citizen Guide Africa Limited determines why and how personal
-            data is processed through CitizenGuide.KE, it is the data
+            Where we determine why and how personal
+            data is processed through CitizenGuide.KE, we act as the data
             controller for that information.
           </p>
 

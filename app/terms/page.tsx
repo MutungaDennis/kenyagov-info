@@ -55,14 +55,13 @@ export default function TermsPage() {
           </h2>
 
           <p className="govuk-body">
-            CitizenGuide.KE is an independent civic information platform
-            operated by Citizen Guide Africa Limited.
+            CitizenGuide.KE is an independent civic information platform.
           </p>
 
           <p className="govuk-body">
             In these terms, &ldquo;CitizenGuide.KE&rdquo;, &ldquo;we&rdquo;,
-            &ldquo;us&rdquo; and &ldquo;our&rdquo; refer to Citizen Guide
-            Africa Limited and the CitizenGuide.KE service.
+            &ldquo;us&rdquo; and &ldquo;our&rdquo; refer to the team behind
+            CitizenGuide.KE and the CitizenGuide.KE service.
           </p>
 
           <p className="govuk-body">
@@ -280,8 +279,8 @@ export default function TermsPage() {
           </p>
 
           <p className="govuk-body">
-            To the extent permitted by Kenyan law, Citizen Guide Africa Limited
-            is not responsible for loss or damage arising from your use of, or
+            To the extent permitted by Kenyan law, we
+            are not responsible for loss or damage arising from your use of, or
             inability to use, CitizenGuide.KE, or from reliance on information
             published on the website.
           </p>

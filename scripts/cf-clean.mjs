@@ -7,7 +7,7 @@
  */
 import fs from "fs";
 import path from "path";
-import { execSync } from "child_process";
+import { spawnSync } from "child_process";
 
 const root = process.cwd();
 
@@ -48,11 +48,15 @@ function windowsPurge(p) {
   const empty = path.join(root, `.cf-clean-empty-${Date.now()}`);
   try {
     fs.mkdirSync(empty, { recursive: true });
-    execSync(`robocopy "${empty}" "${p}" /MIR /NFL /NDL /NJH /NJS /nc /ns /np`, {
+    const purge = spawnSync("robocopy", [empty, p, "/MIR", "/R:0", "/W:0", "/NFL", "/NDL", "/NJH", "/NJS", "/nc", "/ns", "/np"], {
       stdio: "ignore",
       windowsHide: true,
+      timeout: 30_000,
     });
     tryRm(empty);
+    // Robocopy uses 0-7 for success and 8+ for failures. Never wait on
+    // its default million retries when a generated file remains locked.
+    if (purge.error || purge.status === null || purge.status >= 8) return false;
     tryRm(p);
     return !exists(p);
   } catch {
@@ -127,7 +131,7 @@ function removeDir(label, required) {
     console.error(
       `\nFATAL: cannot remove or rename ${label} (${err.code || err.message}).\n` +
         `Close next dev / wrangler / File Explorer, then:\n` +
-        `  Get-Process node -ErrorAction SilentlyContinue | Stop-Process -Force\n` +
+        `  Stop the development server or preview process for this project.\n` +
         `  Remove-Item -LiteralPath "${p}" -Recurse -Force\n` +
         `  pnpm run deploy\n`,
     );

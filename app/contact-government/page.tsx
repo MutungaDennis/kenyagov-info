@@ -6,9 +6,9 @@ import RelatedNav from "@/components/site/RelatedNav";
 export const revalidate = 86400;
 
 export const metadata: Metadata = {
-  title: "Contact government",
+  title: "Find government contact details",
   description:
-    "How to contact Kenyan public institutions — ministries, Parliament, Judiciary, IEBC, counties and common service portals.",
+    "Find the right Kenyan government institution, public office, county government or elected representative to contact.",
 };
 
 export default function ContactGovernmentPage() {
@@ -20,193 +20,172 @@ export default function ContactGovernmentPage() {
           { text: "Help", href: "/help" },
           { text: "Contact government" },
         ]}
-        title="Contact government"
-        lead="Use this page to find the right type of public body. CitizenGuide.KE is not a government switchboard — we cannot transfer calls or process applications for you."
-        showPrint
+        title="Find government contact details"
+        lead="Find the right government institution, office or service to contact. CitizenGuide.KE does not receive enquiries on behalf of government institutions."
       />
 
       <div className="govuk-grid-row">
         <div className="govuk-grid-column-two-thirds">
-          <div className="govuk-warning-text">
-            <span className="govuk-warning-text__icon" aria-hidden="true">
-              !
-            </span>
-            <strong className="govuk-warning-text__text">
-              <span className="govuk-visually-hidden">Warning </span>
-              To contact the team that runs this website, use{" "}
-              <Link href="/contact" className="govuk-link">
-                contact CitizenGuide.KE
-              </Link>
-              . That form does not reach ministries or counties.
-            </strong>
-          </div>
 
-          <h2 className="govuk-heading-l">Online services and payments</h2>
-          <p className="govuk-body">
-            Use our guides first — they explain what each channel is for and then
-            point you to the official portal when you are ready to apply or pay.
-          </p>
-          <ul className="govuk-list govuk-list--bullet">
+          <h2 className="govuk-heading-l">What do you need to do?</h2>
+
+          <ul className="govuk-list govuk-list--spaced">
             <li>
-              <Link href="/ecitizen" className="govuk-link">
-                eCitizen explained
-              </Link>{" "}
-              — many national services
+              <h3 className="govuk-heading-s govuk-!-margin-bottom-1">
+                <Link
+                  href="/government/institutions"
+                  className="govuk-link govuk-link--no-visited-state"
+                >
+                  Contact a government institution
+                </Link>
+              </h3>
+
+              <p className="govuk-body">
+                Find ministries, state departments, agencies, authorities and
+                other public bodies.
+              </p>
             </li>
+
             <li>
-              <Link href="/topics/money-tax" className="govuk-link">
-                Money and tax
-              </Link>{" "}
-              — KRA PIN, returns and compliance (transactions on official tax
-              systems)
+              <h3 className="govuk-heading-s govuk-!-margin-bottom-1">
+                <Link
+                  href="/services"
+                  className="govuk-link govuk-link--no-visited-state"
+                >
+                  Get help with a government service
+                </Link>
+              </h3>
+
+              <p className="govuk-body">
+                Find the institution responsible for applications, licences,
+                registrations, payments and other public services.
+              </p>
             </li>
+
             <li>
-              <Link href="/huduma-centres" className="govuk-link">
-                Huduma Centres
-              </Link>{" "}
-              — in-person assisted services
+              <h3 className="govuk-heading-s govuk-!-margin-bottom-1">
+                <Link
+                  href="/government/counties"
+                  className="govuk-link govuk-link--no-visited-state"
+                >
+                  Contact a county government
+                </Link>
+              </h3>
+
+              <p className="govuk-body">
+                Find official contact information and services for Kenya&apos;s 47
+                county governments.
+              </p>
             </li>
+
             <li>
-              <Link href="/services" className="govuk-link">
-                All service guides
-              </Link>
+              <h3 className="govuk-heading-s govuk-!-margin-bottom-1">
+                <Link
+                  href="/find-your-representatives"
+                  className="govuk-link govuk-link--no-visited-state"
+                >
+                  Contact an elected representative
+                </Link>
+              </h3>
+
+              <p className="govuk-body">
+                Find your MP, senator, woman representative, governor and other
+                elected representatives.
+              </p>
+            </li>
+
+            <li>
+              <h3 className="govuk-heading-s govuk-!-margin-bottom-1">
+                <Link
+                  href="/complain-about-government"
+                  className="govuk-link govuk-link--no-visited-state"
+                >
+                  Complain about a government service
+                </Link>
+              </h3>
+
+              <p className="govuk-body">
+                Find out where to make a complaint, report misconduct or seek
+                help from an oversight body.
+              </p>
             </li>
           </ul>
 
-          <h2 className="govuk-heading-l">National Executive</h2>
-          <p className="govuk-body">
-            Ministries, state departments and agencies publish contacts on their
-            official websites. Start from our directories:
-          </p>
-          <ul className="govuk-list govuk-list--bullet">
-            <li>
-              <Link href="/government/institutions" className="govuk-link">
-                All government institutions
-              </Link>
-            </li>
-            <li>
-              <Link href="/government/cabinet" className="govuk-link">
-                Cabinet and ministries
-              </Link>
-            </li>
-            <li>
-              <Link href="/government/presidency" className="govuk-link">
-                The Presidency
-              </Link>
-            </li>
-          </ul>
+          <hr className="govuk-section-break govuk-section-break--l govuk-section-break--visible" />
 
-          <h2 className="govuk-heading-l">Parliament</h2>
-          <ul className="govuk-list govuk-list--bullet">
-            <li>
-              <Link href="/government/legislature" className="govuk-link">
-                Parliament overview
-              </Link>
-            </li>
+          <h2 className="govuk-heading-l">Browse government organisations</h2>
+
+          <ul className="govuk-list govuk-list--spaced">
             <li>
               <Link
-                href="/government/legislature/national-assembly/members"
-                className="govuk-link"
+                href="/government/institutions"
+                className="govuk-link govuk-link--no-visited-state"
               >
-                Members of the National Assembly
+                Ministries, departments, agencies and public bodies
               </Link>
             </li>
+
             <li>
               <Link
-                href="/government/legislature/senate/senators"
-                className="govuk-link"
+                href="/government/legislature"
+                className="govuk-link govuk-link--no-visited-state"
               >
-                Senators
+                Parliament
               </Link>
             </li>
-          </ul>
-          <p className="govuk-body">
-            For constituency issues, contact your elected representatives. See{" "}
-            <Link href="/find-your-representatives" className="govuk-link">
-              find your representatives
-            </Link>
-            .
-          </p>
 
-          <h2 className="govuk-heading-l">Judiciary and justice</h2>
-          <ul className="govuk-list govuk-list--bullet">
             <li>
-              <Link href="/government/judiciary" className="govuk-link">
-                The Judiciary
+              <Link
+                href="/government/judiciary"
+                className="govuk-link govuk-link--no-visited-state"
+              >
+                Judiciary
               </Link>
             </li>
-            <li>
-              <Link href="/topics/crime-justice" className="govuk-link">
-                Crime, justice and the law
-              </Link>
-            </li>
-          </ul>
 
-          <h2 className="govuk-heading-l">Elections (IEBC)</h2>
-          <p className="govuk-body">
-            Voter registration, polling stations and results are managed by the
-            Independent Electoral and Boundaries Commission.
-          </p>
-          <ul className="govuk-list govuk-list--bullet">
             <li>
-              <Link href="/elections" className="govuk-link">
-                Elections hub
+              <Link
+                href="/government/commissions"
+                className="govuk-link govuk-link--no-visited-state"
+              >
+                Constitutional commissions and independent offices
               </Link>
             </li>
-            <li>
-              <Link href="/elections/iebc-offices" className="govuk-link">
-                IEBC offices
-              </Link>
-            </li>
-          </ul>
 
-          <h2 className="govuk-heading-l">Counties</h2>
-          <p className="govuk-body">
-            For county licences, local health facilities, county roads and many
-            local services, contact the relevant county government.
-          </p>
-          <ul className="govuk-list govuk-list--bullet">
             <li>
-              <Link href="/government/counties" className="govuk-link">
-                County governments directory
-              </Link>
-            </li>
-            <li>
-              <Link href="/government/counties/governors" className="govuk-link">
-                Governors
-              </Link>
-            </li>
-            <li>
-              <Link href="/county-vs-national" className="govuk-link">
-                County vs national functions
-              </Link>
-            </li>
-          </ul>
-
-          <h2 className="govuk-heading-l">Complaints and oversight</h2>
-          <ul className="govuk-list govuk-list--bullet">
-            <li>
-              <Link href="/complain-about-government" className="govuk-link">
-                How to complain about government
-              </Link>
-            </li>
-            <li>
-              <Link href="/access-to-information" className="govuk-link">
-                Access to information requests
-              </Link>
-            </li>
-            <li>
-              <Link href="/government/commissions" className="govuk-link">
-                Constitutional commissions
+              <Link
+                href="/government/counties"
+                className="govuk-link govuk-link--no-visited-state"
+              >
+                County governments
               </Link>
             </li>
           </ul>
 
           <h2 className="govuk-heading-l">Emergencies</h2>
-          <p className="govuk-body">
-            This website is not an emergency service. See{" "}
+
+          <div className="govuk-inset-text">
+            If someone is in immediate danger or you need urgent assistance,
+            see{" "}
             <Link href="/emergency-and-safety" className="govuk-link">
-              emergency and safety information
+              emergency and safety contacts
+            </Link>
+            .
+          </div>
+
+          <h2 className="govuk-heading-l">Contact CitizenGuide.KE</h2>
+
+          <p className="govuk-body">
+            CitizenGuide.KE is an independent civic information service. We
+            cannot access government records, applications or case files and
+            cannot respond on behalf of a government institution.
+          </p>
+
+          <p className="govuk-body">
+            To report a problem with this website, suggest a correction or
+            contact our team, use{" "}
+            <Link href="/contact" className="govuk-link">
+              contact CitizenGuide.KE
             </Link>
             .
           </p>
@@ -214,11 +193,30 @@ export default function ContactGovernmentPage() {
 
         <RelatedNav
           links={[
-            { text: "Contact this website", href: "/contact" },
-            { text: "Help", href: "/help" },
-            { text: "Find your representatives", href: "/find-your-representatives" },
-            { text: "eCitizen explained", href: "/ecitizen" },
-            { text: "Scams and fake websites", href: "/scams" },
+            {
+              text: "Government institutions",
+              href: "/government/institutions",
+            },
+            {
+              text: "Find your representatives",
+              href: "/find-your-representatives",
+            },
+            {
+              text: "County governments",
+              href: "/government/counties",
+            },
+            {
+              text: "Government services",
+              href: "/services",
+            },
+            {
+              text: "Emergency and safety",
+              href: "/emergency-and-safety",
+            },
+            {
+              text: "Contact CitizenGuide.KE",
+              href: "/contact",
+            },
           ]}
         />
       </div>
