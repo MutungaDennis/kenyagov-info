@@ -970,7 +970,8 @@ const nextConfig: NextConfig = {
   },
 };
 
-initOpenNextCloudflareForDev();
+// The development binding proxy is unnecessary during a production build.
+if (process.env.NODE_ENV === "development") initOpenNextCloudflareForDev();
 
 export default process.env.ANALYZE === "true"
   ? withBundleAnalyzer({

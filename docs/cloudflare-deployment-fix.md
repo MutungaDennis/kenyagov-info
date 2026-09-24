@@ -37,7 +37,7 @@ Local `pnpm dev` skips Turnstile for `localhost`, `127.0.0.1` and `::1`. Authent
 
 For local validation, run `pnpm test`, `pnpm typecheck` and `pnpm run build`. The build includes minification and a Worker size check. A build or Wrangler dry run does not publish the site. After deployment, verify the homepage, search, institution profiles, downloads and production admin login on the deployed hostname.
 
-Use `pnpm run preview` (or `pnpm exec opennextjs-cloudflare preview` for an existing build), rather than calling `wrangler dev` directly: OpenNext first populates the static cache assets. Deploy with `pnpm run deploy:only` after building for the same reason. The static cache is read-only and does not persist ISR updates; use a writable R2 cache if persistent revalidation is required later. Local secrets for OpenNext preview belong in untracked `.dev.vars`; production secrets belong in Cloudflare.
+Use `pnpm run preview` (or `pnpm exec opennextjs-cloudflare preview` for an existing build), rather than calling `wrangler dev` directly: OpenNext first populates the static cache assets. Deploy with `pnpm run deploy:only` after building for the same reason. The writable R2 cache now persists ISR updates, with a Durable Object queue for background revalidation. Local secrets for OpenNext preview belong in untracked `.dev.vars`; production secrets belong in Cloudflare.
 
 Validation completed: 125 unit tests passed (the admin-route test file passed on an isolated rerun after a resource-related timeout), TypeScript and targeted lint passed, Next generated 263 static pages, OpenNext built the Worker, and Wrangler's final dry run passed. Local workerd returned 200 for the homepage, institutions directory, Supreme Court profile with people, open-data page, county JSON export (47 records), public configuration and admin login. It returned 404 for `/admin`, a login redirect for the configured admin path, and 401 for an unauthenticated admin API request. Production-mode public configuration kept Turnstile enabled; development localhost disabled it. No production deployment or authenticated administrator login was performed.
 
@@ -52,3 +52,46 @@ The later failure occurred because pnpm did not expose esbuild as a top-level de
 Cleanup now retains `.next/cache` and `.next/dev` while removing stale production artifacts. In Cloudflare, enable **Settings > Build > Build cache**. Cloudflare automatically persists `.next/cache` for Next.js: [build-cache documentation](https://developers.cloudflare.com/workers/ci-cd/builds/build-caching/). A first build or cleared/expired cache can still show the no-cache warning; this is not a deployment failure.
 
 Keep `middleware.ts`: the installed OpenNext adapter and its current compatibility documentation do not support Node middleware (`proxy.ts`). The deprecation warning is non-fatal and should not be hidden or fixed by changing to an unsupported runtime. A generic ?Compiled with warnings? line also does not fail the build; inspect the accompanying details if new warnings appear.
+
+
+## Resource-limit mitigation (September 2026)
+
+Public pages no longer match Edge authentication middleware. The matcher includes
+`/admin`, `/api/admin`, and the configured `NEXT_PUBLIC_ADMIN_BASE_PATH`; common
+asset extensions are excluded. Build/dev scripts generate literal matchers so
+Next can statically analyze them. Middleware verifies JWT claims with the public
+Supabase key; protected layouts and API handlers retain authoritative user and
+administrator checks. No service-role helper is imported into middleware.
+
+The homepage, government, topics and elections hubs retain daily ISR; open-data
+retains hourly ISR. Services needs request-time category redirects, but its two
+Sanity requests now have hourly data caching. R2 incremental cache and cache
+interception avoid loading the Next server for cached public pages. The existing
+bucket `kenyagov-info-next-cache` is bound as `NEXT_INC_CACHE_R2_BUCKET`; the
+`NEXT_CACHE_DO_QUEUE` Durable Object handles background regeneration. CPU is set
+to 30000 ms, and both existing production custom domains are preserved.
+
+Deployment verification:
+
+1. Stop this project's local Next dev server before building on Windows: its
+   binding proxy may lock `.open-next`. Run `pnpm run build`.
+2. Run `pnpm run deploy:only` to populate R2 and deploy the queue migration and
+   Worker together. Use dashboard secrets for private credentials.
+3. Request `/`, `/government`, `/topics`, and `/open-data` twice. Confirm 200
+   responses, cache hits where exposed, and R2 cache objects. Check Worker logs
+   for missing bindings, ISR errors and Error 1102.
+4. Confirm logged-out admin pages redirect, admin APIs reject access, password
+   recovery remains reachable, and a real administrator can sign in.
+5. Compare production CPU time, 1102 rate and Supabase subrequests over comparable
+   traffic windows. A successful build alone cannot establish production impact.
+
+Keep `middleware.ts`: OpenNext does not support the replacement Node proxy yet.
+Its Next.js deprecation notice is expected and is not a build failure.
+
+Local validation completed: all 135 regression tests passed; the complete
+`pnpm run build` passed, including manifest patch, minification and Wrangler dry
+run (19.944 MiB uncompressed). OpenNext populated 268 local R2 cache entries.
+The homepage, government, topics and open-data returned HTTP 200 with cache HIT
+headers. The internal admin path returned 404, the configured admin path
+redirected to login, and an unauthenticated admin API request returned 401.
+Production deployment and comparative 1102/CPU metrics remain to be verified.

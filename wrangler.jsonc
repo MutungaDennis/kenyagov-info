@@ -26,5 +26,40 @@
     "NEXT_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpnZWptaHNrc2NxeGhhcHNjaXJ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwNjIyNTMsImV4cCI6MjA5MzYzODI1M30.LyT4CLV_muNHjIhF1p0fHMARdPiGMmuJ_GFUB6NGUGQ",
     "SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpnZWptaHNrc2NxeGhhcHNjaXJ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwNjIyNTMsImV4cCI6MjA5MzYzODI1M30.LyT4CLV_muNHjIhF1p0fHMARdPiGMmuJ_GFUB6NGUGQ",
     "NEXT_PUBLIC_SANITY_DATASET": "production"
-  }
+  },
+  "limits": {
+    "cpu_ms": 30000
+  },
+  "r2_buckets": [
+    {
+      "binding": "NEXT_INC_CACHE_R2_BUCKET",
+      "bucket_name": "kenyagov-info-next-cache"
+    }
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "NEXT_CACHE_DO_QUEUE",
+        "class_name": "DOQueueHandler"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1-isr-queue",
+      "new_sqlite_classes": [
+        "DOQueueHandler"
+      ]
+    }
+  ],
+  "routes": [
+    {
+      "pattern": "citizenguide.ke",
+      "custom_domain": true
+    },
+    {
+      "pattern": "www.citizenguide.ke",
+      "custom_domain": true
+    }
+  ]
 }

@@ -72,7 +72,7 @@ export async function generateMetadata({
 }
 
 export default async function ServicesHubPage({ searchParams }: PageProps) {
-  // Replaces middleware redirect (middleware removed to stay under CF Free 3 MiB Worker limit)
+  // Preserve legacy category URLs without running public authentication middleware.
   const params = await searchParams;
   const category = params.category?.trim();
   if (category && category !== "all") {
@@ -80,8 +80,8 @@ export default async function ServicesHubPage({ searchParams }: PageProps) {
   }
 
   const [services, categories] = await Promise.all([
-    client.fetch<GovernmentServiceSummary[]>(ALL_SERVICES_QUERY),
-    client.fetch<GovernmentCategoryFilter[]>(ALL_CATEGORIES_QUERY),
+    client.fetch<GovernmentServiceSummary[]>(ALL_SERVICES_QUERY, {}, { next: { revalidate: 3600 } }),
+    client.fetch<GovernmentCategoryFilter[]>(ALL_CATEGORIES_QUERY, {}, { next: { revalidate: 3600 } }),
   ]);
 
   return (
