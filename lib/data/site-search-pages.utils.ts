@@ -1,7 +1,8 @@
 // lib/data/site-search-pages.utils.ts
 // Concurrent-safe static page search (no I/O, no shared mutable state)
 
-import { scoreSearch } from "@/lib/search/match";
+import { createPageIndex } from "@/lib/search/page-index";
+import { searchExcerpt } from "@/lib/search/excerpt";
 import {
   loadSiteSearchPages,
   type SiteSearchPage,
@@ -20,13 +21,8 @@ export type StaticSearchHit = {
   rank: number;
 };
 
-function scorePage(q: string, page: SiteSearchPage): number {
-  const title = scoreSearch(q, page.title);
-  const keywords = scoreSearch(q, page.title, page.keywords);
-  const content = scoreSearch(q, page.title, page.keywords, page.snippet);
-  if (!q.trim() || content === 0) return 0;
-  return title > 0 ? title : keywords > 0 ? keywords * 0.85 : content * 0.65;
-}
+let indexedPages: SiteSearchPage[] | undefined;
+let searchIndex: ReturnType<typeof createPageIndex>;
 
 /**
  * Search curated static pages. Always available — does not depend on Supabase/Sanity.
@@ -39,14 +35,14 @@ export async function searchStaticPages(
   if (!query || query.length < 1) return [];
 
   const pages = await loadSiteSearchPages();
-  return pages
-    .map((page) => {
-      const rank = scorePage(query, page);
+  if (pages !== indexedPages) { indexedPages = pages; searchIndex = createPageIndex(pages); }
+  return searchIndex(query)
+    .map(({ page, rank }) => {
       if (rank <= 0) return null;
       return {
         id: `static:${page.path}`,
         name: page.title,
-        snippet: page.snippet,
+        snippet: searchExcerpt(page.content || page.snippet, query),
         entity_type: page.type,
         path: page.path,
         slug: "",

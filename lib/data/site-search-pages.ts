@@ -11,13 +11,17 @@ export type SiteSearchPage = {
   snippet: string;
   keywords: string[];
   type: string;
+  content?: string;
 };
 
-let cache: SiteSearchPage[] | null = null;
+let cache: Promise<SiteSearchPage[]> | null = null;
 
 export async function loadSiteSearchPages(): Promise<SiteSearchPage[]> {
   if (cache) return cache;
-  cache = await loadStaticJson<SiteSearchPage[]>("data/site-search-pages.json");
+  cache = loadStaticJson<SiteSearchPage[]>("data/site-search-content.json").catch(() => {
+    cache = null;
+    return loadStaticJson<SiteSearchPage[]>("data/site-search-pages.json");
+  });
   return cache;
 }
 
