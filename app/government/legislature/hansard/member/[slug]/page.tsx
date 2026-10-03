@@ -1,11 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { createSanityClient } from "@/lib/sanity/createSanityClient";
+import { hansardForLeaders } from "@/lib/hansard/queries";
 import { createPublicClient } from "@/lib/supabase/public";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import ContributionHeatmap from "@/components/hansard/ContributionHeatmap";
 import {
-  publicHansardDayPath,
   publicHansardHousePath,
   portableTextToPlain,
 } from "@/lib/hansard/speech";
@@ -18,9 +17,8 @@ import {
 } from "@/lib/hansard/tenure";
 import ParliamentExplainer from "@/components/hansard/ParliamentExplainer";
 
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
-const sanityClient = createSanityClient({ useCdn: true, token: null });
 
 interface Leader {
   id: string;
@@ -50,6 +48,7 @@ interface Contribution {
   role?: string;
   supabaseLeaderId?: string;
   sittingDate: string;
+    sittingSlug?: string;
   houseType: string;
   sittingTitle: string;
 }
@@ -138,6 +137,7 @@ export default async function MemberContributionsPage({
   }
 
   const rawSittings: Array<{
+    slug: { current: string };
     sittingDate: string;
     houseType: string;
     title: string;
@@ -159,24 +159,13 @@ export default async function MemberContributionsPage({
       speakerName?: string;
       supabaseLeaderId?: string;
     }>;
-  }> = await sanityClient.fetch(
-    `*[_type == "hansardSitting" && isActive != false && (
-      count(contributions[supabaseLeaderId == $leaderId]) > 0 ||
-      presidingOfficer.supabaseLeaderId == $leaderId
-    )] | order(sittingDate desc) {
-      sittingDate, houseType, title, presidingOfficer,
-      "matchingContributions": contributions[supabaseLeaderId == $leaderId] {
-        _key, order, startTime, sectionHeader, speech, isChairContribution, type,
-        speakerTitle, role, speakerName, supabaseLeaderId
-      }
-    }`,
-    { leaderId: leader.id },
-  );
+  }> = await hansardForLeaders([leader.id]);
 
   const fullRecord: Contribution[] = rawSittings.flatMap((sitting) =>
     (sitting.matchingContributions || []).map((c) => ({
       ...c,
       sittingDate: sitting.sittingDate,
+      sittingSlug: sitting.slug.current,
       houseType: sitting.houseType,
       sittingTitle: sitting.title,
       // Carry sitting chair so stats can exclude Temporary Speaker sittings
@@ -788,7 +777,7 @@ export default async function MemberContributionsPage({
       </form>
 
       {/* List — floor debate only */}
-      <h2 className="govuk-heading-m">
+      <h2 id="member-contributions" tabIndex={-1} className="govuk-heading-m">
         Floor contributions
         {hasActiveFilter ? ` (${total} of ${totalAll})` : ` (${total})`}
       </h2>
@@ -826,10 +815,7 @@ export default async function MemberContributionsPage({
                   style={{ margin: "0 0 0.35rem", fontSize: "1rem" }}
                 >
                   <Link
-                    href={publicHansardDayPath(
-                      contrib.houseType,
-                      contrib.sittingDate,
-                    )}
+                    href={`/government/legislature/hansard/sitting/${contrib.sittingSlug}#contribution-${contrib._key}`}
                     className="govuk-link"
                   >
                     {new Date(
@@ -874,10 +860,7 @@ export default async function MemberContributionsPage({
                 </p>
                 <p className="govuk-body-s govuk-!-margin-top-2 govuk-!-margin-bottom-0">
                   <Link
-                    href={publicHansardDayPath(
-                      contrib.houseType,
-                      contrib.sittingDate,
-                    )}
+                    href={`/government/legislature/hansard/sitting/${contrib.sittingSlug}#contribution-${contrib._key}`}
                     className="govuk-link"
                   >
                     Open sitting

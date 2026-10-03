@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { enrichInstitutionHistory } from "@/lib/institutions/directory-history";
-import { isInstitutionHistorical } from "@/lib/institutions/fields";
+import {
+  isInstitutionHistorical,
+  lifecycleChangeUi,
+  statusLifecyclePhrase,
+} from "@/lib/institutions/fields";
+import { formatSegmentRange } from "@/lib/institutions/lineage";
 
 describe("published institution history", () => {
   it("links a former body under its current successor without changing either identity", () => {
@@ -24,6 +29,15 @@ describe("published institution history", () => {
   });
   it("keeps organisations earmarked for change in the current directory", () => {
     expect(isInstitutionHistorical("Earmarked for change")).toBe(false);
-    for (const status of ["Dissolved", "Former", "Renamed", "Merged", "Abolished"]) expect(isInstitutionHistorical(status)).toBe(true);
+    for (const status of ["Dissolved", "Defunct", "Wound up", "Former", "Renamed", "Merged", "Abolished"]) expect(isInstitutionHistorical(status)).toBe(true);
+  });
+  it("provides historical status wording and optional successor links for defunct bodies", () => {
+    expect(statusLifecyclePhrase("Defunct")).toBe("became defunct");
+    expect(statusLifecyclePhrase("Wound up")).toBe("was wound up");
+    expect(lifecycleChangeUi("Defunct").showSuccessor).toBe(true);
+    expect(lifecycleChangeUi("Wound up").showSuccessor).toBe(true);
+  });
+  it("formats operational periods with readable public-facing dates", () => {
+    expect(formatSegmentRange("2020-01-02", "2022-12-31")).toBe("2 January 2020 – 31 December 2022");
   });
 });

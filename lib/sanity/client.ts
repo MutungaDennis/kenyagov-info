@@ -507,7 +507,7 @@ export async function searchSanityContent(query: string, limit = 25) {
       _type in [
         "guide", "service", "news", "page", "constitutionArticle", 
         "actOfParliament", "institutionContent", "presidentialTrip",
-        "courtPronouncement", "reportMandate", "governmentMinistry", "governmentCategory"
+        "courtPronouncement", "reportMandate"
       ]
       && (
         ${wordFilters} ||

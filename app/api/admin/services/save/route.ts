@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdminApi, slugify } from "@/lib/admin-api";
-import { createSanityWriteClient } from "@/lib/sanity/createSanityWriteClient";
+import { getAdminServices } from "@/lib/services/queries";
+import { deleteContent, getContent } from "@/lib/content/store";
+import { refreshServices } from "@/lib/content/revalidate";
 import { textToPortableText as paragraphsToPortableText } from "@/lib/portable-text";
 
 function randomKey(): string {
@@ -42,70 +44,16 @@ function toBodyBlocks(body: unknown, bodyParagraphs: unknown): unknown[] {
   return Array.isArray(body) ? (body as unknown[]) : [];
 }
 
-const LIST_QUERY = `*[_type == "governmentService"] | order(title asc) {
-  _id, title, "slug": slug.current, executionMode, popularityWeight, status,
-  processingTime, baseCostLabel, _updatedAt, reviewedAt,
-  "portalCount": count(transactionPortals),
-  "categoryIds": *[_type == "governmentCategory" && references(^._id)]._id,
-  "categoryTitles": *[_type == "governmentCategory" && references(^._id)].title
-}`;
-
-const DETAIL_QUERY = `*[_type == "governmentService" && _id == $id][0]{
-  _id, title, "slug": slug.current, summary, body, status, reviewedAt,
-  moreInformationUrl, popularityWeight, processingTime, baseCostLabel,
-  executionMode, timelineGuidancePoints, beforeYouStart, requiredDocuments,
-  steps[]{ stepNumber, stepTitle, stepDescription, _key },
-  feesTable[]{ itemName, amount, _key },
-  physicalVisits[]{ purpose, locations, _key },
-  downloadableResources[]{ label, sourceUrl, _key },
-  commonMistakes[]{ errorTitle, errorFix, _key },
-  faqs[]{ question, answer, _key },
-  relatedLinks[]{ label, href, _key },
-  transactionPortals[]{ portalLabel, portalUrl, _key },
-  providingInstitutions[]{ institutionId, name, slug, shortName, parentName, _key },
-  "providingBodyIds": providingBodies[]._ref,
-  "relatedServiceIds": relatedServices[]._ref,
-  "relatedServiceSlugs": relatedServices[]->slug.current,
-  "categoryIds": *[_type == "governmentCategory" && references(^._id)]._id
-}`;
 
 export async function GET(request: NextRequest) {
   const auth = await requireAdminApi();
   if (!auth.ok) return auth.response;
 
   try {
-    const sanity = createSanityWriteClient();
-    const id = request.nextUrl.searchParams.get("id");
-    if (id) {
-      const data = await sanity.fetch(DETAIL_QUERY, { id });
-      if (!data) {
-        return NextResponse.json(
-          { success: false, error: "Service not found" },
-          { status: 404 },
-        );
-      }
-      return NextResponse.json({ success: true, data });
-    }
-
-    const [services, ministries, categories] = await Promise.all([
-      sanity.fetch(LIST_QUERY),
-      sanity.fetch(
-        `*[_type == "governmentMinistry"] | order(name asc) { _id, name, "slug": slug.current }`,
-      ),
-      sanity.fetch(
-        `*[_type == "governmentCategory"] | order(title asc) {
-          _id, title, "slug": slug.current,
-          subTopics[]{ heading, "serviceIds": services[]._ref }
-        }`,
-      ),
-    ]);
-
-    return NextResponse.json({
-      success: true,
-      data: services || [],
-      ministries: ministries || [],
-      categories: categories || [],
-    });
+    const id = request.nextUrl.searchParams.get("id") || undefined;
+    const result = await getAdminServices(auth.supabase, id);
+    if (id && !result.data) return NextResponse.json({ error: "Service not found" }, { status: 404 });
+    return NextResponse.json({ success: true, ...result });
   } catch (err) {
     console.error("[services GET]", err);
     return NextResponse.json(
@@ -123,12 +71,6 @@ export async function POST(request: NextRequest) {
   if (!auth.ok) return auth.response;
 
   try {
-    if (!process.env.SANITY_API_TOKEN) {
-      return NextResponse.json(
-        { success: false, error: "SANITY_API_TOKEN is not configured" },
-        { status: 500 },
-      );
-    }
 
     const payload = await request.json();
     const title = String(payload.title || "").trim();
@@ -298,6 +240,8 @@ export async function POST(request: NextRequest) {
         ).map((d: Record<string, unknown>) => ({
           label: String(d.label || "").trim(),
           sourceUrl: d.sourceUrl ? String(d.sourceUrl).trim() : undefined,
+          fileUrl: d.fileUrl ? String(d.fileUrl).trim() : undefined,
+          fileSize: typeof d.fileSize === "number" ? d.fileSize : undefined,
         })),
         "downloadableFile",
       ),
@@ -342,61 +286,13 @@ export async function POST(request: NextRequest) {
       })),
     };
 
-    const sanity = createSanityWriteClient();
-    await sanity.createOrReplace(doc);
-
-    // Optional: attach to category subTopic
-    const categoryId = payload.categoryId
-      ? String(payload.categoryId).trim()
-      : "";
-    const subTopicHeading = payload.subTopicHeading
-      ? String(payload.subTopicHeading).trim()
-      : "";
-
-    if (categoryId) {
-      const cat = await sanity.fetch<{
-        _id: string;
-        subTopics?: Array<{
-          _key?: string;
-          heading?: string;
-          services?: Array<{ _ref?: string; _key?: string }>;
-        }>;
-      } | null>(`*[_type == "governmentCategory" && _id == $id][0]{
-        _id, subTopics[]{ _key, heading, services[]{ _ref, _key } }
-      }`, { id: categoryId });
-
-      if (cat) {
-        const topics = Array.isArray(cat.subTopics) ? [...cat.subTopics] : [];
-        let targetIdx = topics.findIndex(
-          (t) =>
-            (t.heading || "").toLowerCase() ===
-            (subTopicHeading || "General").toLowerCase(),
-        );
-        if (targetIdx < 0) {
-          topics.push({
-            _key: randomKey(),
-            heading: subTopicHeading || "General",
-            services: [],
-          });
-          targetIdx = topics.length - 1;
-        }
-        const services = [
-          ...(topics[targetIdx].services || []).filter(
-            (s) => s._ref !== docId,
-          ),
-          { _type: "reference" as const, _ref: docId, _key: randomKey() },
-        ];
-        topics[targetIdx] = {
-          ...topics[targetIdx],
-          _key: topics[targetIdx]._key || randomKey(),
-          services,
-        };
-        await sanity
-          .patch(categoryId)
-          .set({ subTopics: topics })
-          .commit();
-      }
-    }
+    const { error } = await auth.supabase.rpc("save_government_service", {
+      p_document: doc,
+      p_category_id: payload.categoryId ? String(payload.categoryId) : null,
+      p_heading: payload.subTopicHeading ? String(payload.subTopicHeading) : "General",
+    });
+    if (error) throw error;
+    refreshServices(slugRaw);
 
     return NextResponse.json({
       success: true,
@@ -421,12 +317,6 @@ export async function DELETE(request: NextRequest) {
   if (!auth.ok) return auth.response;
 
   try {
-    if (!process.env.SANITY_API_TOKEN) {
-      return NextResponse.json(
-        { success: false, error: "SANITY_API_TOKEN is not configured" },
-        { status: 500 },
-      );
-    }
 
     const body = await request.json().catch(() => ({}));
     const id =
@@ -440,8 +330,9 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const sanity = createSanityWriteClient();
-    await sanity.delete(id);
+    const previous = await getContent("government_services", "id", id, auth.supabase);
+    await deleteContent("government_services", id, auth.supabase);
+    refreshServices((previous?.slug as { current?: string })?.current);
     return NextResponse.json({ success: true, message: "Deleted" });
   } catch (err) {
     console.error("[services DELETE]", err);

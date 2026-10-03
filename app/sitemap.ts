@@ -193,15 +193,22 @@ async function getSupabaseUrls(): Promise<SitemapEntry[]> {
   // 3. INSTITUTIONS
   let institutions = envOk
     ? await fetchAllSlugs('institutions', {
-        apply: (q) => q.eq('is_active', true),
+        apply: (q) => q.eq('is_active', true).eq('record_kind', 'institution'),
         maxRows: 2000,
       })
     : [];
   if (institutions.length === 0) {
-    // Include inactive/historical if active filter returns empty (or use all)
-    institutions = await fetchSlugsViaRest('institutions', 'is_active=eq.true', 2000);
+    institutions = await fetchSlugsViaRest(
+      'institutions',
+      'is_active=eq.true&record_kind=eq.institution',
+      2000,
+    );
     if (institutions.length === 0) {
-      institutions = await fetchSlugsViaRest('institutions', '', 2000);
+      institutions = await fetchSlugsViaRest(
+        'institutions',
+        'record_kind=eq.institution',
+        2000,
+      );
     }
   }
   for (const inst of institutions) {
@@ -210,6 +217,28 @@ async function getSupabaseUrls(): Promise<SitemapEntry[]> {
       lastModified: inst.updated_at ? new Date(inst.updated_at) : undefined,
       changeFrequency: 'weekly',
       priority: 0.8,
+    });
+  }
+
+  let temporaryBodies = envOk
+    ? await fetchAllSlugs('institutions', {
+        apply: (q) => q.eq('is_active', true).eq('record_kind', 'temporary_body'),
+        maxRows: 2000,
+      })
+    : [];
+  if (temporaryBodies.length === 0) {
+    temporaryBodies = await fetchSlugsViaRest(
+      'institutions',
+      'is_active=eq.true&record_kind=eq.temporary_body',
+      2000,
+    );
+  }
+  for (const body of temporaryBodies) {
+    urls.push({
+      url: `${BASE_URL}/government/temporary-bodies/${body.slug}`,
+      lastModified: body.updated_at ? new Date(body.updated_at) : undefined,
+      changeFrequency: 'monthly',
+      priority: 0.55,
     });
   }
 
@@ -232,6 +261,17 @@ async function getSupabaseUrls(): Promise<SitemapEntry[]> {
       priority: 0.5,
     });
   }
+
+  try {
+    const services = await fetchAllSlugs('government_services', { maxRows: 10000, pageSize: 500 });
+    for (const service of services) urls.push({ url: `${BASE_URL}/${service.slug}`, changeFrequency: 'weekly', priority: 0.7 });
+    for (let offset = 0; ; offset += 500) {
+      const { data, error } = await createPublicClient().from('hansard_sittings').select('slug,updated_at').order('id').range(offset,offset+499);
+      if (error) throw error;
+      for (const row of data || []) urls.push({ url: `${BASE_URL}/government/legislature/hansard/sitting/${row.slug}`, lastModified: new Date(row.updated_at), changeFrequency: 'monthly', priority: 0.6 });
+      if (!data || data.length < 500) break;
+    }
+  } catch (error) { console.error('Content sitemap unavailable', error); }
 
   // Index pages (canonical destinations only — no redirect sources)
   urls.push(

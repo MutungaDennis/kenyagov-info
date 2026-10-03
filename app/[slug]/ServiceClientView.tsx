@@ -18,7 +18,7 @@ interface MinistryReference {
   };
 }
 
-interface ServiceClientViewProps {
+export interface ServiceClientViewProps {
   service: {
     title: string;
     summary: string;

@@ -34,7 +34,15 @@ function PeopleCards({ people, current = false }: { people: InstitutionService[]
   })}</ul>;
 }
 
-export default async function InstitutionPeople({ institutionId, status }: { institutionId: string; status: string | null }) {
+export default async function InstitutionPeople({
+  institutionId,
+  status,
+  entityLabel = "institution",
+}: {
+  institutionId: string;
+  status: string | null;
+  entityLabel?: string;
+}) {
   const db = createPublicClient();
   let services: InstitutionService[];
   try {
@@ -70,14 +78,14 @@ export default async function InstitutionPeople({ institutionId, status }: { ins
         status: legacy.is_current === true ? "Active" : legacy.is_current === false ? "Former" : null, priority: null });
     }
   } catch {
-    return <section className="govuk-inset-text"><h2 className="govuk-heading-m">People and service history</h2><p className="govuk-body">These records could not be loaded. Refresh this page to try again.</p></section>;
+    return <section className="govuk-inset-text"><h2 className="govuk-heading-m">People and service history for this {entityLabel}</h2><p className="govuk-body">These records could not be loaded. Refresh this page to try again.</p></section>;
   }
   const historical = isInstitutionHistorical(status);
   const today = new Date().toLocaleDateString("en-CA", { timeZone: "Africa/Nairobi" });
   const groups = groupInstitutionPeople(services, historical, today);
   return <section aria-labelledby="institution-people-heading" className="govuk-!-margin-top-8 govuk-!-margin-bottom-8">
-    <h2 id="institution-people-heading" className="govuk-heading-l">People who serve this institution</h2>
-    <p className="govuk-body-s">Roles and dates recorded against this institution. Open a profile to see the person’s wider service history.</p>
+    <h2 id="institution-people-heading" className="govuk-heading-l">People who serve this {entityLabel}</h2>
+    <p className="govuk-body-s">Roles and dates recorded against this {entityLabel}. Open a profile to see the person’s wider service history.</p>
     {!historical && <><h3 className="govuk-heading-m">Current people <span className="govuk-caption-m">{groups.current.length} recorded</span></h3>
       {groups.current.length ? <PeopleCards people={groups.current} current /> : <p className="govuk-body">No current office holders are recorded here yet.</p>}</>}
     {groups.former.length > 0 && <details className="govuk-details" open={historical}>

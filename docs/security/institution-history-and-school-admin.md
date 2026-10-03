@@ -16,31 +16,65 @@ deployment was made.
   The API authenticates administrators, checks request origin and matches both ID
   and saved name in the delete statement. No schools were deleted during testing.
 - Open **Admin → Institutions → Edit details and history**. Set a lifecycle status
-  such as Dissolved, Renamed, Merged or Former, effective date and reason. Use the
-  existing lifecycle panel to record dated names, operational periods and lineage.
-  Keep a historical institution published so its original URL and officials' service
-  links continue working. Institution DELETE is disabled in the API and admin UI.
+  such as Dissolved, Defunct, Wound up, Renamed, Merged or Former, effective date
+  and reason. Selecting a historical status publishes the record by default; keep it
+  published so its original URL and officials' service links continue working.
+  Use the optional **Detailed institution history** section only when a fuller
+  timeline is needed: separate periods for bodies that stopped and later resumed,
+  dated official names, or links to distinct earlier/later institutions. Choose
+  which linked institution came first; mark a primary link only when it is the
+  main predecessor or successor. Save this section with **Save history**; it is
+  separate from the main institution form. Institution DELETE is disabled in the
+  API and admin UI.
 - A simple name correction can retain the same institution identity. When there is
   a distinct successor organisation, retain the former record and link the successor.
   Do not overwrite officials' historical service affiliations.
 
 ## Public presentation
 
-The institutions directory defaults to current published bodies. The **Include
-historical and former institutions** checkbox persists as `?historical=include`.
-Previous names and links to published earlier organisations appear beneath current
-entries in both list and table views and participate in directory searches.
-Historical profiles retain their URL, show a warning and link to successors.
-Historical global-search results have an explicit historical label and lower boost.
+The institutions directory defaults to current published bodies. A visible
+**Show historical and former institutions** checkbox persists as
+`?historical=include` and adds published dissolved, merged, renamed, split, wound-up
+and defunct bodies to browsing and search. Historical profiles retain their URL,
+identify the recorded change and effective date, explain the reason, link to
+successors and show any dated operational periods and institutional relationships.
+Officials' historical service records remain attached to the profile.
 
 Publication is enforced by RLS for institutions, attached names, lifecycle periods,
 relationships, locations and institution leadership records. Historical status never
 automatically unpublishes a record. Unpublished predecessors are not exposed through
 public name-history links. Existing officials' service records are retained.
 
-The layout uses a full-width heading, indented organisational hierarchy, mobile
-wrapping, labelled controls and a horizontally scrollable table. Public school
-browsing remains behind the education directorate buttons.
+The directory uses one search field, a narrow left column for counts and history
+controls, and institution lists in the wider right column. The columns stack on
+mobile. Public school browsing remains under the education directorates.
+
+Institution branches and field offices are maintained separately from the
+headquarters address under **Other offices and branches** on the institution edit
+page. An office can record its type, service/geographic level, county,
+constituency, sub-county, physical and postal addresses, contact details,
+coordinates, opening/closing dates and notes. Published institution profiles
+display these offices, including closed locations for historical reference.
+Apply `lib/supabase/migrations/20261003_institution_offices.sql` before using this
+admin section.
+
+## Temporary public bodies
+
+Task forces, working parties, advisory panels, commissions of inquiry, and similar
+time-limited bodies are classified as `temporary_body`, not as institutions. The
+admin form requires a body type and creating/parent institution; it also captures
+appointing authority and optional start/end dates. Record people against the body
+using the existing leader-role institution link so their service remains attached
+to the right body after it closes.
+
+The public institutions directory excludes temporary bodies. They are linked under
+their creating institution with a type label and have a separate temporary-body
+profile containing their purpose and service history. This preserves existing
+institution and role references without misrepresenting a temporary committee as a
+permanent government institution.
+
+Before using this workflow, apply
+`lib/supabase/migrations/20261003_temporary_public_bodies.sql` in Supabase.
 
 Reference: [GOV.UK organisation guidance](https://guidance.publishing.service.gov.uk/publish-update-retire-content/organisations-people/organisations/)
 retains closed organisation pages with closure/replacement information.

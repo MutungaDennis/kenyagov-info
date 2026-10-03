@@ -171,10 +171,19 @@ export function formatSegmentRange(
 ): string {
   const s = start?.trim() || null;
   const e = end?.trim() || null;
-  if (!s && !e) return "Dates not recorded";
-  if (s && !e) return `From ${s}`;
-  if (!s && e) return `Until ${e}`;
-  return `${s} – ${e}`;
+  const formatDate = (value: string) => {
+    const date = new Date(value.length === 10 ? `${value}T00:00:00Z` : value);
+    if (Number.isNaN(date.getTime())) return value;
+    const month = [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December",
+    ][date.getUTCMonth()];
+    return `${date.getUTCDate()} ${month} ${date.getUTCFullYear()}`;
+  };
+  if (s && e) return `${formatDate(s)} – ${formatDate(e)}`;
+  if (s) return `From ${formatDate(s)}`;
+  if (e) return `Until ${formatDate(e)}`;
+  return "Dates not recorded";
 }
 
 export function isJudicialAnnulmentStatus(status: unknown): boolean {

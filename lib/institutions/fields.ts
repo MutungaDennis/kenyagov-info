@@ -9,6 +9,10 @@ export const INSTITUTION_WRITABLE_FIELDS = [
   "short_name",
   "official_name",
   "slug",
+  "record_kind",
+  "temporary_body_type",
+  "term_start_date",
+  "term_end_date",
   "former_names",
   "aliases",
   "common_misspellings",
@@ -150,7 +154,34 @@ const DATE_FIELDS = new Set<string>([
   "operational_date",
   "status_effective_date",
   "head_appointment_date",
+  "term_start_date",
+  "term_end_date",
 ]);
+
+export const TEMPORARY_BODY_TYPES = [
+  "Task force",
+  "Working party",
+  "Advisory panel",
+  "Commission of inquiry",
+  "Committee",
+  "Inter-agency body",
+  "Other",
+] as const;
+
+export type TemporaryBodyType = (typeof TEMPORARY_BODY_TYPES)[number];
+
+export function isTemporaryBodyType(value: unknown): value is TemporaryBodyType {
+  return (
+    typeof value === "string" &&
+    TEMPORARY_BODY_TYPES.some((bodyType) => bodyType === value)
+  );
+}
+
+export function isTemporaryBodySchemaUnavailable(message: string): boolean {
+  return /record_kind|temporary_body_type|term_start_date|term_end_date/i.test(
+    message,
+  );
+}
 
 const NUMBER_FIELDS = new Set<string>([
   "latitude",
@@ -330,6 +361,8 @@ export const INSTITUTION_STATUS_OPTIONS = [
   "Split",
   "Absorbed",
   "Dissolved",
+  "Defunct",
+  "Wound up",
   "Abolished",
   "Suspended",
   "Unconstitutional",
@@ -360,6 +393,8 @@ export const INSTITUTION_STATUS_IMPLIES_INACTIVE = new Set([
   "Former",
   "Renamed",
   "Dissolved",
+  "Defunct",
+  "Wound up",
   "Abolished",
   "Merged",
   "Succeeded",
@@ -449,6 +484,8 @@ export function statusEffectiveDateLabel(status: unknown): string {
   const s = String(status || "").trim();
   const map: Record<string, string> = {
     Dissolved: "Dissolved on",
+    Defunct: "Became defunct on",
+    "Wound up": "Wound up on",
     Abolished: "Abolished on",
     Merged: "Merged on",
     Renamed: "Renamed on",
@@ -479,6 +516,8 @@ export function statusLifecyclePhrase(status: unknown): string {
   }
   const map: Record<string, string> = {
     Dissolved: "was dissolved",
+    Defunct: "became defunct",
+    "Wound up": "was wound up",
     Abolished: "was abolished",
     Merged: "was merged",
     Renamed: "was renamed",
@@ -488,9 +527,9 @@ export function statusLifecyclePhrase(status: unknown): string {
     Absorbed: "was absorbed into another body",
     Unconstitutional: "was held unconstitutional",
     "Judiciously annulled": "was annulled by the courts",
-    Former: "is a former institution",
-    Inactive: "is inactive",
-    Suspended: "is suspended",
+    Former: "ceased operating",
+    Inactive: "became inactive",
+    Suspended: "was suspended",
     Proposed: "is proposed (not yet operational)",
   };
   return map[s] || (s ? `has status “${s}”` : "is no longer active");
@@ -503,7 +542,7 @@ export function successorLinkLabel(status: unknown): string {
   if (s === "Merged") return "Merged into";
   if (s === "Succeeded") return "Succeeded by";
   if (s === "Restructured") return "Continued as / restructured into";
-  if (s === "Former" || s === "Dissolved" || s === "Abolished") {
+  if (s === "Former" || s === "Dissolved" || s === "Defunct" || s === "Wound up" || s === "Abolished") {
     return "Functions continued by";
   }
   return "Successor institution";
@@ -561,6 +600,16 @@ export const INSTITUTION_CHANGE_NATURE_OPTIONS = [
     value: "Dissolved",
     label: "Dissolved",
     hint: "Formally wound up; may or may not have a successor",
+  },
+  {
+    value: "Defunct",
+    label: "Defunct",
+    hint: "No longer operating; record a successor if its functions continued elsewhere",
+  },
+  {
+    value: "Wound up",
+    label: "Wound up",
+    hint: "Formal closure or winding-up of the institution",
   },
   {
     value: "Abolished",
@@ -731,6 +780,8 @@ export function lifecycleChangeUi(status: unknown): LifecycleChangeUi {
           "Record the court judgment date and legal basis (Court judgment). Keep the record published as a historical/legal trail.",
       };
     case "Dissolved":
+    case "Defunct":
+    case "Wound up":
     case "Abolished":
       return {
         ...base,
@@ -937,6 +988,14 @@ export function buildInstitutionRow(
     if (!row.arm_of_government) row.arm_of_government = "Executive";
     if (!row.verification_status) row.verification_status = "Unverified";
     if (row.social_media === undefined) row.social_media = {};
+  }
+
+  if (
+    row.record_kind === "temporary_body" &&
+    row.institution_type == null &&
+    isTemporaryBodyType(row.temporary_body_type)
+  ) {
+    row.institution_type = row.temporary_body_type;
   }
 
   return row;

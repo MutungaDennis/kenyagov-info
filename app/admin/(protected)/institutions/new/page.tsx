@@ -57,7 +57,11 @@ export default function NewInstitutionPage() {
     [form, baseline],
   );
 
-  const canSave = isDirty && form.name.trim().length > 0;
+  const canSave =
+    isDirty &&
+    form.name.trim().length > 0 &&
+    (form.record_kind !== "temporary_body" ||
+      Boolean(form.parent_institution_id && form.temporary_body_type));
 
   const onChange = (
     e: React.ChangeEvent<
@@ -71,6 +75,11 @@ export default function NewInstitutionPage() {
         ...prev,
         [name]: type === "checkbox" ? checked : value,
       } as InstitutionFormState;
+      if (name === "record_kind" && value === "institution") {
+        next.temporary_body_type = "";
+        next.term_start_date = "";
+        next.term_end_date = "";
+      }
       if (name === "name" && !prev.slug) {
         next.slug = value
           .toLowerCase()
@@ -196,6 +205,13 @@ export default function NewInstitutionPage() {
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!canSave || submitting) return;
+    if (
+      form.record_kind === "temporary_body" &&
+      (!form.parent_institution_id || !form.temporary_body_type)
+    ) {
+      setError("Select the temporary body type and its creating institution.");
+      return;
+    }
     setSubmitting(true);
     setError(null);
     setSuccess(null);
@@ -215,12 +231,12 @@ export default function NewInstitutionPage() {
       }
       setSuccess(
         form.is_active
-          ? "Institution created and published. Opening editor…"
-          : "Institution created as unpublished. Opening editor…",
+          ? `${form.record_kind === "temporary_body" ? "Temporary body" : "Institution"} created and published. Opening editor…`
+          : `${form.record_kind === "temporary_body" ? "Temporary body" : "Institution"} created as unpublished. Opening editor…`,
       );
 
       // 🚀 Trigger IndexNow to notify search engines of the new published institution
-      if (form.is_active && form.slug) {
+      if (form.record_kind === "institution" && form.is_active && form.slug) {
         void triggerIndexNow(form.slug, "institutions");
       }
 
@@ -249,11 +265,11 @@ export default function NewInstitutionPage() {
         ]}
       />
       <main className="govuk-main-wrapper">
-        <h1 className="govuk-heading-xl">Add government institution</h1>
+        <h1 className="govuk-heading-xl">Add institution or temporary body</h1>
         <p className="govuk-body">
-          Enter identity details, classification (custom values become
-          suggestions after save), optional leader head link, social profiles,
-          and publish status. Verification defaults to Unverified.
+          {form.record_kind === "temporary_body"
+            ? "Record a task force, working party, advisory panel or other time-limited public body. Choose its creating institution and body type; assign members through their leader roles."
+            : "Enter identity and classification details, optional leader head link, social profiles, and publish status. Verification defaults to Unverified."}
         </p>
         {error && (
           <div className="govuk-error-summary" role="alert">
@@ -283,7 +299,11 @@ export default function NewInstitutionPage() {
           onSubmit={onSubmit}
           submitting={submitting}
           canSave={canSave}
-          submitLabel="Create institution"
+          submitLabel={
+            form.record_kind === "temporary_body"
+              ? "Create temporary body"
+              : "Create institution"
+          }
           fieldOptions={fieldOptions}
           cancelHref={adminPath("institutions")}
         />

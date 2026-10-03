@@ -5,7 +5,7 @@ const gate = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/admin-api", () => ({ requireAdminApi: gate, slugify: (s: string) => s }));
 
 // Invoke handlers directly: passing tests must not depend on proxy execution.
-const routes = import.meta.glob("../app/api/admin/**/route.ts");
+const routes = import.meta.glob(["../app/api/admin/**/route.ts", "../app/api/hansard/**/route.ts"]);
 describe("every admin handler rejects access before reading input or the database", () => {
   for (const [path, load] of Object.entries(routes)) {
     it(path, async () => {

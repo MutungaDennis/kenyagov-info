@@ -19,6 +19,7 @@ import InstitutionForm, {
 } from "@/components/admin/InstitutionForm";
 import type { LeaderPickResult } from "@/components/admin/LeaderLinkPicker";
 import InstitutionLifecyclePanel from "@/components/admin/InstitutionLifecyclePanel";
+import InstitutionOfficesPanel from "@/components/admin/InstitutionOfficesPanel";
 import type { SocialLink } from "@/lib/leaders/titles-social";
 
 // 🚀 Import the IndexNow helper
@@ -175,6 +176,10 @@ export default function EditInstitutionPage({
     () => institutionFormSnapshot(form) !== baseline,
     [form, baseline],
   );
+  const canSave =
+    isDirty &&
+    (form.record_kind !== "temporary_body" ||
+      Boolean(form.parent_institution_id && form.temporary_body_type));
 
   const onChange = (
     e: React.ChangeEvent<
@@ -188,6 +193,11 @@ export default function EditInstitutionPage({
         ...prev,
         [name]: type === "checkbox" ? checked : value,
       } as InstitutionFormState;
+      if (name === "record_kind" && value === "institution") {
+        next.temporary_body_type = "";
+        next.term_start_date = "";
+        next.term_end_date = "";
+      }
 
       // Do NOT clear has_organisational_change when status is Active — the
       // change box can be ticked while nature is still unselected (status Active).
@@ -311,6 +321,13 @@ export default function EditInstitutionPage({
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isDirty || submitting) return;
+    if (
+      form.record_kind === "temporary_body" &&
+      (!form.parent_institution_id || !form.temporary_body_type)
+    ) {
+      setError("Select the temporary body type and its creating institution.");
+      return;
+    }
     setSubmitting(true);
     setError(null);
     setSuccess(null);
@@ -412,13 +429,17 @@ export default function EditInstitutionPage({
       setBaseline(institutionFormSnapshot(nextForm));
       setSuccess(
         nextForm.is_active
-          ? "Changes saved. Institution is published on the public site."
-          : "Changes saved. Institution is unpublished (hidden from the public site).",
+          ? `Changes saved. ${nextForm.record_kind === "temporary_body" ? "Temporary body" : "Institution"} is published on the public site.`
+          : `Changes saved. ${nextForm.record_kind === "temporary_body" ? "Temporary body" : "Institution"} is unpublished.`,
       );
 
       // 🚀 Trigger IndexNow to notify search engines of the update
       // Only trigger if the institution is actively published and has a slug
-      if (nextForm.is_active && nextForm.slug) {
+      if (
+        nextForm.record_kind === "institution" &&
+        nextForm.is_active &&
+        nextForm.slug
+      ) {
         void triggerIndexNow(nextForm.slug, "institutions");
       }
 
@@ -460,11 +481,14 @@ export default function EditInstitutionPage({
         ]}
       />
       <main className="govuk-main-wrapper">
-        <h1 className="govuk-heading-xl">Edit institution</h1>
+        <h1 className="govuk-heading-xl">
+          Edit {form.record_kind === "temporary_body" ? "temporary body" : "institution"}
+        </h1>
         <p className="govuk-body">
-          Link the current head to a leader, set organisation social profiles,
-          lifecycle status, and verification. Save activates only when you change
-          something.
+          {form.record_kind === "temporary_body"
+            ? "Record its type, appointing institution, appointment authority, instrument and term, then assign members through their leader roles."
+            : "Link the current head to a leader, set organisation social profiles, lifecycle status, and verification."}{" "}
+          Save activates only when you change something.
         </p>
         {error && (
           <div className="govuk-error-summary" role="alert">
@@ -485,7 +509,11 @@ export default function EditInstitutionPage({
               {form.slug && (
                 <p className="govuk-body">
                   <Link
-                    href={`/government/institutions/${form.slug}`}
+                    href={
+                      form.record_kind === "temporary_body"
+                        ? `/government/temporary-bodies/${form.slug}`
+                        : `/government/institutions/${form.slug}`
+                    }
                     className="govuk-link"
                     target="_blank"
                   >
@@ -515,15 +543,23 @@ export default function EditInstitutionPage({
           onSocialLinksChange={onSocialLinksChange}
           onSubmit={onSubmit}
           submitting={submitting}
-          canSave={isDirty}
-          submitLabel="Save changes"
+          canSave={canSave}
+          submitLabel={
+            form.record_kind === "temporary_body"
+              ? "Save temporary body"
+              : "Save changes"
+          }
           fieldOptions={fieldOptions}
           cancelHref={adminPath("institutions")}
           excludeInstitutionId={id}
           extraActions={
             form.slug ? (
               <Link
-                href={`/government/institutions/${form.slug}`}
+                href={
+                  form.record_kind === "temporary_body"
+                    ? `/government/temporary-bodies/${form.slug}`
+                    : `/government/institutions/${form.slug}`
+                }
                 className="govuk-link"
                 target="_blank"
               >
@@ -533,11 +569,14 @@ export default function EditInstitutionPage({
           }
         />
 
-        {id ? (
-          <InstitutionLifecyclePanel
-            institutionId={id}
-            institutionName={form.name || form.official_name || ""}
-          />
+        {id && form.record_kind !== "temporary_body" ? (
+          <>
+            <InstitutionOfficesPanel institutionId={id} />
+            <InstitutionLifecyclePanel
+              institutionId={id}
+              institutionName={form.name || form.official_name || ""}
+            />
+          </>
         ) : null}
       </main>
     </div>

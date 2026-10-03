@@ -9,6 +9,7 @@ import PublicSchools from "@/components/schools/PublicSchools";
 import {
   isInstitutionEarmarked,
   isInstitutionHistorical,
+  successorLinkLabel,
   statusLifecyclePhrase,
 } from "@/lib/institutions/fields";
 import {
@@ -16,6 +17,7 @@ import {
   isJudicialAnnulmentStatus,
   relationshipTypeMeta,
 } from "@/lib/institutions/lineage";
+import type { InstitutionOffice } from "@/lib/institutions/offices";
 
 function formatGovUKDate(dateStr: string | null | undefined): string {
   if (!dateStr) return "";
@@ -57,6 +59,11 @@ type Institution = {
   successor_institution_id?: string | null;
   former_names?: string[] | null;
   lifecycle_change_reason?: string | null;
+  record_kind?: string | null;
+  temporary_body_type?: string | null;
+  appointing_authority?: string | null;
+  term_start_date?: string | null;
+  term_end_date?: string | null;
 };
 
 type LinkedInstitution = {
@@ -95,6 +102,16 @@ type NameRow = {
   end_date: string | null;
 };
 
+type TemporaryBody = {
+  id: string;
+  slug: string;
+  name: string;
+  temporary_body_type: string | null;
+  term_start_date: string | null;
+  term_end_date: string | null;
+  status: string | null;
+};
+
 export default function InstitutionProfileClient({ people }: { people?: ReactNode }) {
   const params = useParams();
   const slug = params.slug as string;
@@ -106,6 +123,10 @@ export default function InstitutionProfileClient({ people }: { people?: ReactNod
   const [segments, setSegments] = useState<SegmentRow[]>([]);
   const [relationships, setRelationships] = useState<RelRow[]>([]);
   const [nameHistory, setNameHistory] = useState<NameRow[]>([]);
+  const [offices, setOffices] = useState<InstitutionOffice[]>([]);
+  const [officesError, setOfficesError] = useState(false);
+  const [temporaryBodies, setTemporaryBodies] = useState<TemporaryBody[]>([]);
+  const [temporaryBodiesError, setTemporaryBodiesError] = useState(false);
   const [headLeaderSlug, setHeadLeaderSlug] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -145,6 +166,37 @@ export default function InstitutionProfileClient({ people }: { people?: ReactNod
 
         if (!instData) throw new Error("Institution not found");
         setInstitution(instData);
+
+        const officesResult = await supabase
+          .from("institution_offices")
+          .select("*")
+          .eq("institution_id", instData.id)
+          .order("sort_order", { ascending: true })
+          .order("office_name", { ascending: true });
+        if (officesResult.error) {
+          setOfficesError(true);
+        } else {
+          setOffices(officesResult.data as InstitutionOffice[]);
+        }
+
+        const bodyResult = await supabase
+          .from("institutions")
+          .select("id,slug,name,temporary_body_type,term_start_date,term_end_date,status")
+          .eq("parent_institution_id", instData.id)
+          .eq("record_kind", "temporary_body")
+          .eq("is_active", true)
+          .order("name");
+        if (bodyResult.error) {
+          if (
+            !/record_kind|temporary_body_type|schema cache/i.test(
+              bodyResult.error.message,
+            )
+          ) {
+            setTemporaryBodiesError(true);
+          }
+        } else {
+          setTemporaryBodies(bodyResult.data as TemporaryBody[]);
+        }
 
         // Build parent chain
         const chain: LinkedInstitution[] = [];
@@ -355,26 +407,52 @@ export default function InstitutionProfileClient({ people }: { people?: ReactNod
               </div>
             )}
 
-            {/* ✅ Enhanced Historical Banner showing all successors */}
             {historical && !judicial && (
-              <div className="govuk-warning-text">
-                <span className="govuk-warning-text__icon" aria-hidden="true">!</span>
-                <strong className="govuk-warning-text__text">
-                  <span className="govuk-warning-text__assistive">Warning</span>
-                  Historical record — this organisation {statusLifecyclePhrase(institution.status)}{institution.status_effective_date ? ` on ${formatGovUKDate(institution.status_effective_date)}` : ""}.
-                  {successors.length > 0 && (
-                    <> Replaced by: {successors.map((s, i) => (
-                      <span key={s.id}>
-                        <Link href={`/government/institutions/${s.slug}`} className="govuk-link">{s.name}</Link>
-                        {i < successors.length - 1 ? " and " : ""}
-                      </span>
-                    ))}</>
-                  )}
-                </strong>
+              <div className="govuk-inset-text institution-history-notice">
+                <p className="govuk-body govuk-!-font-weight-bold">Historical institution</p>
+                <p className="govuk-body">
+                  This organisation {statusLifecyclePhrase(institution.status)}
+                  {institution.status_effective_date
+                    ? ` on ${formatGovUKDate(institution.status_effective_date)}`
+                    : ""}
+                  . This page is retained for reference, including people who
+                  served here. Contact details and responsibilities may no
+                  longer be current.
+                </p>
+                {institution.lifecycle_change_reason && (
+                  <p className="govuk-body">
+                    <strong>About this change: </strong>
+                    {institution.lifecycle_change_reason}
+                  </p>
+                )}
+                {successors.length > 0 && (
+                  <>
+                    <p className="govuk-body govuk-!-font-weight-bold">
+                      {successorLinkLabel(institution.status)}
+                    </p>
+                    <ul className="govuk-list govuk-list--bullet">
+                      {successors.map(successor => (
+                        <li key={successor.id}>
+                          <Link href={`/government/institutions/${successor.slug}`} className="govuk-link">
+                            {successor.name}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                )}
               </div>
             )}
 
-            {historical && <div className="govuk-inset-text"><p className="govuk-body govuk-!-margin-bottom-0">This page is retained for historical reference, including officials who served here. Its contact details and responsibilities may no longer be current.{institution.lifecycle_change_reason && <> {institution.lifecycle_change_reason}</>}</p></div>}
+            {historical && judicial && (
+              <div className="govuk-inset-text">
+                <p className="govuk-body govuk-!-margin-bottom-0">
+                  This page is retained for historical reference, including
+                  officials who served here. Its contact details and
+                  responsibilities may no longer be current.
+                </p>
+              </div>
+            )}
             {!historical && predecessors.length > 0 && <p className="govuk-body-s govuk-!-margin-bottom-4">Earlier organisations: {predecessors.map((previous, index) => <span key={previous.id}>{index > 0 && "; "}<Link className="govuk-link" href={`/government/institutions/${previous.slug}`}>{previous.name}</Link></span>)}</p>}
             {!!institution.former_names?.length && <p className="govuk-body-s">Former names: {institution.former_names.join("; ")}</p>}
             {nameHistory.length > 0 && (
@@ -404,6 +482,59 @@ export default function InstitutionProfileClient({ people }: { people?: ReactNod
                 Read more about the mandate, history, and corporate information
               </Link>
             </p>
+
+            {(temporaryBodies.length > 0 || temporaryBodiesError) && (
+              <section
+                className="govuk-!-margin-top-8"
+                aria-labelledby="temporary-bodies-heading"
+              >
+                <h2 id="temporary-bodies-heading" className="govuk-heading-l">
+                  Temporary bodies created under this institution
+                </h2>
+                <p className="govuk-body">
+                  These are time-limited bodies, not institutions. Their
+                  membership and service history are recorded separately.
+                </p>
+                {temporaryBodiesError ? (
+                  <p className="govuk-body">
+                    Temporary body records could not be loaded. Refresh this
+                    page to try again.
+                  </p>
+                ) : (
+                  <ul className="govuk-list govuk-list--bullet">
+                    {temporaryBodies.map((body) => (
+                      <li key={body.id} className="govuk-!-margin-bottom-3">
+                        <Link
+                          className="govuk-link govuk-!-font-weight-bold"
+                          href={`/government/temporary-bodies/${body.slug}`}
+                        >
+                          {body.name}
+                        </Link>
+                        <span className="govuk-tag govuk-tag--blue govuk-!-margin-left-2">
+                          {body.temporary_body_type || "Temporary body"}
+                        </span>
+                        {(body.term_start_date || body.term_end_date) && (
+                          <p className="govuk-body-s govuk-!-margin-bottom-0">
+                            {body.term_start_date
+                              ? formatGovUKDate(body.term_start_date)
+                              : "Start date not recorded"}
+                            {" – "}
+                            {body.term_end_date
+                              ? formatGovUKDate(body.term_end_date)
+                              : "present"}
+                          </p>
+                        )}
+                        {body.status && body.status.toLowerCase() !== "active" && (
+                          <p className="govuk-body-s govuk-!-margin-bottom-0">
+                            {body.status}
+                          </p>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </section>
+            )}
 
             {people}
             {(institution.current_head || institution.head_title || institution.board_chair) && (
@@ -592,6 +723,69 @@ export default function InstitutionProfileClient({ people }: { people?: ReactNod
                   )}
                 </dl>
               </>
+            )}
+
+            {(offices.length > 0 || officesError) && (
+              <section className="govuk-!-margin-top-9" aria-labelledby="institution-offices-heading">
+                <h2 className="govuk-heading-l" id="institution-offices-heading">
+                  Offices
+                </h2>
+                {officesError ? (
+                  <p className="govuk-body" role="status">
+                    Office locations are temporarily unavailable.
+                  </p>
+                ) : (
+                  <ul className="govuk-list institution-offices">
+                    {offices.map(office => (
+                      <li key={office.id} className="institution-offices__item">
+                        <h3 className="govuk-heading-s govuk-!-margin-bottom-1">
+                          {office.office_name}
+                          {!office.is_active && <span className="govuk-tag govuk-tag--grey govuk-!-margin-left-2">Closed</span>}
+                        </h3>
+                        <p className="govuk-body-s govuk-!-margin-bottom-2">
+                          {[office.office_type, office.geographic_level, office.county, office.constituency, office.sub_county]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </p>
+                        {(office.physical_address || office.postal_address) && (
+                          <p className="govuk-body govuk-!-margin-bottom-2">
+                            {office.physical_address}
+                            {office.physical_address && office.postal_address && <br />}
+                            {office.postal_address}
+                          </p>
+                        )}
+                        {(office.phone || office.email || office.website_url) && (
+                          <ul className="govuk-list govuk-list--inline institution-offices__contacts">
+                            {office.phone && <li><a className="govuk-link" href={`tel:${office.phone}`}>{office.phone}</a></li>}
+                            {office.email && <li><a className="govuk-link" href={`mailto:${office.email}`}>{office.email}</a></li>}
+                            {office.website_url && <li><a className="govuk-link" href={office.website_url} target="_blank" rel="noreferrer">Office website</a></li>}
+                          </ul>
+                        )}
+                        {(office.latitude != null || office.longitude != null) && (
+                          <p className="govuk-body-s govuk-!-margin-bottom-2">
+                            <a
+                              className="govuk-link"
+                              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${office.latitude ?? ""},${office.longitude ?? ""}`)}`}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              View this office on a map
+                            </a>
+                          </p>
+                        )}
+                        {(office.start_date || office.end_date) && (
+                          <p className="govuk-body-s govuk-!-margin-bottom-2">
+                            {office.start_date ? `Open from ${formatGovUKDate(office.start_date)}` : ""}
+                            {office.start_date && office.end_date ? " · " : ""}
+                            {office.end_date ? `Closed ${formatGovUKDate(office.end_date)}` : ""}
+                          </p>
+                        )}
+                        {office.notes && <p className="govuk-body govuk-!-margin-bottom-0">{office.notes}</p>}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </section>
             )}
           </div>
         </div>

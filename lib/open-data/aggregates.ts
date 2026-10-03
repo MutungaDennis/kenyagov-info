@@ -5,7 +5,7 @@
 
 import { collectExportRows } from "./export-format";
 import { createPublicClient } from "@/lib/supabase/public";
-import { createSanityClient } from "@/lib/sanity/createSanityClient";
+import { listHansard } from "@/lib/hansard/queries";
 import type { ChartSpec } from "@/components/open-data/charts/types";
 
 export type NamedCount = { label: string; count: number };
@@ -110,10 +110,7 @@ export async function getHubCounts(): Promise<Record<string, number>> {
 
     let hansard = 0;
     try {
-      const sanity = createSanityClient({ useCdn: true, token: null });
-      hansard = await sanity.fetch(
-        `count(*[_type == "hansardSitting" && isActive != false])`,
-      );
+      hansard = (await listHansard({ pageSize: 1 })).total;
     } catch {
       hansard = 0;
     }
@@ -583,53 +580,24 @@ async function loadDatasetSummary(
     }
 
     case "hansard-sittings": {
-      const sanity = createSanityClient({ useCdn: true, token: null });
       let total = 0;
       let byHouse: NamedCount[] = [];
       let byMonth: NamedCount[] = [];
       let recent: { date: string; title: string; house: string; n: number }[] = [];
 
       try {
-        total = await sanity.fetch(
-          `count(*[_type == "hansardSitting" && isActive != false])`,
-        );
-        const houses: string[] = ["national-assembly", "senate", "county-assembly"];
-        byHouse = await Promise.all(
-          houses.map(async (h) => ({
-            label:
-              h === "national-assembly"
-                ? "National Assembly"
-                : h === "senate"
-                  ? "Senate"
-                  : "County assembly",
-            count: await sanity.fetch(
-              `count(*[_type == "hansardSitting" && isActive != false && houseType == $h])`,
-              { h },
-            ),
-          })),
-        );
-        const dateRows: { date: string }[] = await sanity.fetch(
-          `*[_type == "hansardSitting" && isActive != false && defined(sittingDate)]{ "date": sittingDate }`,
-        );
-        const monthMap = new Map<string, number>();
-        for (const row of dateRows || []) {
-          const d = String(row.date || "").slice(0, 7); // YYYY-MM
-          if (!/^\d{4}-\d{2}$/.test(d)) continue;
-          monthMap.set(d, (monthMap.get(d) || 0) + 1);
+        const rows: Awaited<ReturnType<typeof listHansard>>["rows"] = [];
+        for (let page = 1; ; page++) {
+          const result = await listHansard({ page, pageSize: 500 });
+          rows.push(...result.rows);
+          total = result.total;
+          if (rows.length >= total) break;
         }
-        byMonth = Array.from(monthMap.entries())
-          .sort(([a], [b]) => a.localeCompare(b))
-          .slice(-18)
-          .map(([label, count]) => ({ label, count }));
-
-        recent = await sanity.fetch(
-          `*[_type == "hansardSitting" && isActive != false] | order(sittingDate desc) [0...8] {
-            "date": sittingDate,
-            title,
-            "house": houseType,
-            "n": count(contributions)
-          }`,
-        );
+        byHouse = ["national-assembly", "senate", "county-assembly"].map(h => ({ label: h === "national-assembly" ? "National Assembly" : h === "senate" ? "Senate" : "County assembly", count: rows.filter(r => r.houseType === h).length }));
+        const monthMap = new Map<string, number>();
+        for (const row of rows) { const month = row.sittingDate.slice(0, 7); monthMap.set(month, (monthMap.get(month) || 0) + 1); }
+        byMonth = [...monthMap.entries()].sort(([a],[b]) => a.localeCompare(b)).slice(-18).map(([label,count]) => ({ label,count }));
+        recent = rows.slice(0,8).map(r => ({ date: r.sittingDate, title: r.title, house: r.houseType, n: r.contributionCount }));
       } catch {
         /* empty */
       }

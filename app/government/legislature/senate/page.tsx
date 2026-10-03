@@ -1,11 +1,10 @@
 import Link from "next/link";
-import { createSanityClient } from "@/lib/sanity/createSanityClient";
+import { listHansard } from "@/lib/hansard/queries";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 
 // ============================================
-// SANITY CLIENT (same pattern as main Hansard hub)
+// SUPABASE HANSARD
 // ============================================
-const sanityClient = createSanityClient();
 
 export const revalidate = 3600; // ISR: Revalidate every hour
 
@@ -28,20 +27,9 @@ export default async function SenateHansard() {
 
   // Fetch recent Senate sittings (safe fetch)
   try {
-    recentSittings = await sanityClient.fetch(`
-      *[_type == "hansardSitting" && houseType == "senate"] 
-      | order(sittingDate desc) [0...10] {
-        _id,
-        title,
-        slug,
-        sittingDate,
-        sittingPeriod,
-        parliamentaryTerm,
-        youtubeUrl
-      }
-    `);
+    recentSittings = (await listHansard({ house: "senate", pageSize: 10 })).rows;
   } catch (error) {
-    console.error("Sanity fetch error (Senate Hansard):", error);
+    console.error("Supabase fetch error (Senate Hansard):", error);
   }
 
   return (

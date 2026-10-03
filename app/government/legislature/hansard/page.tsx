@@ -1,0 +1,29 @@
+import Link from "next/link";
+import { listHansard } from "@/lib/hansard/queries";
+import { createPublicClient } from "@/lib/supabase/public";
+import { PUBLIC_PROCEEDINGS, PROCEEDING_TYPES, type ProceedingType } from "@/lib/hansard/collections";
+export const dynamic = "force-dynamic";
+export const metadata = { title: "Hansard - Parliamentary debates" };
+type SearchHit = { id: string; title: string; slug: string; snippet: string; kind: string; proceeding_type: ProceedingType; sitting_date: string; total_count: number };
+export default async function HansardIndex({ searchParams }: { searchParams: Promise<{ q?: string; house?: string; proceeding?: string; page?: string }> }) {
+ const params = await searchParams; const q = (params.q || "").trim().slice(0,120);
+ const page = Math.max(1, Number.parseInt(params.page || "1",10) || 1);
+ const house = ["senate", "national-assembly", "county-assembly"].includes(params.house || "") ? params.house : undefined;
+ const proceeding = PUBLIC_PROCEEDINGS.includes(params.proceeding as ProceedingType) ? params.proceeding as ProceedingType : undefined;
+ const result = q ? null : await listHansard({ house, proceeding, page, pageSize: 25 });
+ const search = q ? await createPublicClient().rpc("search_hansard_content", { q, p_house: house || null, p_proceeding: proceeding || null, p_offset: (page-1)*25, p_limit: 25 }) : null;
+ if (search?.error) throw search.error;
+ const hits = (search?.data || []) as SearchHit[];
+ const total = result?.total || Number(hits[0]?.total_count || 0);
+ function pageUrl(next: number) { const p = new URLSearchParams(); if (q) p.set("q",q); if (house) p.set("house",house); if (proceeding) p.set("proceeding",proceeding); p.set("page",String(next)); return `?${p}`; }
+ return <div>
+  <h1 className="govuk-heading-xl">Hansard</h1>
+  <p className="govuk-body-l">Follow parliamentary proceedings, read what was said and trace each member&apos;s contributions to the official record.</p>
+  <nav aria-label="Hansard navigation" className="govuk-!-margin-bottom-6"><ul className="govuk-list"><li><Link className="govuk-link" href="/government/legislature/hansard/national-assembly">National Assembly sittings</Link></li><li><Link className="govuk-link" href="/government/legislature/hansard/senate">Senate sittings</Link></li><li><Link className="govuk-link" href="/government/legislature/hansard/county-assemblies">County assembly sittings</Link></li><li><Link className="govuk-link" href="/government/legislature/hansard/members">Find a member and explore their contribution pulse</Link></li></ul></nav>
+  <section aria-labelledby="browse-proceedings"><h2 id="browse-proceedings" className="govuk-heading-m">Browse public proceedings</h2><ul className="govuk-list govuk-list--bullet">{PUBLIC_PROCEEDINGS.map(type => <li key={type}><Link className="govuk-link" href={`?proceeding=${type}`}>{PROCEEDING_TYPES[type]}</Link>{type === "joint-sitting" ? " - National Assembly and Senate together" : type === "state-opening" ? " - historical state openings before the 2010 Constitution" : " - debates, questions and statements"}</li>)}</ul></section>
+  <form className="govuk-!-margin-top-6 govuk-!-margin-bottom-6" role="search" aria-label="Search public Hansard"><div className="govuk-form-group"><label className="govuk-label" htmlFor="debate-query">Search debate text or topics</label><input className="govuk-input" id="debate-query" type="search" name="q" defaultValue={q} /></div><div className="govuk-form-group"><label className="govuk-label" htmlFor="proceeding-type">Proceedings</label><select className="govuk-select" id="proceeding-type" name="proceeding" defaultValue={proceeding || ""}><option value="">All public proceedings</option>{PUBLIC_PROCEEDINGS.map(type => <option key={type} value={type}>{PROCEEDING_TYPES[type]}</option>)}</select></div><div className="govuk-form-group"><label className="govuk-label" htmlFor="house-type">House</label><select className="govuk-select" id="house-type" name="house" defaultValue={house || ""}><option value="">All houses</option><option value="national-assembly">National Assembly</option><option value="senate">Senate</option><option value="county-assembly">County Assembly</option></select></div><button className="govuk-button">Search</button></form>
+  <section aria-labelledby="hansard-results"><h2 id="hansard-results" className="govuk-heading-l">{q ? `Results for "${q}"` : proceeding ? PROCEEDING_TYPES[proceeding] : "Recent sittings"}</h2><p className="govuk-body">{total} {q ? "results" : "sittings"} in this site&apos;s published collection.</p>{!total && <p className="govuk-body">No published records match these filters. The collection is being prepared and does not yet represent the full official archive.</p>}
+  {q ? hits.map(hit => <article className="govuk-!-margin-bottom-5" key={hit.id}><h3 className="govuk-heading-m"><Link className="govuk-link" href={`/government/legislature/hansard/${hit.slug}`}>{hit.title}</Link></h3><p className="govuk-body-s">{hit.sitting_date} | {PROCEEDING_TYPES[hit.proceeding_type]} | {hit.kind}</p><p className="govuk-body">{hit.snippet}</p></article>) : result?.rows.map(s => <article className="govuk-!-margin-bottom-5" key={s._id}><h3 className="govuk-heading-m"><Link className="govuk-link" href={`/government/legislature/hansard/sitting/${s.slug.current}`}>{s.title}</Link></h3><p className="govuk-body">{PROCEEDING_TYPES[s.proceedingType]} | {s.sittingDate} | {s.sittingPeriod} | {s.contributionCount} contributions</p></article>)}
+  <nav aria-label="Results pages" className="govuk-!-margin-top-5"><ul className="govuk-list">{page > 1 && <li><Link className="govuk-link" href={pageUrl(page-1)}>Previous page</Link></li>}{page*25 < total && <li><Link className="govuk-link" href={pageUrl(page+1)}>Next page</Link></li>}</ul></nav></section>
+ </div>;
+}

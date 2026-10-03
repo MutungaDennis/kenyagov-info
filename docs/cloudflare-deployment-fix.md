@@ -95,3 +95,21 @@ The homepage, government, topics and open-data returned HTTP 200 with cache HIT
 headers. The internal admin path returned 404, the configured admin path
 redirected to login, and an unauthenticated admin API request returned 401.
 Production deployment and comparative 1102/CPU metrics remain to be verified.
+
+## Durable Object warning during Next.js development
+
+`next dev` runs in Node.js and does not export OpenNext's internal
+`DOQueueHandler`. Starting `initOpenNextCloudflareForDev()` with the production
+Wrangler configuration therefore produced a missing-class warning from its
+binding proxy. The application does not need that proxy: `loadStaticJson` reads
+from `public/` on disk outside the Worker runtime. The unnecessary initialization
+has been removed from `next.config.ts`.
+
+Keep the production `NEXT_CACHE_DO_QUEUE` binding and migration. OpenNext exports
+`DOQueueHandler` from `.open-next/worker.js`; the generated queue extends
+Cloudflare's `DurableObject`. Exercise R2 and ISR with `pnpm run preview`, rather
+than `next dev`. See [OpenNext's documented warning](https://opennext.js.org/cloudflare/known-issues).
+
+The existing generated Worker passed Wrangler's deployment dry run after this
+change (19.944 MiB uncompressed). This development-only configuration change does
+not rebuild or publish the production Worker.

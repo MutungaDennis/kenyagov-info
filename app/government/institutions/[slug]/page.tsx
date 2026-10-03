@@ -1,4 +1,4 @@
-import { notFound, permanentRedirect } from "next/navigation";
+import { notFound, permanentRedirect, redirect } from "next/navigation";
 import { createPublicClient } from "@/lib/supabase/public";
 import InstitutionProfileClient from "./InstitutionProfileClient";
 import { getPublicSchool } from "@/lib/schools/queries";
@@ -20,19 +20,43 @@ export default async function InstitutionProfilePage({ params }: Props) {
   const { slug } = await params;
   if (!slug?.trim()) notFound();
 
-    const supabase = createPublicClient();
-    const { data, error } = await supabase
+  const supabase = createPublicClient();
+  let data: { id: string; status: string | null; record_kind?: string | null } | null = null;
+  let error: { message: string } | null = null;
+  const current = await supabase
+    .from("institutions")
+    .select("id,status,record_kind")
+    .eq("slug", slug)
+    .eq("is_active", true)
+    .maybeSingle();
+
+  if (
+    current.error &&
+    /record_kind|schema cache|column .* does not exist/i.test(
+      current.error.message,
+    )
+  ) {
+    const legacy = await supabase
       .from("institutions")
       .select("id,status")
       .eq("slug", slug)
       .eq("is_active", true)
       .maybeSingle();
+    data = legacy.data;
+    error = legacy.error;
+  } else {
+    data = current.data;
+    error = current.error;
+  }
 
-    if (error) throw new Error("The institution directory is temporarily unavailable.");
+  if (error) throw new Error("The institution directory is temporarily unavailable.");
 
-    if (data) {
-      return <InstitutionProfileClient people={<InstitutionPeople institutionId={data.id} status={data.status} />} />;
+  if (data) {
+    if (data.record_kind === "temporary_body") {
+      redirect(`/government/temporary-bodies/${slug}`);
     }
+    return <InstitutionProfileClient people={<InstitutionPeople institutionId={data.id} status={data.status} />} />;
+  }
   const school = await getPublicSchool(slug);
   if (school) {
     if (school.slug !== slug) permanentRedirect(`/government/institutions/${school.slug}`);

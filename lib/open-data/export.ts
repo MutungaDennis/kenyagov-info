@@ -42,6 +42,9 @@ export async function datasetExport(request: Request, dataset: ExportDataset) {
     if (rawQuery && !term) return Response.json({ error: "Enter a name or code to search." }, { status: 400 });
     const rows = await collectExportRows(async (from, to) => {
       let query = db.from(config.table).select(config.fields.join(",")).eq("is_active", true).order("id").range(from, to);
+      if (dataset === "institutions") {
+        query = query.eq("record_kind", "institution");
+      }
       for (const [column, value] of filters) query = query.eq(column, value);
       if (term) {
         const columns = dataset === "wards" ? ["name", "constituency_name", "county_name"] : ["name", "polling_station_code"];

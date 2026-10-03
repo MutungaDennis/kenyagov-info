@@ -42,6 +42,11 @@ export default function InstitutionLifecyclePanel({
   const [hint, setHint] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [dirty, setDirty] = useState(false);
+  const [openSections, setOpenSections] = useState({
+    periods: false,
+    relationships: false,
+    names: false,
+  });
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -141,6 +146,11 @@ export default function InstitutionLifecyclePanel({
           notes: String(r.notes || ""),
         })),
       );
+      setOpenSections({
+        periods: segRows.length > 0,
+        relationships: relRows.length > 0,
+        names: nameRows.length > 0,
+      });
       setDirty(false);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load lifecycle data");
@@ -199,7 +209,7 @@ export default function InstitutionLifecyclePanel({
             "Failed to save name history",
         );
       }
-      setSuccess("Lifecycle, lineage and name history saved.");
+      setSuccess("Institution history saved.");
       setDirty(false);
       await load();
     } catch (e) {
@@ -209,6 +219,33 @@ export default function InstitutionLifecyclePanel({
     }
   };
 
+  const setRelationshipDirection = (
+    index: number,
+    direction: "institution-first" | "related-first",
+  ) => {
+    const next = [...relationships];
+    const relationship = next[index];
+    const relatedId =
+      relationship.from_institution_id === institutionId
+        ? relationship.to_institution_id
+        : relationship.from_institution_id;
+
+    next[index] =
+      direction === "institution-first"
+        ? {
+            ...relationship,
+            from_institution_id: institutionId,
+            to_institution_id: relatedId,
+          }
+        : {
+            ...relationship,
+            from_institution_id: relatedId,
+            to_institution_id: institutionId,
+          };
+    setRelationships(next);
+    setDirty(true);
+  };
+
   if (loading) {
     return <p className="govuk-body">Loading lifecycle data…</p>;
   }
@@ -216,13 +253,25 @@ export default function InstitutionLifecyclePanel({
   return (
     <div className="govuk-!-margin-top-8">
       <hr className="govuk-section-break govuk-section-break--l govuk-section-break--visible" />
-      <h2 className="govuk-heading-l">Lifecycle, lineage and names</h2>
+      <h2 className="govuk-heading-l" id="institution-lifecycle-history">
+        Detailed institution history
+      </h2>
       <p className="govuk-body">
-        Use this for complex Kenyan institutional history — offices that were
-        abolished and later recreated (e.g. Prime Minister), bodies that split
-        into several successors (e.g. KP&amp;TC), or positions annulled by the
-        courts. Save here separately from the main institution form.
+        This section is optional. Use it when a body has more than one period
+        of operation, changed its official name over time, or has a formal
+        relationship with another institution.
       </p>
+      <div className="govuk-inset-text">
+        <p className="govuk-body">
+          For a straightforward current or former institution, use the status
+          and predecessor or successor fields in the main form. Add details
+          here only when you need a fuller public timeline.
+        </p>
+        <p className="govuk-body govuk-!-margin-bottom-0">
+          This history is saved separately. Use <strong>Save history</strong>{" "}
+          below; saving the main institution form does not save these entries.
+        </p>
+      </div>
 
       {hint && (
         <div className="govuk-warning-text">
@@ -252,13 +301,25 @@ export default function InstitutionLifecyclePanel({
         </div>
       )}
 
-      {/* Segments */}
-      <h3 className="govuk-heading-m">Operational periods</h3>
-      <p className="govuk-hint">
-        Multiple eras for <strong>{institutionName || "this office"}</strong>.
-        Example: 1963–1964 Active, then 2008–2013 Active (Office of the Prime
-        Minister).
-      </p>
+      <details
+        className="govuk-!-margin-bottom-6"
+        open={openSections.periods}
+        onToggle={(event) =>
+          setOpenSections((previous) => ({
+            ...previous,
+            periods: event.currentTarget.open,
+          }))
+        }
+      >
+        <summary className="govuk-heading-m">
+          Periods this institution operated ({segments.length})
+        </summary>
+        <p className="govuk-hint">
+          Add one entry for each separate period this body operated. For
+          example, a body that operated in 1963–1964 and again in 2008–2013
+          would have two entries. Leave the end date blank if a period is
+          current.
+        </p>
       {segments.map((seg, i) => (
         <div
           key={seg.id || `seg-${i}`}
@@ -432,19 +493,28 @@ export default function InstitutionLifecyclePanel({
           setDirty(true);
         }}
       >
-        Add operational period
+        Add period
       </button>
+      </details>
 
-      {/* Relationships */}
-      <h3 className="govuk-heading-m govuk-!-margin-top-8">
-        Lineage (related institutions)
-      </h3>
-      <p className="govuk-hint">
-        Direction: <strong>from</strong> = ancestor / older body;{" "}
-        <strong>to</strong> = descendant / result. Example: KP&amp;TC → Telkom
-        with type “Split from”. Mark one link as primary to sync the main
-        predecessor/successor fields.
-      </p>
+      <details
+        className="govuk-!-margin-bottom-6"
+        open={openSections.relationships}
+        onToggle={(event) =>
+          setOpenSections((previous) => ({
+            ...previous,
+            relationships: event.currentTarget.open,
+          }))
+        }
+      >
+        <summary className="govuk-heading-m">
+          Links to earlier or later institutions ({relationships.length})
+        </summary>
+        <p className="govuk-hint">
+          Add a link only when another institution is part of this body’s
+          history. The direction runs from the earlier body to the later one.
+          For example, KP&amp;TC → Telkom is recorded as “Split from”.
+        </p>
       {relationships.map((rel, i) => {
         const otherId =
           rel.from_institution_id === institutionId
@@ -464,6 +534,39 @@ export default function InstitutionLifecyclePanel({
             className="govuk-!-margin-bottom-4"
             style={{ border: "1px solid #b1b4b6", padding: 12 }}
           >
+            <div className="govuk-form-group">
+              <label className="govuk-label" htmlFor={`rel-direction-${i}`}>
+                Which institution came first?
+              </label>
+              <select
+                id={`rel-direction-${i}`}
+                className="govuk-select"
+                value={
+                  rel.from_institution_id === institutionId
+                    ? "institution-first"
+                    : "related-first"
+                }
+                onChange={(e) =>
+                  setRelationshipDirection(
+                    i,
+                    e.target.value === "related-first"
+                      ? "related-first"
+                      : "institution-first",
+                  )
+                }
+              >
+                <option value="institution-first">
+                  {institutionName || "This institution"} came first
+                </option>
+                <option value="related-first">
+                  The related institution came first
+                </option>
+              </select>
+              <p className="govuk-hint">
+                Choose the earlier body first, then select the other institution
+                below.
+              </p>
+            </div>
             <div className="govuk-form-group">
               <label className="govuk-label" htmlFor={`rel-type-${i}`}>
                 Relationship type
@@ -554,10 +657,14 @@ export default function InstitutionLifecyclePanel({
                   className="govuk-label govuk-checkboxes__label"
                   htmlFor={`rel-primary-${i}`}
                 >
-                  Primary link (syncs main predecessor/successor on this record)
+                  Use as the main predecessor or successor
                 </label>
               </div>
             </div>
+            <p className="govuk-hint">
+              Select this only for the single main institution this body came
+              from or led to. That link is copied to the main form.
+            </p>
             <div className="govuk-grid-row">
               <div className="govuk-grid-column-one-half">
                 <div className="govuk-form-group">
@@ -628,17 +735,29 @@ export default function InstitutionLifecyclePanel({
           setDirty(true);
         }}
       >
-        Add lineage link
+        Add institution link
       </button>
+      </details>
 
-      {/* Name history */}
-      <h3 className="govuk-heading-m govuk-!-margin-top-8">
-        Name history (dated)
-      </h3>
-      <p className="govuk-hint">
-        Optional dated names (e.g. “Ministry of Education, Science and
-        Technology” 2013–2018). Flat former names on the main form still work.
-      </p>
+      <details
+        className="govuk-!-margin-bottom-6"
+        open={openSections.names}
+        onToggle={(event) =>
+          setOpenSections((previous) => ({
+            ...previous,
+            names: event.currentTarget.open,
+          }))
+        }
+      >
+        <summary className="govuk-heading-m">
+          Past names and when they were used ({names.length})
+        </summary>
+        <p className="govuk-hint">
+          Add an entry when you know the dates a name was in official use. For
+          example, “Ministry of Education, Science and Technology” from 2013
+          until 2018. A simple list of former names can still be entered on the
+          main form.
+        </p>
       {names.map((n, i) => (
         <div
           key={n.id || `name-${i}`}
@@ -749,8 +868,9 @@ export default function InstitutionLifecyclePanel({
           setDirty(true);
         }}
       >
-        Add dated name
+        Add past name
       </button>
+      </details>
 
       <div className="govuk-button-group govuk-!-margin-top-6">
         <button
@@ -759,11 +879,11 @@ export default function InstitutionLifecyclePanel({
           disabled={saving || !dirty}
           onClick={() => void saveAll()}
         >
-          {saving ? "Saving…" : "Save lifecycle & lineage"}
+          {saving ? "Saving…" : "Save history"}
         </button>
       </div>
       {dirty && !saving && (
-        <p className="govuk-hint">You have unsaved lifecycle changes.</p>
+        <p className="govuk-hint">You have unsaved history changes.</p>
       )}
     </div>
   );

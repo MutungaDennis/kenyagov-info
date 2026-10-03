@@ -1,20 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdminApi } from "@/lib/admin-api";
-import { createSanityWriteClient } from "@/lib/sanity/createSanityWriteClient";
+import { listContent, saveContent, deleteContent, getContent } from "@/lib/content/store";
+import type { ServiceLinkPhrase } from "@/lib/services/link-phrases";
 import { SEED_SERVICE_LINK_PHRASES } from "@/lib/services/seed-link-phrases";
 
-const LIST_QUERY = `*[_type == "serviceLinkPhrase"] | order(sortOrder asc, phrase asc) {
-  _id, phrase, matchMode, internalHref, externalHref, externalLabel,
-  scopeServiceSlugs, enabled, sortOrder
-}`;
+async function phrases(db: Parameters<typeof listContent>[1]) {
+  return (await listContent<ServiceLinkPhrase & { _id: string }>("service_link_phrases", db)).sort((a,b) => (a.sortOrder || 0) - (b.sortOrder || 0) || a.phrase.localeCompare(b.phrase));
+}
 
 export async function GET() {
   const auth = await requireAdminApi();
   if (!auth.ok) return auth.response;
 
   try {
-    const sanity = createSanityWriteClient();
-    const data = await sanity.fetch(LIST_QUERY);
+    const data = await phrases(auth.supabase);
     return NextResponse.json({ success: true, data: data || [] });
   } catch (err) {
     console.error("[service link-phrases GET]", err);
@@ -33,27 +32,18 @@ export async function POST(request: NextRequest) {
   if (!auth.ok) return auth.response;
 
   try {
-    if (!process.env.SANITY_API_TOKEN) {
-      return NextResponse.json(
-        { success: false, error: "SANITY_API_TOKEN is not configured" },
-        { status: 500 },
-      );
-    }
 
     const body = await request.json();
-    const sanity = createSanityWriteClient();
 
     if (body.action === "seed") {
-      const existing = await sanity.fetch<Array<{ phrase?: string }>>(
-        `*[_type == "serviceLinkPhrase"]{ phrase }`,
-      );
+      const existing = await phrases(auth.supabase);
       const have = new Set(
         (existing || []).map((e) => (e.phrase || "").toLowerCase()),
       );
       let created = 0;
       for (const seed of SEED_SERVICE_LINK_PHRASES) {
         if (have.has(seed.phrase.toLowerCase())) continue;
-        await sanity.create({
+        await saveContent("service_link_phrases", {
           _type: "serviceLinkPhrase" as const,
           phrase: seed.phrase,
           matchMode: seed.matchMode,
@@ -62,10 +52,10 @@ export async function POST(request: NextRequest) {
           ...(seed.externalLabel ? { externalLabel: seed.externalLabel } : {}),
           sortOrder: seed.sortOrder,
           enabled: seed.enabled,
-        });
+        }, auth.supabase);
         created++;
       }
-      const data = await sanity.fetch(LIST_QUERY);
+      const data = await phrases(auth.supabase);
       return NextResponse.json({
         success: true,
         created,
@@ -75,8 +65,8 @@ export async function POST(request: NextRequest) {
     }
 
     if (body.action === "delete" && body.id) {
-      await sanity.delete(String(body.id));
-      const data = await sanity.fetch(LIST_QUERY);
+      await deleteContent("service_link_phrases", String(body.id), auth.supabase);
+      const data = await phrases(auth.supabase);
       return NextResponse.json({ success: true, data, message: "Deleted" });
     }
 
@@ -111,12 +101,14 @@ export async function POST(request: NextRequest) {
     };
 
     if (body.id) {
-      await sanity.patch(String(body.id)).set(doc).commit();
+      const existing = await getContent("service_link_phrases", "id", String(body.id), auth.supabase);
+      if (!existing) return NextResponse.json({ error: "Phrase not found" }, { status: 404 });
+      await saveContent("service_link_phrases", { ...existing, ...doc, _id: String(body.id) }, auth.supabase);
     } else {
-      await sanity.create(doc);
+      await saveContent("service_link_phrases", doc, auth.supabase);
     }
 
-    const data = await sanity.fetch(LIST_QUERY);
+    const data = await phrases(auth.supabase);
     return NextResponse.json({ success: true, data, message: "Saved" });
   } catch (err) {
     console.error("[service link-phrases POST]", err);

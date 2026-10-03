@@ -175,12 +175,35 @@ export default function InstitutionAboutPage() {
           .order("name");
         if (succs?.length) setSuccessors(succs as LinkedInstitution[]);
 
-        const { data: children } = await supabase
+        const currentChildren = await supabase
           .from("institutions")
-          .select("id, slug, name")
+          .select("id, slug, name, record_kind")
           .eq("parent_institution_id", data.id)
+          .eq("record_kind", "institution")
           .eq("is_active", true)
           .order("name");
+        let children = currentChildren.data as ChildInstitution[] | null;
+        let childrenError = currentChildren.error?.message ?? null;
+        if (
+          childrenError &&
+          /record_kind|schema cache|column .* does not exist/i.test(
+            childrenError,
+          )
+        ) {
+          const legacyChildren = await supabase
+            .from("institutions")
+            .select("id, slug, name")
+            .eq("parent_institution_id", data.id)
+            .eq("is_active", true)
+            .order("name");
+          children = legacyChildren.data as ChildInstitution[] | null;
+          childrenError = legacyChildren.error?.message ?? null;
+        }
+        if (childrenError) {
+          throw new Error(
+            `Child institutions could not be loaded: ${childrenError}`,
+          );
+        }
         if (children) setChildInstitutions(children as ChildInstitution[]);
 
       } catch (err) {

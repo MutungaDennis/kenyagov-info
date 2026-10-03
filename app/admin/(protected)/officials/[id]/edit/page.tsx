@@ -133,6 +133,8 @@ type RefItem = {
   constituency_id?: string | number | null;
   government_level?: string | null;
   institution_type?: string | null;
+  record_kind?: string | null;
+  temporary_body_type?: string | null;
   is_active?: boolean | null;
   official_name?: string | null;
   slug?: string | null;
@@ -2613,8 +2615,8 @@ export default function EditOfficialPage({
                 </label>
                 <div className="govuk-hint">
                   Time-bound with the dates above (e.g. Ministry of Health while
-                  CS). Type to search the full institutions list — the catalogue
-                  is large, so search works better than a long dropdown.
+                  CS). Search the institution catalogue; temporary bodies are
+                  labelled separately and can be assigned to a person’s role.
                 </div>
                 <input
                   id="org_search"
@@ -2692,11 +2694,15 @@ export default function EditOfficialPage({
                               ({i.short_name})
                             </span>
                           ) : null}
-                          {i.institution_type || i.government_level ? (
+                          {i.record_kind === "temporary_body" ||
+                          i.institution_type ||
+                          i.government_level ? (
                             <div className="govuk-hint govuk-!-margin-bottom-0">
-                              {[i.institution_type, i.government_level]
-                                .filter(Boolean)
-                                .join(" · ")}
+                                  {i.record_kind === "temporary_body"
+                                    ? `Temporary body · ${i.temporary_body_type || "Body"}`
+                                    : [i.institution_type, i.government_level]
+                                        .filter(Boolean)
+                                        .join(" · ")}
                             </div>
                           ) : null}
                         </button>
@@ -2709,9 +2715,9 @@ export default function EditOfficialPage({
                   !orgSearching &&
                   orgResults.length === 0 && (
                     <p className="govuk-hint govuk-!-margin-top-1">
-                      No institution matches “{orgSearch.trim()}”. You can still
-                      save the typed name, or create the institution under
-                      Admin → Institutions.
+                      No match for “{orgSearch.trim()}”. You can still save the
+                      typed name, or create an institution or temporary body
+                      under Admin → Institutions.
                     </p>
                   )}
                 {roleForm.organization && (

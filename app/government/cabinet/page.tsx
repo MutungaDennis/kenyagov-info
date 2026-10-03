@@ -3,7 +3,7 @@ import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import { createPublicClient } from "@/lib/supabase/public";
 import { displayNameWithTitles } from "@/lib/leaders/display";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 // Helper to safely generate slugs from organization names (used as fallback)
 function slugify(text: string): string {
@@ -17,7 +17,8 @@ function slugify(text: string): string {
 function getExecutiveRank(title: string | null): number {
   if (!title) return 99;
   const t = title.toLowerCase();
-  if (t.includes("president") && !t.includes("deputy") && !t.includes("prime")) return 1;
+  if (t.includes("president") && !t.includes("deputy") && !t.includes("prime"))
+    return 1;
   if (t.includes("deputy president")) return 2;
   if (t.includes("prime cabinet secretary")) return 3;
   return 99;
@@ -26,7 +27,68 @@ function getExecutiveRank(title: string | null): number {
 // Helper to normalize title text for matching (handles both hyphens and spaces)
 function normalizeTitle(title: string | null): string {
   if (!title) return "";
-  return title.toLowerCase().replace(/[-_]/g, " ").replace(/\s+/g, " ").trim();
+  return title
+    .toLowerCase()
+    .replace(/[-_]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function isJudiciaryTitle(normalizedTitle: string): boolean {
+  return (
+    normalizedTitle.includes("supreme court") ||
+    normalizedTitle.includes("chief justice") ||
+    normalizedTitle.includes("deputy chief justice") ||
+    normalizedTitle.includes("judge") ||
+    normalizedTitle.includes("judicial")
+  );
+}
+
+/** Executive: President, Deputy President, Prime Cabinet Secretary — not judiciary. */
+function isExecutiveLeadershipTitle(normalizedTitle: string): boolean {
+  if (!normalizedTitle || isJudiciaryTitle(normalizedTitle)) return false;
+
+  // "President of the Supreme Court" / "Vice President of the Supreme Court"
+  if (normalizedTitle.includes("supreme court")) return false;
+
+  const isDeputyPresident =
+    normalizedTitle.includes("deputy president") &&
+    !normalizedTitle.includes("supreme court");
+
+  const isPrimeCabinetSecretary = normalizedTitle.includes(
+    "prime cabinet secretary"
+  );
+
+  // Head of state / government president — not "vice president of …"
+  const isPresident =
+    !normalizedTitle.includes("deputy") &&
+    !normalizedTitle.includes("vice") &&
+    !normalizedTitle.includes("prime") &&
+    (normalizedTitle === "president" ||
+      normalizedTitle.startsWith("president of kenya") ||
+      normalizedTitle.startsWith("president of the republic") ||
+      normalizedTitle.includes("president of the republic of kenya") ||
+      // Plain role title often stored as "President"
+      (normalizedTitle.includes("president") &&
+        !normalizedTitle.includes("of the supreme") &&
+        !normalizedTitle.includes("court")));
+
+  return isPresident || isDeputyPresident || isPrimeCabinetSecretary;
+}
+
+function isCabinetSecretaryTitle(normalizedTitle: string): boolean {
+  if (isJudiciaryTitle(normalizedTitle)) return false;
+  return (
+    normalizedTitle.includes("cabinet secretary") &&
+    !normalizedTitle.includes("prime cabinet secretary")
+  );
+}
+
+function isAlsoAttendsCabinetTitle(normalizedTitle: string): boolean {
+  return (
+    normalizedTitle.includes("attorney general") ||
+    normalizedTitle.includes("secretary to the cabinet")
+  );
 }
 
 export default async function CabinetPage() {
@@ -34,7 +96,8 @@ export default async function CabinetPage() {
 
   const { data: activeRoles, error } = await supabase
     .from("leader_roles")
-    .select(`
+    .select(
+      `
       id,
       title,
       organization,
@@ -55,11 +118,15 @@ export default async function CabinetPage() {
         name_titles,
         national_honours
       )
-    `)
+    `
+    )
     .is("term_end_date", null);
 
   if (error) {
-    console.error("Error fetching cabinet members:", JSON.stringify(error, null, 2));
+    console.error(
+      "Error fetching cabinet members:",
+      JSON.stringify(error, null, 2)
+    );
   }
 
   const executiveLeadership: any[] = [];
@@ -70,12 +137,12 @@ export default async function CabinetPage() {
     const leader = role.leaders;
     if (!leader) return;
 
-    // Normalize the title for consistent matching
     const normalizedTitle = normalizeTitle(role.title);
 
-    // Use the institution's authoritative slug from the database
     const institution = role.institutions;
-    const orgSlug = institution?.slug || (role.organization ? slugify(role.organization) : null);
+    const orgSlug =
+      institution?.slug ||
+      (role.organization ? slugify(role.organization) : null);
     const orgName = institution?.name || role.organization || null;
 
     const item = {
@@ -87,23 +154,14 @@ export default async function CabinetPage() {
       rankOrder: role.rank_order ?? getExecutiveRank(role.title),
     };
 
-    // Categorize based on normalized title
-    // NOTE: Using normalized title handles both "attorney-general" and "attorney general"
-    if (
-      normalizedTitle.includes("president") ||
-      normalizedTitle.includes("deputy president") ||
-      normalizedTitle.includes("prime cabinet secretary")
-    ) {
+    if (isExecutiveLeadershipTitle(normalizedTitle)) {
       executiveLeadership.push(item);
-    } else if (normalizedTitle.includes("cabinet secretary")) {
+    } else if (isCabinetSecretaryTitle(normalizedTitle)) {
       cabinetSecretaries.push(item);
-    } else if (
-      normalizedTitle.includes("attorney general") ||
-      normalizedTitle.includes("attorney-general") ||
-      normalizedTitle.includes("secretary to the cabinet")
-    ) {
+    } else if (isAlsoAttendsCabinetTitle(normalizedTitle)) {
       alsoAttends.push(item);
     }
+    // Other active roles (e.g. judiciary) are intentionally omitted from this page.
   });
 
   // Sort Executive Leadership by constitutional rank
@@ -113,7 +171,6 @@ export default async function CabinetPage() {
     return a.fullName.localeCompare(b.fullName);
   });
 
-  // Sort other groups alphabetically
   const sortByName = (a: any, b: any) => a.fullName.localeCompare(b.fullName);
   cabinetSecretaries.sort(sortByName);
   alsoAttends.sort(sortByName);
@@ -135,12 +192,22 @@ export default async function CabinetPage() {
               <h1 className="govuk-heading-xl govuk-!-margin-bottom-4">
                 The Cabinet
               </h1>
-              <div className="govuk-inset-text"><h2 className="govuk-heading-m"><Link className="govuk-link" href="/government/cabinet/briefs">Cabinet briefs and decisions</Link></h2><p className="govuk-body govuk-!-margin-bottom-0">Read published Cabinet meeting briefs and search by topic, year or publication type.</p></div>
+              <div className="govuk-inset-text">
+                <h2 className="govuk-heading-m">
+                  <Link className="govuk-link" href="/government/cabinet/briefs">
+                    Cabinet briefs and decisions
+                  </Link>
+                </h2>
+                <p className="govuk-body govuk-!-margin-bottom-0">
+                  Read published Cabinet meeting briefs and search by topic,
+                  year or publication type.
+                </p>
+              </div>
 
               <p className="govuk-body-m govuk-!-margin-bottom-8">
-                Read biographies and responsibilities of the Executive leadership,
-                Cabinet Secretaries heading ministries, and officials who help
-                coordinate government business.
+                Read biographies and responsibilities of the Executive
+                leadership, Cabinet Secretaries heading ministries, and
+                officials who help coordinate government business.
               </p>
 
               <h2 className="govuk-heading-m govuk-!-margin-bottom-4">
@@ -148,7 +215,10 @@ export default async function CabinetPage() {
               </h2>
               <ul className="govuk-list govuk-!-padding-left-0">
                 {executiveLeadership.map((official, idx) => (
-                  <li key={`${official.slug}-exec-${idx}`} className="govuk-!-margin-bottom-4">
+                  <li
+                    key={`${official.slug}-exec-${idx}`}
+                    className="govuk-!-margin-bottom-4"
+                  >
                     <h3 className="govuk-heading-s govuk-!-margin-top-0 govuk-!-margin-bottom-1">
                       <Link
                         href={`/government/people/${official.slug}`}
@@ -181,7 +251,10 @@ export default async function CabinetPage() {
               </h2>
               <ul className="govuk-list govuk-!-padding-left-0">
                 {cabinetSecretaries.map((official, idx) => (
-                  <li key={`${official.slug}-cs-${idx}`} className="govuk-!-margin-bottom-4">
+                  <li
+                    key={`${official.slug}-cs-${idx}`}
+                    className="govuk-!-margin-bottom-4"
+                  >
                     <h3 className="govuk-heading-s govuk-!-margin-top-0 govuk-!-margin-bottom-1">
                       <Link
                         href={`/government/people/${official.slug}`}
@@ -214,7 +287,10 @@ export default async function CabinetPage() {
               </h2>
               <ul className="govuk-list govuk-!-padding-left-0">
                 {alsoAttends.map((official, idx) => (
-                  <li key={`${official.slug}-attendee-${idx}`} className="govuk-!-margin-bottom-4">
+                  <li
+                    key={`${official.slug}-attendee-${idx}`}
+                    className="govuk-!-margin-bottom-4"
+                  >
                     <h3 className="govuk-heading-s govuk-!-margin-top-0 govuk-!-margin-bottom-1">
                       <Link
                         href={`/government/people/${official.slug}`}

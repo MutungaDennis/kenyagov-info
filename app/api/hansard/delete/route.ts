@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSanityWriteClient } from "@/lib/sanity/createSanityWriteClient";
+import { requireAdminApi } from "@/lib/admin-api";
+import { refreshHansard } from "@/lib/content/revalidate";
 
-const sanity = createSanityWriteClient();
+
 
 export async function POST(request: NextRequest) {
+  const auth = await requireAdminApi();
+  if (!auth.ok) return auth.response;
   try {
     const body = await request.json();
     const documentId = body?.documentId as string | undefined;
@@ -15,7 +18,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    await sanity.delete(documentId);
+    const { error } = await auth.supabase.from("hansard_sittings").delete().eq("id", documentId);
+    if (error) throw error;
+    refreshHansard();
 
     return NextResponse.json({
       success: true,

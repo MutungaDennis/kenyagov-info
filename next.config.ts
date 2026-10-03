@@ -2,7 +2,6 @@ import type { NextConfig } from "next";
 import path from "path";
 
 import withBundleAnalyzer from "@next/bundle-analyzer";
-import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
 
 const DEFAULT_PRODUCTION_ADMIN_BASE =
   "/cg-ke-a5wkqciyjpg940u3";
@@ -970,8 +969,9 @@ const nextConfig: NextConfig = {
   },
 };
 
-// The development binding proxy is unnecessary during a production build.
-if (process.env.NODE_ENV === "development") initOpenNextCloudflareForDev();
+// `next dev` uses Node.js and loadStaticJson's public/ filesystem fallback.
+// Do not start a Wrangler binding proxy here: it cannot export OpenNext's
+// internal DOQueueHandler. Use the OpenNext preview to exercise R2 and ISR.
 
 export default process.env.ANALYZE === "true"
   ? withBundleAnalyzer({

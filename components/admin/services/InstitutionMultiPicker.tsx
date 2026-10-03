@@ -45,6 +45,7 @@ export default function InstitutionMultiPicker({ selected, onChange }: Props) {
       params.set("q", term);
       params.set("limit", "40");
       params.set("active", "1");
+      params.set("record_kind", "institution");
       const res = await fetch(`/api/admin/institutions?${params}`, {
         credentials: "include",
         cache: "no-store",

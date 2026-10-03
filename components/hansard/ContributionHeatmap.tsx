@@ -180,7 +180,7 @@ export default function ContributionHeatmap({
     params.set("dateFrom", ymd);
     params.set("dateTo", ymd);
     if (pulseYear) params.set("pulseYear", String(pulseYear));
-    return `${memberPath}?${params.toString()}`;
+    return `${memberPath}?${params.toString()}#member-contributions`;
   };
 
   const monthFilterHref = (ymd: string) => {
@@ -188,7 +188,7 @@ export default function ContributionHeatmap({
     const params = new URLSearchParams();
     params.set("month", month);
     params.set("pulseYear", String(pulseYear));
-    return `${memberPath}?${params.toString()}`;
+    return `${memberPath}?${params.toString()}#member-contributions`;
   };
 
   const yearHref = (year: number) => {
@@ -298,7 +298,7 @@ export default function ContributionHeatmap({
                       style={{ background: "#047857", color: "#fff" }}
                     >
                       {y}
-                      {hasAct ? "" : " · no speeches"}
+                      {hasAct ? "" : " · no linked records"}
                     </span>
                   ) : (
                     <Link
@@ -392,7 +392,7 @@ export default function ContributionHeatmap({
           </div>
 
           <div
-            role="img"
+            role="group"
             aria-label={`Contribution activity for ${pulseYear}. ${totalInWindow} contributions on ${activeDays} days while in office. Darker green means more activity.`}
             style={{ display: "flex", gap: GAP }}
           >
@@ -436,6 +436,7 @@ export default function ContributionHeatmap({
                         href={dayFilterHref(day.date)}
                         title={title}
                         aria-label={title}
+                        className="govuk-link"
                         style={{
                           width: CELL,
                           height: CELL,
@@ -504,6 +505,9 @@ export default function ContributionHeatmap({
           <span>More</span>
         </div>
       </div>
+
+      <p className="govuk-body-s govuk-!-margin-top-3">This pulse counts published contributions linked on this site. A blank day does not establish absence or inactivity. It is not an attendance or performance score.</p>
+      {activeDays > 0 && <details className="govuk-details"><summary className="govuk-details__summary"><span className="govuk-details__summary-text">Daily contributions - accessible table</span></summary><div className="govuk-details__text"><table className="govuk-table"><caption className="govuk-table__caption">Linked contributions in {pulseYear}</caption><thead><tr><th scope="col" className="govuk-table__header">Date</th><th scope="col" className="govuk-table__header govuk-table__header--numeric">Contributions</th></tr></thead><tbody>{weeks.flat().filter(d => d.active && d.count > 0).map(d => <tr key={d.date}><th scope="row" className="govuk-table__header"><Link className="govuk-link" style={{ display: "inline-block", minHeight: 24, padding: "4px 0" }} href={dayFilterHref(d.date)}>{parseYmd(d.date).toLocaleDateString("en-KE", { day: "numeric", month: "long", year: "numeric" })}</Link></th><td className="govuk-table__cell govuk-table__cell--numeric">{d.count}</td></tr>)}</tbody></table></div></details>}
 
       {monthlyInWindow.length > 0 && (
         <details className="govuk-details govuk-!-margin-top-3">

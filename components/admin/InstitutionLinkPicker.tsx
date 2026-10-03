@@ -36,19 +36,23 @@ export default function InstitutionLinkPicker({
   const [results, setResults] = useState<InstitutionPick[]>([]);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
 
   const runSearch = useCallback(
     async (q: string) => {
       const term = q.trim();
       if (term.length < 1) {
         setResults([]);
+        setSearchError(null);
         return;
       }
       setLoading(true);
+      setSearchError(null);
       try {
         const params = new URLSearchParams();
         params.set("q", term);
         params.set("limit", "40");
+        params.set("record_kind", "institution");
         const res = await fetch(`/api/admin/institutions?${params}`, {
           credentials: "include",
           cache: "no-store",
@@ -56,14 +60,29 @@ export default function InstitutionLinkPicker({
         const json = await res.json();
         if (!res.ok) {
           setResults([]);
+          setSearchError(
+            typeof json.error === "string"
+              ? json.error
+              : "Institutions could not be searched. Try again.",
+          );
+          return;
+        }
+        if (!Array.isArray(json.data)) {
+          setResults([]);
+          setSearchError("The institution search returned an invalid response.");
           return;
         }
         const rows = (json.data || []) as InstitutionPick[];
         setResults(
           rows.filter((r) => !excludeId || String(r.id) !== String(excludeId)),
         );
-      } catch {
+      } catch (error) {
         setResults([]);
+        setSearchError(
+          error instanceof Error
+            ? `Institutions could not be searched: ${error.message}`
+            : "Institutions could not be searched. Try again.",
+        );
       } finally {
         setLoading(false);
       }
@@ -104,6 +123,11 @@ export default function InstitutionLinkPicker({
       />
       {loading && (
         <p className="govuk-hint govuk-!-margin-top-1">Searching…</p>
+      )}
+      {searchError && (
+        <p className="govuk-error-message" role="alert">
+          {searchError}
+        </p>
       )}
       {open && results.length > 0 && (
         <ul
@@ -159,7 +183,7 @@ export default function InstitutionLinkPicker({
           ))}
         </ul>
       )}
-      {open && search.trim().length >= 1 && !loading && results.length === 0 && (
+      {open && search.trim().length >= 1 && !loading && !searchError && results.length === 0 && (
         <p className="govuk-hint govuk-!-margin-top-1">
           No institutions match. Create the parent first if it does not exist.
         </p>

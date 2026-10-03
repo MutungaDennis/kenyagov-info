@@ -27,6 +27,10 @@ export async function searchSite(db: SupabaseClient, input: string, type = "", l
       if (result.error) throw new Error("Government directory search unavailable");
       return (result.data || []) as SearchHit[];
     }), 8000).then(rows => publish(rows.map(hit => ({ ...hit, rank: Math.min(1, (hit.rank || 0) / 4) })))),
+    bounded(db.rpc("search_migrated_content", { q: query, lim: 60 }).then(result => {
+      if (result.error) throw new Error("Hansard and services search unavailable");
+      return (result.data || []) as SearchHit[];
+    }), 8000).then(publish),
     bounded(searchSanityContent(query, 60) as Promise<ContentHit[]>, 5000).then(rows => {
     const content: SearchHit[] = [];
     for (const hit of rows) {

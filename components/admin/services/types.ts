@@ -4,6 +4,8 @@ export type ServiceFormState = {
   slug: string;
   summary: string;
   bodyText: string;
+  originalBodyText?: string;
+  bodyBlocks?: unknown[];
   status: "published" | "draft";
   reviewedAt: string;
   moreInformationUrl: string;
@@ -21,7 +23,7 @@ export type ServiceFormState = {
   }>;
   feesTable: Array<{ itemName: string; amount: string }>;
   physicalVisits: Array<{ purpose: string; locations: string }>;
-  downloadableResources: Array<{ label: string; sourceUrl: string }>;
+  downloadableResources: Array<{ label: string; sourceUrl: string; fileUrl?: string; fileSize?: number }>;
   commonMistakes: Array<{ errorTitle: string; errorFix: string }>;
   faqs: Array<{ question: string; answer: string }>;
   relatedLinks: Array<{ label: string; href: string }>;
@@ -127,6 +129,8 @@ export function detailToForm(data: Record<string, unknown>): ServiceFormState {
     slug: String(data.slug || ""),
     summary: String(data.summary || ""),
     bodyText: blocksToPlainText(data.body),
+    originalBodyText: blocksToPlainText(data.body),
+    bodyBlocks: Array.isArray(data.body) ? data.body : undefined,
     status: data.status === "draft" ? "draft" : "published",
     reviewedAt: data.reviewedAt ? String(data.reviewedAt).slice(0, 10) : "",
     moreInformationUrl: String(data.moreInformationUrl || ""),
@@ -197,6 +201,7 @@ export function formToPayload(form: ServiceFormState) {
     title: form.title,
     slug: form.slug,
     summary: form.summary,
+    body: form.bodyText === form.originalBodyText ? form.bodyBlocks : undefined,
     bodyParagraphs: form.bodyText
       .split(/\n\n+/)
       .map((p) => p.trim())

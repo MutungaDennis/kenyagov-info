@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import PageIntro from "@/components/site/PageIntro";
 import ChevronLinkList from "@/components/site/ChevronLinkList";
-import { client } from "@/sanity/lib/client";
+import { getServiceDirectory } from "@/lib/services/queries";
 
 export const metadata: Metadata = {
   title: "Services A to Z",
@@ -16,11 +16,6 @@ type ServiceRow = {
   summary: string;
 };
 
-const SERVICES_AZ_QUERY = `*[_type == "governmentService" && defined(slug.current) && (status != "draft")] | order(title asc) {
-  title,
-  "slug": slug.current,
-  summary
-}`;
 
 function letterOf(title: string): string {
   const ch = title.trim().charAt(0).toUpperCase();
@@ -30,7 +25,7 @@ function letterOf(title: string): string {
 export default async function ServicesAZPage() {
   let services: ServiceRow[] = [];
   try {
-    services = await client.fetch<ServiceRow[]>(SERVICES_AZ_QUERY);
+    services = (await getServiceDirectory()).services;
   } catch {
     services = [];
   }
@@ -134,3 +129,6 @@ export default async function ServicesAZPage() {
     </>
   );
 }
+
+// Publication changes must take effect without serving a cached draft.
+export const dynamic = "force-dynamic";

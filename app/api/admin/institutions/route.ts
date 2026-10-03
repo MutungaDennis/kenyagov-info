@@ -3,6 +3,8 @@ import { requireAdminApi, slugify } from "@/lib/admin-api";
 import {
   buildInstitutionRow,
   enumErrorFromMessage,
+  isTemporaryBodySchemaUnavailable,
+  isTemporaryBodyType,
   missingColumnFromError,
 } from "@/lib/institutions/fields";
 
@@ -66,6 +68,7 @@ export async function GET(request: NextRequest) {
   const arm = searchParams.get("arm")?.trim() || "";
   const type = searchParams.get("type")?.trim() || "";
   const lifecycleStatus = searchParams.get("status")?.trim() || "";
+  const recordKind = searchParams.get("record_kind")?.trim() || "";
   const activeOnly = searchParams.get("active") === "1";
   const wantFacets = searchParams.get("facets") === "1";
 
@@ -162,7 +165,7 @@ export async function GET(request: NextRequest) {
     parseInt(searchParams.get("offset") || "0", 10) || 0,
   );
 
-  const applyFilters = (query: any) => {
+  const applyFilters = (query: any, includeRecordKind = true) => {
     let qy = query;
     if (q.length >= 1) {
       const qSafe = sanitizeSearchTerm(q);
@@ -189,6 +192,12 @@ export async function GET(request: NextRequest) {
     if (activeOnly) {
       qy = qy.eq("is_active", true);
     }
+    if (
+      includeRecordKind &&
+      (recordKind === "institution" || recordKind === "temporary_body")
+    ) {
+      qy = qy.eq("record_kind", recordKind);
+    }
     return qy;
   };
 
@@ -199,7 +208,7 @@ export async function GET(request: NextRequest) {
        institution_subtype, institution_nature, government_level, arm_of_government,
        constitutional_status, mtef_sector, is_active, status, description, mandate,
        headquarters, website_url, current_head, head_title, verification_status, updated_at,
-       parent_institution_id`,
+       parent_institution_id, record_kind, temporary_body_type`,
       { count: "exact" },
     )
     .order("name", { ascending: true })
@@ -209,6 +218,21 @@ export async function GET(request: NextRequest) {
 
   const { data, error, count } = await query;
   if (error) {
+    const temporaryBodySchemaUnavailable = isTemporaryBodySchemaUnavailable(
+      error.message,
+    );
+    if (
+      recordKind === "temporary_body" &&
+      temporaryBodySchemaUnavailable
+    ) {
+      return NextResponse.json(
+        {
+          error: "Temporary body support is not installed.",
+          hint: "Run 20261003_temporary_public_bodies.sql in Supabase before using this form.",
+        },
+        { status: 503 },
+      );
+    }
     let fallbackQ = auth.supabase
       .from("institutions")
       .select(
@@ -218,7 +242,7 @@ export async function GET(request: NextRequest) {
       )
       .order("name", { ascending: true })
       .range(offset, offset + limit - 1);
-    fallbackQ = applyFilters(fallbackQ);
+    fallbackQ = applyFilters(fallbackQ, !temporaryBodySchemaUnavailable);
 
     const fallback = await fallbackQ;
     if (fallback.error) {
@@ -228,7 +252,10 @@ export async function GET(request: NextRequest) {
       );
     }
     return NextResponse.json({
-      data: fallback.data || [],
+      data: (fallback.data || []).map((row) => ({
+        ...row,
+        record_kind: "institution",
+      })),
       total: fallback.count ?? 0,
       limit,
       offset,
@@ -270,8 +297,57 @@ export async function POST(request: NextRequest) {
   if (!name) {
     return NextResponse.json({ error: "name is required" }, { status: 400 });
   }
+  const recordKind = body.record_kind ?? "institution";
+  if (recordKind !== "institution" && recordKind !== "temporary_body") {
+    return NextResponse.json({ error: "Invalid record kind" }, { status: 400 });
+  }
+  if (recordKind === "temporary_body") {
+    const parentId = String(body.parent_institution_id || "").trim();
+    const bodyType = body.temporary_body_type;
+    if (!parentId || !isTemporaryBodyType(bodyType)) {
+      return NextResponse.json(
+        { error: "A creating institution and valid temporary body type are required." },
+        { status: 400 },
+      );
+    }
+    const startDate = String(body.term_start_date || "");
+    const endDate = String(body.term_end_date || "");
+    if (startDate && endDate && endDate < startDate) {
+      return NextResponse.json(
+        { error: "The term end date must not be earlier than its start date." },
+        { status: 400 },
+      );
+    }
+    const parent = await auth.supabase
+      .from("institutions")
+      .select("id, record_kind")
+      .eq("id", parentId)
+      .maybeSingle();
+    if (parent.error) {
+      if (isTemporaryBodySchemaUnavailable(parent.error.message)) {
+        return NextResponse.json(
+          {
+            error: "Temporary body support is not installed in Supabase.",
+            hint: "Apply lib/supabase/migrations/20261003_temporary_public_bodies.sql to the connected Supabase project, then try again.",
+          },
+          { status: 503 },
+        );
+      }
+      return NextResponse.json(
+        { error: "Could not validate the creating institution.", detail: parent.error.message },
+        { status: 500 },
+      );
+    }
+    if (!parent.data || parent.data.record_kind !== "institution") {
+      return NextResponse.json(
+        { error: "Select an existing institution as the creating institution." },
+        { status: 400 },
+      );
+    }
+  }
 
   let row = buildInstitutionRow(body, { defaults: true });
+  row.record_kind = recordKind;
   row.name = name;
   row.slug =
     String(body.slug || "").trim() ||
@@ -288,6 +364,8 @@ export async function POST(request: NextRequest) {
     "operational_date",
     "status_effective_date",
     "head_appointment_date",
+    "term_start_date",
+    "term_end_date",
   ];
   for (const key of DATE_KEYS) {
     if (row[key] === "null" || row[key] === "" || row[key] == null) {
@@ -319,6 +397,28 @@ export async function POST(request: NextRequest) {
 
     lastError = error;
     console.error(`Attempt ${attempt + 1} failed:`, error);
+
+    if (
+      ["record_kind", "temporary_body_type", "term_start_date", "term_end_date"].includes(
+        missingColumnFromError(error.message) || "",
+      )
+    ) {
+      if (recordKind === "temporary_body") {
+        return NextResponse.json(
+          {
+            error: "Temporary body support is not installed.",
+            hint: "Run 20261003_temporary_public_bodies.sql in Supabase before saving.",
+          },
+          { status: 503 },
+        );
+      }
+      const missing = missingColumnFromError(error.message);
+      if (missing && missing in working) {
+        delete working[missing];
+        dropped.push(missing);
+        continue;
+      }
+    }
 
     if (error?.code === "23505") {
       return NextResponse.json(

@@ -159,7 +159,7 @@ export async function GET(request: NextRequest) {
         let query = sb
           .from("institutions")
           .select(
-            "id, name, short_name, slug, institution_type, government_level, is_active, official_name",
+            "id, name, short_name, slug, institution_type, government_level, is_active, official_name, record_kind, temporary_body_type",
             { count: "exact" },
           )
           .order("name", { ascending: true })

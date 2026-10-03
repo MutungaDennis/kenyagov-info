@@ -52,7 +52,7 @@ export default function Home() {
               items={[
                 {
                   href: "/find-your-representatives",
-                  title: "Find your representatives",
+                   title: "Find your representatives",
                   description:
                     "MP, senator, governor, woman representative, MCA and more.",
                 },

@@ -1,0 +1,72 @@
+{
+  "schema_version": 2,
+  "sitting": {
+    "slug": "senate-2026-09-29-afternoon",
+    "title": "Senate \u2014 Afternoon sitting",
+    "house_type": "senate",
+    "sitting_date": "2026-09-29",
+    "sitting_period": "Afternoon Sitting",
+    "parliament_number": 13,
+    "session_number": 4,
+    "parliamentary_term": "13th Parliament",
+    "official_hansard_url": "https://example.org/replace-with-official-hansard.pdf",
+    "summary_html": "",
+    "summary_text": "",
+    "topics": [],
+    "status": "draft",
+    "review_status": "pending",
+    "proceeding_type": "house-proceeding",
+    "source_access": "unknown",
+    "source_community_id": null,
+    "source_collection_id": null,
+    "source_item_id": null
+  },
+  "sections": [
+    {
+      "section_key": "debate-1",
+      "parent_key": null,
+      "heading": "Replace with the exact debate heading",
+      "section_type": "debate",
+      "sort_order": 1,
+      "body_html": "",
+      "body_text": "",
+      "source_page_start": 1,
+      "source_page_end": 2
+    }
+  ],
+  "contributions": [
+    {
+      "contribution_key": "speech-1",
+      "section_key": "debate-1",
+      "sort_order": 1,
+      "contribution_type": "speech",
+      "speaker_kind": "member",
+      "speaker_name": "Copy the speaker name exactly as printed",
+      "leader_id": null,
+      "leader_role_id": null,
+      "speaker_title": null,
+      "constituency": null,
+      "county": null,
+      "party": null,
+      "capacity": null,
+      "is_chair": false,
+      "body_html": "<p>Replace with the verbatim contribution. Preserve paragraphs, emphasis, lists and tables.</p>",
+      "body_text": "",
+      "language": "en",
+      "spoken_at": null,
+      "source_page": 1,
+      "source_column": null,
+      "link_status": "unmatched",
+      "review_status": "pending"
+    }
+  ],
+  "sources": [
+    {
+      "source_url": "https://example.org/replace-with-official-hansard.pdf",
+      "file_name": "replace-with-pdf-filename.pdf",
+      "page_count": 2,
+      "is_official_source": true,
+      "extraction_method": "pdf-text"
+    }
+  ]
+}

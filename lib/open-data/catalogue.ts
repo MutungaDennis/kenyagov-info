@@ -454,7 +454,7 @@ export const OPEN_DATASETS: OpenDataset[] = [
     sourceUrls: [
       { label: "Parliament of Kenya", href: "http://www.parliament.go.ke/" },
     ],
-    sourceSystem: "sanity",
+    sourceSystem: "supabase",
     formats: [],
     temporalCoverage: "Sittings published on this site (growing archive)",
     geographicCoverage: "National Parliament (and county assembly if published)",

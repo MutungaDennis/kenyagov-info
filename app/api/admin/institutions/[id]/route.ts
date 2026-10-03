@@ -3,6 +3,8 @@ import { requireAdminApi, slugify } from "@/lib/admin-api";
 import {
   buildInstitutionRow,
   enumErrorFromMessage,
+  isTemporaryBodySchemaUnavailable,
+  isTemporaryBodyType,
   missingColumnFromError,
 } from "@/lib/institutions/fields";
 
@@ -45,6 +47,64 @@ export async function PATCH(request: NextRequest, context: Ctx) {
   console.error(`=== INSTITUTION UPDATE PAYLOAD (ID: ${id}) ===`);
   console.error(JSON.stringify(body, null, 2));
 
+  if (
+    "record_kind" in body &&
+    body.record_kind !== "institution" &&
+    body.record_kind !== "temporary_body"
+  ) {
+    return NextResponse.json({ error: "Invalid record kind" }, { status: 400 });
+  }
+
+  if (body.record_kind === "temporary_body") {
+    const parentId = String(body.parent_institution_id || "").trim();
+    if (!parentId || !isTemporaryBodyType(body.temporary_body_type)) {
+      return NextResponse.json(
+        { error: "A creating institution and valid temporary body type are required." },
+        { status: 400 },
+      );
+    }
+    const startDate = String(body.term_start_date || "");
+    const endDate = String(body.term_end_date || "");
+    if (startDate && endDate && endDate < startDate) {
+      return NextResponse.json(
+        { error: "The term end date must not be earlier than its start date." },
+        { status: 400 },
+      );
+    }
+    if (parentId === id) {
+      return NextResponse.json(
+        { error: "A temporary body cannot be its own creating institution." },
+        { status: 400 },
+      );
+    }
+    const parent = await auth.supabase
+      .from("institutions")
+      .select("id, record_kind")
+      .eq("id", parentId)
+      .maybeSingle();
+    if (parent.error) {
+      if (isTemporaryBodySchemaUnavailable(parent.error.message)) {
+        return NextResponse.json(
+          {
+            error: "Temporary body support is not installed in Supabase.",
+            hint: "Apply lib/supabase/migrations/20261003_temporary_public_bodies.sql to the connected Supabase project, then try again.",
+          },
+          { status: 503 },
+        );
+      }
+      return NextResponse.json(
+        { error: "Could not validate the creating institution.", detail: parent.error.message },
+        { status: 500 },
+      );
+    }
+    if (!parent.data || parent.data.record_kind !== "institution") {
+      return NextResponse.json(
+        { error: "Select an existing institution as the creating institution." },
+        { status: 400 },
+      );
+    }
+  }
+
   let patch = buildInstitutionRow(body);
 
   // Legacy cleanup
@@ -65,6 +125,8 @@ export async function PATCH(request: NextRequest, context: Ctx) {
     "operational_date",
     "status_effective_date",
     "head_appointment_date",
+    "term_start_date",
+    "term_end_date",
   ];
   for (const key of DATE_KEYS) {
     if (patch[key] === "null" || patch[key] === "" || patch[key] == null) {
@@ -98,6 +160,26 @@ export async function PATCH(request: NextRequest, context: Ctx) {
 
     lastError = error;
     console.error(`Update attempt ${attempt + 1} failed:`, error);
+
+    if (
+      isTemporaryBodySchemaUnavailable(error.message)
+    ) {
+      if (body.record_kind === "temporary_body") {
+        return NextResponse.json(
+          {
+            error: "Temporary body support is not installed.",
+            hint: "Run 20261003_temporary_public_bodies.sql in Supabase before saving.",
+          },
+          { status: 503 },
+        );
+      }
+      const missing = missingColumnFromError(error.message);
+      if (missing && missing in working) {
+        delete working[missing];
+        dropped.push(missing);
+        continue;
+      }
+    }
 
     // Unique violation
     if (error?.code === "23505") {

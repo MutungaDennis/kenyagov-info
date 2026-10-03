@@ -694,7 +694,7 @@ export default function ServiceEditor({
   );
 }
 
-function ArrayObjectEditor<T extends Record<string, string>>({
+function ArrayObjectEditor<T extends object>({
   title,
   hint,
   items,
@@ -729,7 +729,7 @@ function ArrayObjectEditor<T extends Record<string, string>>({
                 <ExpandableTextarea
                   minRows={2}
                   maxRows={12}
-                  value={item[f.key] || ""}
+                  value={String(item[f.key] ?? "")}
                   onChange={(e) => {
                     const next = [...items];
                     next[idx] = { ...item, [f.key]: e.target.value };
@@ -739,7 +739,7 @@ function ArrayObjectEditor<T extends Record<string, string>>({
               ) : (
                 <input
                   className="govuk-input"
-                  value={item[f.key] || ""}
+                  value={String(item[f.key] ?? "")}
                   onChange={(e) => {
                     const next = [...items];
                     next[idx] = { ...item, [f.key]: e.target.value };

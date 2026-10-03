@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdminApi } from "@/lib/admin-api";
-import { createSanityWriteClient } from "@/lib/sanity/createSanityWriteClient";
+import { listContent, saveContent } from "@/lib/content/store";
+import type { ServiceDocument } from "@/lib/services/queries";
+import { refreshServices } from "@/lib/content/revalidate";
 import {
   applyServicePhrasesToBlocks,
   type ServiceLinkPhrase,
@@ -11,12 +13,6 @@ export async function POST(request: NextRequest) {
   if (!auth.ok) return auth.response;
 
   try {
-    if (!process.env.SANITY_API_TOKEN) {
-      return NextResponse.json(
-        { success: false, error: "SANITY_API_TOKEN is not configured" },
-        { status: 500 },
-      );
-    }
 
     const body = await request.json();
     const dryRun = body.dryRun !== false && body.write !== true;
@@ -26,22 +22,8 @@ export async function POST(request: NextRequest) {
         ? [String(body.serviceId)]
         : [];
 
-    const sanity = createSanityWriteClient();
-    const phrases = (await sanity.fetch(
-      `*[_type == "serviceLinkPhrase" && enabled != false] | order(sortOrder asc) {
-        _id, phrase, matchMode, internalHref, externalHref, externalLabel,
-        scopeServiceSlugs, enabled, sortOrder
-      }`,
-    )) as ServiceLinkPhrase[];
-
-    const services = serviceIds.length
-      ? await sanity.fetch(
-          `*[_type == "governmentService" && _id in $ids]{ _id, "slug": slug.current, body }`,
-          { ids: serviceIds },
-        )
-      : await sanity.fetch(
-          `*[_type == "governmentService" && defined(body) && count(body) > 0]{ _id, "slug": slug.current, body }`,
-        );
+    const phrases = (await listContent<ServiceLinkPhrase>("service_link_phrases", auth.supabase)).filter(p => p.enabled !== false).sort((a,b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+    const services = (await listContent<ServiceDocument>("government_services", auth.supabase)).filter(s => !serviceIds.length || serviceIds.includes(s._id));
 
     const results: Array<{
       id: string;
@@ -54,16 +36,17 @@ export async function POST(request: NextRequest) {
       const { blocks, matchCount, changed } = applyServicePhrasesToBlocks(
         svc.body,
         phrases || [],
-        String(svc.slug || ""),
+        svc.slug.current,
       );
       results.push({
         id: svc._id,
-        slug: svc.slug,
+        slug: svc.slug.current,
         matchCount,
         changed,
       });
       if (!dryRun && changed) {
-        await sanity.patch(svc._id).set({ body: blocks }).commit();
+        await saveContent("government_services", { ...svc, body: blocks }, auth.supabase);
+        refreshServices(svc.slug.current);
       }
     }
 

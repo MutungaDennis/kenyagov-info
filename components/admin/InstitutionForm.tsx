@@ -12,6 +12,7 @@ import {
   INSTITUTION_STATUS_OPTIONS,
   LEGAL_BASIS_TYPE_OPTIONS,
   OPERATIONAL_MODEL_OPTIONS,
+  TEMPORARY_BODY_TYPES,
   VERIFICATION_STATUS_OPTIONS,
   formHasOrganisationalChange,
   formatTextArray,
@@ -45,6 +46,10 @@ export type InstitutionFormState = {
   short_name: string;
   official_name: string;
   slug: string;
+  record_kind: "institution" | "temporary_body";
+  temporary_body_type: string;
+  term_start_date: string;
+  term_end_date: string;
   /** Hierarchy — UUIDs linking to other institutions */
   parent_institution_id: string;
   parent_institution_label: string;
@@ -154,6 +159,10 @@ export const emptyInstitutionForm = (): InstitutionFormState => ({
   short_name: "",
   official_name: "",
   slug: "",
+  record_kind: "institution",
+  temporary_body_type: "",
+  term_start_date: "",
+  term_end_date: "",
   parent_institution_id: "",
   parent_institution_label: "",
   supervising_ministry_id: "",
@@ -266,6 +275,10 @@ export function institutionFormFromRow(
     short_name: s("short_name"),
     official_name: s("official_name"),
     slug: s("slug"),
+    record_kind: s("record_kind") === "temporary_body" ? "temporary_body" : "institution",
+    temporary_body_type: s("temporary_body_type"),
+    term_start_date: d("term_start_date"),
+    term_end_date: d("term_end_date"),
     parent_institution_id: s("parent_institution_id"),
     parent_institution_label: s("parent_institution_label"),
     supervising_ministry_id: s("supervising_ministry_id"),
@@ -441,6 +454,7 @@ export default function InstitutionForm({
   excludeInstitutionId,
 }: Props) {
   const saveEnabled = canSave && !submitting;
+  const isTemporaryBody = form.record_kind === "temporary_body";
   const db = (key: string) => fieldOptions[key] || [];
   const typeOpts = db("institution_type").length
     ? db("institution_type")
@@ -546,6 +560,22 @@ export default function InstitutionForm({
       } as ChangeEvent<HTMLInputElement>);
       return;
     }
+    const hasRecordedLifecycleDetails =
+      form.status !== "Active" ||
+      Boolean(
+        form.status_effective_date ||
+          form.lifecycle_change_reason ||
+          form.successor_institution_id ||
+          form.predecessor_institution_id,
+      );
+    if (
+      hasRecordedLifecycleDetails &&
+      !window.confirm(
+        "Clear this institution's lifecycle status, effective date, reason and predecessor or successor links? This does not remove entries in Lifecycle, lineage and names.",
+      )
+    ) {
+      return;
+    }
     // Untick: clear lifecycle fields in one shot via sequential emits is racy;
     // use a dedicated synthetic that parent pages also handle via checkbox first.
     onChange({
@@ -595,6 +625,35 @@ export default function InstitutionForm({
   return (
     <form onSubmit={onSubmit} className="govuk-!-margin-top-4">
       <h2 className="govuk-heading-m">Identity</h2>
+      <div className="govuk-checkboxes govuk-!-margin-bottom-4">
+        <div className="govuk-checkboxes__item">
+          <input
+            className="govuk-checkboxes__input"
+            id="record_kind_temporary_body"
+            type="checkbox"
+            checked={isTemporaryBody}
+            onChange={() =>
+              emitField(
+                "record_kind",
+                isTemporaryBody ? "institution" : "temporary_body",
+              )
+            }
+          />
+          <label
+            className="govuk-label govuk-checkboxes__label"
+            htmlFor="record_kind_temporary_body"
+          >
+            This is a temporary public body, not an institution
+          </label>
+        </div>
+      </div>
+      {isTemporaryBody && (
+        <p className="govuk-inset-text">
+          Temporary bodies are recorded so their members’ service can be
+          assigned accurately. They are shown under their creating institution,
+          not in the public institutions directory.
+        </p>
+      )}
       <Field id="name" label="Name *">
         <input
           className="govuk-input"
@@ -632,7 +691,11 @@ export default function InstitutionForm({
       <Field
         id="slug"
         label="URL slug *"
-        hint="Public page: /government/institutions/{slug}"
+        hint={
+          isTemporaryBody
+            ? "Public page: /government/temporary-bodies/{slug}"
+            : "Public page: /government/institutions/{slug}"
+        }
       >
         <input
           className="govuk-input"
@@ -685,6 +748,102 @@ export default function InstitutionForm({
         </div>
       </div>
 
+      {isTemporaryBody && (
+        <>
+          <h2 className="govuk-heading-m">Temporary body details</h2>
+          <div className="govuk-grid-row">
+            <div className="govuk-grid-column-one-half">
+              <Field id="temporary_body_type" label="Body type *">
+                <select
+                  className="govuk-select"
+                  id="temporary_body_type"
+                  name="temporary_body_type"
+                  value={form.temporary_body_type}
+                  onChange={onChange}
+                  required
+                >
+                  <option value="">Select a type</option>
+                  {TEMPORARY_BODY_TYPES.map((bodyType) => (
+                    <option key={bodyType} value={bodyType}>
+                      {bodyType}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            </div>
+            <div className="govuk-grid-column-one-half">
+              <Field
+                id="appointing_authority"
+                label="Appointing authority"
+                hint="For example, the President or Cabinet Secretary"
+              >
+                <input
+                  className="govuk-input"
+                  id="appointing_authority"
+                  name="appointing_authority"
+                  value={form.appointing_authority}
+                  onChange={onChange}
+                />
+              </Field>
+            </div>
+          </div>
+          <InstitutionLinkPicker
+            id="temporary_body_parent"
+            label="Creating / parent institution *"
+            hint="The ministry, executive office, or other institution that created or hosts this body"
+            valueId={form.parent_institution_id}
+            valueLabel={form.parent_institution_label}
+            excludeId={excludeInstitutionId}
+            onChange={(pick) => onHierarchyChange?.("parent_institution", pick)}
+          />
+          <Field
+            id="establishment_act"
+            label="Appointment instrument / Gazette notice"
+            hint="Record the order, Gazette Notice, Cabinet decision or other instrument that established the body"
+          >
+            <input
+              className="govuk-input"
+              id="establishment_act"
+              name="establishment_act"
+              value={form.establishment_act}
+              onChange={onChange}
+            />
+          </Field>
+          <div className="govuk-grid-row">
+            <div className="govuk-grid-column-one-half">
+              <Field id="term_start_date" label="Term start date">
+                <input
+                  className="govuk-input"
+                  id="term_start_date"
+                  name="term_start_date"
+                  type="date"
+                  value={form.term_start_date}
+                  onChange={onChange}
+                />
+              </Field>
+            </div>
+            <div className="govuk-grid-column-one-half">
+              <Field
+                id="term_end_date"
+                label="Term end date"
+                hint="Leave blank while active or if the date is unknown"
+              >
+                <input
+                  className="govuk-input"
+                  id="term_end_date"
+                  name="term_end_date"
+                  type="date"
+                  value={form.term_end_date}
+                  onChange={onChange}
+                />
+              </Field>
+            </div>
+          </div>
+        </>
+      )}
+
+      {!isTemporaryBody && (
+        <>
       <h2 className="govuk-heading-m">Government hierarchy</h2>
       <p className="govuk-body">
         Link this body to its parent so the structure is clear — e.g. Kenya Air
@@ -1107,6 +1266,15 @@ export default function InstitutionForm({
         Ministry of Education — instead of confusing two different bodies with
         similar names.
       </p>
+      <p className="govuk-body">
+        This form records a simple change and one main predecessor or successor.
+        For multiple operating periods, dated names, or links to several related
+        bodies, use the optional{" "}
+        <a className="govuk-link" href="#institution-lifecycle-history">
+          Detailed institution history
+        </a>{" "}
+        below. Save that section separately after saving this form.
+      </p>
 
       <div className="govuk-form-group">
         <div className="govuk-checkboxes">
@@ -1126,9 +1294,10 @@ export default function InstitutionForm({
               Record organisational change (past or upcoming)
             </label>
             <div className="govuk-hint govuk-checkboxes__hint">
-              Past: rename, merger, dissolution, restructure, succession, former
-              body. Upcoming: earmarked for change in the coming days or weeks.
-              Leave unticked if nothing material to record.
+              Past: rename, merger, split, dissolution, abolition or closure.
+              Upcoming changes can be recorded without marking the body historical.
+              Selecting a historical status publishes the record automatically;
+              clearing this box asks before saved details are removed.
             </div>
           </div>
         </div>
@@ -1428,7 +1597,12 @@ export default function InstitutionForm({
         </div>
       </div>
 
-      <h2 className="govuk-heading-m">Description & mandate</h2>
+        </>
+      )}
+
+      <h2 className="govuk-heading-m">
+        {isTemporaryBody ? "Purpose & mandate" : "Description & mandate"}
+      </h2>
       <Field id="description" label="Description">
         <textarea
           className="govuk-textarea"
@@ -1449,7 +1623,7 @@ export default function InstitutionForm({
           onChange={onChange}
         />
       </Field>
-      <div className="govuk-grid-row">
+      {!isTemporaryBody && <div className="govuk-grid-row">
         <div className="govuk-grid-column-one-half">
           <Field id="vision" label="Vision">
             <textarea
@@ -1474,8 +1648,8 @@ export default function InstitutionForm({
             />
           </Field>
         </div>
-      </div>
-      <Field id="functions" label="Functions" hint="Comma-separated">
+      </div>}
+      {!isTemporaryBody && <Field id="functions" label="Functions" hint="Comma-separated">
         <textarea
           className="govuk-textarea"
           id="functions"
@@ -1484,8 +1658,8 @@ export default function InstitutionForm({
           value={form.functions}
           onChange={onChange}
         />
-      </Field>
-      <div className="govuk-grid-row">
+      </Field>}
+      {!isTemporaryBody && <div className="govuk-grid-row">
         <div className="govuk-grid-column-one-half">
           <Field id="keywords" label="Keywords" hint="Comma-separated">
             <input
@@ -1508,8 +1682,9 @@ export default function InstitutionForm({
             />
           </Field>
         </div>
-      </div>
+      </div>}
 
+      {!isTemporaryBody && <>
       <h2 className="govuk-heading-m">Leadership</h2>
       <p className="govuk-hint">
         Link the current head to an existing leader so the public page can open
@@ -1584,7 +1759,9 @@ export default function InstitutionForm({
           </Field>
         </div>
       </div>
+      </>}
 
+      {!isTemporaryBody && <>
       <h2 className="govuk-heading-m">Contact & location</h2>
       {historical && (
         <p className="govuk-inset-text">
@@ -1753,7 +1930,9 @@ export default function InstitutionForm({
           </Field>
         </div>
       </div>
+      </>}
 
+      {!isTemporaryBody && <>
       <h2 className="govuk-heading-m">Social media</h2>
       <p className="govuk-hint">
         Organisation profiles (not the head’s personal accounts). Choose the
@@ -1839,7 +2018,9 @@ export default function InstitutionForm({
       >
         Add social link
       </button>
+      </>}
 
+      {!isTemporaryBody && <>
       <h2 className="govuk-heading-m">Transparency & size</h2>
       <div className="govuk-grid-row">
         <div className="govuk-grid-column-one-half">
@@ -1942,17 +2123,34 @@ export default function InstitutionForm({
           </Field>
         </div>
       </div>
+      </>}
 
       <h2 className="govuk-heading-m">Status & publishing</h2>
-      <p className="govuk-hint">
+      {!isTemporaryBody && <p className="govuk-hint">
         Lifecycle status is set under <strong>Organisational changes over time</strong>{" "}
         when the change box is ticked.{" "}
         <strong>Publish / Unpublish</strong> only controls directory visibility —
         keep historical bodies published so citizens can track what they became.
-      </p>
+      </p>}
       <div className="govuk-grid-row">
         <div className="govuk-grid-column-one-third">
-          {hasChange ? (
+          {isTemporaryBody ? (
+            <Field id="status" label="Status">
+              <select
+                className="govuk-select"
+                id="status"
+                name="status"
+                value={form.status}
+                onChange={onChange}
+              >
+                {statusOptions.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          ) : hasChange ? (
             <div className="govuk-form-group">
               <p className="govuk-label">Status</p>
               <p className="govuk-body">

@@ -1,62 +1,9 @@
-import { createSanityWriteClient } from "@/lib/sanity/createSanityWriteClient";
-import { getSanityStudioUrl } from "@/lib/sanity/studioUrl";
-import HansardHub, {
-  type HansardSittingRow,
-  type HansardTab,
-} from "@/components/admin/hansard/HansardHub";
-
-const sanity = createSanityWriteClient();
-const studioBase = getSanityStudioUrl();
-
-type PageProps = {
-  searchParams: Promise<{
-    tab?: string;
-    date?: string;
-    house?: string;
-    id?: string;
-  }>;
-};
-
-function parseTab(raw?: string): HansardTab {
-  if (raw === "manual" || raw === "upload" || raw === "sittings") return raw;
-  return "sittings";
-}
-
-function parseHouse(
-  raw?: string,
-): "national-assembly" | "senate" | "county-assembly" | undefined {
-  if (
-    raw === "national-assembly" ||
-    raw === "senate" ||
-    raw === "county-assembly"
-  ) {
-    return raw;
-  }
-  return undefined;
-}
-
-export default async function HansardManagementPage({ searchParams }: PageProps) {
-  const sp = await searchParams;
-  const sittings: HansardSittingRow[] = await sanity.fetch(
-    `*[_type == "hansardSitting"] | order(sittingDate desc) {
-      _id,
-      title,
-      houseType,
-      sittingDate,
-      sittingPeriod,
-      isActive,
-      "contributionCount": count(contributions)
-    }`,
-  );
-
-  return (
-    <HansardHub
-      sittings={sittings}
-      studioBase={studioBase}
-      initialTab={parseTab(sp.tab)}
-      initialLoadDate={sp.date}
-      initialLoadHouse={parseHouse(sp.house)}
-      initialDocumentId={sp.id}
-    />
-  );
+import { createClient } from "@/lib/supabase/server";
+import { listHansard, getHansardDocument } from "@/lib/hansard/queries";
+import HansardWorkbench from "@/components/admin/hansard/HansardWorkbench";
+export default async function HansardManagementPage({ searchParams }: { searchParams: Promise<{ id?: string }> }) {
+ const { id } = await searchParams; const db = await createClient();
+ const rows = []; for (let page = 1; ; page++) { const result = await listHansard({ page, pageSize: 500 }, db); rows.push(...result.rows); if (rows.length >= result.total) break; }
+ const initialDocument = id ? await getHansardDocument({ id }, db) : null;
+ return <HansardWorkbench sittings={rows} initialDocument={initialDocument} />;
 }

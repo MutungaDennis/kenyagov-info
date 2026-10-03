@@ -21,6 +21,8 @@ type Institution = {
   is_active: boolean;
   status?: string | null;
   description?: string | null;
+  record_kind?: "institution" | "temporary_body";
+  temporary_body_type?: string | null;
 };
 
 const PAGE_SIZE = 50;
@@ -180,7 +182,9 @@ export default function AdminInstitutionsPage() {
       <main className="govuk-main-wrapper">
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-two-thirds">
-            <h1 className="govuk-heading-xl">Government Institutions</h1>
+            <h1 className="govuk-heading-xl">
+              Government institutions and temporary bodies
+            </h1>
             <p className="govuk-body-l">
               Manage public institutions —{" "}
               <strong>{total.toLocaleString()}</strong> matching
@@ -197,7 +201,7 @@ export default function AdminInstitutionsPage() {
               href={adminPath("institutions/new")}
               className="govuk-button"
             >
-              + Add institution
+              + Add institution or temporary body
             </Link>
           </div>
         </div>
@@ -297,7 +301,7 @@ export default function AdminInstitutionsPage() {
                 className="govuk-label govuk-checkboxes__label"
                 htmlFor="inactive"
               >
-                Show inactive
+                Include unpublished records
               </label>
             </div>
           </div>
@@ -340,7 +344,7 @@ export default function AdminInstitutionsPage() {
                     #
                   </th>
                   <th className="govuk-table__header" scope="col">
-                    Institution
+                    Institution / body
                   </th>
                   <th className="govuk-table__header" scope="col">
                     Type
@@ -366,6 +370,13 @@ export default function AdminInstitutionsPage() {
                     <td className="govuk-table__cell">
                       <strong>{inst.name}</strong>
                       {inst.short_name && ` (${inst.short_name})`}
+                      {inst.record_kind === "temporary_body" && (
+                        <p className="govuk-body-s govuk-!-margin-bottom-0">
+                          <strong className="govuk-tag govuk-tag--blue">
+                            Temporary body · {inst.temporary_body_type || "Unclassified"}
+                          </strong>
+                        </p>
+                      )}
                     </td>
                     <td className="govuk-table__cell">
                       {inst.institution_type || "—"}
@@ -390,7 +401,6 @@ export default function AdminInstitutionsPage() {
                           ? "Published"
                           : "Unpublished"}
                       </span>
-                      <p className="govuk-body-s govuk-!-margin-top-2 govuk-!-margin-bottom-0">{isInstitutionHistorical(inst.status) ? "Historical: " : ""}{inst.status || "Active"}</p>
                       <p className="govuk-body-s govuk-!-margin-top-2 govuk-!-margin-bottom-0">{isInstitutionHistorical(inst.status) ? "Historical: " : ""}{inst.status || "Active"}</p>
                     </td>
                     <td className="govuk-table__cell">

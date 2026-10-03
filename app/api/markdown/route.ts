@@ -1,3 +1,4 @@
+import { getServiceBySlug } from "@/lib/services/queries";
 import { NextRequest, NextResponse } from "next/server";
 import { createPublicClient } from "@/lib/supabase/public";
 import { sanityClient } from "@/lib/sanity/client";
@@ -20,6 +21,7 @@ export async function GET(request: NextRequest) {
         supported: [
           "county",
           "institution",
+          "temporary_body",
           "leader",
           "person",
           "service",
@@ -37,6 +39,13 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: "Missing slug" }, { status: 400 });
       }
       return await markdownFromSupabaseEntity(type, slug, request);
+    }
+
+    if (type === "temporary_body") {
+      if (!slug) {
+        return NextResponse.json({ error: "Missing slug" }, { status: 400 });
+      }
+      return await markdownTemporaryBody(slug, request);
     }
 
     if (type === "leader" || type === "person") {
@@ -81,6 +90,7 @@ export async function GET(request: NextRequest) {
         supported: [
           "county",
           "institution",
+          "temporary_body",
           "leader",
           "person",
           "service",
@@ -215,6 +225,7 @@ async function markdownFromSupabaseEntity(
     .from("institutions")
     .select("*")
     .eq("slug", slug)
+    .eq("record_kind", "institution")
     .maybeSingle();
 
   if (error || !inst) {
@@ -236,6 +247,53 @@ async function markdownFromSupabaseEntity(
     md += "\n";
   }
   return markdownResponse(md, `/government/institutions/${slug}`, request);
+}
+
+async function markdownTemporaryBody(slug: string, request: NextRequest) {
+  const supabase = createPublicClient();
+  const { data: body, error } = await supabase
+    .from("institutions")
+    .select(
+      "id,slug,name,description,mandate,temporary_body_type,appointing_authority,establishment_act,term_start_date,term_end_date,status,parent_institution_id",
+    )
+    .eq("slug", slug)
+    .eq("record_kind", "temporary_body")
+    .eq("is_active", true)
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+  if (!body) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  const parent = body.parent_institution_id
+    ? await supabase
+        .from("institutions")
+        .select("name,slug")
+        .eq("id", body.parent_institution_id)
+        .eq("record_kind", "institution")
+        .maybeSingle()
+    : null;
+  if (parent?.error) throw new Error(parent.error.message);
+
+  const canonicalPath = `/government/temporary-bodies/${body.slug}`;
+  let markdown = `# ${body.name}\n\n`;
+  markdown += `> Temporary public body · ${body.temporary_body_type || "Temporary body"}\n\n`;
+  markdown += `> Source: [${SITE_URL}${canonicalPath}](${SITE_URL}${canonicalPath})\n\n`;
+  markdown += `This is a time-limited public body, not a government institution.\n\n`;
+  markdown += `## Purpose and appointment\n\n${body.mandate || body.description || "No mandate has been recorded."}\n\n`;
+  if (body.appointing_authority) {
+    markdown += `- **Appointing authority:** ${body.appointing_authority}\n`;
+  }
+  if (body.establishment_act) {
+    markdown += `- **Appointment instrument:** ${body.establishment_act}\n`;
+  }
+  if (body.term_start_date || body.term_end_date) {
+    markdown += `- **Term:** ${body.term_start_date || "Start date not recorded"} to ${body.term_end_date || "present"}\n`;
+  }
+  if (body.status) markdown += `- **Status:** ${body.status}\n`;
+  if (parent?.data) {
+    markdown += `- **Creating institution:** [${parent.data.name}](${SITE_URL}/government/institutions/${parent.data.slug})\n`;
+  }
+  return markdownResponse(markdown, canonicalPath, request);
 }
 
 async function markdownLeader(slug: string, request: NextRequest) {
@@ -286,16 +344,7 @@ async function markdownLeader(slug: string, request: NextRequest) {
 }
 
 async function markdownService(slug: string, request: NextRequest) {
-  const service = await sanityClient.fetch(
-    `*[_type == "governmentService" && slug.current == $slug && status != "draft"][0]{
-      title, summary, body, processingTime, baseCostLabel, executionMode,
-      beforeYouStart, requiredDocuments,
-      steps[]{ stepNumber, stepTitle, stepDescription },
-      transactionPortals[]{ portalLabel, portalUrl },
-      providingInstitutions[]{ name, parentName }
-    }`,
-    { slug },
-  );
+  const service = await getServiceBySlug(slug);
 
   if (!service) {
     return NextResponse.json({ error: "Service not found" }, { status: 404 });

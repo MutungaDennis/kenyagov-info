@@ -2,7 +2,7 @@
 import React, { Suspense } from "react";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { client } from "@/sanity/lib/client";
+import { getServiceDirectory } from "@/lib/services/queries";
 import ServicesClientView from "./ServicesClientView";
 
 export interface GovernmentServiceSummary {
@@ -23,22 +23,7 @@ export interface GovernmentCategoryFilter {
   subcategories?: Array<{ title: string; slug: string }>;
 }
 
-const ALL_SERVICES_QUERY = `*[_type == "governmentService" && (status != "draft")]{
-  _id,
-  title,
-  summary,
-  "slug": slug.current,
-  "popularityWeight": coalesce(popularityWeight, 0),
-  executionMode,
-  "providingBody": coalesce(providingInstitutions[0].name, providingBodies[0]->name, "Government Agency"),
-  "categorySlug": coalesce(*[_type == "governmentCategory" && references(^._id)].slug.current, [])
-}`;
 
-const ALL_CATEGORIES_QUERY = `*[_type == "governmentCategory"]{
-  title,
-  "slug": slug.current,
-  "subcategories": subTopics[]{ "title": heading, "slug": heading }
-}`;
 
 const SITE_URL = "https://www.citizenguide.ke";
 
@@ -79,10 +64,7 @@ export default async function ServicesHubPage({ searchParams }: PageProps) {
     redirect(`/services/categories/${encodeURIComponent(category)}`);
   }
 
-  const [services, categories] = await Promise.all([
-    client.fetch<GovernmentServiceSummary[]>(ALL_SERVICES_QUERY, {}, { next: { revalidate: 3600 } }),
-    client.fetch<GovernmentCategoryFilter[]>(ALL_CATEGORIES_QUERY, {}, { next: { revalidate: 3600 } }),
-  ]);
+  const { services, categories } = await getServiceDirectory();
 
   return (
     <Suspense
@@ -98,3 +80,6 @@ export default async function ServicesHubPage({ searchParams }: PageProps) {
     </Suspense>
   );
 }
+
+// Publication changes must take effect without serving a cached draft.
+export const dynamic = "force-dynamic";

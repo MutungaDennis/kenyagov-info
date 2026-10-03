@@ -60,18 +60,17 @@ export default async function FindMembersPage({ searchParams }: PageProps) {
 
       // Minimal columns only — no full-table filter scans
       let query = supabase
-        .from("leaders")
+        .from("hansard_members")
         .select(
           "id, slug, full_name, title, current_party, current_county, current_constituency",
           { count: "exact" },
         )
-        .eq("is_active", true)
         .order("full_name", { ascending: true });
 
       if (filters.house === "National Assembly") {
-        query = query.not("current_constituency", "is", null);
+        query = query.contains("parliamentary_houses", ["national-assembly"]);
       } else if (filters.house === "Senate") {
-        query = query.is("current_constituency", null);
+        query = query.contains("parliamentary_houses", ["senate"]);
       }
 
       if (filters.party) {
@@ -129,7 +128,7 @@ export default async function FindMembersPage({ searchParams }: PageProps) {
         ]}
       />
 
-      <h1 className="govuk-heading-l">Find Members of Parliament</h1>
+      <h1 className="govuk-heading-l">Find current and former Members of Parliament</h1>
       <p className="govuk-body-l">
         Search MPs and Senators, then open their Hansard record — speaking pulse
         while in office, floor contributions, and links to full sittings.
