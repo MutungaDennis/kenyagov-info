@@ -14,13 +14,18 @@ describe("Cloudflare build portability", () => {
     }`],
     ["minified", 'getMiddlewareManifest(){return this.minimalMode?null:require(this.middlewareManifestPath)}'],
     ["esbuild require shim", 'getMiddlewareManifest(){return this.minimalMode?null:__require(this.middlewareManifestPath)}'],
+    ["wrapped manifest path", 'getMiddlewareManifest(){return this.minimalMode?null:require(normalizePath(this.middlewareManifestPath))}'],
     ["already fixed upstream", 'getMiddlewareManifest(){return this.minimalMode?null:(0,loader.loadManifest)(this.middlewareManifestPath)}'],
+    ["already fixed with static path", 'getMiddlewareManifest(){return this.minimalMode?null:loader.loadManifest("server/middleware-manifest.json")}'],
   ]) {
     it(`preserves middleware behavior for ${name} output`, () => {
       const input = `class Server { ${pages} ${method} }`;
       const output = patchManifestSource(input);
       const manifest = { middleware: { "/": { name: "admin-session" } } };
-      const Server = new Function("loader", `${output}; return Server;`)({ loadManifest: () => manifest });
+      const Server = new Function("loader", "normalizePath", `${output}; return Server;`)(
+        { loadManifest: () => manifest },
+        (value: string) => value,
+      );
       const instance = new Server();
       instance.middlewareManifestPath = "/.next/server/middleware-manifest.json";
       expect(instance.getMiddlewareManifest()).toBe(manifest);
@@ -32,6 +37,15 @@ describe("Cloudflare build portability", () => {
   it("uses the loader in the same class, ignoring unrelated readers", () => {
     const output = patchManifestSource(`class Other { getPagesManifest(){return other.loadManifest("other")} } class Server { ${pages} getMiddlewareManifest(){return require(this.middlewareManifestPath)} }`);
     expect(output).toContain("(0, loader.loadManifest)(this.middlewareManifestPath)");
+  });
+  it("finds the manifest reader when a wrapper contains the path access", () => {
+    const output = patchManifestSource(`class Server { ${pages} getMiddlewareManifest(){return require(normalize(this.middlewareManifestPath))} }`);
+    expect(output).toContain("(0, loader.loadManifest)(normalize(this.middlewareManifestPath))");
+  });
+  it("patches every middleware manifest read in alternate branches", () => {
+    const output = patchManifestSource(`class Server { ${pages} getMiddlewareManifest(){return this.useFallback ? require(this.middlewareManifestPath) : require(this.middlewareManifestPath)} }`);
+    expect(output.match(/\(0, loader\.loadManifest\)/g)).toHaveLength(3);
+    expect(output).not.toContain("require(this.middlewareManifestPath)");
   });
   it("rejects unexpected changes rather than disabling protection", () => {
     expect(() => patchManifestSource(`class Server { ${pages} getMiddlewareManifest(){return customLoader(this.middlewareManifestPath)} }`)).toThrow("Unexpected middleware loader");

@@ -42,13 +42,37 @@ export function patchManifestSource(source) {
   }
   const loaders = calls(pages).filter(call => isLoader(call.expression));
   if (loaders.length !== 1) throw new Error("Cannot identify OpenNext's inlined manifest loader.");
-  const readers = calls(method).filter(call => call.arguments.some(arg => ts.isPropertyAccessExpression(arg) && arg.expression.kind === ts.SyntaxKind.ThisKeyword && arg.name.text === "middlewareManifestPath"));
-  if (readers.length !== 1) throw new Error("Unexpected middleware manifest access. Review the adapter compatibility patch.");
-  const reader = readers[0];
-  if (isLoader(reader.expression)) return source; // upstream fixed, or already patched
-  const target = unwrap(reader.expression);
-  if (!ts.isIdentifier(target) || !/^(?:__)?require\d*$/.test(target.text)) throw new Error("Unexpected middleware loader; refusing to change its behavior.");
-  const start = reader.expression.getStart(file);
-  const end = reader.expression.end;
-  return source.slice(0, start) + loaders[0].expression.getText(file) + source.slice(end);
+  /** @param {import('typescript').Node} node */
+  function referencesMiddlewareManifest(node) {
+    if (
+      (ts.isPropertyAccessExpression(node) &&
+        node.expression.kind === ts.SyntaxKind.ThisKeyword &&
+        node.name.text === "middlewareManifestPath") ||
+      (ts.isIdentifier(node) && node.text === "middlewareManifestPath") ||
+      (ts.isStringLiteralLike(node) && node.text.includes("middleware-manifest"))
+    ) {
+      return true;
+    }
+    return node.forEachChild(referencesMiddlewareManifest) || false;
+  }
+  /** @param {import('typescript').Expression} expression */
+  function isNodeRequire(expression) {
+    const target = unwrap(expression);
+    return ts.isIdentifier(target) && /^(?:__)?require\d*$/.test(target.text);
+  }
+  const candidates = calls(method).filter(call => call.arguments.some(referencesMiddlewareManifest));
+  const readers = candidates.filter(call => isNodeRequire(call.expression));
+  const existingLoaders = candidates.filter(call => isLoader(call.expression));
+  if (readers.length === 0 && existingLoaders.length > 0) return source;
+  if (readers.length === 0 && candidates.length > 0) {
+    throw new Error("Unexpected middleware loader; refusing to change its behavior.");
+  }
+  if (readers.length === 0) throw new Error("Unexpected middleware manifest access. Review the adapter compatibility patch.");
+  let patched = source;
+  for (const reader of readers.sort((a, b) => b.expression.getStart(file) - a.expression.getStart(file))) {
+    const start = reader.expression.getStart(file);
+    const end = reader.expression.end;
+    patched = patched.slice(0, start) + loaders[0].expression.getText(file) + patched.slice(end);
+  }
+  return patched;
 }
