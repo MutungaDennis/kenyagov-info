@@ -58,6 +58,23 @@ display these offices, including closed locations for historical reference.
 Apply `lib/supabase/migrations/20261003_institution_offices.sql` before using this
 admin section.
 
+Current officials can be grouped and ordered from **Current officials: levels and
+order** on the institution edit page. Create main seniority levels such as
+“Commissioners” and “Secretariat”, then add optional subcategories beneath a main
+level, such as “Chair” and “Vice Chair”. Set display order separately among main
+levels and within each level's subcategories, then assign each current official a
+group and a unique number within that group. Lower numbers appear first from left
+to right. Officials assigned directly to a main level appear below that heading;
+officials assigned to a subcategory appear beneath the subcategory. Removing a
+main level promotes its subcategories to main levels. This institution-specific
+order takes precedence over each role's existing public prominence/position rank;
+unassigned people keep the automatic role ordering. The public profile reflects
+the same hierarchy in a responsive multi-column layout.
+
+Apply `lib/supabase/migrations/20261005_institution_people_order.sql` first, then
+`lib/supabase/migrations/20261006_institution_people_subcategories.sql` before
+using subcategories.
+
 ## Temporary public bodies
 
 Task forces, working parties, advisory panels, commissions of inquiry, and similar

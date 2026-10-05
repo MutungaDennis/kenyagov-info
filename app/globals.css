@@ -76,6 +76,14 @@ body {
   padding: 0;
 }
 
+.institution-profile-container {
+  max-width: 1280px;
+}
+
+.institution-profile-people {
+  width: 100%;
+}
+
 /* -------------------------------------------------------------------------- */
 /* Homepage masthead — GOV.UK-style hero, CitizenGuide brand green            */
 /* -------------------------------------------------------------------------- */

@@ -2,7 +2,13 @@ import Link from "next/link";
 import { createPublicClient } from "@/lib/supabase/public";
 import { displayNameWithTitles, type LeaderNameParts } from "@/lib/leaders/display";
 import { isInstitutionHistorical } from "@/lib/institutions/fields";
-import { groupInstitutionPeople, safePortrait, type InstitutionService } from "@/lib/institutions/people-model";
+import {
+  groupInstitutionPeople,
+  orderInstitutionPeopleLevels,
+  safePortrait,
+  type InstitutionPeopleLevel,
+  type InstitutionService,
+} from "@/lib/institutions/people-model";
 import styles from "./institution-people.module.css";
 
 type Person = LeaderNameParts & { id: string; slug: string; image_url: string | null };
@@ -14,7 +20,16 @@ function dateLabel(date: string | null) {
   return new Date(`${date}T00:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
 }
 
-function PeopleCards({ people, current = false }: { people: InstitutionService[][]; current?: boolean }) {
+function PeopleCards({
+  people,
+  current = false,
+  headingLevel = 3,
+}: {
+  people: InstitutionService[][];
+  current?: boolean;
+  headingLevel?: 3 | 4 | 5 | 6;
+}) {
+  const PersonHeading = `h${headingLevel}` as const;
   return <ul className={styles.people}>{people.map(roles => {
     const person = roles[0];
     return <li className={styles.person} key={person.personId}>
@@ -23,7 +38,7 @@ function PeopleCards({ people, current = false }: { people: InstitutionService[]
         <img src={person.image} alt="" width={72} height={88} loading="lazy" className={styles.portrait} />
         : <span className={styles.placeholder} aria-hidden="true">{person.name.split(/\s+/).slice(0, 2).map(part => part[0]).join("")}</span>}
       <div className={styles.details}>
-        <h3 className="govuk-heading-s govuk-!-margin-bottom-2">{person.href ? <Link className="govuk-link" href={person.href}>{person.name}</Link> : person.name}</h3>
+        <PersonHeading className="govuk-heading-s govuk-!-margin-bottom-2">{person.href ? <Link className="govuk-link" href={person.href}>{person.name}</Link> : person.name}</PersonHeading>
         <ul className="govuk-list govuk-body-s govuk-!-margin-bottom-0">{roles.map(role => <li key={role.id}>
           <strong>{role.title || "Role not recorded"}</strong><br />
           {dateLabel(role.start)} to {role.end ? dateLabel(role.end) : current ? "present" : "end date not recorded"}
@@ -45,8 +60,29 @@ export default async function InstitutionPeople({
 }) {
   const db = createPublicClient();
   let services: InstitutionService[];
+  let levels: InstitutionPeopleLevel[] = [];
+  const assignmentByPerson = new Map<
+    string,
+    { leader_id: string; level_id: string | null; sort_order: number | null }
+  >();
   try {
     const roles: Role[] = [];
+    const [levelsResult, assignmentsResult] = await Promise.all([
+      db.from("institution_people_levels").select("id,name,sort_order,parent_level_id").eq("institution_id", institutionId).order("sort_order"),
+      db.from("institution_people_assignments").select("leader_id,level_id,sort_order").eq("institution_id", institutionId),
+    ]);
+    const isMissingPeopleOrdering = (message: string) =>
+      /does not exist|schema cache|could not find|PGRST204/i.test(message);
+    if (levelsResult.error && !isMissingPeopleOrdering(levelsResult.error.message)) {
+      throw levelsResult.error;
+    }
+    if (assignmentsResult.error && !isMissingPeopleOrdering(assignmentsResult.error.message)) {
+      throw assignmentsResult.error;
+    }
+    if (!levelsResult.error) levels = (levelsResult.data || []) as InstitutionPeopleLevel[];
+    for (const assignment of assignmentsResult.data || []) {
+      assignmentByPerson.set(assignment.leader_id, assignment);
+    }
     for (let offset = 0; ; offset += 1000) {
       const result = await db.from("leader_roles").select(`id,title,term_start_date,term_end_date,status,rank_order,display_priority,
         person:leaders!leader_roles_leader_id_fkey!inner(id,slug,full_name,first_name,other_names,surname,name_titles,national_honours,image_url)`)
@@ -65,9 +101,15 @@ export default async function InstitutionPeople({
       const previous = peopleByName.get(name);
       peopleByName.set(name, previous === undefined || previous?.id === role.person.id ? role.person : null);
     }
+    const levelOrderById = new Map(
+      orderInstitutionPeopleLevels(levels).map((level, index) => [level.id, index + 1]),
+    );
     services = roles.filter(role => role.person).map(role => ({
       id: role.id, personId: role.person!.id, name: displayNameWithTitles(role.person!), href: role.person!.slug ? `/government/people/${role.person!.slug}` : null,
       image: safePortrait(role.person!.image_url), title: role.title, start: role.term_start_date, end: role.term_end_date, status: role.status, priority: role.display_priority ?? role.rank_order,
+      levelId: assignmentByPerson.get(role.person!.id)?.level_id || null,
+      levelOrder: levelOrderById.get(assignmentByPerson.get(role.person!.id)?.level_id || "") ?? null,
+      personOrder: assignmentByPerson.get(role.person!.id)?.sort_order ?? null,
     }));
     for (const legacy of (legacyResult.data || []) as Legacy[]) {
       const person = peopleByName.get(legacy.name.trim().toLowerCase());
@@ -82,12 +124,16 @@ export default async function InstitutionPeople({
   }
   const historical = isInstitutionHistorical(status);
   const today = new Date().toLocaleDateString("en-CA", { timeZone: "Africa/Nairobi" });
-  const groups = groupInstitutionPeople(services, historical, today);
+  const groups = groupInstitutionPeople(services, historical, today, levels);
   return <section aria-labelledby="institution-people-heading" className="govuk-!-margin-top-8 govuk-!-margin-bottom-8">
     <h2 id="institution-people-heading" className="govuk-heading-l">People who serve this {entityLabel}</h2>
     <p className="govuk-body-s">Roles and dates recorded against this {entityLabel}. Open a profile to see the person’s wider service history.</p>
     {!historical && <><h3 className="govuk-heading-m">Current people <span className="govuk-caption-m">{groups.current.length} recorded</span></h3>
-      {groups.current.length ? <PeopleCards people={groups.current} current /> : <p className="govuk-body">No current office holders are recorded here yet.</p>}</>}
+      {groups.current.length ? (
+        groups.currentByLevel.length
+          ? groups.currentByLevel.map((level) => <section key={level.id} aria-label={level.name} className={styles.level}><h4 className="govuk-heading-m">{level.name}</h4>{level.people.length > 0 && <PeopleCards people={level.people} current headingLevel={5} />}{level.subcategories.map((subcategory) => <section key={subcategory.id} className={styles.subcategory}><h5 className="govuk-heading-s">{subcategory.name}</h5><PeopleCards people={subcategory.people} current headingLevel={6} /></section>)}</section>)
+          : <PeopleCards people={groups.current} current headingLevel={4} />
+      ) : <p className="govuk-body">No current office holders are recorded here yet.</p>}</>}
     {groups.former.length > 0 && <details className="govuk-details" open={historical}>
       <summary className="govuk-details__summary"><span className="govuk-details__summary-text">Former people and service history ({groups.former.length})</span></summary>
       <div className="govuk-details__text"><PeopleCards people={groups.former} /></div>

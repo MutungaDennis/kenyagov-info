@@ -332,7 +332,7 @@ export default function InstitutionProfileClient({ people }: { people?: ReactNod
 
   if (isLoading) {
     return (
-      <div className="govuk-width-container">
+      <div className="govuk-width-container institution-profile-container">
         <GovUKBreadcrumbs items={[{ text: "Home", href: "/" }, { text: "Government", href: "/government" }, { text: "Institutions", href: "/government/institutions" }]} />
         <main className="govuk-main-wrapper"><p className="govuk-body">Loading institution profile...</p></main>
       </div>
@@ -341,7 +341,7 @@ export default function InstitutionProfileClient({ people }: { people?: ReactNod
 
   if (error || !institution) {
     return (
-      <div className="govuk-width-container">
+      <div className="govuk-width-container institution-profile-container">
         <GovUKBreadcrumbs items={[{ text: "Home", href: "/" }, { text: "Government", href: "/government" }, { text: "Institutions", href: "/government/institutions" }]} />
         <main className="govuk-main-wrapper">
           <h1 className="govuk-heading-xl">Page not found</h1>
@@ -364,7 +364,7 @@ export default function InstitutionProfileClient({ people }: { people?: ReactNod
   );
 
   return (
-    <div className="govuk-width-container">
+    <div className="govuk-width-container institution-profile-container">
       <GovUKBreadcrumbs items={[
         { text: "Home", href: "/" },
         { text: "Government", href: "/government" },
@@ -536,7 +536,11 @@ export default function InstitutionProfileClient({ people }: { people?: ReactNod
               </section>
             )}
 
-            {people}
+          </div>
+        </div>
+        <div className="institution-profile-people">{people}</div>
+        <div className="govuk-grid-row">
+          <div className="govuk-grid-column-two-thirds">
             {(institution.current_head || institution.head_title || institution.board_chair) && (
               <>
                 <h2 className="govuk-heading-l govuk-!-margin-top-9">Leadership</h2>
