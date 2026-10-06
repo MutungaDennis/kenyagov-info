@@ -95,7 +95,10 @@ export function isNationalAssemblySpeakerTitle(
   chamber: ParliamentaryChamber,
   title: string | null | undefined,
 ) {
-  return chamber === "national_assembly" && /(^|\W)speaker(\W|$)/i.test(title || "");
+  const value = title || "";
+  if (!/(^|\W)speaker(\W|$)/i.test(value)) return false;
+  // A Speaker belongs only to their own House.
+  return chamber === "national_assembly" ? !/senate/i.test(value) : !/national\s+assembly/i.test(value);
 }
 
 const CATEGORY_ORDER: Record<ParliamentaryChamber, string[]> = {

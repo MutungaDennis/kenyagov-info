@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireAdminApi } from "@/lib/admin-api";
 import { isCurrentInstitutionService } from "@/lib/institutions/people-model";
@@ -279,7 +279,7 @@ export async function PUT(request: NextRequest, context: Context) {
       })
       .map((role) => role.leader_id));
     if (currentMemberIds.some((memberId) => !validMembers.has(memberId))) {
-      return NextResponse.json({ error: "Current committee assignments must be current MPs or Senators from this House, or the National Assembly Speaker." }, { status: 400 });
+      return NextResponse.json({ error: "Current committee assignments must be current MPs or Senators from this House, or the Speaker of this House." }, { status: 400 });
     }
   }
 

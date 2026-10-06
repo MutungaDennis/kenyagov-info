@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
@@ -454,7 +454,7 @@ export default function InstitutionCommitteeAssignmentsPanel({
                 <div className={`govuk-grid-row govuk-!-margin-bottom-4 ${styles.addControls}`}>
                   <div className="govuk-grid-column-one-third govuk-form-group">
                     <label className="govuk-label" htmlFor="house-member-search">
-                      Search current {chamber === "national_assembly" ? "MPs and Speaker" : "Senators"} designated to this House
+                      Search current {chamber === "national_assembly" ? "MPs and Speaker" : "Senators and Speaker"} designated to this House
                     </label>
                     <input className="govuk-input" id="house-member-search" value={memberSearch} onChange={(event) => setMemberSearch(event.target.value)} placeholder="Search by name" />
                     <label className="govuk-label govuk-!-margin-top-2" htmlFor="house-member-select">MP or Senator</label>

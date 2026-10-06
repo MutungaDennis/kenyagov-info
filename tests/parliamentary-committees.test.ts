@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+﻿import { describe, expect, it } from "vitest";
 import {
   chamberLabel,
   committeeMembershipStatus,
@@ -29,6 +29,8 @@ describe("parliamentary committees", () => {
     expect(isNationalAssemblySpeakerTitle("national_assembly", "Speaker")).toBe(true);
     expect(isNationalAssemblySpeakerTitle("senate", "Speaker of the National Assembly")).toBe(false);
     expect(isNationalAssemblySpeakerTitle("national_assembly", "Committee Clerk")).toBe(false);
+    expect(isNationalAssemblySpeakerTitle("senate", "Speaker of the Senate")).toBe(true);
+    expect(isNationalAssemblySpeakerTitle("national_assembly", "Speaker of the Senate")).toBe(false);
   });
 
   it("uses dates and explicit inactive statuses while retaining roles with an unrecorded status", () => {
