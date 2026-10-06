@@ -1,0 +1,76 @@
+.page {
+  min-width: 0;
+}
+
+.tableScroll {
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  margin-bottom: 24px;
+}
+
+.rosterTable {
+  min-width: 920px;
+}
+
+.memberStatus {
+  display: block;
+  width: fit-content;
+  margin-top: 4px;
+}
+
+.actionBar {
+  position: sticky;
+  z-index: 2;
+  bottom: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 20px;
+  margin: 24px -15px -15px;
+  padding: 15px;
+  background: #fff;
+  border-top: 1px solid #b1b4b6;
+  box-shadow: 0 -4px 8px rgb(11 12 12 / 8%);
+}
+
+.actionBar button {
+  margin-bottom: 0;
+}
+
+.createForm {
+  min-width: 0;
+}
+
+.createButton {
+  margin-top: 16px;
+  margin-bottom: 0;
+}
+
+.addControls {
+  min-width: 0;
+}
+
+.addControls button {
+  white-space: normal;
+}
+
+@media (max-width: 640px) {
+  .createButton {
+    width: 100%;
+  }
+
+  .actionBar {
+    margin-right: -15px;
+    margin-left: -15px;
+  }
+
+  .actionBar button {
+    width: 100%;
+  }
+
+  .actionBar p {
+    margin: 0;
+  }
+}

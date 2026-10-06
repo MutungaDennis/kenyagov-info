@@ -98,6 +98,17 @@ export default function LegislaturePage() {
             </div>
           </div>
 
+          <p className="govuk-body govuk-!-margin-top-5">
+            <Link
+              href="/government/legislature/committees"
+              className="govuk-link govuk-!-font-weight-bold"
+            >
+              Browse parliamentary committees
+            </Link>
+            {" — "}
+            see committee membership, leadership and secretariat support.
+          </p>
+
           <hr className="govuk-section-break govuk-section-break--l govuk-section-break--visible" />
 
           <h2 className="govuk-heading-m">Hansard and debates</h2>

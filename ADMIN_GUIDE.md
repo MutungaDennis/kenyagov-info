@@ -82,6 +82,35 @@ After login you are redirected to `/admin`. All `/admin/*` routes are protected 
 - Entity descriptions
 - Websites and contact info
 
+### Parliamentary Committees
+
+**URL:** `/admin/parliamentary-committees`
+
+Create and maintain committee records separately for the National Assembly and
+Senate. Select a committee category, add its description and mandate, and set
+whether it is active and published. Committee records and publication are
+managed here; retiring a committee preserves its assignment history.
+
+To allocate membership, edit the National Assembly or Senate institution. In
+**National Assembly committee assignments** or **Senate committee assignments**,
+choose a committee, search for current members, and add them as Chairperson,
+Vice-Chairperson or Member. Record the required start date and optional end date;
+a blank end date means the person is still serving. A member may belong to more
+than one committee. Use the order field to set priority within each role.
+
+The secretariat section on the House institution editor only offers people with
+current roles at that House. Assign each to a committee secretariat role, such as
+Committee Clerk, Legal Counsel, Fiscal Analyst or Research Analyst. Secretariat
+entries are non-voting. Past assignments remain available for date-based history.
+
+The public directory is at `/government/legislature/committees`. Draft committees
+are not public. National Assembly and Senate institution pages also group
+published committee rosters, showing current leadership, membership and
+secretariat first, with upcoming and former assignments in a history section.
+Apply `20261007_parliamentary_committees.sql` and
+`20261009_committee_assignment_management.sql` from `lib/supabase/migrations/` in
+Supabase before using committee management and House-level assignments.
+
 ## Data Structure
 
 ### Officials Table Schema

@@ -24,6 +24,12 @@ const TASKS = [
     group: "Government directory",
   },
   {
+    segment: "parliamentary-committees",
+    title: "Parliamentary committees",
+    body: "Create, categorize and retire National Assembly and Senate committees. Assign members and secretariat staff from each House institution.",
+    group: "Parliament & Hansard",
+  },
+  {
     segment: "mcas",
     title: "County MCAs",
     body: "Manage Members of County Assembly, terms (start/end dates), publish status, and profiles.",

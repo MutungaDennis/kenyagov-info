@@ -4,6 +4,8 @@ import InstitutionProfileClient from "./InstitutionProfileClient";
 import { getPublicSchool } from "@/lib/schools/queries";
 import SchoolProfile from "@/components/schools/SchoolProfile";
 import InstitutionPeople from "@/components/institutions/InstitutionPeople";
+import InstitutionCommittees from "@/components/institutions/InstitutionCommittees";
+import { parliamentaryChamberForInstitution } from "@/lib/legislature/committees";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -21,11 +23,11 @@ export default async function InstitutionProfilePage({ params }: Props) {
   if (!slug?.trim()) notFound();
 
   const supabase = createPublicClient();
-  let data: { id: string; status: string | null; record_kind?: string | null } | null = null;
+  let data: { id: string; status: string | null; record_kind?: string | null; slug?: string | null; name?: string | null } | null = null;
   let error: { message: string } | null = null;
   const current = await supabase
     .from("institutions")
-    .select("id,status,record_kind")
+    .select("id,status,record_kind,slug,name")
     .eq("slug", slug)
     .eq("is_active", true)
     .maybeSingle();
@@ -38,7 +40,7 @@ export default async function InstitutionProfilePage({ params }: Props) {
   ) {
     const legacy = await supabase
       .from("institutions")
-      .select("id,status")
+      .select("id,status,slug,name")
       .eq("slug", slug)
       .eq("is_active", true)
       .maybeSingle();
@@ -55,7 +57,19 @@ export default async function InstitutionProfilePage({ params }: Props) {
     if (data.record_kind === "temporary_body") {
       redirect(`/government/temporary-bodies/${slug}`);
     }
-    return <InstitutionProfileClient people={<InstitutionPeople institutionId={data.id} status={data.status} />} />;
+    const chamber = parliamentaryChamberForInstitution(data.slug, data.name);
+    return (
+      <InstitutionProfileClient
+        people={
+          <InstitutionPeople
+            institutionId={data.id}
+            status={data.status}
+            committeeChamber={chamber}
+            afterCurrent={chamber ? <InstitutionCommittees chamber={chamber} institutionId={data.id} /> : null}
+          />
+        }
+      />
+    );
   }
   const school = await getPublicSchool(slug);
   if (school) {

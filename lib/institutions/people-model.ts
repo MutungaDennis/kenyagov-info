@@ -6,6 +6,7 @@ export type InstitutionService = {
   href: string | null;
   image: string | null;
   title: string;
+  detail?: string | null;
   start: string | null;
   end: string | null;
   status: string | null;

@@ -315,7 +315,7 @@ export default function InstitutionPeopleOrderPanel({
                   Display order
                 </label>
                 <input
-                  className="govuk-input"
+                  className="govuk-input govuk-input--width-3"
                   id={`people-level-order-${level.id}`}
                   type="number"
                   min={1}
@@ -380,7 +380,7 @@ export default function InstitutionPeopleOrderPanel({
                             Priority within category
                           </label>
                           <input
-                            className="govuk-input govuk-input--width-5"
+                            className="govuk-input govuk-input--width-3"
                             id={`people-level-order-${subcategory.id}`}
                             type="number"
                             min={1}
@@ -430,8 +430,14 @@ export default function InstitutionPeopleOrderPanel({
       {!data.people.length ? (
         <p className="govuk-body">No current linked officials are recorded for this institution.</p>
       ) : (
-        <div className="govuk-table__container">
-          <table className="govuk-table">
+        <div
+          className="govuk-table__container"
+          role="region"
+          aria-label="Current official categories and display order. Scroll horizontally to see all fields."
+          tabIndex={0}
+          style={{ maxWidth: "100%", overflowX: "auto", WebkitOverflowScrolling: "touch" }}
+        >
+          <table className="govuk-table" style={{ minWidth: 760 }}>
             <thead className="govuk-table__head">
               <tr className="govuk-table__row">
                 <th className="govuk-table__header" scope="col">Official and role</th>

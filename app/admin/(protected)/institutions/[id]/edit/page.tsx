@@ -20,6 +20,7 @@ import InstitutionForm, {
 import type { LeaderPickResult } from "@/components/admin/LeaderLinkPicker";
 import InstitutionLifecyclePanel from "@/components/admin/InstitutionLifecyclePanel";
 import InstitutionOfficesPanel from "@/components/admin/InstitutionOfficesPanel";
+import InstitutionCommitteeAssignmentsPanel from "@/components/admin/InstitutionCommitteeAssignmentsPanel";
 import InstitutionPeopleOrderPanel from "@/components/admin/InstitutionPeopleOrderPanel";
 import type { SocialLink } from "@/lib/leaders/titles-social";
 
@@ -574,6 +575,11 @@ export default function EditInstitutionPage({
           <>
             <InstitutionPeopleOrderPanel
               institutionId={id}
+              institutionName={form.name || form.official_name || ""}
+            />
+            <InstitutionCommitteeAssignmentsPanel
+              institutionId={id}
+              institutionSlug={form.slug || ""}
               institutionName={form.name || form.official_name || ""}
             />
             <InstitutionOfficesPanel institutionId={id} />

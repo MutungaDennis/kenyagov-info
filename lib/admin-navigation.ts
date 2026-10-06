@@ -4,10 +4,13 @@ export const ADMIN_NAVIGATION = [
     { path: "institutions", label: "Institutions" }, { path: "schools", label: "Schools" },
     { path: "officials", label: "National officials" }, { path: "mcas", label: "County MCAs" },
   ] },
+  { title: "Parliament and Hansard", items: [
+    { path: "parliamentary-committees", label: "Parliamentary committees" },
+    { path: "hansard", label: "Parliamentary Hansard" },
+  ] },
   { title: "Law and publications", items: [
     { path: "constitution", label: "Constitution" }, { path: "legislation", label: "Acts and county laws" },
     { path: "gazette", label: "Kenya Gazette" }, { path: "documents", label: "Documents" },
-    { path: "hansard", label: "Parliamentary Hansard" },
   ] },
   { title: "Services and elections", items: [
     { path: "services", label: "Public services" }, { path: "polling-stations/upload", label: "Polling stations" },

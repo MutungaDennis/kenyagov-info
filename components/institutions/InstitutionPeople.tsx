@@ -1,6 +1,8 @@
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { createPublicClient } from "@/lib/supabase/public";
 import { displayNameWithTitles, type LeaderNameParts } from "@/lib/leaders/display";
+import { committeeMembershipStatus, representationLabel, type ParliamentaryChamber } from "@/lib/legislature/committees";
 import { isInstitutionHistorical } from "@/lib/institutions/fields";
 import {
   groupInstitutionPeople,
@@ -12,7 +14,7 @@ import {
 import styles from "./institution-people.module.css";
 
 type Person = LeaderNameParts & { id: string; slug: string; image_url: string | null };
-type Role = { id: string; title: string; term_start_date: string | null; term_end_date: string | null; status: string | null; rank_order: number | null; display_priority: number | null; person: Person | null };
+type Role = { id: string; title: string; term_start_date: string | null; term_end_date: string | null; status: string | null; rank_order: number | null; display_priority: number | null; seat_type: string | null; nomination_category: string | null; county: string | null; constituency: string | null; person: Person | null };
 type Legacy = { id: string; name: string; title: string; start_date: string | null; end_date: string | null; is_current: boolean | null; profile_url: string | null; image_url: string | null };
 
 function dateLabel(date: string | null) {
@@ -40,7 +42,7 @@ function PeopleCards({
       <div className={styles.details}>
         <PersonHeading className="govuk-heading-s govuk-!-margin-bottom-2">{person.href ? <Link className="govuk-link" href={person.href}>{person.name}</Link> : person.name}</PersonHeading>
         <ul className="govuk-list govuk-body-s govuk-!-margin-bottom-0">{roles.map(role => <li key={role.id}>
-          <strong>{role.title || "Role not recorded"}</strong><br />
+          <strong>{role.title || "Role not recorded"}</strong>{role.detail && <><br /><span>{role.detail}</span></>}<br />
           {dateLabel(role.start)} to {role.end ? dateLabel(role.end) : current ? "present" : "end date not recorded"}
           {role.status && !["Active", "Former"].includes(role.status) && <span> · {role.status}</span>}
         </li>)}</ul>
@@ -53,18 +55,24 @@ export default async function InstitutionPeople({
   institutionId,
   status,
   entityLabel = "institution",
+  committeeChamber = null,
+  afterCurrent = null,
 }: {
   institutionId: string;
   status: string | null;
   entityLabel?: string;
+  committeeChamber?: ParliamentaryChamber | null;
+  afterCurrent?: ReactNode;
 }) {
   const db = createPublicClient();
+  const today = new Date().toLocaleDateString("en-CA", { timeZone: "Africa/Nairobi" });
   let services: InstitutionService[];
   let levels: InstitutionPeopleLevel[] = [];
   const assignmentByPerson = new Map<
     string,
     { leader_id: string; level_id: string | null; sort_order: number | null }
   >();
+  const assignedCommitteeMemberIds = new Set<string>();
   try {
     const roles: Role[] = [];
     const [levelsResult, assignmentsResult] = await Promise.all([
@@ -84,7 +92,7 @@ export default async function InstitutionPeople({
       assignmentByPerson.set(assignment.leader_id, assignment);
     }
     for (let offset = 0; ; offset += 1000) {
-      const result = await db.from("leader_roles").select(`id,title,term_start_date,term_end_date,status,rank_order,display_priority,
+      const result = await db.from("leader_roles").select(`id,title,term_start_date,term_end_date,status,rank_order,display_priority,seat_type,nomination_category,county,constituency,
         person:leaders!leader_roles_leader_id_fkey!inner(id,slug,full_name,first_name,other_names,surname,name_titles,national_honours,image_url)`)
         .eq("institution_id", institutionId).eq("person.is_active", true).order("id").range(offset, offset + 999);
       if (result.error) throw result.error;
@@ -106,11 +114,41 @@ export default async function InstitutionPeople({
     );
     services = roles.filter(role => role.person).map(role => ({
       id: role.id, personId: role.person!.id, name: displayNameWithTitles(role.person!), href: role.person!.slug ? `/government/people/${role.person!.slug}` : null,
-      image: safePortrait(role.person!.image_url), title: role.title, start: role.term_start_date, end: role.term_end_date, status: role.status, priority: role.display_priority ?? role.rank_order,
+      image: safePortrait(role.person!.image_url), title: role.title, detail: committeeChamber ? representationLabel(role) : null, start: role.term_start_date, end: role.term_end_date, status: role.status, priority: role.display_priority ?? role.rank_order,
       levelId: assignmentByPerson.get(role.person!.id)?.level_id || null,
       levelOrder: levelOrderById.get(assignmentByPerson.get(role.person!.id)?.level_id || "") ?? null,
       personOrder: assignmentByPerson.get(role.person!.id)?.sort_order ?? null,
     }));
+
+    if (committeeChamber) {
+      const committeesResult = await db
+        .from("parliamentary_committees")
+        .select("id")
+        .eq("chamber", committeeChamber)
+        .eq("is_active", true)
+        .eq("is_published", true);
+      if (committeesResult.error) throw committeesResult.error;
+      const committeeIds = (committeesResult.data || []).map((row) => row.id).filter(Boolean);
+      if (committeeIds.length > 0) {
+        for (let offset = 0; ; offset += 1000) {
+          const membershipResult = await db
+            .from("parliamentary_committee_memberships")
+            .select("leader_id,start_date,end_date")
+            .in("committee_id", committeeIds)
+            .order("id")
+            .range(offset, offset + 999);
+          if (membershipResult.error) throw membershipResult.error;
+          const page = membershipResult.data || [];
+          for (const row of page) {
+            if (committeeMembershipStatus(row.start_date, row.end_date, today) === "current") {
+              assignedCommitteeMemberIds.add(row.leader_id);
+            }
+          }
+          if (page.length < 1000) break;
+        }
+      }
+    }
+
     for (const legacy of (legacyResult.data || []) as Legacy[]) {
       const person = peopleByName.get(legacy.name.trim().toLowerCase());
       if (person && services.some(service => service.personId === person.id && service.title.toLowerCase() === legacy.title.toLowerCase() && service.start === legacy.start_date && service.end === legacy.end_date)) continue;
@@ -123,17 +161,29 @@ export default async function InstitutionPeople({
     return <section className="govuk-inset-text"><h2 className="govuk-heading-m">People and service history for this {entityLabel}</h2><p className="govuk-body">These records could not be loaded. Refresh this page to try again.</p></section>;
   }
   const historical = isInstitutionHistorical(status);
-  const today = new Date().toLocaleDateString("en-CA", { timeZone: "Africa/Nairobi" });
   const groups = groupInstitutionPeople(services, historical, today, levels);
+  const currentByLevel = assignedCommitteeMemberIds.size
+    ? groups.currentByLevel
+      .map((level) => level.id === "unassigned" ? {
+        ...level,
+        people: level.people.filter((roles) => !assignedCommitteeMemberIds.has(roles[0]?.personId || "")),
+      } : level)
+      .filter((level) => level.id !== "unassigned" || level.people.length > 0 || level.subcategories.length > 0)
+    : groups.currentByLevel;
+  const leadershipLevels = currentByLevel.filter((level) => level.id !== "unassigned");
+  const otherLevels = currentByLevel.filter((level) => level.id === "unassigned");
+  const renderLevel = (level: (typeof currentByLevel)[number]) => <section key={level.id} aria-label={level.name} className={styles.level}><h4 className="govuk-heading-m">{level.name}</h4>{level.people.length > 0 && <PeopleCards people={level.people} current headingLevel={5} />}{level.subcategories.map((subcategory) => <section key={subcategory.id} className={styles.subcategory}><h5 className="govuk-heading-s">{subcategory.name}</h5><PeopleCards people={subcategory.people} current headingLevel={6} /></section>)}</section>;
   return <section aria-labelledby="institution-people-heading" className="govuk-!-margin-top-8 govuk-!-margin-bottom-8">
     <h2 id="institution-people-heading" className="govuk-heading-l">People who serve this {entityLabel}</h2>
     <p className="govuk-body-s">Roles and dates recorded against this {entityLabel}. Open a profile to see the person’s wider service history.</p>
     {!historical && <><h3 className="govuk-heading-m">Current people <span className="govuk-caption-m">{groups.current.length} recorded</span></h3>
       {groups.current.length ? (
-        groups.currentByLevel.length
-          ? groups.currentByLevel.map((level) => <section key={level.id} aria-label={level.name} className={styles.level}><h4 className="govuk-heading-m">{level.name}</h4>{level.people.length > 0 && <PeopleCards people={level.people} current headingLevel={5} />}{level.subcategories.map((subcategory) => <section key={subcategory.id} className={styles.subcategory}><h5 className="govuk-heading-s">{subcategory.name}</h5><PeopleCards people={subcategory.people} current headingLevel={6} /></section>)}</section>)
+        currentByLevel.length
+          ? leadershipLevels.map(renderLevel)
           : <PeopleCards people={groups.current} current headingLevel={4} />
       ) : <p className="govuk-body">No current office holders are recorded here yet.</p>}</>}
+    {afterCurrent}
+    {!historical && otherLevels.map(renderLevel)}
     {groups.former.length > 0 && <details className="govuk-details" open={historical}>
       <summary className="govuk-details__summary"><span className="govuk-details__summary-text">Former people and service history ({groups.former.length})</span></summary>
       <div className="govuk-details__text"><PeopleCards people={groups.former} /></div>
