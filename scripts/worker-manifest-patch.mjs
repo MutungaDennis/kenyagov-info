@@ -67,6 +67,11 @@ export function patchManifestSource(source) {
   if (readers.length === 0 && candidates.length > 0) {
     throw new Error("Unexpected middleware loader; refusing to change its behavior.");
   }
+  // Newer adapters may no longer read the manifest from disk in this method.
+  if (readers.length === 0 && !referencesMiddlewareManifest(method)) {
+    console.warn(`Middleware manifest reader does not read from disk; leaving it unchanged: ${method.getText(file).slice(0, 300)}`);
+    return source;
+  }
   if (readers.length === 0) throw new Error("Unexpected middleware manifest access. Review the adapter compatibility patch.");
   let patched = source;
   for (const reader of readers.sort((a, b) => b.expression.getStart(file) - a.expression.getStart(file))) {

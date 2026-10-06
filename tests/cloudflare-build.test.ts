@@ -49,7 +49,8 @@ describe("Cloudflare build portability", () => {
   });
   it("rejects unexpected changes rather than disabling protection", () => {
     expect(() => patchManifestSource(`class Server { ${pages} getMiddlewareManifest(){return customLoader(this.middlewareManifestPath)} }`)).toThrow("Unexpected middleware loader");
-    expect(() => patchManifestSource(`class Server { ${pages} getMiddlewareManifest(){return null} }`)).toThrow("Unexpected middleware manifest access");
+    const noDiskRead = `class Server { ${pages} getMiddlewareManifest(){return null} }`;
+    expect(patchManifestSource(noDiskRead)).toBe(noDiskRead);
   });
   it("preserves the restored cache and development output while clearing stale builds", () => {
     const root = mkdtempSync(path.join(tmpdir(), "citizenguide-build-test-"));
