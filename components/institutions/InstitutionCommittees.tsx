@@ -220,7 +220,6 @@ export default async function InstitutionCommittees({
                         <div className={styles.details}>
                           <p className="govuk-body govuk-!-margin-bottom-1">{person?.slug ? <Link className="govuk-link govuk-!-font-weight-bold" href={`/government/people/${person.slug}`}>{name}</Link> : <strong>{name}</strong>}</p>
                           {represents && <p className="govuk-body-s govuk-!-margin-bottom-1">{represents}</p>}
-                          <p className="govuk-body-s govuk-!-margin-bottom-0">{serviceRange(row.start_date, row.end_date, "current")}</p>
                         </div>
                       </li>;
                     })}
