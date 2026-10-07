@@ -17,6 +17,7 @@ export const ADMIN_NAVIGATION = [
   ] },
   { title: "Citizen responses", items: [
     { path: "contact", label: "Contact messages" }, { path: "feedback", label: "General feedback" },
+    { path: "page-feedback", label: "Page feedback" },
     { path: "bug-reports", label: "Bug reports" },
   ] },
   { title: "Site management", items: [

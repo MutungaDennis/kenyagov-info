@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { recordPageVote } from "./actions";
 
 /**
@@ -11,10 +11,23 @@ import { recordPageVote } from "./actions";
 export default function GovUKFeedback() {
   const pathname = usePathname();
   const [isPending, startTransition] = useTransition();
+  const [ready, setReady] = useState(false);
   const [submissionState, setSubmissionState] = useState<{
     success?: boolean;
     error?: string;
   } | null>(null);
+
+  // Wait until the page has finished loading so the panel is not pushed down by late content.
+  useEffect(() => {
+    let frame = 0;
+    const show = () => { frame = requestAnimationFrame(() => setReady(true)); };
+    if (document.readyState === "complete") show();
+    else window.addEventListener("load", show, { once: true });
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("load", show);
+    };
+  }, [pathname]);
 
   function handleVote(isUseful: boolean) {
     setSubmissionState(null);
@@ -31,6 +44,8 @@ export default function GovUKFeedback() {
       }
     });
   }
+
+  if (!ready) return null;
 
   if (submissionState?.success) {
     return (

@@ -25,10 +25,12 @@ function dateLabel(date: string | null) {
 function PeopleCards({
   people,
   current = false,
+  hideDates = false,
   headingLevel = 3,
 }: {
   people: InstitutionService[][];
   current?: boolean;
+  hideDates?: boolean;
   headingLevel?: 3 | 4 | 5 | 6;
 }) {
   const PersonHeading = `h${headingLevel}` as const;
@@ -42,8 +44,8 @@ function PeopleCards({
       <div className={styles.details}>
         <PersonHeading className="govuk-heading-s govuk-!-margin-bottom-2">{person.href ? <Link className="govuk-link" href={person.href}>{person.name}</Link> : person.name}</PersonHeading>
         <ul className="govuk-list govuk-body-s govuk-!-margin-bottom-0">{roles.map(role => <li key={role.id}>
-          <strong>{role.title || "Role not recorded"}</strong>{role.detail && <><br /><span>{role.detail}</span></>}<br />
-          {dateLabel(role.start)} to {role.end ? dateLabel(role.end) : current ? "present" : "end date not recorded"}
+          <strong>{role.title || "Role not recorded"}</strong>{role.detail && <><br /><span>{role.detail}</span></>}
+          {!hideDates && <><br />{dateLabel(role.start)} to {role.end ? dateLabel(role.end) : current ? "present" : "end date not recorded"}</>}
           {role.status && !["Active", "Former"].includes(role.status) && <span> · {role.status}</span>}
         </li>)}</ul>
       </div>
@@ -172,7 +174,7 @@ export default async function InstitutionPeople({
     : groups.currentByLevel;
   const leadershipLevels = currentByLevel.filter((level) => level.id !== "unassigned");
   const otherLevels = currentByLevel.filter((level) => level.id === "unassigned");
-  const renderLevel = (level: (typeof currentByLevel)[number]) => <section key={level.id} aria-label={level.name} className={styles.level}><h4 className="govuk-heading-m">{level.name}</h4>{level.people.length > 0 && <PeopleCards people={level.people} current headingLevel={5} />}{level.subcategories.map((subcategory) => <section key={subcategory.id} className={styles.subcategory}><h5 className="govuk-heading-s">{subcategory.name}</h5><PeopleCards people={subcategory.people} current headingLevel={6} /></section>)}</section>;
+  const renderLevel = (level: (typeof currentByLevel)[number]) => <section key={level.id} aria-label={level.name} className={styles.level}><h4 className="govuk-heading-m">{level.name}</h4>{level.people.length > 0 && <PeopleCards people={level.people} current hideDates={Boolean(committeeChamber)} headingLevel={5} />}{level.subcategories.map((subcategory) => <section key={subcategory.id} className={styles.subcategory}><h5 className="govuk-heading-s">{subcategory.name}</h5><PeopleCards people={subcategory.people} current hideDates={Boolean(committeeChamber)} headingLevel={6} /></section>)}</section>;
   return <section aria-labelledby="institution-people-heading" className="govuk-!-margin-top-8 govuk-!-margin-bottom-8">
     <h2 id="institution-people-heading" className="govuk-heading-l">People who serve this {entityLabel}</h2>
     <p className="govuk-body-s">Roles and dates recorded against this {entityLabel}. Open a profile to see the person’s wider service history.</p>
@@ -180,7 +182,7 @@ export default async function InstitutionPeople({
       {groups.current.length ? (
         currentByLevel.length
           ? leadershipLevels.map(renderLevel)
-          : <PeopleCards people={groups.current} current headingLevel={4} />
+          : <PeopleCards people={groups.current} current hideDates={Boolean(committeeChamber)} headingLevel={4} />
       ) : <p className="govuk-body">No current office holders are recorded here yet.</p>}</>}
     {afterCurrent}
     {!historical && otherLevels.map(renderLevel)}

@@ -12,13 +12,13 @@ type ConsentStatus = 'hidden' | 'unanswered' | 'accepted-message' | 'rejected-me
  * @see https://design-system.service.gov.uk/components/cookie-banner/
  */
 export default function CookieBanner() {
-  const [consentStatus, setConsentStatus] =
-    useState<ConsentStatus>('unanswered');
+  // Hidden until the saved choice has been read, so returning visitors never see a flash.
+  const [consentStatus, setConsentStatus] = useState<ConsentStatus>('hidden');
 
   useEffect(() => {
     const savedConsent = localStorage.getItem('cookie-consent');
-    if (savedConsent === 'accepted' || savedConsent === 'rejected') {
-      const frame = requestAnimationFrame(() => setConsentStatus('hidden'));
+    if (savedConsent !== 'accepted' && savedConsent !== 'rejected') {
+      const frame = requestAnimationFrame(() => setConsentStatus('unanswered'));
       return () => cancelAnimationFrame(frame);
     }
   }, []);
