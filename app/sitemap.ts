@@ -494,6 +494,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/how-government-works`, changeFrequency: 'monthly', priority: 0.8 },
     { url: `${BASE_URL}/county-vs-national`, changeFrequency: 'monthly', priority: 0.8 },
     { url: `${BASE_URL}/how-public-money-works`, changeFrequency: 'monthly', priority: 0.7 },
+    { url: `${BASE_URL}/constitution-and-laws`, changeFrequency: 'monthly' as const, priority: 0.8 },
     ...taskGuides.map((g) => ({ url: `${BASE_URL}/guides/${g.slug}`, changeFrequency: 'monthly' as const, priority: 0.8 })),
     ...hgwSections.map((s) => ({ url: `${BASE_URL}/how-government-works/${s.slug}`, changeFrequency: 'monthly' as const, priority: 0.6 })),
     ...hpmSections.map((s) => ({ url: `${BASE_URL}/how-public-money-works/${s.slug}`, changeFrequency: 'monthly' as const, priority: 0.6 })),
