@@ -3,6 +3,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import PageIntro from "@/components/site/PageIntro";
+import AutoContents from "@/components/site/AutoContents";
 import RelatedNav from "@/components/site/RelatedNav";
 
 export const revalidate = 86400;
@@ -54,6 +55,12 @@ export default function EditorialPolicyPage() {
         lead="How CitizenGuide.KE decides what to publish, where our information comes from, how we verify it and how we keep it up to date."
         showPrint
       />
+
+      <div className="govuk-grid-row">
+        <div className="govuk-grid-column-two-thirds">
+          <AutoContents />
+        </div>
+      </div>
 
       <div className="govuk-grid-row">
         <div className="govuk-grid-column-two-thirds">

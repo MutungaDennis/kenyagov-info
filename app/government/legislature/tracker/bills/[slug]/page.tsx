@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+import { sanityDetailMetadata } from "@/lib/seo-sanity";
 import Link from "next/link";
 import { createSanityClient } from "@/lib/sanity/createSanityClient";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
@@ -319,4 +321,17 @@ export default async function BillDetailPage({ params }: PageProps) {
   
   </>
 );
+}
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  return sanityDetailMetadata({
+    type: "bill",
+    slug,
+    basePath: "/government/legislature/tracker/bills",
+    fallbackTitle: "Bill", summaryField: "summary",
+  });
 }

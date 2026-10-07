@@ -179,7 +179,7 @@ export default async function PapersReportsPage({ searchParams }: PageProps) {
         items={[
           { text: "Home", href: "/" },
           { text: "Legislature", href: "/legislature" },
-          { text: "Tracker", href: "/legislature/tracker" },
+          { text: "Tracker", href: "/government/legislature" },
           { text: "Papers & Reports", href: "" },
         ]}
       />

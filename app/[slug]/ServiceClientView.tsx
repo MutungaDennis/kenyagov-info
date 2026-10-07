@@ -1,6 +1,7 @@
 // app/[slug]/ServiceClientView.tsx
 "use client";
 
+import ExternalLinkIcon from "@/components/govuk/ExternalLinkIcon";
 import React, { useState } from "react";
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
@@ -296,7 +297,7 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
                   data-module="govuk-button"
                 >
                   {primaryPortal.portalLabel || "Start on official website"}
-                  <span aria-hidden="true"> ↗</span>
+                  <ExternalLinkIcon />
                   <span className="govuk-visually-hidden">
                     {" "}
                     (opens in a new tab)
@@ -331,7 +332,7 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
                       rel="noopener noreferrer"
                     >
                       {portal.portalLabel || "Related official website"}
-                      <span aria-hidden="true"> ↗</span>
+                      <ExternalLinkIcon />
                       <span className="govuk-visually-hidden">
                         {" "}
                         (opens in a new tab)
@@ -726,7 +727,7 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
                 className="govuk-button"
               >
                 {primaryPortal.portalLabel || "Start on official website"}
-                <span aria-hidden="true"> ↗</span>
+                <ExternalLinkIcon />
                 <span className="govuk-visually-hidden">
                   {" "}
                   (opens in a new tab)

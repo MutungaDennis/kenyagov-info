@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+import { sanityDetailMetadata } from "@/lib/seo-sanity";
 import Link from "next/link";
 import { createSanityClient } from "@/lib/sanity/createSanityClient";
 import { PortableText } from "@portabletext/react";
@@ -102,7 +104,7 @@ export default async function PetitionDetail({ params }: PageProps) {
         items={[
           { text: "Home", href: "/" },
           { text: "Legislature", href: "/legislature" },
-          { text: "Petitions Tracker", href: "/legislature/tracker/petitions" },
+          { text: "Petitions Tracker", href: "/government/legislature" },
           { text: petition.petitionNumber || "Petition", href: "" },
         ]}
       />
@@ -269,7 +271,7 @@ export default async function PetitionDetail({ params }: PageProps) {
         <div className="govuk-grid-row govuk-!-margin-top-8">
           <div className="govuk-grid-column-full">
             <Link 
-              href="/legislature/tracker/petitions" 
+              href="/government/legislature" 
               className="govuk-button govuk-button--secondary"
             >
               ← Back to Petitions Tracker
@@ -284,4 +286,18 @@ export default async function PetitionDetail({ params }: PageProps) {
   
   </>
 );
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  return sanityDetailMetadata({
+    type: "petition",
+    slug,
+    basePath: "/government/legislature/tracker/petitions",
+    fallbackTitle: "Petition",
+  });
 }

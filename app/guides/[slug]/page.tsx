@@ -7,6 +7,9 @@ import PrintPageButton from '@/components/govuk/PrintPageButton';
 import { getGuideBySlug, getGuides } from '@/lib/sanity/client';
 import { PortableText } from '@portabletext/react';
 import type { Metadata } from 'next';
+import TaskGuideView from '@/components/site/TaskGuideView';
+import { getTaskGuide, taskGuides } from '@/lib/guides/task-guides';
+import { buildPageMetadata } from '@/lib/seo';
 
 interface GuidePageProps {
   params: Promise<{ slug: string }>;
@@ -14,6 +17,10 @@ interface GuidePageProps {
 
 export async function generateMetadata({ params }: GuidePageProps): Promise<Metadata> {
   const { slug } = await params;
+  const task = getTaskGuide(slug);
+  if (task) {
+    return buildPageMetadata({ title: task.title, description: task.description, path: `/guides/${task.slug}` });
+  }
   try {
     const guide = await getGuideBySlug(slug);
     return {
@@ -31,16 +38,21 @@ export async function generateMetadata({ params }: GuidePageProps): Promise<Meta
 export async function generateStaticParams() {
   try {
     const guides = await getGuides();
-    return guides.map((guide: any) => ({
-      slug: guide.slug.current,
-    }));
+    return [
+      ...taskGuides.map((g) => ({ slug: g.slug })),
+      ...guides.map((guide: any) => ({
+        slug: guide.slug.current,
+      })),
+    ];
   } catch {
-    return [];
+    return taskGuides.map((g) => ({ slug: g.slug }));
   }
 }
 
 export default async function GuidePage({ params }: GuidePageProps) {
   const { slug } = await params;
+  const task = getTaskGuide(slug);
+  if (task) return <TaskGuideView guide={task} />;
   let guide = null;
 
   try {

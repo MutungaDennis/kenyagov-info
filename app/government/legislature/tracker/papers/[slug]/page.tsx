@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+import { sanityDetailMetadata } from "@/lib/seo-sanity";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createSanityClient } from "@/lib/sanity/createSanityClient";
@@ -125,7 +127,7 @@ export default async function PaperDetailPage({ params }: PageProps) {
         items={[
           { text: "Home", href: "/" },
           { text: "Legislature", href: "/legislature" },
-          { text: "Tracker", href: "/legislature/tracker" },
+          { text: "Tracker", href: "/government/legislature" },
           { text: "Papers & Reports", href: "/legislature/tracker/papers" },
           { text: paper.referenceNumber || paper.title, href: "" },
         ]}
@@ -296,4 +298,18 @@ export default async function PaperDetailPage({ params }: PageProps) {
   
   </>
 );
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  return sanityDetailMetadata({
+    type: "paper",
+    slug,
+    basePath: "/government/legislature/tracker/papers",
+    fallbackTitle: "Parliamentary paper",
+  });
 }

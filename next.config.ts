@@ -297,6 +297,14 @@ const nextConfig: NextConfig = {
         permanent: true,
       },
 
+      // Moved or never-existing paths that were linked from the site
+      { source: "/acts/parliament", destination: "/legislation/acts", permanent: true },
+      { source: "/acts/parliament/:slug", destination: "/legislation/acts/:slug", permanent: true },
+      { source: "/constitution/chapter/:chapter/article/:article", destination: "/constitution/article/:article", permanent: true },
+      { source: "/government/legislature/national-assembly", destination: "/government/institutions/national-assembly", permanent: true },
+      { source: "/government/legislature/tracker", destination: "/government/legislature", permanent: true },
+      { source: "/government/legislature/tracker/petitions", destination: "/government/legislature", permanent: true },
+
       // Government structure
       {
         source: "/executive",

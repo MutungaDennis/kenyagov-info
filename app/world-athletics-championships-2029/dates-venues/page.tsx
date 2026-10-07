@@ -111,12 +111,7 @@ export default function DatesVenuesPage() {
           <p className="govuk-body">
             Transport routes, parking, event shuttles, road closures and
             entrances are covered under{" "}
-            <Link
-              href="/world-athletics-championships-2029/getting-to-the-venues"
-              className="govuk-link govuk-link--no-visited-state"
-            >
-              getting to the venues
-            </Link>
+            getting to the venues
             .
           </p>
         </div>

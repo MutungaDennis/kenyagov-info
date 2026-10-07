@@ -1,3 +1,6 @@
+import { taskGuides } from '@/lib/guides/task-guides';
+import { sections as hgwSections } from './how-government-works/_shared';
+import { sections as hpmSections } from './how-public-money-works/_shared';
 import { MetadataRoute } from 'next';
 import { createPublicClient } from '@/lib/supabase/public';
 import {
@@ -361,7 +364,7 @@ async function getSanityUrls(): Promise<SitemapEntry[]> {
       articles.forEach(
         (a: { chapter: number; articleNumber: number; _updatedAt?: string }) => {
           urls.push({
-            url: `${BASE_URL}/constitution/chapter/${a.chapter}/article/${a.articleNumber}`,
+            url: `${BASE_URL}/constitution/article/${a.articleNumber}`,
             lastModified: a._updatedAt ? new Date(a._updatedAt) : undefined,
             changeFrequency: 'monthly',
             priority: 0.8,
@@ -380,7 +383,7 @@ async function getSanityUrls(): Promise<SitemapEntry[]> {
     acts?.forEach((a: { slug?: string; _updatedAt?: string }) => {
       if (!a.slug) return;
       urls.push({
-        url: `${BASE_URL}/acts/parliament/${a.slug}`,
+        url: `${BASE_URL}/legislation/acts/${a.slug}`,
         lastModified: a._updatedAt ? new Date(a._updatedAt) : undefined,
         changeFrequency: 'monthly',
         priority: 0.7,
@@ -465,13 +468,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/elections/about`, changeFrequency: 'yearly', priority: 0.6 },
 
     { url: `${BASE_URL}/constitution`, changeFrequency: 'weekly', priority: 0.9 },
-    { url: `${BASE_URL}/acts/parliament`, changeFrequency: 'weekly', priority: 0.8 },
+    { url: `${BASE_URL}/legislation/acts`, changeFrequency: 'weekly', priority: 0.8 },
 
     { url: `${BASE_URL}/documents`, changeFrequency: 'weekly', priority: 0.7 },
     { url: `${BASE_URL}/documents/vision-2030`, changeFrequency: 'monthly', priority: 0.7 },
-    { url: `${BASE_URL}/documents/sessional-papers/1965-no-10`, changeFrequency: 'yearly', priority: 0.5 },
-    { url: `${BASE_URL}/documents/sessional-papers/1986-no-1`, changeFrequency: 'yearly', priority: 0.5 },
-    { url: `${BASE_URL}/documents/sessional-papers/2012-no-1`, changeFrequency: 'yearly', priority: 0.5 },
 
     { url: `${BASE_URL}/search`, changeFrequency: 'weekly', priority: 0.85 },
     { url: `${BASE_URL}/open-data`, changeFrequency: 'monthly', priority: 0.8 },
@@ -494,6 +494,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/how-government-works`, changeFrequency: 'monthly', priority: 0.8 },
     { url: `${BASE_URL}/county-vs-national`, changeFrequency: 'monthly', priority: 0.8 },
     { url: `${BASE_URL}/how-public-money-works`, changeFrequency: 'monthly', priority: 0.7 },
+    ...taskGuides.map((g) => ({ url: `${BASE_URL}/guides/${g.slug}`, changeFrequency: 'monthly' as const, priority: 0.8 })),
+    ...hgwSections.map((s) => ({ url: `${BASE_URL}/how-government-works/${s.slug}`, changeFrequency: 'monthly' as const, priority: 0.6 })),
+    ...hpmSections.map((s) => ({ url: `${BASE_URL}/how-public-money-works/${s.slug}`, changeFrequency: 'monthly' as const, priority: 0.6 })),
     { url: `${BASE_URL}/ecitizen`, changeFrequency: 'monthly', priority: 0.8 },
     { url: `${BASE_URL}/huduma-centres`, changeFrequency: 'monthly', priority: 0.8 },
     { url: `${BASE_URL}/huduma-centres/locations`, changeFrequency: 'monthly', priority: 0.75 },

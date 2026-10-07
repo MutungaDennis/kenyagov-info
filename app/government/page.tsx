@@ -231,7 +231,7 @@ export default function GovernmentHomePage() {
                 </Link>
               </li>
               <li>
-                <Link href="/acts/parliament" className="govuk-link">
+                <Link href="/legislation/acts" className="govuk-link">
                   Acts of Parliament
                 </Link>
               </li>

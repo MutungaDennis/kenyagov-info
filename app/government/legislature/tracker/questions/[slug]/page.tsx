@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+import { sanityDetailMetadata } from "@/lib/seo-sanity";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createSanityClient } from "@/lib/sanity/createSanityClient";
@@ -309,4 +311,18 @@ export default async function QuestionDetailPage({ params }: PageProps) {
   
   </>
 );
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  return sanityDetailMetadata({
+    type: "parliamentaryQuestion",
+    slug,
+    basePath: "/government/legislature/tracker/questions",
+    fallbackTitle: "Parliamentary question",
+  });
 }

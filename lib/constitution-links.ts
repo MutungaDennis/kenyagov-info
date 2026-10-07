@@ -16,7 +16,8 @@ export function constitutionArticleHref(
   chapter: number | string,
   article: number | string,
 ): string {
-  return `/constitution/chapter/${chapter}/article/${article}`;
+  void chapter;
+  return `/constitution/article/${article}`;
 }
 
 /** Standard visible label for an article link */

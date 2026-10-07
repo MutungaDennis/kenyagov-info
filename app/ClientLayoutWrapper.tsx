@@ -11,6 +11,7 @@ import GovUKReportProblem from "@/components/govuk/ReportProblem";
 import GovUKPhaseBanner from "@/components/govuk/PhaseBanner";
 import CookieBanner from "@/components/govuk/CookieBanner";
 import ScrollRestoration from "@/components/govuk/ScrollRestoration";
+import ServiceWorkerRegister from "@/components/govuk/ServiceWorkerRegister";
 import { logPageViewClient } from "@/lib/supabase/log-page-view";
 import { isAdminFilesystemPath, isAdminPublicPath } from "@/lib/admin-path";
 
@@ -64,6 +65,7 @@ export function ClientLayoutWrapper({ children }: { children: React.ReactNode })
   return (
     <>
       {!isAdminRoute && <ScrollRestoration />}
+      {!isAdminRoute && <ServiceWorkerRegister />}
       {!isAdminRoute && <CookieBanner />}
 
       {!isAdminRoute && (

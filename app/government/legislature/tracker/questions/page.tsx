@@ -137,7 +137,7 @@ export default async function QuestionsTracker({ searchParams }: PageProps) {
         items={[
           { text: "Home", href: "/" },
           { text: "Legislature", href: "/legislature" },
-          { text: "Tracker", href: "/legislature/tracker" },
+          { text: "Tracker", href: "/government/legislature" },
           { text: "Questions", href: "" },
         ]}
       />

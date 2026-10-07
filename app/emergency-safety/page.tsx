@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import PageIntro from "@/components/site/PageIntro";
+import AutoContents from "@/components/site/AutoContents";
 import RelatedNav from "@/components/site/RelatedNav";
 import ExternalLink from "@/components/site/ExternalLink";
 
@@ -95,6 +96,12 @@ export default function EmergencyAndSafetyPage() {
         ]}
         title="Emergency and safety information"
       />
+
+      <div className="govuk-grid-row">
+        <div className="govuk-grid-column-two-thirds">
+          <AutoContents />
+        </div>
+      </div>
 
       <div className="govuk-grid-row">
         <div className="govuk-grid-column-two-thirds">

@@ -6,7 +6,8 @@ import {
   resolvePrimaryRole,
   type LeaderRoleLike,
 } from "@/lib/leaders/display";
-import { buildPageMetadata, SITE_NAME } from "@/lib/seo";
+import { buildPageMetadata, SITE_NAME, SITE_URL } from "@/lib/seo";
+import { JsonLd } from "@/components/JsonLd";
 
 type Props = {
   children: React.ReactNode;
@@ -164,6 +165,42 @@ export async function generateMetadata({
   });
 }
 
-export default function PersonProfileLayout({ children }: Props) {
-  return children;
+export default async function PersonProfileLayout({ children, params }: Props) {
+  const { slug } = await params;
+  let schema: Record<string, unknown> | null = null;
+  try {
+    const { data: leader } = await createPublicClient()
+      .from("leaders")
+      .select(
+        "slug, first_name, other_names, surname, full_name, title, image_url, current_organization, bio",
+      )
+      .eq("slug", slug)
+      .maybeSingle();
+    if (leader) {
+      const name = displayName(leader);
+      schema = {
+        "@context": "https://schema.org",
+        "@type": "Person",
+        name,
+        url: `${SITE_URL}/government/people/${leader.slug || slug}`,
+        jobTitle: leader.title || undefined,
+        image: leader.image_url || undefined,
+        description: leader.bio
+          ? String(leader.bio).replace(/\s+/g, " ").trim().slice(0, 300)
+          : undefined,
+        worksFor: leader.current_organization
+          ? { "@type": "GovernmentOrganization", name: leader.current_organization }
+          : undefined,
+        nationality: { "@type": "Country", name: "Kenya" },
+      };
+    }
+  } catch {
+    /* metadata is optional */
+  }
+  return (
+    <>
+      {schema ? <JsonLd data={schema} /> : null}
+      {children}
+    </>
+  );
 }

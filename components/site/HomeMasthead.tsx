@@ -43,7 +43,7 @@ const MENU_SECTIONS: {
     heading: "Laws & records",
     links: [
       { href: "/constitution", label: "Constitution of Kenya", bold: true },
-      { href: "/acts/parliament", label: "Acts of Parliament" },
+      { href: "/legislation/acts", label: "Acts of Parliament" },
       { href: "/documents", label: "Official documents" },
       {
         href: "/government/legislature/hansard/national-assembly",

@@ -1,4 +1,6 @@
 
+import type { Metadata } from "next";
+import { buildPageMetadata } from "@/lib/seo";
 import { safeHtml } from "@/lib/safe-html";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -26,6 +28,36 @@ function formatDate(date: string) {
       `${date}T12:00:00+03:00`,
     ),
   );
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const publication = await getPublicPresidentialSpeechBySlug(slug).catch(() => null);
+  const path = `/government/presidency/speeches/${slug}`;
+  if (!publication) {
+    return buildPageMetadata({
+      title: "Presidential speech",
+      description: "Presidential speeches and communiqu?s on CitizenGuide.KE.",
+      path,
+      noIndex: true,
+    });
+  }
+  return buildPageMetadata({
+    title: publication.title,
+    description: (
+      publication.summary ||
+      publication.excerpt ||
+      `${publication.title} ? presidential speech or communiqu? on CitizenGuide.KE.`
+    )
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 300),
+    path,
+  });
 }
 
 export default async function PresidentialSpeechPage({

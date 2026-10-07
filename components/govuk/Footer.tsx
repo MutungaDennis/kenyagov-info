@@ -131,7 +131,7 @@ export default function GovUKFooter() {
                 </Link>
               </li>
               <li className="govuk-footer__list-item">
-                <Link href="/acts/parliament" className="govuk-footer__link">
+                <Link href="/legislation/acts" className="govuk-footer__link">
                   Acts of Parliament
                 </Link>
               </li>

@@ -97,12 +97,7 @@ export default function KasaraniStadiumPage() {
             Do not rely on normal-day routes during the championships. Event
             traffic controls and access points may be different. Confirmed
             transport information will be provided under{" "}
-            <Link
-              href="/world-athletics-championships-2029/getting-to-the-venues"
-              className="govuk-link govuk-link--no-visited-state"
-            >
-              getting to the venues
-            </Link>
+            getting to the venues
             .
           </p>
 

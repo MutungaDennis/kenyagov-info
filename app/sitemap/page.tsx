@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
@@ -353,7 +353,7 @@ export default function SitemapPage() {
                 <p className="govuk-body-s govuk-!-margin-top-1 govuk-text-secondary">The supreme law of Kenya, with all chapters and articles.</p>
               </li>
               <li>
-                <Link href="/acts/parliament" className="govuk-link govuk-!-font-weight-bold govuk-!-font-size-19">Acts of Parliament</Link>
+                <Link href="/legislation/acts" className="govuk-link govuk-!-font-weight-bold govuk-!-font-size-19">Acts of Parliament</Link>
                 <p className="govuk-body-s govuk-!-margin-top-1 govuk-text-secondary">Laws enacted by the Parliament of Kenya.</p>
               </li>
             </ul>
@@ -367,15 +367,6 @@ export default function SitemapPage() {
               </li>
               <li>
                 <Link href="/documents/vision-2030" className="govuk-link">Kenya Vision 2030</Link>
-              </li>
-              <li>
-                <Link href="/documents/sessional-papers/1965-no-10" className="govuk-link">Sessional Paper No. 10 of 1965 (African Socialism)</Link>
-              </li>
-              <li>
-                <Link href="/documents/sessional-papers/1986-no-1" className="govuk-link">Sessional Paper No. 1 of 1986</Link>
-              </li>
-              <li>
-                <Link href="/documents/sessional-papers/2012-no-1" className="govuk-link">Sessional Paper No. 1 of 2012</Link>
               </li>
             </ul>
 
@@ -441,3 +432,4 @@ export default function SitemapPage() {
     </>
 );
 }
+

@@ -1,4 +1,5 @@
 
+import ExternalLinkIcon from "@/components/govuk/ExternalLinkIcon";
 import { safeHtml } from "@/lib/safe-html";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -337,7 +338,7 @@ export default async function CabinetBriefPage({
                             tab)
                           </span>
 
-                          {" ↗"}
+                          <ExternalLinkIcon />
                         </a>
                       </p>
                     </>
@@ -380,7 +381,7 @@ export default async function CabinetBriefPage({
                                   a new tab)
                                 </span>
 
-                                {" ↗"}
+                                <ExternalLinkIcon />
                               </a>
 
                               {source.isOfficial && (

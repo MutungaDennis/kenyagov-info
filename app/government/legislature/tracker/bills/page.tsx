@@ -113,7 +113,7 @@ export default async function BillsTracker({ searchParams }: PageProps) {
         items={[
           { text: "Home", href: "/" },
           { text: "Legislature", href: "/legislature" },
-          { text: "Tracker", href: "/legislature/tracker" },
+          { text: "Tracker", href: "/government/legislature" },
           { text: "Bills", href: "" },
         ]}
       />

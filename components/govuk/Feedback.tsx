@@ -2,7 +2,30 @@
 
 import { usePathname } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
+import ExternalLinkIcon from "./ExternalLinkIcon";
 import { recordPageVote } from "./actions";
+
+const SITE_URL = "https://www.citizenguide.ke";
+
+function PageHelpLinks({ pathname }: { pathname: string }) {
+  const shareText = encodeURIComponent(`${SITE_URL}${pathname}`);
+  return (
+    <ul className="govuk-list govuk-body-s govuk-!-margin-top-2">
+      <li>
+        <a
+          className="govuk-link"
+          href={`https://wa.me/?text=${shareText}`}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Share this page on WhatsApp
+          <ExternalLinkIcon />
+          <span className="govuk-visually-hidden"> (opens in a new tab)</span>
+        </a>
+      </li>
+    </ul>
+  );
+}
 
 /**
  * "Is this page useful?" — GOV.UK-style page feedback.
@@ -55,6 +78,7 @@ export default function GovUKFeedback() {
             <p className="govuk-body govuk-!-font-weight-bold">
               Thank you for your feedback.
             </p>
+            <PageHelpLinks pathname={pathname} />
           </div>
         </div>
       </div>
@@ -99,6 +123,7 @@ export default function GovUKFeedback() {
             {isPending ? "Sending..." : "No"}
           </button>
         </div>
+        <PageHelpLinks pathname={pathname} />
       </div>
     </div>
   );

@@ -404,7 +404,7 @@ export default function Home() {
               </li>
               <li>
                 <Link
-                  href="/acts/parliament"
+                  href="/legislation/acts"
                   className="govuk-link govuk-!-font-weight-bold"
                 >
                   Acts of Parliament

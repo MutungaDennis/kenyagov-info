@@ -42,7 +42,7 @@ export default function AccessToInformationPage() {
             </Link>
             . The Access to Information Act sets out procedures, timelines and
             exemptions in more detail — see{" "}
-            <Link href="/acts/parliament" className="govuk-link">
+            <Link href="/legislation/acts" className="govuk-link">
               Acts of Parliament
             </Link>
             .
@@ -141,7 +141,7 @@ export default function AccessToInformationPage() {
               </Link>
             </li>
             <li>
-              <Link href="/acts/parliament" className="govuk-link">
+              <Link href="/legislation/acts" className="govuk-link">
                 Acts of Parliament
               </Link>
             </li>

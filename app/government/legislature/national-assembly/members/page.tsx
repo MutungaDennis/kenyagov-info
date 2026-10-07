@@ -18,7 +18,7 @@ export default function NationalAssemblyMembersPage() {
           { text: "Home", href: "/" },
           { text: "Government", href: "/government" },
           { text: "The Legislature", href: "/government/legislature" },
-          { text: "National Assembly", href: "/government/legislature/national-assembly" },
+          { text: "National Assembly", href: "/government/institutions/national-assembly" },
           { text: "Members" },
         ]}
       />

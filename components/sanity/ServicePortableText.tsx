@@ -1,4 +1,5 @@
 "use client";
+import ExternalLinkIcon from "@/components/govuk/ExternalLinkIcon";
 
 import { PortableText } from "@portabletext/react";
 import Link from "next/link";
@@ -25,7 +26,7 @@ function ExternalAffordance({
       aria-label={`Official source: ${name} (opens in a new tab)`}
       title={`Official source: ${name}`}
     >
-      <span aria-hidden="true">↗</span>
+      <ExternalLinkIcon />
       <span className="govuk-visually-hidden">
         {" "}
         Official source: {name} (opens in a new tab)

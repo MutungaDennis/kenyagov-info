@@ -1,6 +1,9 @@
 
+import ExternalLinkIcon from "@/components/govuk/ExternalLinkIcon";
 import { safeHtml } from "@/lib/safe-html";
 import Link from "next/link";
+import { JsonLd } from "@/components/JsonLd";
+import { SITE_URL } from "@/lib/seo";
 import type {
   LegislationAmendmentGroup,
   LegislationDocument,
@@ -19,6 +22,14 @@ function kindLabel(document: LegislationDocument) {
   if (document.category === "county_act") return "County legislation";
   if (document.category === "subsidiary") return "Subsidiary legislation";
   return "Treaty";
+}
+
+function legislationPath(document: LegislationDocument) {
+  if (document.category === "act") return `/legislation/acts/${document.slug}`;
+  if (document.category === "subsidiary") return `/legislation/subsidiary/${document.slug}`;
+  if (document.category === "county_act" && document.county_slug)
+    return `/legislation/counties/${document.county_slug}/${document.slug}`;
+  return `/legislation/treaties/${document.slug}`;
 }
 
 function AmendmentSchedule({
@@ -165,8 +176,25 @@ export function LegislationDocumentView({
 
   const isAmendingAct = document.legislation_kind === "amending";
 
+  const legislationSchema = {
+    "@context": "https://schema.org",
+    "@type": "Legislation",
+    name: document.title,
+    legislationIdentifier: document.citation || undefined,
+    description: document.long_title || undefined,
+    url: `${SITE_URL}${legislationPath(document)}`,
+    legislationJurisdiction: document.county_name
+      ? `${document.county_name} County, Kenya`
+      : "Kenya",
+    datePublished: document.publication_date || undefined,
+    legislationDate: document.assent_date || undefined,
+    dateModified: document.last_amended_date || document.current_version_date || undefined,
+    inLanguage: "en",
+  };
+
   return (
     <main className="govuk-main-wrapper" id="main-content">
+      <JsonLd data={legislationSchema} />
       <div className="govuk-grid-row">
         <div className="govuk-grid-column-two-thirds">
           <span className="govuk-caption-l">{kindLabel(document)}</span>
@@ -189,7 +217,7 @@ export function LegislationDocumentView({
           {document.source_url ? (
             <p className="govuk-body">
               <a className="govuk-link" href={document.source_url}>
-                View official source <span aria-hidden="true">↗</span>
+                View official source<ExternalLinkIcon />
                 <span className="govuk-visually-hidden">
                   {" "}
                   (external website)

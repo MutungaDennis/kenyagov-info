@@ -1,3 +1,4 @@
+import ExternalLinkIcon from "@/components/govuk/ExternalLinkIcon";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -345,7 +346,7 @@ export default async function ArticlePage({
           <p className="govuk-body-s govuk-!-margin-top-5">
             Links within the Article may open related CitizenGuide people,
             institutions, Acts or other CitizenGuide pages. Links marked with
-            <span aria-hidden="true"> ↗</span> lead to an external official source.
+            the external link icon lead to an external official source.
           </p>
 
           {/* =================================================
@@ -390,11 +391,7 @@ export default async function ArticlePage({
                     Parliament of Kenya
                     — Constitution of
                     Kenya, 2010 PDF{" "}
-                    <span
-                      aria-hidden="true"
-                    >
-                      ↗
-                    </span>
+                    <ExternalLinkIcon />
                     <span className="govuk-visually-hidden">
                       {" "}
                       (opens in a new
@@ -415,11 +412,7 @@ export default async function ArticlePage({
                     Kenya Law —
                     Constitution of
                     Kenya, 2010{" "}
-                    <span
-                      aria-hidden="true"
-                    >
-                      ↗
-                    </span>
+                    <ExternalLinkIcon />
                     <span className="govuk-visually-hidden">
                       {" "}
                       (opens in a new

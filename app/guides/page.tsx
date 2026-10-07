@@ -2,6 +2,7 @@ import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import ChevronLinkList from "@/components/site/ChevronLinkList";
 import { getGuides } from "@/lib/sanity/client";
+import { taskGuides } from "@/lib/guides/task-guides";
 
 export const revalidate = 3600;
 
@@ -58,6 +59,16 @@ export default async function GuidesPage() {
         life events. These pages explain processes — applications happen on
         official systems.
       </p>
+
+      <h2 className="govuk-heading-m">Common tasks</h2>
+      <ChevronLinkList
+        ariaLabel="Common task guides"
+        items={taskGuides.map((guide) => ({
+          title: guide.title,
+          href: `/guides/${guide.slug}`,
+          description: guide.description,
+        }))}
+      />
 
       <h2 className="govuk-heading-m">Life events</h2>
       <ChevronLinkList
