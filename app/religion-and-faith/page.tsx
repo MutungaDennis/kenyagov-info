@@ -6,14 +6,6 @@ import Link from "next/link";
 import { createBrowserClientAsync } from "@/lib/supabase/client";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import LastUpdated from "@/components/govuk/LastUpdated";
-import { buildPageMetadata } from "@/lib/seo";
-
-export const metadata = buildPageMetadata({
-  title: "Religion and faith in Kenya",
-  description: "Religious communities in Kenya and how the Constitution protects freedom of religion.",
-  path: "/religion-and-faith",
-});
-
 
 interface CensusYear {
   id: number;

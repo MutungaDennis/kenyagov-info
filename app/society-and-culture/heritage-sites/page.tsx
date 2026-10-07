@@ -16,14 +16,6 @@ import {
   CATEGORY_LABELS,
   REGION_LABELS,
 } from '@/lib/data/heritageSites.utils'
-import { buildPageMetadata } from "@/lib/seo";
-
-export const metadata = buildPageMetadata({
-  title: "Heritage sites in Kenya",
-  description: "Kenya's national and world heritage sites.",
-  path: "/society-and-culture/heritage-sites",
-});
-
 
 export default function HeritageSitesPage() {
   const [sites, setSites] = useState<HeritageSite[]>([])
