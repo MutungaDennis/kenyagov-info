@@ -1,6 +1,14 @@
 import Link from "next/link";
 //import GovUKBackLink from "@/components/govuk/BackLink";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
+import { buildPageMetadata } from "@/lib/seo";
+
+export const metadata = buildPageMetadata({
+  title: "Supreme Court of Kenya",
+  description: "The Supreme Court of Kenya: judges, jurisdiction and role.",
+  path: "/government/judiciary/supreme-court",
+});
+
 
 
 export default function SupremeCourtPage() {

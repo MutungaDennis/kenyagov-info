@@ -1,6 +1,14 @@
 // app/government/deputy-presidency/page.tsx
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
+import { buildPageMetadata } from "@/lib/seo";
+
+export const metadata = buildPageMetadata({
+  title: "Office of the Deputy President",
+  description: "The Deputy President of Kenya: role, office and responsibilities.",
+  path: "/government/deputy-presidency",
+});
+
 
 export default function DeputyPresidencyPage() {
   return (

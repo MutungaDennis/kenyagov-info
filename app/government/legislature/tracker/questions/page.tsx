@@ -2,6 +2,14 @@ import Link from "next/link";
 import { createSanityClient } from "@/lib/sanity/createSanityClient";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import { PortableText } from "@portabletext/react";
+import { buildPageMetadata } from "@/lib/seo";
+
+export const metadata = buildPageMetadata({
+  title: "Parliamentary questions",
+  description: "Questions put to ministers in Parliament and the answers given.",
+  path: "/government/legislature/tracker/questions",
+});
+
 
 const sanityClient = createSanityClient();
 

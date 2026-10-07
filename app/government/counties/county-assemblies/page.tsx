@@ -2,6 +2,14 @@ import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import { createPublicClient } from "@/lib/supabase/public";
 import CountyAssembliesDirectoryClient from "./CountyAssembliesDirectoryClient";
+import { buildPageMetadata } from "@/lib/seo";
+
+export const metadata = buildPageMetadata({
+  title: "County assemblies",
+  description: "Kenya's 47 county assemblies, their speakers and members.",
+  path: "/government/counties/county-assemblies",
+});
+
 
 export const revalidate = 3600;
 

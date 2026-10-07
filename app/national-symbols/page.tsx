@@ -3,6 +3,14 @@ import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import LastUpdated from "@/components/govuk/LastUpdated";
 import PrintPageButton from "@/components/govuk/PrintPageButton";
+import { buildPageMetadata } from "@/lib/seo";
+
+export const metadata = buildPageMetadata({
+  title: "National symbols of Kenya",
+  description: "The Kenyan flag, coat of arms, anthem and pledge, and what they mean.",
+  path: "/national-symbols",
+});
+
 
 export const revalidate = 86400;
 

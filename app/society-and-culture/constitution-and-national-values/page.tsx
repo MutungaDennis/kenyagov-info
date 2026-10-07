@@ -2,6 +2,14 @@
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import LastUpdated from "@/components/govuk/LastUpdated";
+import { buildPageMetadata } from "@/lib/seo";
+
+export const metadata = buildPageMetadata({
+  title: "The Constitution and national values",
+  description: "The national values and principles of governance in the Constitution of Kenya.",
+  path: "/society-and-culture/constitution-and-national-values",
+});
+
 
 export default function ConstitutionAndNationalValuesPage() {
   return (

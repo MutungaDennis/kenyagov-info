@@ -7,6 +7,14 @@ import {
   type CabinetBriefFinderRow,
   type CabinetBriefSearchParams,
 } from "@/lib/cabinet/queries";
+import { buildPageMetadata } from "@/lib/seo";
+
+export const metadata = buildPageMetadata({
+  title: "Cabinet briefs",
+  description: "Plain-English briefs of Cabinet meetings and decisions in Kenya.",
+  path: "/government/cabinet/briefs",
+});
+
 
 export const dynamic = "force-dynamic";
 

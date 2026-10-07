@@ -1,6 +1,14 @@
 import Link from "next/link";
 import { listHansard } from "@/lib/hansard/queries";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
+import { buildPageMetadata } from "@/lib/seo";
+
+export const metadata = buildPageMetadata({
+  title: "The Senate of Kenya",
+  description: "The Senate of Kenya: role, leadership and senators.",
+  path: "/government/legislature/senate",
+});
+
 
 // ============================================
 // SUPABASE HANSARD

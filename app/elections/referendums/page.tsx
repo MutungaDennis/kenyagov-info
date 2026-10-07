@@ -1,6 +1,14 @@
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import LastUpdated from "@/components/govuk/LastUpdated";
 import Link from "next/link";
+import { buildPageMetadata } from "@/lib/seo";
+
+export const metadata = buildPageMetadata({
+  title: "Referendums in Kenya",
+  description: "History and results of referendums held in Kenya, and how a referendum is triggered.",
+  path: "/elections/referendums",
+});
+
 
 export const revalidate = 86400;
 

@@ -1,6 +1,14 @@
 import { Suspense } from "react";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import MembersClient from "./MembersClient";
+import { buildPageMetadata } from "@/lib/seo";
+
+export const metadata = buildPageMetadata({
+  title: "Members of the National Assembly",
+  description: "Members of the National Assembly of Kenya by constituency and party.",
+  path: "/government/legislature/national-assembly/members",
+});
+
 
 export default function NationalAssemblyMembersPage() {
   return (

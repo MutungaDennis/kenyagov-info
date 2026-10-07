@@ -6,6 +6,14 @@ import {
   type DocumentFinderRow,
   type DocumentSearchParams,
 } from "@/lib/documents/queries";
+import { buildPageMetadata } from "@/lib/seo";
+
+export const metadata = buildPageMetadata({
+  title: "Government documents and publications",
+  description: "Search official Kenyan government documents, reports, policies and publications in one place.",
+  path: "/documents",
+});
+
 
 export const dynamic = "force-dynamic";
 

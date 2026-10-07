@@ -2,6 +2,14 @@ import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import { createPublicClient } from "@/lib/supabase/public";
 import { chamberLabel, type ParliamentaryChamber } from "@/lib/legislature/committees";
+import { buildPageMetadata } from "@/lib/seo";
+
+export const metadata = buildPageMetadata({
+  title: "Parliamentary committees",
+  description: "Committees of the National Assembly and the Senate: who chairs them, who serves and what each does.",
+  path: "/government/legislature/committees",
+});
+
 
 export const dynamic = "force-dynamic";
 

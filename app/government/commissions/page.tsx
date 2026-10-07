@@ -1,6 +1,14 @@
 // app/government/commissions/page.tsx
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
+import { buildPageMetadata } from "@/lib/seo";
+
+export const metadata = buildPageMetadata({
+  title: "Constitutional commissions and independent offices",
+  description: "Kenya's constitutional commissions and independent offices, their mandates and leaders.",
+  path: "/government/commissions",
+});
+
 
 export const revalidate = 86400;
 

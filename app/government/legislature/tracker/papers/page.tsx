@@ -2,6 +2,14 @@ import Link from "next/link";
 import { createSanityClient } from "@/lib/sanity/createSanityClient";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import { PortableText } from "@portabletext/react";
+import { buildPageMetadata } from "@/lib/seo";
+
+export const metadata = buildPageMetadata({
+  title: "Papers tabled in Parliament",
+  description: "Papers tabled in the National Assembly and the Senate.",
+  path: "/government/legislature/tracker/papers",
+});
+
 
 const sanityClient = createSanityClient();
 

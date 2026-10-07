@@ -7,6 +7,14 @@ import {
   type PresidentialSpeechFinderRow,
   type PresidentialSpeechSearchParams,
 } from "@/lib/presidential-speeches/queries";
+import { buildPageMetadata } from "@/lib/seo";
+
+export const metadata = buildPageMetadata({
+  title: "Presidential speeches",
+  description: "Speeches by the President of Kenya.",
+  path: "/government/presidency/speeches",
+});
+
 
 export const dynamic = "force-dynamic";
 

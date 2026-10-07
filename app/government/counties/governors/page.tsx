@@ -3,6 +3,14 @@ import Link from "next/link";
 import { createPublicClient } from "@/lib/supabase/public";
 import { buildCountyLeadership } from "@/lib/counties/leadership";
 import GovernorsDirectoryClient from "./GovernorsDirectoryClient";
+import { buildPageMetadata } from "@/lib/seo";
+
+export const metadata = buildPageMetadata({
+  title: "County governors",
+  description: "The governors of Kenya's 47 counties and their deputies.",
+  path: "/government/counties/governors",
+});
+
 
 export const revalidate = 3600;
 

@@ -1,5 +1,13 @@
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
+import { buildPageMetadata } from "@/lib/seo";
+
+export const metadata = buildPageMetadata({
+  title: "The Presidency of Kenya",
+  description: "The President of Kenya: role, powers, office and recent activity.",
+  path: "/government/presidency",
+});
+
 
 export const revalidate = 86400;
 

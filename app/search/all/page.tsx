@@ -1,6 +1,15 @@
 // app/search/all/page.tsx
 // Legacy URL — redirect to the unified GOV.UK-style site search.
 import { redirect } from "next/navigation";
+import { buildPageMetadata } from "@/lib/seo";
+
+export const metadata = buildPageMetadata({
+  title: "Search results",
+  description: "Search results across CitizenGuide.KE.",
+  path: "/search/all",
+  noIndex: true,
+});
+
 
 export const revalidate = 86400;
 

@@ -1,6 +1,14 @@
 // app/government/judiciary/page.tsx
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
+import { buildPageMetadata } from "@/lib/seo";
+
+export const metadata = buildPageMetadata({
+  title: "The Judiciary of Kenya",
+  description: "Kenya's courts and judicial officers, from the Supreme Court to magistrates' courts.",
+  path: "/government/judiciary",
+});
+
 
 export const revalidate = 86400;
 

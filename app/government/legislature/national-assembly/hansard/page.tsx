@@ -1,6 +1,14 @@
 import Link from "next/link";
 import { listHansard } from "@/lib/hansard/queries";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
+import { buildPageMetadata } from "@/lib/seo";
+
+export const metadata = buildPageMetadata({
+  title: "National Assembly Hansard",
+  description: "Official reports of National Assembly debates.",
+  path: "/government/legislature/national-assembly/hansard",
+});
+
 
 // ============================================
 // SANITY CLIENT (same as main Hansard hub)

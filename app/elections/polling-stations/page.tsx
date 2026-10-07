@@ -5,6 +5,14 @@ import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import GovUKPagination from "@/components/govuk/Pagination";
 import LastUpdated from "@/components/govuk/LastUpdated";
 import PollingStationFilters from "@/components/votes/polling-station-filters";
+import { buildPageMetadata } from "@/lib/seo";
+
+export const metadata = buildPageMetadata({
+  title: "Polling stations in Kenya",
+  description: "Find polling stations by county, constituency and ward, with voter numbers.",
+  path: "/elections/polling-stations",
+});
+
 
 export const revalidate = 3600;
 

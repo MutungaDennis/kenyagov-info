@@ -26,6 +26,7 @@ Use this site to find structured, plain-language information about Kenyan govern
 - [People and public officials](${SITE_URL}/government/people): current and former roles, organizations, constituencies, counties, and parties.
 - [Constitution of Kenya](${SITE_URL}/constitution): chapters, articles, schedules, and explanatory material.
 - [Legislature and Hansard](${SITE_URL}/government/legislature): Parliament, members, proceedings, bills, papers, questions, and debates.
+- [Parliamentary committees](${SITE_URL}/government/legislature/committees): National Assembly and Senate committees with their chairs, vice-chairs, members and secretariat.
 - [Elections](${SITE_URL}/elections): election processes, voter information, parties, polling stations, and election planning.
 - [Public services](${SITE_URL}/services): informational guidance with links to official transaction portals.
 - [Guides](${SITE_URL}/guides): plain-language civic and public-service guidance.

@@ -1,4 +1,12 @@
 import { redirect } from "next/navigation";
+import { buildPageMetadata } from "@/lib/seo";
+
+export const metadata = buildPageMetadata({
+  title: "Members of County Assembly (MCAs)",
+  description: "Find Members of County Assembly by county and ward.",
+  path: "/government/county-assemblies/mcas",
+});
+
 
 /** Legacy URL — MCA register now lives under /government/counties/county-assemblies/mcas */
 export default async function MCAsLegacyRedirect({

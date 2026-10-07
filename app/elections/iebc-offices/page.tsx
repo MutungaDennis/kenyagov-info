@@ -3,6 +3,14 @@ import { createPublicClient, isPublicSupabaseConfigured } from "@/lib/supabase/p
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import GovUKPagination from "@/components/govuk/Pagination";
 import LastUpdated from "@/components/govuk/LastUpdated";
+import { buildPageMetadata } from "@/lib/seo";
+
+export const metadata = buildPageMetadata({
+  title: "IEBC offices",
+  description: "Find Independent Electoral and Boundaries Commission offices across Kenya's counties and constituencies.",
+  path: "/elections/iebc-offices",
+});
+
 
 export const revalidate = 3600;
 

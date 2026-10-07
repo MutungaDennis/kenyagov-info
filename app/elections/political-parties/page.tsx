@@ -2,6 +2,14 @@
 import Link from "next/link";
 import { createPublicClient } from "@/lib/supabase/public";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
+import { buildPageMetadata } from "@/lib/seo";
+
+export const metadata = buildPageMetadata({
+  title: "Political parties in Kenya",
+  description: "Registered Kenyan political parties, their leaders, symbols and registration details.",
+  path: "/elections/political-parties",
+});
+
 
 export const revalidate = 3600;
 

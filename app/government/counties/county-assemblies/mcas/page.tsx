@@ -2,6 +2,14 @@ import Link from "next/link";
 import { createPublicClient } from "@/lib/supabase/public";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import TableScroll from "@/components/govuk/TableScroll";
+import { buildPageMetadata } from "@/lib/seo";
+
+export const metadata = buildPageMetadata({
+  title: "Members of County Assembly (MCAs)",
+  description: "Find Members of County Assembly by county and ward.",
+  path: "/government/counties/county-assemblies/mcas",
+});
+
 
 export const revalidate = 3600;
 

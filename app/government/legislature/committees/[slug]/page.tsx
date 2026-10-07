@@ -8,6 +8,9 @@ import {
   type ParliamentaryChamber,
 } from "@/lib/legislature/committees";
 import { createPublicClient } from "@/lib/supabase/public";
+import type { Metadata } from "next";
+import { buildPageMetadata, SITE_URL } from "@/lib/seo";
+import { JsonLd } from "@/components/JsonLd";
 
 export const dynamic = "force-dynamic";
 
@@ -65,6 +68,24 @@ function termLabel(start: string | null, end: string | null, historical = false)
   }
   const finish = end ? dateLabel(end) : historical ? "End date not recorded" : "present";
   return `${start ? dateLabel(start) : "Start date not recorded"} – ${finish}`;
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const { data } = await createPublicClient()
+    .from("parliamentary_committees")
+    .select("chamber,name,description,mandate")
+    .eq("slug", slug)
+    .eq("is_published", true)
+    .maybeSingle();
+  if (!data) return { title: "Committee not found", robots: { index: false, follow: false } };
+  const house = chamberLabel(data.chamber as ParliamentaryChamber);
+  const text = String(data.description || data.mandate || "").replace(/\s+/g, " ").trim().slice(0, 240);
+  return buildPageMetadata({
+    title: `${data.name} - ${house}`,
+    description: text || `Chair, vice-chair, members and secretariat of the ${data.name} of the ${house}.`,
+    path: `/government/legislature/committees/${slug}`,
+  });
 }
 
 export default async function ParliamentaryCommitteePage({
@@ -151,8 +172,20 @@ export default async function ParliamentaryCommitteePage({
     : [];
   const positions = ["chairperson", "vice_chairperson", "member"];
 
+  const pageUrl = `${SITE_URL}/government/legislature/committees/${committee.slug}`;
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "GovernmentOrganization",
+    "@id": `${pageUrl}#committee`,
+    name: committee.name,
+    url: pageUrl,
+    description: committee.description || committee.mandate || undefined,
+    parentOrganization: { "@type": "GovernmentOrganization", name: chamberLabel(committee.chamber) },
+  };
+
   return (
     <>
+      <JsonLd data={structuredData} />
       <GovUKBreadcrumbs items={[
         { text: "Home", href: "/" },
         { text: "Government", href: "/government" },

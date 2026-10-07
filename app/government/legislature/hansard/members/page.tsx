@@ -4,6 +4,14 @@ import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import Pagination from "@/components/govuk/Pagination";
 import ParliamentExplainer from "@/components/hansard/ParliamentExplainer";
 import { fetchCountyNames } from "@/lib/legislature/members";
+import { buildPageMetadata } from "@/lib/seo";
+
+export const metadata = buildPageMetadata({
+  title: "Hansard: members of Parliament",
+  description: "Members of Parliament who appear in the Hansard, with their contributions.",
+  path: "/government/legislature/hansard/members",
+});
+
 
 interface PageProps {
   searchParams: Promise<{

@@ -2,6 +2,14 @@ import Link from "next/link";
 import { createSanityClient } from "@/lib/sanity/createSanityClient";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import { PortableText } from "@portabletext/react";
+import { buildPageMetadata } from "@/lib/seo";
+
+export const metadata = buildPageMetadata({
+  title: "Bills tracker",
+  description: "Follow bills before the National Assembly and the Senate and where each one is in the process.",
+  path: "/government/legislature/tracker/bills",
+});
+
 
 const sanityClient = createSanityClient();
 

@@ -1,6 +1,14 @@
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import LastUpdated from "@/components/govuk/LastUpdated";
 import Link from "next/link";
+import { buildPageMetadata } from "@/lib/seo";
+
+export const metadata = buildPageMetadata({
+  title: "Voter registration in Kenya",
+  description: "How to register as a voter in Kenya, check your status and update your details.",
+  path: "/elections/voter-registration",
+});
+
 
 export const revalidate = 86400;
 

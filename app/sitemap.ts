@@ -242,6 +242,24 @@ async function getSupabaseUrls(): Promise<SitemapEntry[]> {
     });
   }
 
+  let committees = envOk
+    ? await fetchAllSlugs('parliamentary_committees', {
+        apply: (q) => q.eq('is_published', true),
+        maxRows: 2000,
+      })
+    : [];
+  if (committees.length === 0) {
+    committees = await fetchSlugsViaRest('parliamentary_committees', 'is_published=eq.true', 2000);
+  }
+  for (const committee of committees) {
+    urls.push({
+      url: `${BASE_URL}/government/legislature/committees/${committee.slug}`,
+      lastModified: committee.updated_at ? new Date(committee.updated_at) : undefined,
+      changeFrequency: 'weekly',
+      priority: 0.6,
+    });
+  }
+
   // 4. COUNTIES — profiles are institution pages (/government/institutions/[slug])
   // Index pages only here; individual county URLs are covered by institutions above.
   // Keep a note in the HTML sitemap; avoid duplicate /government/counties/[slug] URLs.
@@ -283,6 +301,7 @@ async function getSupabaseUrls(): Promise<SitemapEntry[]> {
     { url: `${BASE_URL}/government/counties/county-assemblies`, changeFrequency: 'weekly', priority: 0.8 },
     { url: `${BASE_URL}/government/counties/county-assemblies/mcas`, changeFrequency: 'weekly', priority: 0.7 },
     { url: `${BASE_URL}/government/legislature`, changeFrequency: 'weekly', priority: 0.8 },
+    { url: `${BASE_URL}/government/legislature/committees`, changeFrequency: 'weekly', priority: 0.8 },
   );
 
   console.info(

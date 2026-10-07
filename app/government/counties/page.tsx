@@ -2,6 +2,14 @@ import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import { createPublicClient } from "@/lib/supabase/public";
 import CountiesDirectoryClient from "./CountiesDirectoryClient";
+import { buildPageMetadata } from "@/lib/seo";
+
+export const metadata = buildPageMetadata({
+  title: "Counties of Kenya",
+  description: "Profiles of Kenya's 47 counties: governors, assemblies, demographics and services.",
+  path: "/government/counties",
+});
+
 
 export const revalidate = 3600;
 

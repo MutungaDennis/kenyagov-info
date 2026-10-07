@@ -2,6 +2,14 @@
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import LastUpdated from "@/components/govuk/LastUpdated";
+import { buildPageMetadata } from "@/lib/seo";
+
+export const metadata = buildPageMetadata({
+  title: "Languages of Kenya",
+  description: "The languages spoken in Kenya, and the official and national languages.",
+  path: "/society-and-culture/languages",
+});
+
 
 export const revalidate = 86400;
 

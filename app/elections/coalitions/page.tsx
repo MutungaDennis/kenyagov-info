@@ -1,6 +1,14 @@
 import Link from "next/link";
 import { createPublicClient } from "@/lib/supabase/public";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
+import { buildPageMetadata } from "@/lib/seo";
+
+export const metadata = buildPageMetadata({
+  title: "Political coalitions in Kenya",
+  description: "Registered political coalitions in Kenya, their member parties and leaders.",
+  path: "/elections/coalitions",
+});
+
 
 export const revalidate = 3600;
 

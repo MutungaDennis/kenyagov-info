@@ -2,6 +2,14 @@ import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import { createPublicClient } from "@/lib/supabase/public";
 import { displayNameWithTitles } from "@/lib/leaders/display";
+import { buildPageMetadata } from "@/lib/seo";
+
+export const metadata = buildPageMetadata({
+  title: "Cabinet of Kenya",
+  description: "The current Cabinet Secretaries of Kenya, their ministries and responsibilities.",
+  path: "/government/cabinet",
+});
+
 
 export const dynamic = "force-dynamic";
 

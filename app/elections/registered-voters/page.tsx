@@ -5,6 +5,14 @@ import PollingStationFilters from "@/components/votes/polling-station-filters";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import GovUKPagination from "@/components/govuk/Pagination";
 import LastUpdated from "@/components/govuk/LastUpdated";
+import { buildPageMetadata } from "@/lib/seo";
+
+export const metadata = buildPageMetadata({
+  title: "Registered voters in Kenya",
+  description: "Registered voter numbers by county, constituency and ward from IEBC data.",
+  path: "/elections/registered-voters",
+});
+
 
 export const revalidate = 3600;
 

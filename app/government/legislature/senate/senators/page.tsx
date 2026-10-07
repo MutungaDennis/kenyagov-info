@@ -1,6 +1,14 @@
 import { Suspense } from "react";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import SenatorsClient from "./SenatorsClient";
+import { buildPageMetadata } from "@/lib/seo";
+
+export const metadata = buildPageMetadata({
+  title: "Senators of Kenya",
+  description: "Senators of Kenya by county, nominated seat and party.",
+  path: "/government/legislature/senate/senators",
+});
+
 
 export default function SenateSenatorsPage() {
   return (

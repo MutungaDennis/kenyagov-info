@@ -1,2 +1,10 @@
 import {LegislationFilters} from "@/components/legislation/LegislationFilters";import {LegislationList} from "@/components/legislation/LegislationList";import {listLegislation} from "@/lib/legislation/queries";
+import { buildPageMetadata } from "@/lib/seo";
+
+export const metadata = buildPageMetadata({
+  title: "Treaties",
+  description: "Treaties Kenya has signed or ratified.",
+  path: "/legislation/treaties",
+});
+
 export default async function Page({searchParams}:{searchParams:Promise<Record<string,string|undefined>>}){const p=await searchParams;const items=await listLegislation({category:"treaty",query:p.query,status:p.status});return <main className="govuk-width-container govuk-main-wrapper" id="main-content"><h1 className="govuk-heading-xl">Treaties</h1><p className="govuk-body-l">Regional and international treaties connected to Kenya. Treaties are presented separately from subsidiary legislation.</p><div className="govuk-grid-row"><div className="govuk-grid-column-one-third"><LegislationFilters action="/legislation/treaties" values={p}/></div><div className="govuk-grid-column-two-thirds"><LegislationList items={items}/></div></div></main>}

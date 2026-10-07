@@ -3,6 +3,14 @@ import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import LastUpdated from "@/components/govuk/LastUpdated";
 import ChevronLinkList from "@/components/site/ChevronLinkList";
+import { buildPageMetadata } from "@/lib/seo";
+
+export const metadata = buildPageMetadata({
+  title: "About elections in Kenya",
+  description: "How elections work in Kenya, who runs them and what each election cycle involves.",
+  path: "/elections/about",
+});
+
 
 export const revalidate = 86400;
 

@@ -2,6 +2,14 @@ import Link from "next/link";
 import { createPublicClient } from "@/lib/supabase/public";
 import WardsFilters from "@/components/wards/wards-filters";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
+import { buildPageMetadata } from "@/lib/seo";
+
+export const metadata = buildPageMetadata({
+  title: "Wards in Kenya",
+  description: "Browse Kenya's electoral wards by county and constituency.",
+  path: "/government/counties/wards",
+});
+
 
 export const revalidate = 3600;
 

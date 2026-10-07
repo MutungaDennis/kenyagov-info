@@ -1,6 +1,14 @@
 // app/about/page.tsx
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
+import { buildPageMetadata } from "@/lib/seo";
+
+export const metadata = buildPageMetadata({
+  title: "About CitizenGuide.KE",
+  description: "What CitizenGuide.KE is, who runs it and how we keep Kenyan government information accurate and independent.",
+  path: "/about",
+});
+
 
 export const revalidate = 86400;
 

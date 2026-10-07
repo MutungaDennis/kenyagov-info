@@ -1,6 +1,14 @@
 // app/government/prime-cabinet-secretary/page.tsx
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
+import { buildPageMetadata } from "@/lib/seo";
+
+export const metadata = buildPageMetadata({
+  title: "Prime Cabinet Secretary",
+  description: "The office of the Prime Cabinet Secretary of Kenya: role and responsibilities.",
+  path: "/government/prime-cabinet-secretary",
+});
+
 
 export default function PrimeCabinetSecretaryPage() {
   return (
