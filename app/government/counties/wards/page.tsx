@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { createPublicClient } from "@/lib/supabase/public";
 import WardsFilters from "@/components/wards/wards-filters";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
@@ -39,7 +39,7 @@ export default async function WardsPage({
   const fromOffset = (currentPage - 1) * ITEMS_PER_PAGE;
   const toOffset = fromOffset + ITEMS_PER_PAGE - 1;
 
-  // Static 47 counties — no DB round-trip for dropdown
+  // Static 47 counties â€” no DB round-trip for dropdown
   const { fetchCountyNames } = await import("@/lib/legislature/members");
   const countyNames = await fetchCountyNames();
   const counties = countyNames.map((name) => ({ name }));
@@ -53,7 +53,7 @@ export default async function WardsPage({
   try {
     const supabase = createPublicClient();
 
-    // Only resolve constituency→county when needed (one row)
+    // Only resolve constituencyâ†’county when needed (one row)
     if (constituency && !county) {
       const { data: constituencyCounty } = await supabase
         .from("constituencies")
@@ -301,7 +301,7 @@ export default async function WardsPage({
                           <td className="govuk-table__cell govuk-body-s">{ward.constituency_name}</td>
                           <td className="govuk-table__cell govuk-body-s">{ward.county_name}</td>
                           <td className="govuk-table__cell govuk-body-s">
-                            {ward.registered_voters_2022 ? ward.registered_voters_2022.toLocaleString() : "—"}
+                            {ward.registered_voters_2022 ? ward.registered_voters_2022.toLocaleString() : "â€”"}
                           </td>
                         </tr>
                       ))}

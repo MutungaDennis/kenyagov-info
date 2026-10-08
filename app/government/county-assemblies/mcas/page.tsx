@@ -1,4 +1,4 @@
-import { redirect } from "next/navigation";
+﻿import { redirect } from "next/navigation";
 import { buildPageMetadata } from "@/lib/seo";
 
 export const metadata = buildPageMetadata({
@@ -8,7 +8,7 @@ export const metadata = buildPageMetadata({
 });
 
 
-/** Legacy URL — MCA register now lives under /government/counties/county-assemblies/mcas */
+/** Legacy URL â€” MCA register now lives under /government/counties/wards/mcas */
 export default async function MCAsLegacyRedirect({
   searchParams,
 }: {
@@ -22,6 +22,7 @@ export default async function MCAsLegacyRedirect({
   }
   const query = qs.toString();
   redirect(
-    `/government/counties/county-assemblies/mcas${query ? `?${query}` : ""}`,
+    `/government/counties/wards/mcas${query ? `?${query}` : ""}`,
   );
 }
+

@@ -1,4 +1,4 @@
-import { taskGuides } from '@/lib/guides/task-guides';
+﻿import { taskGuides } from '@/lib/guides/task-guides';
 import { sections as hgwSections } from './how-government-works/_shared';
 import { sections as hpmSections } from './how-public-money-works/_shared';
 import { MetadataRoute } from 'next';
@@ -11,7 +11,7 @@ import { sanityClient } from '@/lib/sanity/client';
 import { getAllTopicSlugs } from '@/lib/topics';
 import { getAllNationalEventSlugs } from '@/lib/data/national-events';
 import { getAllAskProfileSlugs } from '@/lib/data/ask-shows';
-/** Rebuild periodically — crawlers must not force heavy Worker work each hit. */
+/** Rebuild periodically â€” crawlers must not force heavy Worker work each hit. */
 export const revalidate = 3600;
 
 const BASE_URL = 'https://www.citizenguide.ke';
@@ -107,7 +107,7 @@ async function fetchSlugsViaRest(
 ): Promise<{ slug: string; updated_at?: string | null }[]> {
   const env = resolveSupabasePublicEnv(false);
   if (!hasRealSupabasePublicEnv(env)) {
-    console.error('[sitemap] Supabase env missing at runtime — dynamic URLs skipped');
+    console.error('[sitemap] Supabase env missing at runtime â€” dynamic URLs skipped');
     return [];
   }
 
@@ -152,7 +152,7 @@ async function getSupabaseUrls(): Promise<SitemapEntry[]> {
   const urls: SitemapEntry[] = [];
   const envOk = hasRealSupabasePublicEnv(resolveSupabasePublicEnv(false));
 
-  // 1. LEADERS → /government/people/[slug]
+  // 1. LEADERS â†’ /government/people/[slug]
   let leaders = envOk
     ? await fetchAllSlugs('leaders', {
         apply: (q) => q.eq('is_active', true),
@@ -171,7 +171,7 @@ async function getSupabaseUrls(): Promise<SitemapEntry[]> {
     });
   }
 
-  // 2. MCAs (published) → same people path
+  // 2. MCAs (published) â†’ same people path
   let mcas = envOk
     ? await fetchAllSlugs('mcas', {
         apply: (q) => q.neq('status', 'Unpublished'),
@@ -263,11 +263,11 @@ async function getSupabaseUrls(): Promise<SitemapEntry[]> {
     });
   }
 
-  // 4. COUNTIES — profiles are institution pages (/government/institutions/[slug])
+  // 4. COUNTIES â€” profiles are institution pages (/government/institutions/[slug])
   // Index pages only here; individual county URLs are covered by institutions above.
   // Keep a note in the HTML sitemap; avoid duplicate /government/counties/[slug] URLs.
 
-  // 5. WARDS (cap — large table)
+  // 5. WARDS (cap â€” large table)
   let wards = envOk
     ? await fetchAllSlugs('wards', { maxRows: 2000, pageSize: 500 })
     : [];
@@ -294,7 +294,7 @@ async function getSupabaseUrls(): Promise<SitemapEntry[]> {
     }
   } catch (error) { console.error('Content sitemap unavailable', error); }
 
-  // Index pages (canonical destinations only — no redirect sources)
+  // Index pages (canonical destinations only â€” no redirect sources)
   urls.push(
     { url: `${BASE_URL}/government`, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${BASE_URL}/government/people`, changeFrequency: 'weekly', priority: 0.8 },
@@ -302,7 +302,7 @@ async function getSupabaseUrls(): Promise<SitemapEntry[]> {
     { url: `${BASE_URL}/government/counties`, changeFrequency: 'weekly', priority: 0.8 },
     { url: `${BASE_URL}/government/counties/governors`, changeFrequency: 'weekly', priority: 0.8 },
     { url: `${BASE_URL}/government/counties/county-assemblies`, changeFrequency: 'weekly', priority: 0.8 },
-    { url: `${BASE_URL}/government/counties/county-assemblies/mcas`, changeFrequency: 'weekly', priority: 0.7 },
+    { url: `${BASE_URL}/government/counties/wards/mcas`, changeFrequency: 'weekly', priority: 0.7 },
     { url: `${BASE_URL}/government/legislature`, changeFrequency: 'weekly', priority: 0.8 },
     { url: `${BASE_URL}/government/legislature/committees`, changeFrequency: 'weekly', priority: 0.8 },
   );
@@ -431,7 +431,7 @@ async function getSanityUrls(): Promise<SitemapEntry[]> {
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  // Only final canonical destinations — never redirect sources (those inflate GSC "Page with redirect")
+  // Only final canonical destinations â€” never redirect sources (those inflate GSC "Page with redirect")
   const staticUrls: SitemapEntry[] = [
     { url: BASE_URL, changeFrequency: 'daily', priority: 1.0 },
 
@@ -581,3 +581,4 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: entry.priority,
   }));
 }
+

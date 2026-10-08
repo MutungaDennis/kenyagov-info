@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTransition } from "react";
@@ -41,7 +41,7 @@ export default function WardsFilters({
     params.set("page", "1"); // Always reset page index on parameters shift
 
     startTransition(() => {
-      router.push(`/counties/wards?${params.toString()}`);
+      router.push(`/government/counties/wards?${params.toString()}`);
     });
   };
 
@@ -128,3 +128,4 @@ export default function WardsFilters({
     </div>
   );
 }
+

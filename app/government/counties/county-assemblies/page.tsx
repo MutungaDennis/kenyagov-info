@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import { createPublicClient } from "@/lib/supabase/public";
 import CountyAssembliesDirectoryClient from "./CountyAssembliesDirectoryClient";
@@ -48,18 +48,18 @@ export default async function CountyAssembliesPage() {
             <Link href="/government/counties/governors" className="govuk-link">
               County Executives
             </Link>
-            {" · "}
+            {" Â· "}
             <Link
-              href="/government/counties/county-assemblies/mcas"
+              href="/government/counties/wards/mcas"
               className="govuk-link"
             >
               Members of County Assembly (MCAs)
             </Link>
-            {" · "}
+            {" Â· "}
             <Link href="/government/counties" className="govuk-link">
               Counties
             </Link>
-            {" · "}
+            {" Â· "}
             <Link href="/government/counties/devolution" className="govuk-link">
               Devolution
             </Link>
@@ -71,3 +71,4 @@ export default async function CountyAssembliesPage() {
     </>
   );
 }
+
