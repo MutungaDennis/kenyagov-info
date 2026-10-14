@@ -183,7 +183,7 @@ export default function GeneralFeedbackPage() {
               id="feedback_text"
               name="feedback_text"
               label="How can we improve this website?"
-              hint="Do not include sensitive personal or financial information, such as your National ID number."
+              hint="Do not include sensitive personal or financial information"
               errorMessage={fieldError}
               maxLength={MAX_CHARS}
               value={feedbackValue}
