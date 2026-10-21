@@ -26,7 +26,7 @@ export const metadata: Metadata = {
  * Homepage, simplified for phones first:
  * 1) Masthead with search
  * 2) One main action: find your representatives
- * 3) Common tasks
+ * 3) Browse government services by category
  * 4) Browse in 6 topics (one list, two columns on larger screens)
  * 5) Timely notice, emergency numbers, independence note
  */
@@ -113,21 +113,21 @@ export default async function Home() {
 
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-two-thirds">
-            <h2 className="govuk-heading-m">Browse government services</h2>
+            <h2 className="govuk-heading-m">Browse services by topic</h2>
             <p className="govuk-body">
-              Choose a broad topic to find the service that matches what you need to do.
-              Applications and payments are made on official government systems.
+              Find government services and information by choosing a topic.
+              You can narrow your search on the next page.
             </p>
             <ChevronLinkList
               ariaLabel="Government service categories"
-              items={categories.slice(0, 8).map((category) => ({
+              items={categories.map((category) => ({
                 href: `/services/categories/${category.slug}`,
                 title: category.title,
                 description: category.description,
               }))}
             />
             <p className="govuk-body">
-              <Link href="/services" className="govuk-link">Browse all services and information</Link>
+              <Link href="/services" className="govuk-link">Browse all services</Link>
             </p>
           </div>
 

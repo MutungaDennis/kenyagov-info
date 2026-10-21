@@ -49,7 +49,7 @@ export async function generateMetadata({
 
   return {
     title: "Services and information",
-    description: "Browse Kenyan government services by topic."
+    description: "Browse Kenyan government services by topic.",
     alternates: {
       canonical: `${SITE_URL}/services`,
     },
