@@ -67,7 +67,7 @@ export default async function GuidePage({ params }: GuidePageProps) {
         <h2 className="govuk-error-summary__title">Guide not found</h2>
         <div className="govuk-error-summary__body">
           <p className="govuk-body">The guide you are looking for could not be found.</p>
-          <Link href="/guides" className="govuk-link">
+          <Link href="/services" className="govuk-link">
             Back to guides
           </Link>
         </div>
@@ -78,12 +78,12 @@ export default async function GuidePage({ params }: GuidePageProps) {
   return (
     <>
     
-      {/* <GovUKBackLink href="/guides" /> */}
+      {/* <GovUKBackLink href="/services" /> */}
 
       <GovUKBreadcrumbs
         items={[
           { text: 'Home', href: '/' },
-          { text: 'Guides', href: '/guides' },
+          { text: 'Services', href: '/services' },
           { text: guide.title, href: `/guides/${slug}` },
         ]}
       />

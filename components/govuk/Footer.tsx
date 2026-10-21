@@ -59,11 +59,6 @@ export default function GovUKFooter() {
                   2027 election timeline
                 </Link>
               </li>
-              <li className="govuk-footer__list-item">
-                <Link href="/guides" className="govuk-footer__link">
-                  Guides
-                </Link>
-              </li>
             </ul>
           </div>
 

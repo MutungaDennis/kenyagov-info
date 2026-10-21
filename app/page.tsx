@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import HomeMasthead from "@/components/site/HomeMasthead";
 import ChevronLinkList from "@/components/site/ChevronLinkList";
-import { taskGuides } from "@/lib/guides/task-guides";
+import { getServiceDirectory } from "@/lib/services/queries";
 import {
   buildPageMetadata,
   DEFAULT_DESCRIPTION,
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
  * Homepage, simplified for phones first:
  * 1) Masthead with search
  * 2) One main action: find your representatives
- * 3) Common tasks
+ * 3) Browse government services by category
  * 4) Browse in 6 topics (one list, two columns on larger screens)
  * 5) Timely notice, emergency numbers, independence note
  */
@@ -73,7 +73,9 @@ const topics = [
   },
 ];
 
-export default function Home() {
+export default async function Home() {
+  const { categories } = await getServiceDirectory();
+
   return (
     <>
       <HomeMasthead />
@@ -111,25 +113,22 @@ export default function Home() {
 
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-two-thirds">
-            <h2 className="govuk-heading-m">Common tasks</h2>
+            <h2 className="govuk-heading-m">Browse services by topic</h2>
             <p className="govuk-body">
-              We explain how public services work. Applications and payments
-              are made on{" "}
-              <Link href="/ecitizen" className="govuk-link">
-                eCitizen
-              </Link>{" "}
-              or with the relevant office.
+              Find government services and information by choosing a topic.
+              You can narrow your search on the next page.
             </p>
             <ChevronLinkList
-              ariaLabel="Common tasks"
-              items={[
-                ...taskGuides.map((guide) => ({
-                  href: `/guides/${guide.slug}`,
-                  title: guide.title,
-                })),
-                { href: "/guides", title: "All guides and life events" },
-              ]}
+              ariaLabel="Government service categories"
+              items={categories.map((category) => ({
+                href: `/services/categories/${category.slug}`,
+                title: category.title,
+                description: category.description,
+              }))}
             />
+            <p className="govuk-body">
+              <Link href="/services" className="govuk-link">Browse all services</Link>
+            </p>
           </div>
 
           <div className="govuk-grid-column-one-third-from-desktop govuk-grid-column-full govuk-!-margin-top-4">

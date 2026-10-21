@@ -63,7 +63,7 @@ export default function PopularServicesPage() {
           </Link>
         </li>
         <li>
-          <Link href="/guides" className="govuk-link">
+          <Link href="/services" className="govuk-link">
             Life-event and how-to guides
           </Link>
         </li>

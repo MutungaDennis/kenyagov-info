@@ -10,7 +10,7 @@ export default function TaskGuideView({ guide }: { guide: TaskGuide }) {
       <PageIntro
         breadcrumbs={[
           { text: "Home", href: "/" },
-          { text: "Guides", href: "/guides" },
+          { text: "Services", href: "/services" },
           { text: guide.title },
         ]}
         caption="Step by step"

@@ -195,6 +195,11 @@ export async function POST(request: NextRequest) {
       moreInformationUrl: payload.moreInformationUrl
         ? String(payload.moreInformationUrl).trim()
         : undefined,
+      copyrightNotice: payload.copyrightNotice ? String(payload.copyrightNotice).trim() : undefined,
+      licenseUrl: payload.licenseUrl ? String(payload.licenseUrl).trim() : undefined,
+      sourceLinks: withKeys((Array.isArray(payload.sourceLinks) ? payload.sourceLinks : []).map((s: Record<string, unknown>) => ({ label: String(s.label || '').trim(), href: String(s.href || '').trim() })).filter((s: { label: string; href: string }) => s.label && s.href), 'sourceLink'),
+      pathways: withKeys((Array.isArray(payload.pathways) ? payload.pathways : []).map((p: Record<string, unknown>) => ({ title: String(p.title || '').trim(), summary: String(p.summary || '').trim(), details: String(p.details || '').trim(), portalUrl: p.portalUrl ? String(p.portalUrl).trim() : undefined })).filter((p: { title: string }) => p.title), 'servicePathway'),
+      countyRequirements: withKeys((Array.isArray(payload.countyRequirements) ? payload.countyRequirements : []).map((c: Record<string, unknown>) => ({ county: String(c.county || '').trim(), requirements: String(c.requirements || '').trim(), sourceUrl: c.sourceUrl ? String(c.sourceUrl).trim() : undefined })).filter((c: { county: string; requirements: string }) => c.county && c.requirements), 'countyRequirement'),
       popularityWeight: Number.isFinite(Number(payload.popularityWeight))
         ? Number(payload.popularityWeight)
         : 0,

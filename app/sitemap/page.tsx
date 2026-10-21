@@ -72,7 +72,7 @@ export default function SitemapPage() {
                 </Link>
               </li>
               <li>
-                <Link href="/guides" className="govuk-link">
+                <Link href="/services" className="govuk-link">
                   Guides and life events
                 </Link>
               </li>
@@ -374,7 +374,7 @@ export default function SitemapPage() {
             <h2 className="govuk-heading-m govuk-!-margin-top-6 govuk-!-margin-bottom-3">Guides and Society</h2>
             <ul className="govuk-list govuk-list--spaced">
               <li>
-                <Link href="/guides" className="govuk-link govuk-!-font-weight-bold govuk-!-font-size-19">Guides</Link>
+                <Link href="/services" className="govuk-link govuk-!-font-weight-bold govuk-!-font-size-19">Services</Link>
                 <p className="govuk-body-s govuk-!-margin-top-1 govuk-text-secondary">Step-by-step guides on government processes and citizen rights.</p>
               </li>
               <li>

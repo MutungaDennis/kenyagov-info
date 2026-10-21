@@ -22,7 +22,6 @@ const MENU_SECTIONS: {
       { href: "/topics", label: "Topics", bold: true },
       { href: "/services/popular", label: "Popular services" },
       { href: "/services/a-z", label: "Services A–Z" },
-      { href: "/guides", label: "Life-event guides" },
       { href: "/ecitizen", label: "eCitizen explained" },
       { href: "/huduma-centres", label: "Huduma Centres" },
     ],

@@ -18,7 +18,8 @@ export default function RegisteringADeathGuidePage() {
       <PageIntro
         breadcrumbs={[
           { text: "Home", href: "/" },
-          { text: "Guides", href: "/guides" },
+          { text: "Services", href: "/services" },
+
           { text: "Registering a death" },
         ]}
         caption="Life event"
@@ -134,7 +135,7 @@ export default function RegisteringADeathGuidePage() {
           links={[
             { text: "Having a baby", href: "/guides/having-a-baby" },
             { text: "Starting a business", href: "/guides/starting-a-business" },
-            { text: "All guides", href: "/guides" },
+            { text: "All services", href: "/services" },
             { text: "Popular services", href: "/services/popular" },
           ]}
         />

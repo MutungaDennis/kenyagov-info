@@ -48,8 +48,8 @@ export async function generateMetadata({
   }
 
   return {
-    title: "Services and guidance",
-    description: "Find government services. Search or filter by topic.",
+    title: "Services and information",
+    description: "Browse Kenyan government services by topic.",
     alternates: {
       canonical: `${SITE_URL}/services`,
     },
