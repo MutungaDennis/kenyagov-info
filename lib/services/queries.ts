@@ -38,9 +38,10 @@ export async function getServiceDirectory() {
       popularityWeight: s.popularityWeight || 0, executionMode: s.executionMode,
       providingBody: s.providingInstitutions?.[0]?.name || providers.find(p => p._id === s.providingBodies?.[0]?._ref)?.name || "Government Agency",
       categorySlug: categories.filter(c => links.some(l => l.category_id === c._id && l.service_id === s._id)).map(c => c.slug.current),
+      subcategorySlug: links.find(l => l.service_id === s._id)?.heading || undefined,
     })).sort((a, b) => a.title.localeCompare(b.title)),
-    categories: categories.map(c => ({ title: c.title, slug: c.slug.current,
-      subcategories: [...new Set([...(c.subTopics || []).map(t => t.heading || "General"), ...links.filter(l => l.category_id === c._id).map(l => l.heading)])].map(h => ({ title: h, slug: h })),
+    categories: categories.map(c => ({ title: c.title, slug: c.slug.current, description: c.description,
+      subcategories: [...new Set([...(c.subTopics || []).map(t => t.heading || "General"), ...links.filter(l => l.category_id === c._id).map(l => l.heading)])].map(h => ({ title: h, slug: h.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") })),
     })),
   };
 }
