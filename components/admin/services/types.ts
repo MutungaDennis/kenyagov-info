@@ -9,6 +9,11 @@ export type ServiceFormState = {
   status: "published" | "draft";
   reviewedAt: string;
   moreInformationUrl: string;
+  copyrightNotice: string;
+  licenseUrl: string;
+  sourceLinks: Array<{ label: string; href: string }>;
+  pathways: Array<{ title: string; summary: string; details: string; portalUrl: string }>;
+  countyRequirements: Array<{ county: string; requirements: string; sourceUrl: string }>;
   popularityWeight: number;
   processingTime: string;
   baseCostLabel: string;
@@ -71,6 +76,11 @@ export function emptyServiceForm(): ServiceFormState {
     status: "published",
     reviewedAt: "",
     moreInformationUrl: "",
+    copyrightNotice: "",
+    licenseUrl: "",
+    sourceLinks: [],
+    pathways: [],
+    countyRequirements: [],
     popularityWeight: 0,
     processingTime: "",
     baseCostLabel: "",
@@ -134,6 +144,11 @@ export function detailToForm(data: Record<string, unknown>): ServiceFormState {
     status: data.status === "draft" ? "draft" : "published",
     reviewedAt: data.reviewedAt ? String(data.reviewedAt).slice(0, 10) : "",
     moreInformationUrl: String(data.moreInformationUrl || ""),
+    copyrightNotice: String(data.copyrightNotice || ""),
+    licenseUrl: String(data.licenseUrl || ""),
+    sourceLinks: Array.isArray(data.sourceLinks) ? (data.sourceLinks as ServiceFormState["sourceLinks"]) : [],
+    pathways: Array.isArray(data.pathways) ? (data.pathways as ServiceFormState["pathways"]) : [],
+    countyRequirements: Array.isArray(data.countyRequirements) ? (data.countyRequirements as ServiceFormState["countyRequirements"]) : [],
     popularityWeight: Number(data.popularityWeight) || 0,
     processingTime: String(data.processingTime || ""),
     baseCostLabel: String(data.baseCostLabel || ""),
@@ -209,6 +224,11 @@ export function formToPayload(form: ServiceFormState) {
     status: form.status,
     reviewedAt: form.reviewedAt || undefined,
     moreInformationUrl: form.moreInformationUrl || undefined,
+    copyrightNotice: form.copyrightNotice || undefined,
+    licenseUrl: form.licenseUrl || undefined,
+    sourceLinks: form.sourceLinks,
+    pathways: form.pathways,
+    countyRequirements: form.countyRequirements,
     popularityWeight: form.popularityWeight,
     processingTime: form.processingTime,
     baseCostLabel: form.baseCostLabel,

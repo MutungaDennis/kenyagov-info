@@ -70,6 +70,51 @@ export default defineType({
       validation: (Rule) => Rule.uri({ scheme: ['http', 'https'] }),
     }),
     defineField({
+      name: 'copyrightNotice',
+      title: 'Copyright / attribution notice',
+      type: 'string',
+      description: 'For example: Information from eProcedures.investkenya.go.ke, licensed under CC BY-SA 4.0 International.',
+    }),
+    defineField({
+      name: 'licenseUrl',
+      title: 'License URL',
+      type: 'url',
+      description: 'Link to the applicable licence or reuse terms.',
+      validation: (Rule) => Rule.uri({ scheme: ['http', 'https'] }),
+    }),
+    defineField({
+      name: 'sourceLinks',
+      title: 'Information sources',
+      type: 'array',
+      of: [{ type: 'object', name: 'sourceLink', fields: [
+        { name: 'label', title: 'Source label', type: 'string', validation: Rule => Rule.required() },
+        { name: 'href', title: 'Source URL', type: 'url', validation: Rule => Rule.required().uri({ scheme: ['http', 'https'] }) },
+      ], preview: { select: { title: 'label', subtitle: 'href' } } }],
+    }),
+    defineField({
+      name: 'pathways',
+      title: 'Service pathways / subprocedures',
+      type: 'array',
+      description: 'Use for branching services such as different company types or applicant groups.',
+      of: [{ type: 'object', name: 'servicePathway', fields: [
+        { name: 'title', title: 'Pathway title', type: 'string', validation: Rule => Rule.required() },
+        { name: 'summary', title: 'Pathway summary', type: 'text', rows: 2 },
+        { name: 'details', title: 'Pathway details', type: 'text', rows: 4 },
+        { name: 'portalUrl', title: 'Pathway application URL', type: 'url', validation: Rule => Rule.uri({ scheme: ['http', 'https'] }) },
+      ], preview: { select: { title: 'title', subtitle: 'summary' } } }],
+    }),
+    defineField({
+      name: 'countyRequirements',
+      title: 'County-specific requirements',
+      type: 'array',
+      description: 'Add a county only when requirements, fees, locations or links differ.',
+      of: [{ type: 'object', name: 'countyRequirement', fields: [
+        { name: 'county', title: 'County', type: 'string', validation: Rule => Rule.required() },
+        { name: 'requirements', title: 'Requirements and local guidance', type: 'text', rows: 4, validation: Rule => Rule.required() },
+        { name: 'sourceUrl', title: 'County source URL', type: 'url', validation: Rule => Rule.uri({ scheme: ['http', 'https'] }) },
+      ], preview: { select: { title: 'county', subtitle: 'requirements' } } }],
+    }),
+    defineField({
       name: 'relatedLinks',
       title: 'Related links',
       type: 'array',

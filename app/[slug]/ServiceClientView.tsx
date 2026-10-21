@@ -26,6 +26,11 @@ export interface ServiceClientViewProps {
     body?: unknown;
     reviewedAt?: string;
     moreInformationUrl?: string;
+    copyrightNotice?: string;
+    licenseUrl?: string;
+    sourceLinks?: Array<{ label: string; href: string }>;
+    pathways?: Array<{ title: string; summary?: string; details?: string; portalUrl?: string }>;
+    countyRequirements?: Array<{ county: string; requirements: string; sourceUrl?: string }>;
     relatedLinks?: Array<{ label: string; href: string }>;
     _createdAt: string;
     _updatedAt: string;
@@ -72,6 +77,7 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
   };
 
   const [openFaqs, setOpenFaqs] = useState<Record<number, boolean>>({});
+  const [selectedCounty, setSelectedCounty] = useState("");
 
   const formatBytes = (bytes?: number): string => {
     if (!bytes) return "";
@@ -357,8 +363,42 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
             </section>
           ) : null}
 
-          <section
-            id="before-you-start"
+  {service.pathways && service.pathways.length > 0 ? (
+    <section id="pathways" aria-labelledby="pathways-heading" className="govuk-!-margin-bottom-6">
+      <h2 id="pathways-heading" className="govuk-heading-m">Choose a pathway</h2>
+      <p className="govuk-body">Select the option that matches what you want to do.</p>
+      {service.pathways.map((pathway, idx) => (
+        <details key={idx} className="govuk-details">
+          <summary className="govuk-details__summary"><span className="govuk-details__summary-text">{pathway.title}</span></summary>
+          <div className="govuk-details__text">
+            {pathway.summary ? <p className="govuk-body">{pathway.summary}</p> : null}
+            {pathway.details ? <p className="govuk-body">{pathway.details}</p> : null}
+            {pathway.portalUrl ? <a className="govuk-link" href={pathway.portalUrl} target="_blank" rel="noopener noreferrer">Apply for {pathway.title}</a> : null}
+          </div>
+        </details>
+      ))}
+    </section>
+  ) : null}
+
+  {service.countyRequirements && service.countyRequirements.length > 0 ? (
+    <section id="county-requirements" aria-labelledby="county-heading" className="govuk-!-margin-bottom-6">
+      <h2 id="county-heading" className="govuk-heading-m">Requirements by county</h2>
+      <div className="govuk-form-group">
+        <label className="govuk-label" htmlFor="county-select">Select a county</label>
+        <select id="county-select" className="govuk-select" value={selectedCounty} onChange={(event) => setSelectedCounty(event.target.value)}>
+          <option value="">Select a county</option>
+          {service.countyRequirements.map((item) => <option key={item.county} value={item.county}>{item.county}</option>)}
+        </select>
+      </div>
+      {selectedCounty ? (() => {
+        const county = service.countyRequirements?.find((item) => item.county === selectedCounty);
+        return county ? <div className="govuk-inset-text"><p className="govuk-body">{county.requirements}</p>{county.sourceUrl ? <a className="govuk-link" href={county.sourceUrl} target="_blank" rel="noopener noreferrer">Check the county source</a> : null}</div> : null;
+      })() : null}
+    </section>
+  ) : null}
+
+  <section
+    id="before-you-start"
             aria-labelledby="before-you-start-heading"
             className="govuk-!-margin-bottom-6"
           >
@@ -715,6 +755,10 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
               <p className="govuk-body-s govuk-!-margin-top-1 govuk-!-margin-bottom-0">
                 Last reviewed {formatDate(service.reviewedAt)}
               </p>
+            ) : null}
+            {service.copyrightNotice ? <p className="govuk-body-s govuk-!-margin-top-2">{service.copyrightNotice}{service.licenseUrl ? <> <a className="govuk-link" href={service.licenseUrl} target="_blank" rel="noopener noreferrer">Read the licence</a></> : null}</p> : null}
+            {service.sourceLinks && service.sourceLinks.length > 0 ? (
+              <div className="govuk-!-margin-top-3"><h3 className="govuk-heading-s">Sources</h3><ul className="govuk-list govuk-list--bullet">{service.sourceLinks.map((source, idx) => <li key={idx}><a className="govuk-link" href={source.href} target="_blank" rel="noopener noreferrer">{source.label}</a></li>)}</ul></div>
             ) : null}
           </div>
 
