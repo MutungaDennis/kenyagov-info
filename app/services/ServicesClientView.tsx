@@ -5,6 +5,7 @@ import Link from "next/link";
 import { matchesSearch } from "@/lib/search/match";
 import { useSearchParams, useRouter } from "next/navigation";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
+import ChevronLinkList from "@/components/site/ChevronLinkList";
 
 export interface GovernmentServiceSummary {
   _id: string;
@@ -99,6 +100,12 @@ export default function ServicesClientView({
     return results;
   }, [initialServices, searchQuery, selectedCategory, selectedSubcategory, selectedOrganization, sortOrder]);
 
+  const selectedCategoryRecord = categories.find((category) => category.slug === selectedCategory);
+  const mostViewedServices = [...initialServices]
+    .filter((service) => selectedCategory === "all" || (Array.isArray(service.categorySlug) ? service.categorySlug.includes(selectedCategory) : service.categorySlug === selectedCategory))
+    .sort((a, b) => b.popularityWeight - a.popularityWeight)
+    .slice(0, 5);
+
   const totalServicesCount = filteredAndSortedServices.length;
   const totalPages = Math.ceil(totalServicesCount / ITEMS_PER_PAGE) || 1;
   const resultsAnnouncement = `${totalServicesCount} service${totalServicesCount === 1 ? "" : "s"} found`;
@@ -155,7 +162,34 @@ export default function ServicesClientView({
         </div>
       </div>
 
-            {/* Search and sort controls - using GOV.UK form patterns */}
+      {selectedCategory === "all" ? (
+        <section className="govuk-!-margin-bottom-7" aria-labelledby="browse-topics-heading">
+          <h2 id="browse-topics-heading" className="govuk-heading-l">Browse services by topic</h2>
+          <p className="govuk-body">Start with a broad topic, then choose the service that matches what you need to do.</p>
+          <ChevronLinkList
+            ariaLabel="Service topics"
+            items={categories.map((category) => ({
+              href: `/services/categories/${encodeURIComponent(category.slug)}`,
+              title: category.title,
+              description: `${initialServices.filter((service) => Array.isArray(service.categorySlug) ? service.categorySlug.includes(category.slug) : service.categorySlug === category.slug).length} services`,
+            }))}
+          />
+        </section>
+      ) : (
+        <section className="govuk-!-margin-bottom-7" aria-labelledby="most-viewed-heading">
+          <h2 id="most-viewed-heading" className="govuk-heading-l">Most viewed in {selectedCategoryRecord?.title || "this topic"}</h2>
+          <ChevronLinkList
+            ariaLabel="Most viewed services"
+            items={mostViewedServices.map((service) => ({
+              href: `/${service.slug}`,
+              title: service.title,
+              description: service.summary,
+            }))}
+          />
+        </section>
+      )}
+
+      {/* Search and sort controls - using GOV.UK form patterns */}
       <div className="govuk-grid-row govuk-!-margin-bottom-6">
         <div className="govuk-grid-column-two-thirds">
           <div className="govuk-form-group">
