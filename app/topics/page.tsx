@@ -66,7 +66,7 @@ export default async function TopicsIndexPage() {
           </Link>
         </li>
         <li>
-          <Link href="/guides" className="govuk-link">
+          <Link href="/services" className="govuk-link">
             Step-by-step guides
           </Link>
         </li>

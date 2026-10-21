@@ -165,7 +165,7 @@ export default function ServicesClientView({
                 browse topics
               </Link>
               , or{" "}
-              <Link href="/guides" className="govuk-link">
+              <Link href="/services" className="govuk-link">
                 life-event guides
               </Link>
               . This website does not process applications.

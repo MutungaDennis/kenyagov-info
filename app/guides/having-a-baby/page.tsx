@@ -19,7 +19,7 @@ export default function HavingABabyGuidePage() {
       <PageIntro
         breadcrumbs={[
           { text: "Home", href: "/" },
-          { text: "Guides", href: "/guides" },
+          { text: "Services", href: "/services" },
           { text: "Having a baby" },
         ]}
         caption="Life event"
@@ -165,7 +165,7 @@ export default function HavingABabyGuidePage() {
           links={[
             { text: "Registering a death", href: "/guides/registering-a-death" },
             { text: "Starting a business", href: "/guides/starting-a-business" },
-            { text: "All guides", href: "/guides" },
+            { text: "All services", href: "/services" },
             { text: "All topics", href: "/topics" },
           ]}
         />

@@ -127,7 +127,7 @@ export default function Home() {
                   href: `/guides/${guide.slug}`,
                   title: guide.title,
                 })),
-                { href: "/guides", title: "All guides and life events" },
+                { href: "/services", title: "Browse all services" },
               ]}
             />
           </div>

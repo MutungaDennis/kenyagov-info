@@ -139,7 +139,7 @@ export default function SocietyAndCulturePage() {
           </Link>
         </li>
         <li>
-          <Link href="/guides" className="govuk-link">
+          <Link href="/services" className="govuk-link">
             Guides and life events
           </Link>
         </li>
