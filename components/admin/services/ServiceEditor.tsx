@@ -108,6 +108,20 @@ export default function ServiceEditor({
   };
 
   const save = async () => {
+    const title = form.title.trim();
+    const summary = form.summary.trim();
+    if (!title || !summary) {
+      setError("Add a clear title and a short summary before saving.");
+      return;
+    }
+    if (form.steps.length > 7) {
+      setError("Keep the main journey to 7 steps or fewer. Put alternatives in Service pathways.");
+      return;
+    }
+    if (form.executionMode === "online" && form.physicalVisits.length > 0) {
+      setError("This service is marked online only. Remove physical visits or change the application channel.");
+      return;
+    }
     setSaving(true);
     setError(null);
     setMessage(null);
@@ -139,10 +153,18 @@ export default function ServiceEditor({
       <h2 className="govuk-heading-l">
         {form._id ? "Edit service guide" : "New service guide"}
       </h2>
-      <p className="govuk-body">
-        Write for citizens. The Start now button must open an official portal
-        (eCitizen or agency site) — this site does not take applications.
-      </p>
+          <p className="govuk-body">
+            Write for citizens. Keep the main journey short and linear; put genuine alternatives in pathways or county requirements. The Start now button must open an official portal (eCitizen or agency site) — this site does not take applications.
+          </p>
+          <div className="govuk-inset-text">
+            <p className="govuk-body govuk-!-margin-bottom-2"><strong>Editor checklist</strong></p>
+            <ul className="govuk-list govuk-list--bullet govuk-!-margin-bottom-0">
+              <li>Use a verb-led title, such as “Register a company”.</li>
+              <li>Explain one clear task per page and keep steps to 5–7 where possible.</li>
+              <li>Use pathways for alternatives and county requirements only where they differ.</li>
+              <li>Add at least one official source and the correct attribution or licence.</li>
+            </ul>
+          </div>
 
       {error && (
         <div className="govuk-error-summary" role="alert">

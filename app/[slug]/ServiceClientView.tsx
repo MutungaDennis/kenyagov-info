@@ -158,6 +158,12 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
     ...(Array.isArray(service.body) && service.body.length
       ? [{ href: "#guidance", text: "Guidance" }]
       : []),
+    ...(service.pathways?.length
+      ? [{ href: "#pathways", text: "Choose a pathway" }]
+      : []),
+    ...(service.countyRequirements?.length
+      ? [{ href: "#county-requirements", text: "Requirements by county" }]
+      : []),
     { href: "#before-you-start", text: "Before you start" },
     ...(service.timelineGuidancePoints?.length
       ? [{ href: "#timeline", text: "Timeline" }]
@@ -372,7 +378,11 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
           <summary className="govuk-details__summary"><span className="govuk-details__summary-text">{pathway.title}</span></summary>
           <div className="govuk-details__text">
             {pathway.summary ? <p className="govuk-body">{pathway.summary}</p> : null}
-            {pathway.details ? <p className="govuk-body">{pathway.details}</p> : null}
+            {pathway.details
+              ? pathway.details.split(/\n\n+/).map((paragraph, paragraphIndex) => (
+                  <p className="govuk-body" key={paragraphIndex}>{paragraph}</p>
+                ))
+              : null}
             {pathway.portalUrl ? <a className="govuk-link" href={pathway.portalUrl} target="_blank" rel="noopener noreferrer">Apply for {pathway.title}</a> : null}
           </div>
         </details>

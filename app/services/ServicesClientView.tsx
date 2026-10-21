@@ -146,31 +146,12 @@ export default function ServicesClientView({
         <div className="govuk-grid-column-two-thirds">
           <h1 className="govuk-heading-xl">Services and guidance</h1>
           
-          {/* 
-            TODO: Uncomment this introductory text when needed.
-            <p className="govuk-body-l govuk-!-margin-bottom-2">
-              Find services from across government. Search or filter by topic.
-            </p>
-            <p className="govuk-body govuk-!-margin-bottom-6">
-              You can also{" "}
-              <Link href="/services/popular" className="govuk-link">
-                popular services
-              </Link>
-              ,{" "}
-              <Link href="/services/a-z" className="govuk-link">
-                services A to Z
-              </Link>
-              ,{" "}
-              <Link href="/topics" className="govuk-link">
-                browse topics
-              </Link>
-              , or{" "}
-              <Link href="/services" className="govuk-link">
-                life-event guides
-              </Link>
-              . This website does not process applications.
-            </p>
-          */}
+          <p className="govuk-body-l govuk-!-margin-bottom-2">
+            Find a government service and understand what to do next.
+          </p>
+          <p className="govuk-body govuk-!-margin-bottom-6">
+            Search by service or browse by topic. This website explains the process; applications and payments happen on official government systems.
+          </p>
         </div>
       </div>
 
@@ -178,7 +159,10 @@ export default function ServicesClientView({
       <div className="govuk-grid-row govuk-!-margin-bottom-6">
         <div className="govuk-grid-column-two-thirds">
           <div className="govuk-form-group">
-            <label className="govuk-label" htmlFor="search-input">Search services</label>
+            <label className="govuk-label" htmlFor="search-input">
+              Search services
+              <span className="govuk-hint">For example, passport, driving licence or business registration</span>
+            </label>
             <div className="relative">
               <input
                 id="search-input"
