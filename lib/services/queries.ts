@@ -10,7 +10,7 @@ export type ServiceDocument = Omit<ServiceView, "providingBodies" | "relatedServ
   _id: string; slug: { current: string }; status?: string; popularityWeight?: number;
   providingBodies?: Ref[]; relatedServices?: Ref[];
 };
-export type ServiceCategory = { _id: string; title: string; slug: { current: string }; description?: string; subTopics?: { heading?: string; slug?: string; description?: string; parentHeading?: string; services?: Ref[] }[] };
+export type ServiceCategory = { _id: string; title: string; slug: { current: string }; description?: string; priority?: number; subTopics?: { heading?: string; slug?: string; description?: string; parentHeading?: string; priority?: number; services?: Ref[] }[] };
 type Provider = { _id: string; name: string; slug: { current: string }; parentMinistry?: Ref };
 type CategoryLink = { category_id: string; service_id: string; heading: string; position: number };
 
@@ -35,7 +35,9 @@ export async function getServiceDirectory() {
   const publishedServiceIds = new Set(services.map((service) => service._id));
   const activeLinks = links.filter((link) => publishedServiceIds.has(link.service_id));
   const activeCategoryIds = new Set(activeLinks.map((link) => link.category_id));
-  const visibleCategories = categories.filter((category) => activeCategoryIds.has(category._id));
+  const visibleCategories = categories
+    .filter((category) => activeCategoryIds.has(category._id))
+    .sort((a, b) => (a.priority ?? 100) - (b.priority ?? 100) || a.title.localeCompare(b.title));
 
   return {
     services: services.map(s => ({
@@ -50,6 +52,7 @@ export async function getServiceDirectory() {
       slug: c.slug.current,
       description: c.description,
       subcategories: [...new Set(activeLinks.filter(l => l.category_id === c._id).map(l => l.heading || "General"))]
+        .sort((a, b) => (c.subTopics?.find(t => t.heading === a)?.priority ?? 100) - (c.subTopics?.find(t => t.heading === b)?.priority ?? 100) || a.localeCompare(b))
         .map(h => ({ title: h, slug: h.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "-") })),
     })),
   };
