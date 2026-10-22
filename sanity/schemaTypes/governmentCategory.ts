@@ -32,6 +32,14 @@ export default defineType({
       description: 'A brief 1-2 sentence overview of what users will find in this section.',
     }),
     defineField({
+      name: 'priority',
+      title: 'Display priority',
+      type: 'number',
+      description: 'Lower numbers appear first. Use 1 for the most important category.',
+      initialValue: 100,
+      validation: Rule => Rule.integer().min(1),
+    }),
+    defineField({
       name: 'subTopics',
       title: 'Sub-Topics Clusters',
       type: 'array',
