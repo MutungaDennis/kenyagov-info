@@ -27,7 +27,6 @@ export default function TaxonomyPanel({ categories, onChange }: Props) {
   const items = useMemo(() => selected?.subTopics || [], [selected]);
   const roots = items.filter((item) => !item.parentHeading);
   const childrenOf = (parent: string) => items.filter((item) => item.parentHeading === parent);
-  const editingItem = editingId ? items.find((item) => item.heading === editingId) : null;
 
   const refresh = async () => {
     const response = await fetch("/api/admin/services/save", { credentials: "include" });
@@ -56,7 +55,7 @@ export default function TaxonomyPanel({ categories, onChange }: Props) {
         credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          kind: editingCategory ? "category" : "subcategory",
+          kind: editingCategory ? "category" : formLevel,
           id: editingCategory ? selectedId : editingId || undefined,
           categoryId: selectedId || undefined,
           name: draft.title.trim(),

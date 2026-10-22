@@ -38,12 +38,32 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const name = String(body.name || body.title || "").trim();
+    const kind = String(body.kind || "");
     const slug = slugify(name);
-    if (!slug || !["ministry", "category"].includes(body.kind)) return NextResponse.json({ error: "Valid name and kind (ministry or category) are required" }, { status: 400 });
-    const table = body.kind === "ministry" ? "service_providers" : "service_categories";
+    if (!slug || !["ministry", "category", "subcategory", "subsubcategory"].includes(kind)) {
+      return NextResponse.json({ error: "Valid name and kind are required" }, { status: 400 });
+    }
+
+    if (kind === "subcategory" || kind === "subsubcategory") {
+      const categoryId = String(body.categoryId || "");
+      const category = await getContent<Category>("service_categories", "id", categoryId, auth.supabase);
+      if (!category) return NextResponse.json({ error: "Choose a valid main category first" }, { status: 400 });
+      const parentHeading = kind === "subsubcategory" ? String(body.parentHeading || "").trim() : "";
+      if (kind === "subsubcategory" && !parentHeading) return NextResponse.json({ error: "Choose a parent subcategory first" }, { status: 400 });
+      const topics = normaliseTopics(category);
+      if (topics.some((topic) => topic.heading.toLowerCase() === name.toLowerCase() && topic.parentHeading === parentHeading)) {
+        return NextResponse.json({ error: "A browse path with this name already exists here" }, { status: 409 });
+      }
+      const topic = { heading: name, description: String(body.description || ""), parentHeading, services: [] };
+      await saveContent("service_categories", { ...category, subTopics: [...topics, topic] }, auth.supabase);
+      refreshServices();
+      return NextResponse.json({ success: true, created: true, data: topic });
+    }
+
+    const table = kind === "ministry" ? "service_providers" : "service_categories";
     const existing = await getContent(table, "slug", slug, auth.supabase);
     if (existing) return NextResponse.json({ success: true, created: false, data: { ...existing, slug } });
-    const document = { _id: crypto.randomUUID(), slug: { current: slug }, ...(body.kind === "ministry" ? { name } : { title: name, description: String(body.description || ""), subTopics: [] }) };
+    const document = { _id: crypto.randomUUID(), slug: { current: slug }, ...(kind === "ministry" ? { name } : { title: name, description: String(body.description || ""), subTopics: [] }) };
     await saveContent(table, document, auth.supabase);
     refreshServices();
     return NextResponse.json({ success: true, created: true, data: { ...document, slug } });
