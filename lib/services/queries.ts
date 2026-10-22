@@ -10,7 +10,7 @@ export type ServiceDocument = Omit<ServiceView, "providingBodies" | "relatedServ
   _id: string; slug: { current: string }; status?: string; popularityWeight?: number;
   providingBodies?: Ref[]; relatedServices?: Ref[];
 };
-export type ServiceCategory = { _id: string; title: string; slug: { current: string }; description?: string; subTopics?: { heading?: string; services?: Ref[] }[] };
+export type ServiceCategory = { _id: string; title: string; slug: { current: string }; description?: string; subTopics?: { heading?: string; description?: string; parentHeading?: string; services?: Ref[] }[] };
 type Provider = { _id: string; name: string; slug: { current: string }; parentMinistry?: Ref };
 type CategoryLink = { category_id: string; service_id: string; heading: string; position: number };
 
@@ -79,7 +79,7 @@ export async function getAdminServices(db: SupabaseClient, id?: string) {
   return { data: id ? rows.find(s => s._id === id) || null : rows,
     ministries: providers.map(p => ({ ...p, slug: p.slug.current })),
     categories: categories.map(c => ({ ...c, slug: c.slug.current,
-      subTopics: [...new Set([...(c.subTopics || []).map(t => t.heading || "General"), ...links.filter(l => l.category_id === c._id).map(l => l.heading)])].map(heading => ({ heading, serviceIds: links.filter(l => l.category_id === c._id && l.heading === heading).map(l => l.service_id) })),
+      subTopics: [...new Set([...(c.subTopics || []).map(t => t.heading || "General"), ...links.filter(l => l.category_id === c._id).map(l => l.heading)])].map(heading => ({ heading, description: c.subTopics?.find(t => t.heading === heading)?.description, parentHeading: c.subTopics?.find(t => t.heading === heading)?.parentHeading, serviceIds: links.filter(l => l.category_id === c._id && l.heading === heading).map(l => l.service_id) })),
     })),
   };
 }

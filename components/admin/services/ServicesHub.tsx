@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import ServiceEditor from "./ServiceEditor";
 import ServicesUploadPanel from "./UploadPanel";
 import ServicesLinkPhrasesPanel from "./LinkPhrasesPanel";
+import TaxonomyPanel from "./TaxonomyPanel";
 import {
   detailToForm,
   emptyServiceForm,
@@ -14,7 +15,7 @@ import {
   type ServiceListRow,
 } from "./types";
 
-export type ServicesTab = "list" | "new" | "upload" | "links" | "edit";
+export type ServicesTab = "list" | "new" | "upload" | "links" | "taxonomy" | "edit";
 
 type Props = {
   initialTab?: ServicesTab;
@@ -136,6 +137,7 @@ export default function ServicesHub({ initialTab = "list" }: Props) {
               ["new", "New (form)"],
               ["upload", "Paste → Grok"],
               ["links", "Link phrases"],
+              ["taxonomy", "Categories"],
             ] as const
           ).map(([id, label]) => (
             <li key={id}>
@@ -301,6 +303,10 @@ export default function ServicesHub({ initialTab = "list" }: Props) {
       )}
 
       {tab === "links" && <ServicesLinkPhrasesPanel />}
+
+      {tab === "taxonomy" && (
+        <TaxonomyPanel categories={categories} onChange={setCategories} />
+      )}
 
       {tab === "edit" && editorForm && (
         <ServiceEditor

@@ -52,7 +52,8 @@ export type CategoryOption = {
   _id: string;
   title: string;
   slug?: string;
-  subTopics?: Array<{ heading?: string; serviceIds?: string[] }>;
+  description?: string;
+  subTopics?: Array<{ heading?: string; description?: string; parentHeading?: string; serviceIds?: string[] }>;
 };
 export type ServiceListRow = {
   _id: string;
