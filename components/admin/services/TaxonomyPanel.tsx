@@ -8,10 +8,14 @@ type Props = {
   onChange: (categories: CategoryOption[]) => void;
 };
 
-type Draft = { id?: string; title: string; description: string; parentId: string };
-const emptyDraft: Draft = { title: "", description: "", parentId: "" };
+type Draft = { id?: string; title: string; slug: string; description: string; parentId: string };
+const emptyDraft: Draft = { title: "", slug: "", description: "", parentId: "" };
 
 type TaxonomyItem = NonNullable<CategoryOption["subTopics"]>[number];
+
+function makeSlug(value: string) {
+  return value.toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/['’]/g, "").replace(/\b(the|a|an)\b/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").replace(/-+/g, "-");
+}
 
 export default function TaxonomyPanel({ categories, onChange }: Props) {
   const [selectedId, setSelectedId] = useState(categories[0]?._id || "");
@@ -59,6 +63,7 @@ export default function TaxonomyPanel({ categories, onChange }: Props) {
           id: editingCategory ? selectedId : editingId || undefined,
           categoryId: selectedId || undefined,
           name: draft.title.trim(),
+          slug: draft.slug.trim() || makeSlug(draft.title),
           description: draft.description.trim(),
           parentHeading: formLevel === "subsubcategory" ? draft.parentId : undefined,
         }),
@@ -81,14 +86,14 @@ export default function TaxonomyPanel({ categories, onChange }: Props) {
     setEditingId(null);
     setEditingCategory(true);
     setFormLevel("category");
-    setDraft({ title: category.title, description: category.description || "", parentId: "" });
+    setDraft({ title: category.title, slug: category.slug || makeSlug(category.title), description: category.description || "", parentId: "" });
   };
 
   const editItem = (item: TaxonomyItem) => {
     setEditingId(item.heading || null);
     setEditingCategory(false);
     setFormLevel(item.parentHeading ? "subsubcategory" : "subcategory");
-    setDraft({ title: item.heading || "", description: item.description || "", parentId: item.parentHeading || "" });
+    setDraft({ title: item.heading || "", slug: item.slug || makeSlug(item.heading || ""), description: item.description || "", parentId: item.parentHeading || "" });
   };
 
   const remove = async (payload: { kind: "category" | "subcategory"; categoryId: string; heading?: string }) => {
@@ -168,7 +173,8 @@ export default function TaxonomyPanel({ categories, onChange }: Props) {
             <h3 className="govuk-heading-m">{editingCategory ? "Edit main category" : editingId ? `Edit ${formLevel === "subsubcategory" ? "sub-subcategory" : "subcategory"}` : "Add to the browse path"}</h3>
             {!editingCategory && <div className="govuk-form-group"><label className="govuk-label" htmlFor="taxonomy-level">What are you adding?</label><select id="taxonomy-level" className="govuk-select" value={formLevel} disabled={!selected || Boolean(editingId)} onChange={(event) => { setFormLevel(event.target.value as typeof formLevel); setDraft({ ...draft, parentId: "" }); }}><option value="category">Main category</option><option value="subcategory" disabled={!selected}>Subcategory</option><option value="subsubcategory" disabled={!selected || roots.length === 0}>Sub-subcategory</option></select></div>}
             {formLevel === "subsubcategory" && !editingCategory && <div className="govuk-form-group"><label className="govuk-label" htmlFor="taxonomy-parent">Parent subcategory</label><select id="taxonomy-parent" className="govuk-select" value={draft.parentId} onChange={(event) => setDraft({ ...draft, parentId: event.target.value })}><option value="">Choose a parent</option>{roots.map((item) => <option key={item.heading} value={item.heading}>{item.heading}</option>)}</select></div>}
-            <div className="govuk-form-group"><label className="govuk-label" htmlFor="taxonomy-name">Name</label><input id="taxonomy-name" className="govuk-input govuk-!-width-two-thirds" value={draft.title} onChange={(event) => setDraft({ ...draft, title: event.target.value })} /></div>
+            <div className="govuk-form-group"><label className="govuk-label" htmlFor="taxonomy-name">Name</label><input id="taxonomy-name" className="govuk-input govuk-!-width-two-thirds" value={draft.title} onChange={(event) => setDraft({ ...draft, title: event.target.value, slug: editingId || editingCategory ? draft.slug : makeSlug(event.target.value) })} /></div>
+            <div className="govuk-form-group"><label className="govuk-label" htmlFor="taxonomy-slug">URL path</label><div className="govuk-hint">Lowercase words separated by hyphens. Articles are removed automatically.</div><div className="govuk-input__wrapper"><span className="govuk-input__prefix">/services/</span><input id="taxonomy-slug" className="govuk-input govuk-!-width-two-thirds" value={draft.slug} onChange={(event) => setDraft({ ...draft, slug: makeSlug(event.target.value) })} /></div></div>
             <div className="govuk-form-group"><label className="govuk-label" htmlFor="taxonomy-description">Short description <span className="govuk-hint govuk-!-display-inline">(optional)</span></label><textarea id="taxonomy-description" className="govuk-textarea" rows={3} value={draft.description} onChange={(event) => setDraft({ ...draft, description: event.target.value })} /></div>
             <button type="button" className="govuk-button" disabled={busy} onClick={() => void save()}>{busy ? "Saving…" : editingCategory || editingId ? "Save changes" : `Add ${formLevel === "category" ? "category" : formLevel === "subcategory" ? "subcategory" : "sub-subcategory"}`}</button>
             {(editingId || editingCategory || draft.title) && <button type="button" className="govuk-button govuk-button--secondary govuk-!-margin-left-2" onClick={resetForm}>Cancel</button>}

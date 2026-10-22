@@ -4,11 +4,12 @@ import { requireAdminApi, slugify } from "@/lib/admin-api";
 import { deleteContent, getContent, saveContent } from "@/lib/content/store";
 import { refreshServices } from "@/lib/content/revalidate";
 
-type Category = { _id: string; title: string; slug?: { current?: string } | string; description?: string; subTopics?: Array<{ heading?: string; description?: string; parentHeading?: string; services?: Array<{ _ref: string }>; serviceIds?: string[] }> };
+type Category = { _id: string; title: string; slug?: { current?: string } | string; description?: string; subTopics?: Array<{ heading?: string; description?: string; parentHeading?: string; slug?: string; services?: Array<{ _ref: string }>; serviceIds?: string[] }> };
 
 function normaliseTopics(category: Category) {
   return (category.subTopics || []).map((topic) => ({
     heading: topic.heading || "General",
+    slug: topic.slug || slugify(topic.heading || "General"),
     description: topic.description || "",
     parentHeading: topic.parentHeading || "",
     services: topic.services || (topic.serviceIds || []).map((_ref) => ({ _ref })),
@@ -39,7 +40,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const name = String(body.name || body.title || "").trim();
     const kind = String(body.kind || "");
-    const slug = slugify(name);
+    const slug = slugify(String(body.slug || name));
     if (!slug || !["ministry", "category", "subcategory", "subsubcategory"].includes(kind)) {
       return NextResponse.json({ error: "Valid name and kind are required" }, { status: 400 });
     }
@@ -54,7 +55,9 @@ export async function POST(request: NextRequest) {
       if (topics.some((topic) => topic.heading.toLowerCase() === name.toLowerCase() && topic.parentHeading === parentHeading)) {
         return NextResponse.json({ error: "A browse path with this name already exists here" }, { status: 409 });
       }
-      const topic = { heading: name, description: String(body.description || ""), parentHeading, services: [] };
+      const topicSlug = slugify(String(body.slug || name));
+      if (topics.some((topic) => slugify(String(topic.slug || topic.heading)) === topicSlug)) return NextResponse.json({ error: "This URL is already in use in this category" }, { status: 409 });
+      const topic = { heading: name, slug: topicSlug, description: String(body.description || ""), parentHeading, services: [] };
       await saveContent("service_categories", { ...category, subTopics: [...topics, topic] }, auth.supabase);
       refreshServices();
       return NextResponse.json({ success: true, created: true, data: topic });
@@ -62,7 +65,7 @@ export async function POST(request: NextRequest) {
 
     const table = kind === "ministry" ? "service_providers" : "service_categories";
     const existing = await getContent(table, "slug", slug, auth.supabase);
-    if (existing) return NextResponse.json({ success: true, created: false, data: { ...existing, slug } });
+    if (existing) return NextResponse.json({ error: "This URL is already in use. Choose a different name or URL." }, { status: 409 });
     const document = { _id: crypto.randomUUID(), slug: { current: slug }, ...(kind === "ministry" ? { name } : { title: name, description: String(body.description || ""), subTopics: [] }) };
     await saveContent(table, document, auth.supabase);
     refreshServices();
@@ -83,15 +86,20 @@ export async function PUT(request: NextRequest) {
     if (!category) return NextResponse.json({ error: "Category not found" }, { status: 404 });
     if (body.kind === "category") {
       const title = String(body.name || "").trim();
-      if (!title) return NextResponse.json({ error: "Category name is required" }, { status: 400 });
-      await saveContent("service_categories", { ...category, title, description: String(body.description || ""), slug: { current: slugify(title) }, subTopics: normaliseTopics(category) }, auth.supabase);
+      const nextSlug = slugify(String(body.slug || title));
+      if (!title || !nextSlug) return NextResponse.json({ error: "Category name and URL are required" }, { status: 400 });
+      const duplicate = await getContent<Category>("service_categories", "slug", nextSlug, auth.supabase);
+      if (duplicate && duplicate._id !== category._id) return NextResponse.json({ error: "This URL is already in use" }, { status: 409 });
+      await saveContent("service_categories", { ...category, title, description: String(body.description || ""), slug: { current: nextSlug }, subTopics: normaliseTopics(category) }, auth.supabase);
     } else {
       const heading = String(body.heading || body.id || "").trim();
       const title = String(body.name || "").trim();
       const topics = normaliseTopics(category);
       const index = topics.findIndex((topic) => topic.heading === heading);
       if (index < 0 || !title) return NextResponse.json({ error: "Subcategory not found" }, { status: 404 });
-      topics[index] = { ...topics[index], heading: title, description: String(body.description || ""), parentHeading: String(body.parentHeading || "") };
+      const topicSlug = slugify(String(body.slug || title));
+      if (topics.some((topic, topicIndex) => topicIndex !== index && slugify(String(topic.slug || topic.heading)) === topicSlug)) return NextResponse.json({ error: "This URL is already in use in this category" }, { status: 409 });
+      topics[index] = { ...topics[index], heading: title, slug: topicSlug, description: String(body.description || ""), parentHeading: String(body.parentHeading || "") };
       const links = await auth.supabase.from("service_category_links").update({ heading: title }).eq("category_id", categoryId).eq("heading", heading);
       if (links.error) throw links.error;
       await saveContent("service_categories", { ...category, subTopics: topics }, auth.supabase);

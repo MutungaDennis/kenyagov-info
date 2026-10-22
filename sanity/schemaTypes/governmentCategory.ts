@@ -50,6 +50,13 @@ export default defineType({
               validation: Rule => Rule.required(),
             }),
             defineField({
+              name: 'slug',
+              title: 'URL Slug',
+              type: 'string',
+              description: 'Lowercase URL segment generated from the heading.',
+              validation: Rule => Rule.required(),
+            }),
+            defineField({
               name: 'services',
               title: 'Assigned Services',
               type: 'array',
