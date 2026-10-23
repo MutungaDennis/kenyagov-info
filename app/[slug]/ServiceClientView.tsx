@@ -103,7 +103,7 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
         ? [
             {
               text: service.parentCategory.title,
-              href: `/services/categories/${service.parentCategory.slug}`,
+              href: `/services/${service.parentCategory.slug}`,
             },
           ]
         : [{ text: "Services", href: "/services" }]),
@@ -137,7 +137,7 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
       ? [
           {
             text: service.parentCategory.title,
-            href: `/services/categories/${service.parentCategory.slug}`,
+            href: `/services/${service.parentCategory.slug}`,
           },
         ]
       : []),
@@ -708,7 +708,7 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
               {service.parentCategory && (
                 <li>
                   <Link
-                    href={`/services/categories/${service.parentCategory.slug}`}
+                    href={`/services/${service.parentCategory.slug}`}
                     className="govuk-link"
                   >
                     More in {service.parentCategory.title}

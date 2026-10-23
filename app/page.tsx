@@ -121,7 +121,7 @@ export default async function Home() {
             <ChevronLinkList
               ariaLabel="Government service categories"
               items={categories.map((category) => ({
-                href: `/services/categories/${category.slug}`,
+                href: `/services/${category.slug}`,
                 title: category.title,
                 description: category.description,
               }))}

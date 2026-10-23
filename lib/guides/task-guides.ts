@@ -56,7 +56,7 @@ export const taskGuides: TaskGuide[] = [
       { text: "iTax portal", href: "https://itax.kra.go.ke", external: true },
     ],
     related: [
-      { text: "Money and tax services", href: "/services/categories/money-tax" },
+      { text: "Money and tax services", href: "/services/money-tax" },
       { text: "How public money works", href: "/how-public-money-works" },
       { text: "eCitizen", href: "/ecitizen" },
     ],
@@ -200,7 +200,7 @@ export const taskGuides: TaskGuide[] = [
       { text: "Department of Immigration Services", href: "https://immigration.go.ke", external: true },
     ],
     related: [
-      { text: "Passports, travel and living abroad", href: "/services/categories/passports-travel" },
+      { text: "Passports, travel and living abroad", href: "/services/passports-travel" },
       { text: "eCitizen", href: "/ecitizen" },
       { text: "Huduma Centres", href: "/huduma-centres" },
     ],

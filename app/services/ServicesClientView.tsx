@@ -59,7 +59,7 @@ export default function ServicesClientView({
           <ChevronLinkList
             ariaLabel="Browse services by topic"
             items={categories.map((item) => ({
-              href: `/services/categories/${item.slug}`,
+              href: `/services/${item.slug}`,
               title: item.title,
               description: item.description || "Government services and information",
             }))}

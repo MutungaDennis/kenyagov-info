@@ -42,7 +42,7 @@ export async function generateMetadata({
       title: `Services: ${category.replace(/-/g, " ")}`,
       description: "Find government services filtered by topic.",
       alternates: {
-        canonical: `${SITE_URL}/services/categories/${encodeURIComponent(category)}`,
+        canonical: `${SITE_URL}/services/${encodeURIComponent(category)}`,
       },
     };
   }
@@ -61,7 +61,7 @@ export default async function ServicesHubPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const category = params.category?.trim();
   if (category && category !== "all") {
-    redirect(`/services/categories/${encodeURIComponent(category)}`);
+    redirect(`/services/${encodeURIComponent(category)}`);
   }
 
   const { services, categories } = await getServiceDirectory();
