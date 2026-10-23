@@ -28,7 +28,7 @@ export default function ElectionsAdminPage() {
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { load().catch((e) => setError(e.message)); }, []);
 
-  async function save(path: string, payload: PartyForm | CoalitionForm | (PartyForm & { id?: string }) | (CoalitionForm & { id?: string })) {
+  async function save(path: string, payload: (PartyForm | CoalitionForm) & { id?: string | null }) {
     setSaving(true); setError(null);
     try {
       const res = await fetch(path, { method: payload.id ? "PATCH" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
