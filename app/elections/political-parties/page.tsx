@@ -215,6 +215,7 @@ export default async function PoliticalPartiesPage({
               <ul className="govuk-list app-party-list">
                 {items.map((party: any) => (
                   <li key={party.id} className="app-party-item">
+                    {party.symbol && /^https?:\/\//i.test(party.symbol) && <img src={party.symbol} alt="" className="app-party-symbol" />}
                     <Link
                       href={`/elections/political-parties/${party.slug}`}
                       className="govuk-link govuk-link--no-visited-state"
@@ -299,6 +300,8 @@ export default async function PoliticalPartiesPage({
           margin: 0;
           padding: 0;
         }
+
+        .app-party-symbol { width: 56px; height: 56px; object-fit: contain; float: right; margin-left: 1rem; }
 
         .app-party-item {
           padding: 20px 0;

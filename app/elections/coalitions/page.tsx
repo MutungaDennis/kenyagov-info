@@ -163,6 +163,7 @@ export default async function CoalitionsPage({
                 className="govuk-grid-column-one-half govuk-!-margin-bottom-6"
               >
                 <div className="govuk-panel govuk-panel--confirmation">
+                  {coalition.symbol && /^https?:\/\//i.test(coalition.symbol) && <img src={coalition.symbol} alt="" className="app-coalition-symbol" />}
                   <h2 className="govuk-heading-m">
                     {coalition.name}
                   </h2>
@@ -223,6 +224,8 @@ export default async function CoalitionsPage({
       )}
 
       <style>{`
+        .app-coalition-symbol { width: 64px; height: 64px; object-fit: contain; float: right; margin-left: 1rem; background: #ffffff; padding: 0.25rem; }
+
         .coalition-type-label {
           display: inline-block;
           padding: 0.35rem 0.6rem;
