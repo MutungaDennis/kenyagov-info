@@ -58,6 +58,7 @@ export default async function PoliticalPartyPage({
       slug,
       abbreviation,
       symbol,
+      symbol_name,
       colors,
       slogan,
       status,
@@ -185,7 +186,8 @@ export default async function PoliticalPartyPage({
                 <div className="govuk-summary-list__row">
                   <dt className="govuk-summary-list__key">Symbol</dt>
                   <dd className="govuk-summary-list__value">
-                    {party.symbol || "—"}
+                    {party.symbol && /^https?:\/\//i.test(party.symbol) && <img src={party.symbol} alt={party.symbol_name || `${party.name} symbol`} className="app-party-detail-symbol" />}
+                    <span>{party.symbol_name || (party.symbol ? "Uploaded symbol" : "—")}</span>
                   </dd>
                 </div>
 
@@ -240,7 +242,7 @@ export default async function PoliticalPartyPage({
                 </div>
 
                 <div className="govuk-summary-list__row">
-                  <dt className="govuk-summary-list__key">Certificate issue date</dt>
+                  <dt className="govuk-summary-list__key">Certificate date</dt>
                   <dd className="govuk-summary-list__value">
                     {formatDate(party.certificate_issue_date || party.certificate_date)}
                   </dd>
@@ -391,6 +393,8 @@ export default async function PoliticalPartyPage({
       
 
       <style>{`
+        .app-party-detail-symbol { display: block; width: 128px; height: 128px; object-fit: contain; margin-bottom: 0.75rem; border: 1px solid #b1b4b6; background: #ffffff; padding: 0.5rem; }
+
         .app-party-tags {
           display: flex;
           gap: 10px;
