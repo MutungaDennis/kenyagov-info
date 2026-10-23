@@ -14,11 +14,11 @@ export const ADMIN_NAVIGATION = [
   ] },
   { title: "Services and elections", items: [
     { path: "services", label: "Public services" }, { path: "polling-stations/upload", label: "Polling stations" },
+    { path: "elections/political-parties", label: "Political parties" }, { path: "elections/coalitions", label: "Coalitions" },
   ] },
   { title: "Citizen responses", items: [
     { path: "contact", label: "Contact messages" }, { path: "feedback", label: "General feedback" },
-    { path: "page-feedback", label: "Page feedback" },
-    { path: "bug-reports", label: "Bug reports" },
+    { path: "page-feedback", label: "Page feedback" }, { path: "bug-reports", label: "Bug reports" },
   ] },
   { title: "Site management", items: [
     { path: "analytics", label: "Analytics" }, { path: "site-status", label: "Site status" },
