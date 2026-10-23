@@ -15,6 +15,7 @@ export type ServiceFormState = {
   pathways: Array<{ title: string; summary: string; details: string; portalUrl: string }>;
   countyRequirements: Array<{ county: string; requirements: string; sourceUrl: string }>;
   popularityWeight: number;
+  servicePriority: number;
   processingTime: string;
   baseCostLabel: string;
   executionMode: "online" | "hybrid" | "manual";
@@ -84,6 +85,7 @@ export function emptyServiceForm(): ServiceFormState {
     pathways: [],
     countyRequirements: [],
     popularityWeight: 0,
+    servicePriority: 0,
     processingTime: "",
     baseCostLabel: "",
     executionMode: "online",
@@ -152,6 +154,7 @@ export function detailToForm(data: Record<string, unknown>): ServiceFormState {
     pathways: Array.isArray(data.pathways) ? (data.pathways as ServiceFormState["pathways"]) : [],
     countyRequirements: Array.isArray(data.countyRequirements) ? (data.countyRequirements as ServiceFormState["countyRequirements"]) : [],
     popularityWeight: Number(data.popularityWeight) || 0,
+    servicePriority: Number(data.servicePriority) || 0,
     processingTime: String(data.processingTime || ""),
     baseCostLabel: String(data.baseCostLabel || ""),
     executionMode:
@@ -232,6 +235,7 @@ export function formToPayload(form: ServiceFormState) {
     pathways: form.pathways,
     countyRequirements: form.countyRequirements,
     popularityWeight: form.popularityWeight,
+    servicePriority: form.servicePriority,
     processingTime: form.processingTime,
     baseCostLabel: form.baseCostLabel,
     executionMode: form.executionMode,

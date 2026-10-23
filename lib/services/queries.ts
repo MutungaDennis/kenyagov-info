@@ -7,8 +7,13 @@ import { getContent, listContent } from "@/lib/content/store";
 export type ServiceView = ServiceClientViewProps["service"];
 type Ref = { _ref: string };
 export type ServiceDocument = Omit<ServiceView, "providingBodies" | "relatedServices"> & {
-  _id: string; slug: { current: string }; status?: string; popularityWeight?: number;
-  providingBodies?: Ref[]; relatedServices?: Ref[];
+  _id: string;
+  slug: { current: string };
+  status?: string;
+  popularityWeight?: number;
+  servicePriority?: number;
+  providingBodies?: Ref[];
+  relatedServices?: Ref[];
 };
 export type ServiceCategory = { _id: string; title: string; slug: { current: string }; description?: string; priority?: number; subTopics?: { heading?: string; slug?: string; description?: string; parentHeading?: string; priority?: number; services?: Ref[] }[] };
 type Provider = { _id: string; name: string; slug: { current: string }; parentMinistry?: Ref };
@@ -42,11 +47,11 @@ export async function getServiceDirectory() {
   return {
     services: services.map(s => ({
       _id: s._id, title: s.title, summary: s.summary || "", slug: s.slug.current,
-      popularityWeight: s.popularityWeight || 0, executionMode: s.executionMode,
+      popularityWeight: s.popularityWeight || 0, servicePriority: s.servicePriority || 0, executionMode: s.executionMode,
       providingBody: s.providingInstitutions?.[0]?.name || providers.find(p => p._id === s.providingBodies?.[0]?._ref)?.name || "Government Agency",
       categorySlug: visibleCategories.filter(c => activeLinks.some(l => l.category_id === c._id && l.service_id === s._id)).map(c => c.slug.current),
       subcategorySlug: activeLinks.find(l => l.service_id === s._id)?.heading || undefined,
-    })).sort((a, b) => a.title.localeCompare(b.title)),
+    })).sort((a, b) => (a.servicePriority || Number.MAX_SAFE_INTEGER) - (b.servicePriority || Number.MAX_SAFE_INTEGER) || a.title.localeCompare(b.title)),
     categories: visibleCategories.map(c => ({
       title: c.title,
       slug: c.slug.current,

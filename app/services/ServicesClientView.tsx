@@ -8,6 +8,7 @@ export interface GovernmentServiceSummary {
   summary: string;
   slug: string;
   popularityWeight: number;
+  servicePriority?: number;
   executionMode: string;
   categorySlug: string | string[];
   subcategorySlug?: string;
@@ -70,7 +71,7 @@ export default function ServicesClientView({
 
   const services = initialServices
     .filter((service) => categoryHasService(service, pathCategorySlug))
-    .sort((a, b) => a.title.localeCompare(b.title));
+    .sort((a, b) => (a.servicePriority || Number.MAX_SAFE_INTEGER) - (b.servicePriority || Number.MAX_SAFE_INTEGER) || a.title.localeCompare(b.title));
   const grouped = new Map<string, GovernmentServiceSummary[]>();
   for (const service of services) {
     const heading = service.subcategorySlug || "Services in this topic";

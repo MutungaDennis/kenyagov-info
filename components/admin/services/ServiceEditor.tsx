@@ -275,6 +275,23 @@ export default function ServiceEditor({
           </div>
           <div className="govuk-grid-column-one-third">
             <div className="govuk-form-group">
+              <label className="govuk-label" htmlFor="svc-priority">
+                Service priority
+              </label>
+              <div className="govuk-hint">Optional. 1 appears first within its subcategory, then 2, 3 and so on.</div>
+              <input
+                className="govuk-input govuk-input--width-5"
+                id="svc-priority"
+                type="number"
+                min={0}
+                step={1}
+                value={form.servicePriority}
+                onChange={(e) => set("servicePriority", Math.max(0, Math.floor(Number(e.target.value) || 0)))}
+              />
+            </div>
+          </div>
+          <div className="govuk-grid-column-one-third">
+            <div className="govuk-form-group">
               <label className="govuk-label" htmlFor="svc-weight">
                 Popularity weight
               </label>
