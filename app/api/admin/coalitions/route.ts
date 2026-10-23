@@ -3,7 +3,7 @@ import { requireAdminApi } from "@/lib/admin-api";
 
 export const dynamic = "force-dynamic";
 
-const coalitionSelect = "id, name, abbreviation, slogan, colors, symbol";
+const coalitionSelect = "id, name, abbreviation, slogan, colors, symbol, coalition_type";
 
 export async function GET() {
   const auth = await requireAdminApi();
@@ -26,6 +26,7 @@ export async function POST(request: NextRequest) {
     slogan: String(body.slogan || "").trim() || null,
     colors: String(body.colors || "").trim() || null,
     symbol: String(body.symbol || "").trim() || null,
+    coalition_type: String(body.coalition_type || "pre_election").trim(),
   };
   const { data, error } = await auth.supabase.from("coalitions").insert(row).select(coalitionSelect).single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -46,6 +47,7 @@ export async function PATCH(request: NextRequest) {
     slogan: String(body.slogan || "").trim() || null,
     colors: String(body.colors || "").trim() || null,
     symbol: String(body.symbol || "").trim() || null,
+    coalition_type: String(body.coalition_type || "pre_election").trim(),
   }).eq("id", id).select(coalitionSelect).single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ data });
