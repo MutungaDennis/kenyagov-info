@@ -57,6 +57,13 @@ export async function PATCH(request: NextRequest) {
     symbol: String(body.symbol || "").trim() || null,
     status: String(body.status || "active"),
     coalition_id: String(body.coalition_id || "").trim() || null,
+    certificate_serial_no: String(body.certificate_serial_no || "").trim() || null,
+    certificate_issue_date: String(body.certificate_issue_date || "").trim() || null,
+    certificate_date: String(body.certificate_date || "").trim() || null,
+    postal_address: String(body.postal_address || "").trim() || null,
+    head_office_location: String(body.head_office_location || "").trim() || null,
+    previous_names: String(body.previous_names || "").trim() || null,
+    changes: String(body.changes || "").trim() || null,
   }).eq("id", id).select(partySelect).single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ data });
