@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdminApi, slugify } from "@/lib/admin-api";
 
 export const dynamic = "force-dynamic";
-const partySelect = "id, slug, name, abbreviation, symbol, colors, slogan, status, coalition_id, certificate_serial_no, certificate_issue_date, certificate_date, postal_address, head_office_location, previous_names, changes";
+const partySelect = "id, slug, name, abbreviation, symbol, colors, slogan, status, coalition_id, certificate_serial_no, certificate_date, postal_address, head_office_location, previous_names, changes";
 
 export async function GET() {
   const auth = await requireAdminApi();
