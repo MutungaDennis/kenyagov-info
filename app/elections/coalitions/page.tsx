@@ -16,7 +16,6 @@ export const revalidate = 3600;
 
 interface SearchParams {
   q?: string;
-  letter?: string;
 }
 
 interface PageProps {
@@ -30,7 +29,6 @@ export default async function CoalitionsPage({
   const params = await searchParams;
 
   const q = params.q?.toLowerCase() || "";
-  const letter = params.letter?.toUpperCase();
 
   let coalitions: any[] | null = null;
   let error: { message: string } | null = null;
@@ -97,23 +95,15 @@ export default async function CoalitionsPage({
   // Safe fallback
   const safeCoalitions = coalitions ?? [];
 
-  // Search + alphabet filtering
-  const filtered = safeCoalitions
-    .filter((c) => {
-      if (!q) return true;
+  // Coalitions are few, so search is more useful than an alphabet filter.
+  const filtered = safeCoalitions.filter((c) => {
+    if (!q) return true;
 
-      return (
-        c.name?.toLowerCase().includes(q) ||
-        c.abbreviation?.toLowerCase().includes(q)
-      );
-    })
-    .filter((c) => {
-      if (!letter) return true;
-
-      return c.name?.[0]?.toUpperCase() === letter;
-    });
-
-  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+    return (
+      c.name?.toLowerCase().includes(q) ||
+      c.abbreviation?.toLowerCase().includes(q)
+    );
+  });
 
   return (
   <>
@@ -131,9 +121,7 @@ export default async function CoalitionsPage({
       </h1>
 
       <p className="govuk-body-l">
-        Coalitions are voluntary alliances of political
-        parties. A political party can belong to only one
-        coalition at a time.
+        A coalition is an alliance of two or more political parties formed to pursue a common goal. Coalitions may be formed before an election or after an election. A coalition political party is a coalition registered as a political party and is exempt from Sections 5 and 6 of the Political Parties Act, 2011.
       </p>
 
       {/* SEARCH */}
@@ -155,29 +143,6 @@ export default async function CoalitionsPage({
           Search
         </button>
       </form>
-
-      {/* A-Z FILTER */}
-      <div className="govuk-!-margin-bottom-6">
-        <p className="govuk-body">
-          Filter by alphabet
-        </p>
-
-        <div className="govuk-!-display-flex govuk-!-flex-wrap-wrap govuk-!-gap-2">
-          <Link className="govuk-link" href="/elections/coalitions">
-            All
-          </Link>
-
-          {alphabet.map((l) => (
-            <Link
-              key={l}
-              href={`/elections/coalitions?letter=${l}`}
-              className={`govuk-link ${letter === l ? 'govuk-!-font-weight-bold' : ''}`}
-            >
-              {l}
-            </Link>
-          ))}
-        </div>
-      </div>
 
       {/* EMPTY STATE */}
       {safeCoalitions.length === 0 ? (
@@ -208,8 +173,14 @@ export default async function CoalitionsPage({
                     </span>
                   )}
 
-                  <p className="govuk-body-s govuk-!-margin-bottom-2">
-                    <strong>{coalition.coalition_type === "post_election" ? "Post-election coalition" : "Pre-election coalition"}</strong>
+                  <p className="govuk-body-s govuk-!-margin-bottom-2 coalition-type-label">
+                    <strong>
+                      {coalition.coalition_type === "post_election"
+                        ? "Post-election coalition"
+                        : coalition.coalition_type === "coalition_party"
+                          ? "Coalition political party"
+                          : "Pre-election coalition"}
+                    </strong>
                   </p>
 
                   {coalition.slogan && (
@@ -251,9 +222,27 @@ export default async function CoalitionsPage({
         </>
       )}
 
-      
-    
-  
+      <style>{`
+        .coalition-type-label {
+          display: inline-block;
+          padding: 0.35rem 0.6rem;
+          background: #ffffff;
+          color: #0b3d2e;
+          border: 2px solid #0b3d2e;
+          border-radius: 0.2rem;
+        }
+
+        .govuk-panel--confirmation .govuk-details__summary,
+        .govuk-panel--confirmation .govuk-details__summary-text {
+          color: #ffffff;
+          font-weight: 700;
+        }
+
+        .govuk-panel--confirmation .govuk-details__summary:focus,
+        .govuk-panel--confirmation .govuk-details__summary:focus .govuk-details__summary-text {
+          color: #0b0c0c;
+        }
+      `}</style>
   </>
 );
 }
