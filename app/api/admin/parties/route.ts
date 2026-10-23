@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdminApi, slugify } from "@/lib/admin-api";
 
 export const dynamic = "force-dynamic";
-const partySelect = "id, slug, name, abbreviation, symbol, colors, slogan, status, coalition_id, certificate_serial_no, certificate_date, postal_address, head_office_location, previous_names, changes";
+const partySelect = "id, slug, name, abbreviation, symbol, symbol_name, colors, slogan, status, coalition_id, certificate_serial_no, certificate_date, postal_address, head_office_location, previous_names, changes";
 
 export async function GET() {
   const auth = await requireAdminApi();
@@ -26,10 +26,10 @@ export async function POST(request: NextRequest) {
     slogan: String(body.slogan || "").trim() || null,
     colors: String(body.colors || "").trim() || null,
     symbol: String(body.symbol || "").trim() || null,
+    symbol_name: String(body.symbol_name || "").trim() || null,
     status: String(body.status || "active"),
     coalition_id: String(body.coalition_id || "").trim() || null,
     certificate_serial_no: String(body.certificate_serial_no || "").trim() || null,
-    certificate_issue_date: String(body.certificate_issue_date || "").trim() || null,
     certificate_date: String(body.certificate_date || "").trim() || null,
     postal_address: String(body.postal_address || "").trim() || null,
     head_office_location: String(body.head_office_location || "").trim() || null,
@@ -55,10 +55,10 @@ export async function PATCH(request: NextRequest) {
     slogan: String(body.slogan || "").trim() || null,
     colors: String(body.colors || "").trim() || null,
     symbol: String(body.symbol || "").trim() || null,
+    symbol_name: String(body.symbol_name || "").trim() || null,
     status: String(body.status || "active"),
     coalition_id: String(body.coalition_id || "").trim() || null,
     certificate_serial_no: String(body.certificate_serial_no || "").trim() || null,
-    certificate_issue_date: String(body.certificate_issue_date || "").trim() || null,
     certificate_date: String(body.certificate_date || "").trim() || null,
     postal_address: String(body.postal_address || "").trim() || null,
     head_office_location: String(body.head_office_location || "").trim() || null,

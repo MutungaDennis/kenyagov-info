@@ -49,7 +49,7 @@ export default async function PoliticalPartiesPage({
       .from("political_parties")
       .select(
         `
-    id, slug, name, abbreviation, symbol, colors, slogan,
+    id, slug, name, abbreviation, symbol, symbol_name, colors, slogan,
     coalition_id,
     coalitions (id, name, abbreviation)
   `,
@@ -215,7 +215,7 @@ export default async function PoliticalPartiesPage({
               <ul className="govuk-list app-party-list">
                 {items.map((party: any) => (
                   <li key={party.id} className="app-party-item">
-                    {party.symbol && /^https?:\/\//i.test(party.symbol) && <img src={party.symbol} alt="" className="app-party-symbol" />}
+                    {party.symbol && /^https?:\/\//i.test(party.symbol) && <img src={party.symbol} alt={party.symbol_name || `${party.name} symbol`} className="app-party-symbol" />}
                     <Link
                       href={`/elections/political-parties/${party.slug}`}
                       className="govuk-link govuk-link--no-visited-state"
