@@ -9,6 +9,7 @@ import {
   DEFAULT_TITLE,
 } from "@/lib/seo";
 
+// Cache the public homepage for high traffic and reduce repeated database reads.
 export const revalidate = 86400;
 
 export const metadata: Metadata = {

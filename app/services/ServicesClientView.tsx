@@ -50,8 +50,7 @@ export default function ServicesClientView({
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-two-thirds">
             <h1 className="govuk-heading-xl">Services and information</h1>
-            <p className="govuk-body-l">Find government services, forms and information.</p>
-            <p className="govuk-body">Choose a topic to find the service you need. We explain what to do and link you to the official organisation when you are ready to apply.</p>
+            <p className="govuk-body-l">Find the service or information you need from the Kenyan government.</p>
           </div>
         </div>
         <section aria-labelledby="browse-services-heading" className="govuk-!-margin-top-6">
@@ -81,13 +80,14 @@ export default function ServicesClientView({
   return (
     <>
       <GovUKBreadcrumbs items={[{ text: "Home", href: "/" }, { text: "Services", href: "/services" }, { text: category?.title || pathCategorySlug }]} />
-      <div className="govuk-grid-row">
-        <div className="govuk-grid-column-two-thirds">
-          <h1 className="govuk-heading-xl">{category?.title || pathCategorySlug.replaceAll("-", " ")}</h1>
-          <p className="govuk-body-l">{category?.description || "Government services and information in this topic."}</p>
-          <p className="govuk-body">Select a service to see the steps, requirements and official links.</p>
+      <section className="service-directory-header" aria-labelledby="service-category-heading">
+        <div className="govuk-grid-row">
+          <div className="govuk-grid-column-two-thirds">
+            <h1 id="service-category-heading" className="govuk-heading-xl">{category?.title || pathCategorySlug.replaceAll("-", " ")}</h1>
+            <p className="govuk-body-l">{category?.description || "Find government services and information in this topic."}</p>
+          </div>
         </div>
-      </div>
+      </section>
       {services.length === 0 ? (
         <p className="govuk-body">There are no published services in this topic yet.</p>
       ) : (

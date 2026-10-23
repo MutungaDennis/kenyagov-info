@@ -15,7 +15,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   return {
     title: `Services: ${label}`,
-    description: `Find Kenyan government services in the ${label} category.`,
+    description: `Find Kenyan government services and information about ${label}.`,
     alternates: {
       canonical: `${SITE_URL}/services/${encodeURIComponent(slug)}`,
     },
