@@ -9,9 +9,8 @@ import {
   DEFAULT_TITLE,
 } from "@/lib/seo";
 
-// Keep the homepage category links in sync with the live services directory.
-// Service titles and descriptions are admin-managed, so do not cache this page for a day.
-export const dynamic = "force-dynamic";
+// Cache the public homepage for high traffic and reduce repeated database reads.
+export const revalidate = 86400;
 
 export const metadata: Metadata = {
   ...buildPageMetadata({
