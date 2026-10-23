@@ -203,6 +203,9 @@ export async function POST(request: NextRequest) {
       popularityWeight: Number.isFinite(Number(payload.popularityWeight))
         ? Number(payload.popularityWeight)
         : 0,
+      servicePriority: Number.isFinite(Number(payload.servicePriority)) && Number(payload.servicePriority) > 0
+        ? Math.floor(Number(payload.servicePriority))
+        : 0,
       processingTime,
       baseCostLabel,
       executionMode,

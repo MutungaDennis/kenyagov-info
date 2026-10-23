@@ -93,7 +93,7 @@ export async function PUT(request: NextRequest) {
       if (duplicate && duplicate._id !== category._id) return NextResponse.json({ error: "This URL is already in use" }, { status: 409 });
       await saveContent("service_categories", { ...category, title, description: String(body.description || ""), priority: Math.max(1, Number(body.priority) || 100), slug: { current: nextSlug }, subTopics: normaliseTopics(category) }, auth.supabase);
     } else {
-      const heading = String(body.heading || body.id || "").trim();
+      const heading = String(body.heading || "").trim();
       const title = String(body.name || "").trim();
       const topics = normaliseTopics(category);
       const index = topics.findIndex((topic) => topic.heading === heading);

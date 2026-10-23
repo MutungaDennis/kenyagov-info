@@ -60,8 +60,9 @@ export default function TaxonomyPanel({ categories, onChange }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           kind: editingCategory ? "category" : formLevel,
-          id: editingCategory ? selectedId : editingId || undefined,
+          id: editingCategory ? selectedId : undefined,
           categoryId: selectedId || undefined,
+          heading: editingId || undefined,
           name: draft.title.trim(),
           slug: draft.slug.trim() || makeSlug(draft.title),
           priority: draft.priority,
