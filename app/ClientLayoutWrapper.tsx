@@ -19,6 +19,7 @@ export function ClientLayoutWrapper({ children }: { children: React.ReactNode })
   const pathname = usePathname();
   const isAdminRoute = !!pathname && (isAdminFilesystemPath(pathname) || isAdminPublicPath(pathname));
   const isHome = pathname === "/";
+  const isServicesPage = pathname === "/services" || pathname?.startsWith("/services/");
 
   // GOV.UK: mark JS support on body
   useEffect(() => {
@@ -98,17 +99,19 @@ export function ClientLayoutWrapper({ children }: { children: React.ReactNode })
             <>
               <SiteHeader />
 
-              <div className="govuk-width-container">
-                <GovUKPhaseBanner />
-                <SiteNotifications />
+              <div className={isServicesPage ? "service-page-shell" : undefined}>
+                <div className="govuk-width-container">
+                  <GovUKPhaseBanner />
+                  <SiteNotifications />
 
-                <main className="govuk-main-wrapper" id="main-content" role="main">
-                  {children}
-                </main>
+                  <main className="govuk-main-wrapper" id="main-content" role="main">
+                    {children}
+                  </main>
 
-                <div className="govuk-!-margin-top-9 govuk-!-margin-bottom-6 govuk-!-display-none-print app-no-print">
-                  <GovUKFeedback />
-                  <GovUKReportProblem />
+                  <div className="govuk-!-margin-top-9 govuk-!-margin-bottom-6 govuk-!-display-none-print app-no-print">
+                    <GovUKFeedback />
+                    <GovUKReportProblem />
+                  </div>
                 </div>
               </div>
             </>

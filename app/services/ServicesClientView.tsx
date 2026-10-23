@@ -47,12 +47,14 @@ export default function ServicesClientView({
     return (
       <>
         <GovUKBreadcrumbs items={[{ text: "Home", href: "/" }, { text: "Services" }]} />
-        <div className="govuk-grid-row">
-          <div className="govuk-grid-column-two-thirds">
-            <h1 className="govuk-heading-xl">Services and information</h1>
-            <p className="govuk-body-l">Find the service or information you need from the Kenyan government.</p>
+        <section className="service-directory-header" aria-labelledby="services-heading">
+          <div className="govuk-grid-row">
+            <div className="govuk-grid-column-two-thirds">
+              <h1 id="services-heading" className="govuk-heading-xl">Services and information</h1>
+              <p className="govuk-body-l">Find the service or information you need from the Kenyan government.</p>
+            </div>
           </div>
-        </div>
+        </section>
         <section aria-labelledby="browse-services-heading" className="govuk-!-margin-top-6">
           <h2 id="browse-services-heading" className="govuk-heading-l">Browse services by topic</h2>
           <ChevronLinkList
