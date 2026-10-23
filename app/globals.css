@@ -11,12 +11,7 @@
 }
 
 .service-page-shell {
-  background: #eef5ef;
-}
-
-.service-page-shell .govuk-phase-banner,
-.service-page-shell .govuk-notification-banner {
-  border-color: #a8c9b0;
+  background: transparent;
 }
 
 .service-directory-header {
