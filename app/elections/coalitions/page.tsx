@@ -48,6 +48,7 @@ export default async function CoalitionsPage({
       slogan,
       colors,
       symbol,
+      coalition_type,
       political_parties (
         id,
         name,
@@ -206,6 +207,10 @@ export default async function CoalitionsPage({
                       {coalition.abbreviation}
                     </span>
                   )}
+
+                  <p className="govuk-body-s govuk-!-margin-bottom-2">
+                    <strong>{coalition.coalition_type === "post_election" ? "Post-election coalition" : "Pre-election coalition"}</strong>
+                  </p>
 
                   {coalition.slogan && (
                     <p className="govuk-body-s">
