@@ -3,19 +3,28 @@
 :root {
   --background: #ffffff;
   --foreground: #0b0c0c;
-  /* CitizenGuide.KE product brand (header chrome — not GOV.UK palette) */
+  /* CitizenGuide.KE product brand (header chrome — not GOV.UK palette). Service pages use a soft green field to complement the navbar without copying GOV.UK blue. */
   --app-brand-green: #047857;
   --app-brand-green-dark: #065f46;
   --app-brand-red: #ce1126;
   --font-public-sans: Arial, sans-serif;
 }
 
+.service-page-shell {
+  background: #eef5ef;
+}
+
+.service-page-shell .govuk-phase-banner,
+.service-page-shell .govuk-notification-banner {
+  border-color: #a8c9b0;
+}
+
 .service-directory-header {
-  background: #e8f1f8;
-  border-top: 1px solid #b1c8d8;
-  border-bottom: 1px solid #b1c8d8;
-  margin: 0 0 2rem;
-  padding: 2rem 0 1rem;
+  background: #dceee1;
+  border-top: 1px solid #a8c9b0;
+  border-bottom: 1px solid #a8c9b0;
+  margin: 0 calc(50% - 50vw) 2rem;
+  padding: 2rem max(1rem, calc((100vw - 960px) / 2)) 1rem;
 }
 
 .service-directory-header .govuk-heading-xl {
