@@ -32,7 +32,7 @@ export default defineType({
       name: "internalHref",
       title: "Internal CitizenGuide path",
       type: "string",
-      description: "e.g. /ecitizen or /services/categories/driving-transport",
+      description: "e.g. /ecitizen or /services/driving-transport",
     }),
     defineField({
       name: "externalHref",
