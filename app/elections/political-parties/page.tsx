@@ -54,6 +54,7 @@ export default async function PoliticalPartiesPage({
     coalitions (id, name, abbreviation)
   `,
       )
+      .eq("status", "active")
       .order("name")
       .limit(200);
 
