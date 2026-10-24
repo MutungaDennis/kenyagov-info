@@ -39,7 +39,6 @@ export default function ServiceEditor({
   allServices,
   onSaved,
   onCancel,
-  onCategoriesChange,
 }: Props) {
   const [form, setForm] = useState<ServiceFormState>(initial);
   const [savedSnapshot, setSavedSnapshot] = useState(() =>
@@ -48,9 +47,6 @@ export default function ServiceEditor({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
-  const [newCategory, setNewCategory] = useState("");
-  const [creatingCategory, setCreatingCategory] = useState(false);
-
   const relatedOptions = useMemo(
     () => allServices.filter((s) => s._id !== form._id),
     [allServices, form._id],
@@ -71,41 +67,6 @@ export default function ServiceEditor({
 
   const showPhysicalVisits =
     form.executionMode === "hybrid" || form.executionMode === "manual";
-
-  const createCategory = async () => {
-    const title = newCategory.trim();
-    if (!title) return;
-    setCreatingCategory(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/admin/services/taxonomy", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ kind: "category", name: title }),
-      });
-      const json = await res.json();
-      if (!res.ok || !json.success) throw new Error(json.error || "Create failed");
-      const created = json.data as { _id: string; title: string; slug?: string };
-      const next = [
-        ...categories.filter((c) => c._id !== created._id),
-        {
-          _id: created._id,
-          title: created.title,
-          slug: created.slug,
-          subTopics: [],
-        },
-      ].sort((a, b) => a.title.localeCompare(b.title));
-      onCategoriesChange?.(next);
-      set("categoryId", created._id);
-      setNewCategory("");
-      setMessage(json.message || "Category added");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not add category");
-    } finally {
-      setCreatingCategory(false);
-    }
-  };
 
   const save = async () => {
     const title = form.title.trim();
@@ -425,7 +386,10 @@ export default function ServiceEditor({
             className="govuk-select"
             id="svc-cat"
             value={form.categoryId}
-            onChange={(e) => set("categoryId", e.target.value)}
+            onChange={(e) => {
+              set("categoryId", e.target.value);
+              set("subTopicHeading", "");
+            }}
           >
             <option value="">— Not assigned —</option>
             {categories.map((c) => (
@@ -436,40 +400,35 @@ export default function ServiceEditor({
           </select>
         </div>
 
-        <div className="govuk-inset-text">
-          <div className="govuk-form-group govuk-!-margin-bottom-2">
-            <label className="govuk-label" htmlFor="new-category">
-              Add a category that is not listed
-            </label>
-            <input
-              className="govuk-input"
-              id="new-category"
-              value={newCategory}
-              onChange={(e) => setNewCategory(e.target.value)}
-              placeholder="e.g. Education and learning"
-            />
-          </div>
-          <button
-            type="button"
-            className="govuk-button govuk-button--secondary"
-            disabled={creatingCategory || !newCategory.trim()}
-            onClick={() => void createCategory()}
-          >
-            {creatingCategory ? "Adding…" : "Add category"}
-          </button>
-        </div>
-
         <div className="govuk-form-group">
           <label className="govuk-label" htmlFor="svc-sub">
             Sub-topic heading within the category
           </label>
-          <input
-            className="govuk-input"
+          <div className="govuk-hint">
+            Choose a subcategory maintained in the Category hub. Select a main category first.
+          </div>
+          <select
+            className="govuk-select"
             id="svc-sub"
             value={form.subTopicHeading}
+            disabled={!form.categoryId}
             onChange={(e) => set("subTopicHeading", e.target.value)}
-            placeholder="e.g. Learning to drive"
-          />
+          >
+            <option value="">— No subcategory —</option>
+            {categories
+              .find((category) => category._id === form.categoryId)
+              ?.subTopics?.map((topic) => (
+                <option key={topic.heading} value={topic.heading}>
+                  {topic.heading}
+                </option>
+              ))}
+          </select>
+          {form.categoryId &&
+          !categories.find((category) => category._id === form.categoryId)?.subTopics?.length ? (
+            <p className="govuk-hint">
+              No subcategories are available for this category yet. Add one in the Category hub.
+            </p>
+          ) : null}
         </div>
       </fieldset>
 
