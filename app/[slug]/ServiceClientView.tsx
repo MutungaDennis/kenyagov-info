@@ -8,7 +8,6 @@ import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import GovUKSummaryList from "@/components/govuk/SummaryList";
 import FromAttribution from "@/components/site/FromAttribution";
 import ServicePortableText from "@/components/sanity/ServicePortableText";
-import CivicDisclaimer from "@/components/site/CivicDisclaimer";
 
 interface MinistryReference {
   name: string;
@@ -245,21 +244,10 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
               {service.summary}
             </p>
 
-            <div className="govuk-warning-text">
-              <span className="govuk-warning-text__icon" aria-hidden="true">
-                !
-              </span>
-              <strong className="govuk-warning-text__text">
-                <span className="govuk-visually-hidden">Warning </span>
-                This is an independent guide — not a government website. Never
-                share passwords or OTPs with agents. Only pay through official
-                portals.{" "}
-                <Link href="/scams" className="govuk-link">
-                  Scams and fake websites
-                </Link>
-              </strong>
-            </div>
-            <CivicDisclaimer />
+            <p className="govuk-body-s govuk-!-margin-bottom-6">
+              Use this guide to understand the process, then start on the official
+              website below. You do not apply through CitizenGuide.KE.
+            </p>
           </div>
 
           <section
@@ -407,55 +395,52 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
     </section>
   ) : null}
 
-  <section
-    id="before-you-start"
-            aria-labelledby="before-you-start-heading"
-            className="govuk-!-margin-bottom-6"
-          >
-            <h2 id="before-you-start-heading" className="govuk-heading-m">
-              Before you start
-            </h2>
-            <ul className="govuk-list govuk-list--bullet">
-              {service.beforeYouStart?.map((item, idx) => (
-                <li key={idx}>{item}</li>
-              ))}
-            </ul>
-          </section>
+          {service.beforeYouStart?.length > 0 && (
+            <section id="before-you-start" className="govuk-!-margin-bottom-6">
+              <details className="govuk-details">
+                <summary className="govuk-details__summary">
+                  <span className="govuk-details__summary-text">Before you start</span>
+                </summary>
+                <div className="govuk-details__text">
+                  <ul className="govuk-list govuk-list--bullet govuk-!-margin-bottom-0">
+                    {service.beforeYouStart.map((item, idx) => <li key={idx}>{item}</li>)}
+                  </ul>
+                </div>
+              </details>
+            </section>
+          )}
+
 
           {service.timelineGuidancePoints &&
             service.timelineGuidancePoints.length > 0 && (
-              <section
-                id="timeline"
-                aria-labelledby="timeline-heading"
-                className="govuk-!-margin-bottom-6"
-              >
-                <h2 id="timeline-heading" className="govuk-heading-m">
-                  Timeline
-                </h2>
-                <div className="govuk-inset-text">
-                  <ul className="govuk-list govuk-list--bullet govuk-!-margin-bottom-0">
-                    {service.timelineGuidancePoints.map((point, idx) => (
-                      <li key={idx}>{point}</li>
-                    ))}
-                  </ul>
-                </div>
+              <section id="timeline" className="govuk-!-margin-bottom-6">
+                <details className="govuk-details">
+                  <summary className="govuk-details__summary">
+                    <span className="govuk-details__summary-text">Timeline</span>
+                  </summary>
+                  <div className="govuk-details__text">
+                    <ul className="govuk-list govuk-list--bullet govuk-!-margin-bottom-0">
+                      {service.timelineGuidancePoints.map((point, idx) => <li key={idx}>{point}</li>)}
+                    </ul>
+                  </div>
+                </details>
               </section>
             )}
 
-          <section
-            id="required-documents"
-            aria-labelledby="required-docs-heading"
-            className="govuk-!-margin-bottom-6"
-          >
-            <h2 id="required-docs-heading" className="govuk-heading-m">
-              Documents you need
-            </h2>
-            <ul className="govuk-list govuk-list--bullet">
-              {service.requiredDocuments?.map((doc, idx) => (
-                <li key={idx}>{doc}</li>
-              ))}
-            </ul>
-          </section>
+          {service.requiredDocuments?.length > 0 && (
+            <section id="required-documents" className="govuk-!-margin-bottom-6">
+              <details className="govuk-details">
+                <summary className="govuk-details__summary">
+                  <span className="govuk-details__summary-text">Documents you need</span>
+                </summary>
+                <div className="govuk-details__text">
+                  <ul className="govuk-list govuk-list--bullet govuk-!-margin-bottom-0">
+                    {service.requiredDocuments.map((doc, idx) => <li key={idx}>{doc}</li>)}
+                  </ul>
+                </div>
+              </details>
+            </section>
+          )}
 
           {service.steps && service.steps.length > 0 && (
             <section
