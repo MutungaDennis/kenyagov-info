@@ -4,6 +4,9 @@ import { revalidatePath } from "next/cache";
 
 export const dynamic = "force-dynamic";
 
+// ────────────────────────────────────────────────
+// Types & constants
+// ────────────────────────────────────────────────
 type Vote = {
   page_path: string;
   is_useful: boolean;
@@ -22,16 +25,25 @@ type PageTotals = {
   last: string;
   urgency: number;
   trend: number | null;
-  // Latest admin note for this page
   comment: string | null;
   commentAt: string | null;
   commentBy: string | null;
-  latestVoteCreatedAt: string; // used to target the update
+  latestVoteCreatedAt: string;
 };
 
 const PAGE_SIZE = 1000;
 const MAX_VOTES = 20000;
 const TABLE_PAGE_SIZE = 50;
+
+const TEST_PATH_PATTERNS = [
+  /^\/Test\.com/i,
+  /^\/test(\/|$)/i,
+  /^\/localhost/i,
+];
+
+function isTestPath(path: string): boolean {
+  return TEST_PATH_PATTERNS.some((re) => re.test(path));
+}
 
 type SearchParams = {
   q?: string;
@@ -40,8 +52,12 @@ type SearchParams = {
   sort?: string;
   group?: string;
   page?: string;
+  test?: string; // "1" = include test pages
 };
 
+// ────────────────────────────────────────────────
+// Helpers
+// ────────────────────────────────────────────────
 async function loadVotes(): Promise<{ votes: Vote[]; error: string | null }> {
   try {
     const supabase = createServiceClient();
@@ -126,7 +142,6 @@ async function saveAdminComment(formData: FormData) {
 
   const supabase = createServiceClient();
 
-  // Find the most recent vote for this page so we can attach the note to it
   const { data: latest, error: findError } = await supabase
     .from("page_usefulness_votes")
     .select("created_at")
@@ -155,9 +170,12 @@ async function saveAdminComment(formData: FormData) {
     return;
   }
 
-  revalidatePath("/admin/page-feedback"); // adjust path if different
+  revalidatePath("/admin/page-feedback");
 }
 
+// ────────────────────────────────────────────────
+// Page component
+// ────────────────────────────────────────────────
 export default async function AdminPageFeedbackPage({
   searchParams,
 }: {
@@ -169,16 +187,24 @@ export default async function AdminPageFeedbackPage({
   const minVotes = Math.max(0, parseInt(sp.min || "0", 10) || 0);
   const sort = sp.sort || "no";
   const groupBySection = sp.group === "1";
+  const showTest = sp.test === "1";
   const currentPage = Math.max(1, parseInt(sp.page || "1", 10) || 1);
 
   const { votes, error } = await loadVotes();
 
   const now = Date.now();
   const cutoff = days > 0 ? now - days * 24 * 60 * 60 * 1000 : 0;
-  const filteredVotes =
+
+  // Date filter first
+  let filteredVotes =
     days > 0
       ? votes.filter((v) => new Date(v.created_at).getTime() >= cutoff)
       : votes;
+
+  // Exclude test paths from everything unless explicitly requested
+  if (!showTest) {
+    filteredVotes = filteredVotes.filter((v) => !isTestPath(v.page_path));
+  }
 
   const byPage = new Map<string, PageTotals>();
   const sevenDays = 7 * 24 * 60 * 60 * 1000;
@@ -208,18 +234,15 @@ export default async function AdminPageFeedbackPage({
     row.pctUseful = pct(row.yes, row.total);
     row.urgency = Math.round(row.total * ((100 - row.pctUseful) / 100));
 
-    // Keep the most recent vote’s timestamp and any comment on it
     if (vote.created_at > row.latestVoteCreatedAt) {
       row.latestVoteCreatedAt = vote.created_at;
       row.last = vote.created_at;
-      // Prefer a comment that actually exists
       if (vote.admin_comment) {
         row.comment = vote.admin_comment;
         row.commentAt = vote.admin_comment_at;
         row.commentBy = vote.admin_comment_by;
       }
     } else if (vote.admin_comment && !row.comment) {
-      // Fallback: any comment we find
       row.comment = vote.admin_comment;
       row.commentAt = vote.admin_comment_at;
       row.commentBy = vote.admin_comment_by;
@@ -228,14 +251,15 @@ export default async function AdminPageFeedbackPage({
     byPage.set(vote.page_path, row);
   }
 
-  // Trend calculation (same as before)
+  // Trend (last 7d vs previous 7d) – only when we have enough history
   if (days === 0 || days >= 14) {
     const recentYes = new Map<string, number>();
     const recentTotal = new Map<string, number>();
     const prevYes = new Map<string, number>();
     const prevTotal = new Map<string, number>();
 
-    for (const vote of votes) {
+    // Use the full (date-filtered) set that respects the test toggle
+    for (const vote of filteredVotes) {
       const t = new Date(vote.created_at).getTime();
       if (t >= recentCutoff) {
         recentTotal.set(vote.page_path, (recentTotal.get(vote.page_path) || 0) + 1);
@@ -280,7 +304,12 @@ export default async function AdminPageFeedbackPage({
     }
   });
 
-  // Section roll-up (unchanged)
+  // How many test pages exist in the raw data (for the hint)
+  const testPageCount = new Set(
+    votes.filter((v) => isTestPath(v.page_path)).map((v) => v.page_path)
+  ).size;
+
+  // Section roll-up
   let sectionRows: {
     path: string;
     yes: number;
@@ -334,6 +363,7 @@ export default async function AdminPageFeedbackPage({
     min: sp.min,
     sort: sp.sort,
     group: sp.group,
+    test: sp.test,
   };
 
   return (
@@ -341,8 +371,9 @@ export default async function AdminPageFeedbackPage({
       <span className="govuk-caption-l">Citizen responses</span>
       <h1 className="govuk-heading-xl">Page feedback</h1>
       <p className="govuk-body">
-        Answers to &ldquo;Is this page useful?&rdquo;. You can leave internal
-        notes on any page to record decisions or investigation findings.
+        Answers to &ldquo;Is this page useful?&rdquo;. Click any page to see
+        its full history, daily and hourly breakdown. Test pages are hidden by
+        default so they do not affect the overall numbers.
       </p>
 
       {error && (
@@ -356,7 +387,7 @@ export default async function AdminPageFeedbackPage({
         </div>
       )}
 
-      {/* Filter panel – same as before */}
+      {/* ── Filter panel ─────────────────────────────── */}
       <div className="govuk-form-group govuk-!-margin-bottom-6">
         <form method="get" className="govuk-grid-row">
           <div className="govuk-grid-column-one-quarter">
@@ -421,6 +452,7 @@ export default async function AdminPageFeedbackPage({
               <option value="recent">Most recent</option>
             </select>
           </div>
+
           <div className="govuk-grid-column-full govuk-!-margin-top-4">
             <div className="govuk-checkboxes govuk-checkboxes--small">
               <div className="govuk-checkboxes__item">
@@ -439,13 +471,30 @@ export default async function AdminPageFeedbackPage({
                   Group by top-level section
                 </label>
               </div>
+              <div className="govuk-checkboxes__item">
+                <input
+                  className="govuk-checkboxes__input"
+                  id="test"
+                  name="test"
+                  type="checkbox"
+                  value="1"
+                  defaultChecked={showTest}
+                />
+                <label
+                  className="govuk-label govuk-checkboxes__label"
+                  htmlFor="test"
+                >
+                  Include test pages (/Test.com etc.)
+                </label>
+              </div>
             </div>
           </div>
+
           <div className="govuk-grid-column-full govuk-!-margin-top-4">
             <button type="submit" className="govuk-button">
               Apply filters
             </button>
-            {(sp.q || sp.days || sp.min || sp.sort || sp.group) && (
+            {(sp.q || sp.days || sp.min || sp.sort || sp.group || sp.test) && (
               <Link
                 href="/admin/page-feedback"
                 className="govuk-link govuk-!-margin-left-4"
@@ -457,12 +506,27 @@ export default async function AdminPageFeedbackPage({
         </form>
       </div>
 
-      {/* Summary cards */}
+      {/* Hint when test pages are hidden */}
+      {!showTest && testPageCount > 0 && (
+        <p className="govuk-hint govuk-!-margin-bottom-4">
+          {testPageCount} test page{testPageCount === 1 ? "" : "s"} hidden from
+          results.{" "}
+          <Link
+            className="govuk-link"
+            href={buildQuery({ ...baseParams, test: "1" })}
+          >
+            Show test pages
+          </Link>
+        </p>
+      )}
+
+      {/* ── Summary cards ────────────────────────────── */}
       <div className="govuk-grid-row govuk-!-margin-bottom-6">
         <div className="govuk-grid-column-one-third">
           <div className="admin-task-card">
             <p className="govuk-body-s govuk-!-margin-bottom-1">
               Total answers{days > 0 ? ` (${days}d)` : ""}
+              {showTest ? " (incl. test)" : ""}
             </p>
             <p className="govuk-heading-l govuk-!-margin-bottom-0">
               {filteredVotes.length}
@@ -495,7 +559,7 @@ export default async function AdminPageFeedbackPage({
         </div>
       </div>
 
-      {/* At a glance */}
+      {/* ── At a glance ──────────────────────────────── */}
       {!error && filteredVotes.length > 0 && (
         <div className="govuk-inset-text govuk-!-margin-bottom-6">
           <p className="govuk-body govuk-!-margin-bottom-1">
@@ -521,6 +585,7 @@ export default async function AdminPageFeedbackPage({
         </div>
       )}
 
+      {/* ── Table ────────────────────────────────────── */}
       {totalItems === 0 && !error ? (
         <div className="govuk-inset-text">
           No page feedback matches the current filters.
@@ -637,14 +702,19 @@ export default async function AdminPageFeedbackPage({
                   : visiblePages.map((pageRow) => (
                       <tr className="govuk-table__row" key={pageRow.path}>
                         <td className="govuk-table__cell">
-                          <a
+                          <Link
                             className="govuk-link"
-                            href={pageRow.path}
-                            target="_blank"
-                            rel="noreferrer"
+                            href={`/admin/page-feedback/detail?path=${encodeURIComponent(
+                              pageRow.path
+                            )}`}
                           >
                             {pageRow.path}
-                          </a>
+                          </Link>
+                          {isTestPath(pageRow.path) && (
+                            <span className="govuk-tag govuk-tag--grey govuk-!-margin-left-2">
+                              Test
+                            </span>
+                          )}
                         </td>
                         <td className="govuk-table__cell govuk-table__cell--numeric">
                           {pageRow.yes}
@@ -683,8 +753,11 @@ export default async function AdminPageFeedbackPage({
                           {statusTag(pageRow.pctUseful, pageRow.total)}
                         </td>
 
-                        {/* Admin note column */}
-                        <td className="govuk-table__cell" style={{ minWidth: "260px" }}>
+                        {/* Admin note */}
+                        <td
+                          className="govuk-table__cell"
+                          style={{ minWidth: "260px" }}
+                        >
                           {pageRow.comment ? (
                             <div className="govuk-!-margin-bottom-2">
                               <p className="govuk-body-s govuk-!-margin-bottom-1">
@@ -763,7 +836,7 @@ export default async function AdminPageFeedbackPage({
             </table>
           </div>
 
-          {/* Pagination – same as before */}
+          {/* Pagination */}
           {totalPages > 1 && (
             <nav
               className="govuk-pagination"
