@@ -188,9 +188,7 @@ export default function HomeMasthead() {
             </div>
 
             <p className="app-home-masthead__lead">
-              Find clear, factual information about the Government of Kenya —
-              institutions, leaders, counties, public services and the
-              constitution.
+              Find clear, factual information about the Government of Kenya 
             </p>
 
             <HomeSearch variant="inverse" />
