@@ -6,10 +6,10 @@ import { buildPageMetadata } from "@/lib/seo";
 
 export const metadata = buildPageMetadata({
   title: "Cabinet of Kenya",
-  description: "The current Cabinet Secretaries of Kenya, their ministries and responsibilities.",
+  description:
+    "The current Cabinet Secretaries of Kenya, their ministries and responsibilities.",
   path: "/government/cabinet",
 });
-
 
 export const dynamic = "force-dynamic";
 
@@ -181,7 +181,8 @@ export default async function CabinetPage() {
     return a.fullName.localeCompare(b.fullName);
   });
 
-  const sortByRank = (a: any, b: any) => (a.rankOrder - b.rankOrder) || a.fullName.localeCompare(b.fullName);
+  const sortByRank = (a: any, b: any) =>
+    a.rankOrder - b.rankOrder || a.fullName.localeCompare(b.fullName);
   cabinetSecretaries.sort(sortByRank);
   alsoAttends.sort(sortByRank);
 
@@ -197,6 +198,7 @@ export default async function CabinetPage() {
 
       <div className="govuk-width-container">
         <main className="govuk-main-wrapper" id="main-content" role="main">
+          {/* Intro – stays narrow for readability */}
           <div className="govuk-grid-row">
             <div className="govuk-grid-column-two-thirds">
               <h1 className="govuk-heading-xl govuk-!-margin-bottom-4">
@@ -219,129 +221,216 @@ export default async function CabinetPage() {
                 leadership, Cabinet Secretaries heading ministries, and
                 officials who help coordinate government business.
               </p>
-
-              <h2 className="govuk-heading-m govuk-!-margin-bottom-4">
-                Executive Leadership
-              </h2>
-              <ul className="govuk-list govuk-!-padding-left-0 cabinet-people-grid">
-                {executiveLeadership.map((official, idx) => (
-                  <li
-                    key={`${official.slug}-exec-${idx}`}
-                    className="govuk-!-margin-bottom-4"
-                  >
-                    {official.imageUrl ? <img src={official.imageUrl} alt="" className="cabinet-person__image" loading="lazy" /> : <div className="cabinet-person__image cabinet-person__image--empty" aria-hidden="true" />}
-                    <h3 className="govuk-heading-s govuk-!-margin-top-0 govuk-!-margin-bottom-1">
-                      <Link
-                        href={`/government/people/${official.slug}`}
-                        className="govuk-link govuk-link--no-visited-state"
-                      >
-                        {official.fullName}
-                      </Link>
-                    </h3>
-                    <p className="govuk-body-s govuk-!-margin-bottom-2">
-                      {official.roleTitle}
-                      {official.organization && official.orgSlug && (
-                        <>
-                          {", "}
-                          <Link
-                            href={`/government/institutions/${official.orgSlug}`}
-                            className="govuk-link govuk-!-font-weight-bold govuk-link--no-visited-state"
-                          >
-                            {official.organization}
-                          </Link>
-                        </>
-                      )}
-                    </p>
-                    <hr className="govuk-section-break govuk-section-break--m govuk-section-break--visible" />
-                  </li>
-                ))}
-              </ul>
-
-              <h2 className="govuk-heading-m govuk-!-margin-top-6 govuk-!-margin-bottom-4">
-                Cabinet Secretaries
-              </h2>
-              <ul className="govuk-list govuk-!-padding-left-0 cabinet-people-grid">
-                {cabinetSecretaries.map((official, idx) => (
-                  <li
-                    key={`${official.slug}-cs-${idx}`}
-                    className="govuk-!-margin-bottom-4"
-                  >
-                    {official.imageUrl ? <img src={official.imageUrl} alt="" className="cabinet-person__image" loading="lazy" /> : <div className="cabinet-person__image cabinet-person__image--empty" aria-hidden="true" />}
-                    <h3 className="govuk-heading-s govuk-!-margin-top-0 govuk-!-margin-bottom-1">
-                      <Link
-                        href={`/government/people/${official.slug}`}
-                        className="govuk-link govuk-link--no-visited-state"
-                      >
-                        {official.fullName}
-                      </Link>
-                    </h3>
-                    <p className="govuk-body-s govuk-!-margin-bottom-2">
-                      {official.roleTitle}
-                      {official.organization && official.orgSlug && (
-                        <>
-                          {", "}
-                          <Link
-                            href={`/government/institutions/${official.orgSlug}`}
-                            className="govuk-link govuk-!-font-weight-bold govuk-link--no-visited-state"
-                          >
-                            {official.organization}
-                          </Link>
-                        </>
-                      )}
-                    </p>
-                    <hr className="govuk-section-break govuk-section-break--m govuk-section-break--visible" />
-                  </li>
-                ))}
-              </ul>
-
-              <h2 className="govuk-heading-m govuk-!-margin-top-6 govuk-!-margin-bottom-4">
-                Also attends Cabinet
-              </h2>
-              <ul className="govuk-list govuk-!-padding-left-0 cabinet-people-grid">
-                {alsoAttends.map((official, idx) => (
-                  <li
-                    key={`${official.slug}-attendee-${idx}`}
-                    className="govuk-!-margin-bottom-4"
-                  >
-                    {official.imageUrl ? <img src={official.imageUrl} alt="" className="cabinet-person__image" loading="lazy" /> : <div className="cabinet-person__image cabinet-person__image--empty" aria-hidden="true" />}
-                    <h3 className="govuk-heading-s govuk-!-margin-top-0 govuk-!-margin-bottom-1">
-                      <Link
-                        href={`/government/people/${official.slug}`}
-                        className="govuk-link govuk-link--no-visited-state"
-                      >
-                        {official.fullName}
-                      </Link>
-                    </h3>
-                    <p className="govuk-body-s govuk-!-margin-bottom-2">
-                      {official.roleTitle}
-                      {official.organization && official.orgSlug && (
-                        <>
-                          {", "}
-                          <Link
-                            href={`/government/institutions/${official.orgSlug}`}
-                            className="govuk-link govuk-!-font-weight-bold govuk-link--no-visited-state"
-                          >
-                            {official.organization}
-                          </Link>
-                        </>
-                      )}
-                    </p>
-                    <hr className="govuk-section-break govuk-section-break--m govuk-section-break--visible" />
-                  </li>
-                ))}
-              </ul>
             </div>
           </div>
+
+          {/* Executive Leadership – full width */}
+          <h2 className="govuk-heading-m govuk-!-margin-bottom-4">
+            Executive Leadership
+          </h2>
+          <ul className="govuk-list govuk-!-padding-left-0 cabinet-people-grid">
+            {executiveLeadership.map((official, idx) => (
+              <li
+                key={`${official.slug}-exec-${idx}`}
+                className="govuk-!-margin-bottom-4"
+              >
+                {official.imageUrl ? (
+                  <img
+                    src={official.imageUrl}
+                    alt=""
+                    className="cabinet-person__image"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div
+                    className="cabinet-person__image cabinet-person__image--empty"
+                    aria-hidden="true"
+                  />
+                )}
+                <h3 className="govuk-heading-s govuk-!-margin-top-0 govuk-!-margin-bottom-1">
+                  <Link
+                    href={`/government/people/${official.slug}`}
+                    className="govuk-link govuk-link--no-visited-state"
+                  >
+                    {official.fullName}
+                  </Link>
+                </h3>
+                <p className="govuk-body-s govuk-!-margin-bottom-2">
+                  {official.roleTitle}
+                  {official.organization && official.orgSlug && (
+                    <>
+                      {", "}
+                      <Link
+                        href={`/government/institutions/${official.orgSlug}`}
+                        className="govuk-link govuk-!-font-weight-bold govuk-link--no-visited-state"
+                      >
+                        {official.organization}
+                      </Link>
+                    </>
+                  )}
+                </p>
+              </li>
+            ))}
+          </ul>
+
+          {/* Cabinet Secretaries – full width */}
+          <h2 className="govuk-heading-m govuk-!-margin-top-6 govuk-!-margin-bottom-4">
+            Cabinet Secretaries
+          </h2>
+          <ul className="govuk-list govuk-!-padding-left-0 cabinet-people-grid">
+            {cabinetSecretaries.map((official, idx) => (
+              <li
+                key={`${official.slug}-cs-${idx}`}
+                className="govuk-!-margin-bottom-4"
+              >
+                {official.imageUrl ? (
+                  <img
+                    src={official.imageUrl}
+                    alt=""
+                    className="cabinet-person__image"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div
+                    className="cabinet-person__image cabinet-person__image--empty"
+                    aria-hidden="true"
+                  />
+                )}
+                <h3 className="govuk-heading-s govuk-!-margin-top-0 govuk-!-margin-bottom-1">
+                  <Link
+                    href={`/government/people/${official.slug}`}
+                    className="govuk-link govuk-link--no-visited-state"
+                  >
+                    {official.fullName}
+                  </Link>
+                </h3>
+                <p className="govuk-body-s govuk-!-margin-bottom-2">
+                  {official.roleTitle}
+                  {official.organization && official.orgSlug && (
+                    <>
+                      {", "}
+                      <Link
+                        href={`/government/institutions/${official.orgSlug}`}
+                        className="govuk-link govuk-!-font-weight-bold govuk-link--no-visited-state"
+                      >
+                        {official.organization}
+                      </Link>
+                    </>
+                  )}
+                </p>
+              </li>
+            ))}
+          </ul>
+
+          {/* Also attends Cabinet – full width */}
+          <h2 className="govuk-heading-m govuk-!-margin-top-6 govuk-!-margin-bottom-4">
+            Also attends Cabinet
+          </h2>
+          <ul className="govuk-list govuk-!-padding-left-0 cabinet-people-grid">
+            {alsoAttends.map((official, idx) => (
+              <li
+                key={`${official.slug}-attendee-${idx}`}
+                className="govuk-!-margin-bottom-4"
+              >
+                {official.imageUrl ? (
+                  <img
+                    src={official.imageUrl}
+                    alt=""
+                    className="cabinet-person__image"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div
+                    className="cabinet-person__image cabinet-person__image--empty"
+                    aria-hidden="true"
+                  />
+                )}
+                <h3 className="govuk-heading-s govuk-!-margin-top-0 govuk-!-margin-bottom-1">
+                  <Link
+                    href={`/government/people/${official.slug}`}
+                    className="govuk-link govuk-link--no-visited-state"
+                  >
+                    {official.fullName}
+                  </Link>
+                </h3>
+                <p className="govuk-body-s govuk-!-margin-bottom-2">
+                  {official.roleTitle}
+                  {official.organization && official.orgSlug && (
+                    <>
+                      {", "}
+                      <Link
+                        href={`/government/institutions/${official.orgSlug}`}
+                        className="govuk-link govuk-!-font-weight-bold govuk-link--no-visited-state"
+                      >
+                        {official.organization}
+                      </Link>
+                    </>
+                  )}
+                </p>
+              </li>
+            ))}
+          </ul>
         </main>
       </div>
+
       <style>{`
-        .cabinet-people-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1.5rem; }
-        .cabinet-people-grid > li { margin: 0 !important; padding: 1rem; border: 1px solid #b1b4b6; background: #fff; }
-        .cabinet-people-grid > li hr { display: none; }
-        .cabinet-person__image { display: block; width: 100%; aspect-ratio: 1 / 1; object-fit: cover; object-position: center top; margin-bottom: .75rem; background: #f3f2f1; }
-        .cabinet-person__image--empty { border: 1px solid #d8dde0; }
-        @media (max-width: 900px) { .cabinet-people-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-        @media (max-width: 520px) { .cabinet-people-grid { grid-template-columns: 1fr; } }
+        .cabinet-people-grid {
+          display: grid;
+          gap: 1.5rem;
+          /* Desktop: 4 equal columns */
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+
+        .cabinet-people-grid > li {
+          margin: 0 !important;
+          padding: 1rem;
+          border: 1px solid #b1b4b6;
+          background: #fff;
+          display: flex;
+          flex-direction: column;
+        }
+
+        .cabinet-person__image {
+          display: block;
+          width: 100%;
+          aspect-ratio: 1 / 1;
+          object-fit: cover;
+          object-position: center top;
+          margin-bottom: 0.75rem;
+          background: #f3f2f1;
+        }
+
+        .cabinet-person__image--empty {
+          border: 1px solid #d8dde0;
+        }
+
+        /* Tablet: 3 columns */
+        @media (max-width: 900px) {
+          .cabinet-people-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 1.25rem;
+          }
+        }
+
+        /* Mobile phones: 1 column, smaller images */
+        @media (max-width: 520px) {
+          .cabinet-people-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+          }
+
+          .cabinet-people-grid > li {
+            padding: 0.75rem;
+          }
+
+          .cabinet-person__image {
+            /* Reduce visual weight on small screens */
+            max-width: 160px;
+            margin-left: auto;
+            margin-right: auto;
+            margin-bottom: 0.5rem;
+          }
+        }
       `}</style>
     </>
   );
