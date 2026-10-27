@@ -1,6 +1,7 @@
 import { createServiceClient } from "@/lib/supabase/service";
 import Link from "next/link";
 import { revalidatePath } from "next/cache";
+import { adminPath } from "@/lib/admin-path";
 
 export const dynamic = "force-dynamic";
 
@@ -704,7 +705,7 @@ export default async function AdminPageFeedbackPage({
                         <td className="govuk-table__cell">
                           <Link
                             className="govuk-link"
-                            href={`/admin/page-feedback/detail?path=${encodeURIComponent(
+                            href={`${adminPath("page-feedback/detail")}?path=${encodeURIComponent(
                               pageRow.path
                             )}`}
                           >

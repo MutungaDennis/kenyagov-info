@@ -1,6 +1,7 @@
 import { createServiceClient } from "@/lib/supabase/service";
 import Link from "next/link";
 import { revalidatePath } from "next/cache";
+import { adminPath } from "@/lib/admin-path";
 import {
   formatDate,
   formatDateTime,
@@ -82,7 +83,7 @@ export default async function PageFeedbackDetailPage({
       <div className="govuk-error-summary" role="alert">
         <h2 className="govuk-error-summary__title">Missing page path</h2>
         <p className="govuk-body">
-          <Link className="govuk-link" href="/admin/page-feedback">
+          <Link className="govuk-link" href={adminPath("page-feedback")}>
             Back to page feedback
           </Link>
         </p>
@@ -129,7 +130,7 @@ export default async function PageFeedbackDetailPage({
   return (
     <>
       <p className="govuk-body">
-        <Link className="govuk-link" href="/admin/page-feedback">
+        <Link className="govuk-link" href={adminPath("page-feedback")}>
           ← Back to all page feedback
         </Link>
       </p>
