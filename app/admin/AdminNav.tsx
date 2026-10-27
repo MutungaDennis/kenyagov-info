@@ -29,6 +29,7 @@ const NAV_SECTIONS: NavSection[] = [
     heading: "Government directory",
     items: [
       { segment: "institutions", label: "Institutions" },
+      { segment: "schools", label: "Schools" },
       { segment: "officials", label: "National officials" },
       { segment: "mcas", label: "County MCAs" },
     ],
@@ -42,6 +43,8 @@ const NAV_SECTIONS: NavSection[] = [
     items: [
       { segment: "constitution", label: "Constitution 2010" },
       { segment: "legislation", label: "Acts & county laws" },
+      { segment: "gazette", label: "Kenya Gazette" },
+      { segment: "documents", label: "Documents" },
     ],
   },
   {
@@ -62,6 +65,7 @@ const NAV_SECTIONS: NavSection[] = [
     items: [
       { segment: "contact", label: "Contact messages" },
       { segment: "feedback", label: "General feedback" },
+      { segment: "page-feedback", label: "Page feedback" },
       { segment: "bug-reports", label: "Bug reports" },
     ],
   },

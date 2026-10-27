@@ -481,7 +481,8 @@ export default function GovernmentInstitutionsPage() {
       <main className="govuk-main-wrapper institution-directory" id="main-content" role="main">
         <header className="institution-directory-heading">
           <h1 className="govuk-heading-xl govuk-!-margin-bottom-3">Departments, agencies and public institutions</h1>
-          <p className="govuk-body govuk-!-margin-bottom-0">Find the ministries, agencies, commissions and other public bodies that make up Kenya’s government.</p>
+          <p className="govuk-body govuk-!-margin-bottom-2">Find the ministries, agencies, commissions and other public bodies that make up Kenya’s government.</p>
+          <p className="govuk-body-s govuk-!-margin-bottom-0">Browse by arm of government, or search for a specific institution. Open a heading to see the bodies and agencies connected to it.</p>
         </header>
 
         <section className="directory-search">
@@ -621,6 +622,15 @@ export default function GovernmentInstitutionsPage() {
         .institution-directory .govuk-table { min-width: 540px; }
         .institution-history { color: #505a5f; margin: 6px 0 10px; line-height: 1.5; }
         .institution-directory .govuk-link, .institution-directory .govuk-details__summary-text { overflow-wrap: anywhere; }
+        .directory-category { border-top: 4px solid #1d70b8; padding-top: 16px; margin-bottom: 40px; }
+        .directory-category__heading { display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap; margin-bottom: 8px; }
+        .directory-category__count { color: #505a5f; font-size: 1rem; font-weight: 400; white-space: nowrap; }
+        .directory-category__description { max-width: 760px; color: #505a5f; }
+        .directory-search { background: #f3f2f1; padding: 20px; margin-bottom: 28px; }
+        .directory-search__row { display: flex; align-items: flex-end; gap: 12px; max-width: 760px; }
+        .directory-search__row .govuk-input { flex: 1; min-width: 0; }
+        .directory-search__row .govuk-button { margin-bottom: 0; white-space: nowrap; }
+        @media (max-width: 640px) { .directory-search { padding: 16px; } .directory-search__row { display: block; } .directory-search__row .govuk-button { margin-top: 12px; } }
         .institution-directory nav li { padding: 5px 0; }
         .institution-directory .govuk-accordion__section-content > ul > li { padding: 12px 0; border-bottom: 1px solid #d8dde0; }
         @media(max-width: 640px) { .institution-directory-heading h1 { font-size: 32px; line-height: 1.15; } .institution-directory .govuk-button { white-space: normal; } }
