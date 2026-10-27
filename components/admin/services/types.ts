@@ -46,6 +46,7 @@ export type ServiceFormState = {
   relatedServiceIds: string[];
   categoryId: string;
   subTopicHeading: string;
+  subSubTopicHeading: string;
 };
 
 export type MinistryOption = { _id: string; name: string; slug?: string };
@@ -105,6 +106,7 @@ export function emptyServiceForm(): ServiceFormState {
     relatedServiceIds: [],
     categoryId: "",
     subTopicHeading: "General",
+    subSubTopicHeading: "",
   };
 }
 
@@ -212,6 +214,7 @@ export function detailToForm(data: Record<string, unknown>): ServiceFormState {
       ? String(data.categoryIds[0])
       : "",
     subTopicHeading: "General",
+    subSubTopicHeading: "",
   };
 }
 
@@ -254,7 +257,7 @@ export function formToPayload(form: ServiceFormState) {
     providingBodyIds: form.providingBodyIds,
     relatedServiceIds: form.relatedServiceIds,
     categoryId: form.categoryId || undefined,
-    subTopicHeading: form.subTopicHeading || "General",
+    subTopicHeading: form.subSubTopicHeading || form.subTopicHeading || "General",
   };
 }
 
