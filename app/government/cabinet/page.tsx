@@ -124,7 +124,8 @@ export default async function CabinetPage() {
         surname,
         full_name,
         name_titles,
-        national_honours
+        national_honours,
+        image_url
       )
     `
     )
@@ -160,6 +161,7 @@ export default async function CabinetPage() {
       organization: orgName,
       orgSlug: orgSlug,
       rankOrder: role.rank_order ?? getExecutiveRank(role.title),
+      imageUrl: leader.image_url,
     };
 
     if (isExecutiveLeadershipTitle(normalizedTitle)) {
@@ -179,9 +181,9 @@ export default async function CabinetPage() {
     return a.fullName.localeCompare(b.fullName);
   });
 
-  const sortByName = (a: any, b: any) => a.fullName.localeCompare(b.fullName);
-  cabinetSecretaries.sort(sortByName);
-  alsoAttends.sort(sortByName);
+  const sortByRank = (a: any, b: any) => (a.rankOrder - b.rankOrder) || a.fullName.localeCompare(b.fullName);
+  cabinetSecretaries.sort(sortByRank);
+  alsoAttends.sort(sortByRank);
 
   return (
     <>
@@ -221,12 +223,13 @@ export default async function CabinetPage() {
               <h2 className="govuk-heading-m govuk-!-margin-bottom-4">
                 Executive Leadership
               </h2>
-              <ul className="govuk-list govuk-!-padding-left-0">
+              <ul className="govuk-list govuk-!-padding-left-0 cabinet-people-grid">
                 {executiveLeadership.map((official, idx) => (
                   <li
                     key={`${official.slug}-exec-${idx}`}
                     className="govuk-!-margin-bottom-4"
                   >
+                    {official.imageUrl ? <img src={official.imageUrl} alt="" className="cabinet-person__image" loading="lazy" /> : <div className="cabinet-person__image cabinet-person__image--empty" aria-hidden="true" />}
                     <h3 className="govuk-heading-s govuk-!-margin-top-0 govuk-!-margin-bottom-1">
                       <Link
                         href={`/government/people/${official.slug}`}
@@ -257,12 +260,13 @@ export default async function CabinetPage() {
               <h2 className="govuk-heading-m govuk-!-margin-top-6 govuk-!-margin-bottom-4">
                 Cabinet Secretaries
               </h2>
-              <ul className="govuk-list govuk-!-padding-left-0">
+              <ul className="govuk-list govuk-!-padding-left-0 cabinet-people-grid">
                 {cabinetSecretaries.map((official, idx) => (
                   <li
                     key={`${official.slug}-cs-${idx}`}
                     className="govuk-!-margin-bottom-4"
                   >
+                    {official.imageUrl ? <img src={official.imageUrl} alt="" className="cabinet-person__image" loading="lazy" /> : <div className="cabinet-person__image cabinet-person__image--empty" aria-hidden="true" />}
                     <h3 className="govuk-heading-s govuk-!-margin-top-0 govuk-!-margin-bottom-1">
                       <Link
                         href={`/government/people/${official.slug}`}
@@ -293,12 +297,13 @@ export default async function CabinetPage() {
               <h2 className="govuk-heading-m govuk-!-margin-top-6 govuk-!-margin-bottom-4">
                 Also attends Cabinet
               </h2>
-              <ul className="govuk-list govuk-!-padding-left-0">
+              <ul className="govuk-list govuk-!-padding-left-0 cabinet-people-grid">
                 {alsoAttends.map((official, idx) => (
                   <li
                     key={`${official.slug}-attendee-${idx}`}
                     className="govuk-!-margin-bottom-4"
                   >
+                    {official.imageUrl ? <img src={official.imageUrl} alt="" className="cabinet-person__image" loading="lazy" /> : <div className="cabinet-person__image cabinet-person__image--empty" aria-hidden="true" />}
                     <h3 className="govuk-heading-s govuk-!-margin-top-0 govuk-!-margin-bottom-1">
                       <Link
                         href={`/government/people/${official.slug}`}
@@ -329,6 +334,15 @@ export default async function CabinetPage() {
           </div>
         </main>
       </div>
+      <style>{`
+        .cabinet-people-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1.5rem; }
+        .cabinet-people-grid > li { margin: 0 !important; padding: 1rem; border: 1px solid #b1b4b6; background: #fff; }
+        .cabinet-people-grid > li hr { display: none; }
+        .cabinet-person__image { display: block; width: 100%; aspect-ratio: 1 / 1; object-fit: cover; object-position: center top; margin-bottom: .75rem; background: #f3f2f1; }
+        .cabinet-person__image--empty { border: 1px solid #d8dde0; }
+        @media (max-width: 900px) { .cabinet-people-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+        @media (max-width: 520px) { .cabinet-people-grid { grid-template-columns: 1fr; } }
+      `}</style>
     </>
   );
 }
