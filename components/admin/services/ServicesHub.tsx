@@ -71,7 +71,7 @@ export default function ServicesHub({ initialTab = "list" }: Props) {
     setTab("edit");
   };
 
-  const openEdit = async (id: string) => {
+  const openEdit = async (id: string, nextStatus?: "published" | "draft") => {
     setError(null);
     try {
       const res = await fetch(`/api/admin/services/save?id=${encodeURIComponent(id)}`, {
@@ -79,7 +79,9 @@ export default function ServicesHub({ initialTab = "list" }: Props) {
       });
       const json = await res.json();
       if (!res.ok || !json.success) throw new Error(json.error || "Load failed");
-      setEditorForm(detailToForm(json.data));
+      const nextForm = detailToForm(json.data);
+      if (nextStatus) nextForm.status = nextStatus;
+      setEditorForm(nextForm);
       setTab("edit");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to open");
@@ -269,6 +271,10 @@ export default function ServicesHub({ initialTab = "list" }: Props) {
                         onClick={() => void openEdit(s._id)}
                       >
                         Edit
+                      </button>
+                      {" · "}
+                      <button type="button" className="govuk-link" onClick={() => void openEdit(s._id, s.status === "draft" ? "published" : "draft")}>
+                        {s.status === "draft" ? "Edit to publish" : "Edit to unpublish"}
                       </button>
                       {" · "}
                       {s.slug ? (
