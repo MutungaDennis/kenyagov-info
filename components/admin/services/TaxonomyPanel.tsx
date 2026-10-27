@@ -31,6 +31,8 @@ export default function TaxonomyPanel({ categories, onChange }: Props) {
   const items = useMemo(() => selected?.subTopics || [], [selected]);
   const roots = items.filter((item) => !item.parentHeading);
   const childrenOf = (parent: string) => items.filter((item) => item.parentHeading === parent);
+  const serviceCount = (category: CategoryOption) => new Set((category.subTopics || []).flatMap((topic) => topic.serviceIds || [])).size;
+  const descendantCount = (category: CategoryOption) => (category.subTopics || []).filter((topic) => topic.parentHeading).length;
 
   const refresh = async () => {
     const response = await fetch("/api/admin/services/save", { credentials: "include" });
@@ -150,8 +152,8 @@ export default function TaxonomyPanel({ categories, onChange }: Props) {
             <p className="govuk-hint">The first level people see at /services.</p>
             {categories.length === 0 ? <p className="govuk-body-s">No categories yet.</p> : <ul className="govuk-list govuk-list--spaced">
               {categories.map((category) => <li key={category._id}>
-                <button type="button" className="govuk-link" aria-current={selectedId === category._id ? "page" : undefined} onClick={() => { setSelectedId(category._id); resetForm(); }}>{category.title}</button>
-                <span className="govuk-hint govuk-!-display-block govuk-body-s govuk-!-margin-bottom-1">{category.subTopics?.length || 0} browse levels</span>
+                <button type="button" className="govuk-link govuk-!-font-size-19" aria-current={selectedId === category._id ? "page" : undefined} onClick={() => { setSelectedId(category._id); resetForm(); }}>{category.title}</button>
+                <span className="govuk-hint govuk-!-display-block govuk-body-s govuk-!-margin-bottom-1">{roots.length && selectedId === category._id ? roots.length : (category.subTopics || []).filter((topic) => !topic.parentHeading).length} main subcategor{((category.subTopics || []).filter((topic) => !topic.parentHeading).length === 1) ? "y" : "ies"} · {descendantCount(category)} nested · {serviceCount(category)} services</span>
                 <button type="button" className="govuk-link govuk-body-s" onClick={() => editCategory(category)}>Edit</button>
                 <span aria-hidden="true" className="govuk-!-margin-left-2 govuk-!-margin-right-2">·</span>
                 <button type="button" className="govuk-link govuk-body-s" onClick={() => void remove({ kind: "category", categoryId: category._id })}>Remove</button>

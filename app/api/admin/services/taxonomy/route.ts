@@ -17,12 +17,25 @@ function normaliseTopics(category: Category) {
   }));
 }
 
-async function moveLinks(supabase: SupabaseClient,  fromCategoryId: string, heading?: string, toCategoryId?: string, targetHeading = "General") {
+async function moveLinks(supabase: SupabaseClient, fromCategoryId: string, heading?: string, toCategoryId?: string, targetHeading = "General") {
   let query = supabase.from("service_category_links").select("service_id,position").eq("category_id", fromCategoryId);
   if (heading) query = query.eq("heading", heading);
   const { data, error } = await query;
   if (error) throw error;
   if (!data?.length) return;
+
+  // When the destination is the same category, update in place. Upserting and
+  // then deleting by category would delete the rows we just moved.
+  if (toCategoryId === fromCategoryId) {
+    const updated = await supabase
+      .from("service_category_links")
+      .update({ heading: targetHeading })
+      .eq("category_id", fromCategoryId)
+      .in("service_id", data.map((row: { service_id: string }) => row.service_id));
+    if (updated.error) throw updated.error;
+    return;
+  }
+
   if (toCategoryId) {
     const rows = data.map((row: { service_id: string; position: number }) => ({ category_id: toCategoryId, service_id: row.service_id, heading: targetHeading, position: row.position || 0 }));
     const inserted = await supabase.from("service_category_links").upsert(rows, { onConflict: "category_id,service_id" });
@@ -123,8 +136,25 @@ export async function DELETE(request: NextRequest) {
       const category = await getContent<Category>("service_categories", "id", categoryId, auth.supabase);
       if (!category) return NextResponse.json({ error: "Category not found" }, { status: 404 });
       const heading = String(body.heading || "").trim();
-      const topics = normaliseTopics(category).filter((topic) => topic.heading !== heading && topic.parentHeading !== heading);
-      await moveLinks(auth.supabase, categoryId, heading, categoryId);
+      const allTopics = normaliseTopics(category);
+      const headingsToMove = new Set<string>([heading]);
+      let changed = true;
+      while (changed) {
+        changed = false;
+        for (const topic of allTopics) {
+          if (topic.parentHeading && headingsToMove.has(topic.parentHeading) && !headingsToMove.has(topic.heading)) {
+            headingsToMove.add(topic.heading);
+            changed = true;
+          }
+        }
+      }
+      const topics = allTopics.filter((topic) => !headingsToMove.has(topic.heading));
+      if (!topics.some((topic) => topic.heading.toLowerCase() === "general")) {
+        topics.push({ heading: "General", slug: "general", description: "Services not yet assigned to a more specific browse path", parentHeading: "", priority: 999, services: [] });
+      }
+      for (const headingToMove of headingsToMove) {
+        await moveLinks(auth.supabase, categoryId, headingToMove, categoryId);
+      }
       await saveContent("service_categories", { ...category, subTopics: topics }, auth.supabase);
     } else {
       const general = await getContent<Category>("service_categories", "slug", "general", auth.supabase) || { _id: crypto.randomUUID(), title: "General", slug: { current: "general" }, description: "Services not yet assigned to a category", subTopics: [] };
