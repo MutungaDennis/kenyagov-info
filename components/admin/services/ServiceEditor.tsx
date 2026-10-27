@@ -389,6 +389,7 @@ export default function ServiceEditor({
             onChange={(e) => {
               set("categoryId", e.target.value);
               set("subTopicHeading", "");
+              set("subSubTopicHeading", "");
             }}
           >
             <option value="">— Not assigned —</option>
@@ -412,24 +413,25 @@ export default function ServiceEditor({
             id="svc-sub"
             value={form.subTopicHeading}
             disabled={!form.categoryId}
-            onChange={(e) => set("subTopicHeading", e.target.value)}
+            onChange={(e) => { set("subTopicHeading", e.target.value); set("subSubTopicHeading", ""); }}
           >
             <option value="">— No subcategory —</option>
-            {categories
-              .find((category) => category._id === form.categoryId)
-              ?.subTopics?.map((topic) => (
-                <option key={topic.heading} value={topic.heading}>
-                  {topic.heading}
-                </option>
-              ))}
+            {categories.find((category) => category._id === form.categoryId)?.subTopics?.filter((topic) => !topic.parentHeading).map((topic) => (
+              <option key={topic.heading} value={topic.heading}>{topic.heading}</option>
+            ))}
           </select>
-          {form.categoryId &&
-          !categories.find((category) => category._id === form.categoryId)?.subTopics?.length ? (
-            <p className="govuk-hint">
-              No subcategories are available for this category yet. Add one in the Category hub.
-            </p>
-          ) : null}
+          {form.categoryId && !categories.find((category) => category._id === form.categoryId)?.subTopics?.length ? <p className="govuk-hint">No subcategories are available for this category yet. Add one in the Category hub.</p> : null}
         </div>
+        {form.categoryId && form.subTopicHeading && (
+          <div className="govuk-form-group">
+            <label className="govuk-label" htmlFor="svc-subsub">Sub-subcategory (optional)</label>
+            <div className="govuk-hint">Use this only when the service belongs to a more specific pathway.</div>
+            <select className="govuk-select" id="svc-subsub" value={form.subSubTopicHeading} onChange={(e) => set("subSubTopicHeading", e.target.value)}>
+              <option value="">— No sub-subcategory —</option>
+              {categories.find((category) => category._id === form.categoryId)?.subTopics?.filter((topic) => topic.parentHeading === form.subTopicHeading).map((topic) => <option key={topic.heading} value={topic.heading}>{topic.heading}</option>)}
+            </select>
+          </div>
+        )}
       </fieldset>
 
       <fieldset className="govuk-fieldset govuk-!-margin-bottom-6">

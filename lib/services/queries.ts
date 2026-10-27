@@ -51,6 +51,7 @@ export async function getServiceDirectory() {
       providingBody: s.providingInstitutions?.[0]?.name || providers.find(p => p._id === s.providingBodies?.[0]?._ref)?.name || "Government Agency",
       categorySlug: visibleCategories.filter(c => activeLinks.some(l => l.category_id === c._id && l.service_id === s._id)).map(c => c.slug.current),
       subcategorySlug: activeLinks.find(l => l.service_id === s._id)?.heading || undefined,
+      subcategoryParent: (() => { const heading = activeLinks.find(l => l.service_id === s._id)?.heading; return visibleCategories.flatMap(c => c.subTopics || []).find(t => t.heading === heading)?.parentHeading; })(),
     })).sort((a, b) => (a.servicePriority || Number.MAX_SAFE_INTEGER) - (b.servicePriority || Number.MAX_SAFE_INTEGER) || a.title.localeCompare(b.title)),
     categories: visibleCategories.map(c => ({
       title: c.title,

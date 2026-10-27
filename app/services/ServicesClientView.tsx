@@ -12,6 +12,7 @@ export interface GovernmentServiceSummary {
   executionMode: string;
   categorySlug: string | string[];
   subcategorySlug?: string;
+  subcategoryParent?: string;
   providingBody: string;
 }
 
@@ -78,6 +79,7 @@ export default function ServicesClientView({
     const heading = service.subcategorySlug || "Services in this topic";
     grouped.set(heading, [...(grouped.get(heading) || []), service]);
   }
+  const groupParent = (heading: string) => grouped.get(heading)?.[0]?.subcategoryParent;
 
   return (
     <>
@@ -95,7 +97,8 @@ export default function ServicesClientView({
       ) : (
         <div className="govuk-!-margin-top-6">
           {Array.from(grouped.entries()).map(([heading, items]) => (
-            <section key={heading} aria-labelledby={`group-${heading}`} className="govuk-!-margin-bottom-7">
+            <section key={heading} aria-labelledby={`group-${heading}`} className={`service-topic-group govuk-!-margin-bottom-7 ${groupParent(heading) ? "service-topic-group--nested" : ""}`}>
+              {groupParent(heading) && <p className="govuk-hint govuk-!-margin-bottom-1">{groupParent(heading)}</p>}
               <h2 id={`group-${heading}`} className="govuk-heading-l">{heading}</h2>
               <ChevronLinkList
                 ariaLabel={heading}
