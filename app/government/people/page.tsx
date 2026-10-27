@@ -454,7 +454,7 @@ function PeopleDirectoryContent() {
   };
 
   return (
-    <div className="govuk-width-container">
+    <div className="govuk-width-container gov-government-people">
       <GovUKBreadcrumbs
         items={[
           { text: "Home", href: "/" },
@@ -629,6 +629,23 @@ function PeopleDirectoryContent() {
           .app-filter-sidebar {
             padding-right: 30px;
             border-right: 1px solid #b1b4b6;
+          }
+        }
+        @media (min-width: 48rem) and (max-width: 64rem) {
+          .app-filter-sidebar {
+            padding-right: 20px;
+          }
+          .app-filter-sidebar .govuk-label,
+          .app-filter-sidebar .govuk-hint,
+          .app-filter-sidebar .govuk-select,
+          .app-filter-sidebar .govuk-input {
+            font-size: 0.95rem;
+          }
+          .gov-government-people .govuk-grid-column-one-third {
+            width: 30%;
+          }
+          .gov-government-people .govuk-grid-column-two-thirds {
+            width: 70%;
           }
         }
       `}</style>
