@@ -14,6 +14,7 @@ export default function EPRAFuelSection() {
   const [cycle, setCycle] = useState<Cycle | null>(null);
   const [towns, setTowns] = useState<TownPrice[]>([]);
   const [lpg, setLpg] = useState<LpgPrice[]>([]);
+  const [nairobiHistory, setNairobiHistory] = useState<{ date: string; petrol: number }[]>([]);
   const [town, setTown] = useState("");
   const [error, setError] = useState(false);
 
@@ -26,14 +27,21 @@ export default function EPRAFuelSection() {
       if (cycleError) { setError(true); return; }
       setCycle(cycleData);
       if (!cycleData) return;
-      const [townResult, lpgResult] = await Promise.all([
+      const [townResult, lpgResult, historyResult] = await Promise.all([
         supabase.from("epra_town_prices").select("id,town_name,price_pms,price_ago,price_ik,is_major_city").eq("cycle_id", cycleData.id).order("is_major_city", { ascending: false }).order("town_name"),
         supabase.from("epra_lpg_prices").select("id,town_name,refill_price_6kg,refill_price_13kg").eq("cycle_id", cycleData.id).order("town_name").limit(12),
+        supabase.from("epra_town_prices").select("cycle_id,price_pms").eq("town_name", "Nairobi").not("price_pms", "is", null).order("cycle_id"),
       ]);
       if (!mounted) return;
       if (townResult.error || lpgResult.error) setError(true);
       setTowns(townResult.data || []);
       setLpg(lpgResult.data || []);
+      const cycleIds = (historyResult.data || []).map((item) => item.cycle_id).filter(Boolean);
+      if (cycleIds.length) {
+        const { data: historyCycles } = await supabase.from("epra_price_cycles").select("id,start_date").in("id", cycleIds).order("start_date");
+        const cycleDates = new Map((historyCycles || []).map((item) => [item.id, item.start_date]));
+        setNairobiHistory((historyResult.data || []).map((item) => ({ date: cycleDates.get(item.cycle_id) || "", petrol: Number(item.price_pms) })).filter((item) => item.date && Number.isFinite(item.petrol)));
+      }
     })();
     return () => { mounted = false; };
   }, []);
@@ -56,12 +64,12 @@ export default function EPRAFuelSection() {
           <div className="govuk-table-wrapper"><table className="govuk-table"><caption className="govuk-table__caption govuk-heading-m">Maximum retail prices</caption><thead><tr><th>Town</th><th>Petrol (PMS)</th><th>Diesel (AGO)</th><th>Kerosene (IK)</th></tr></thead><tbody>{visibleTowns.map((item) => <tr key={item.id}><th scope="row">{item.town_name}{item.is_major_city ? "*" : ""}</th><td>{money(item.price_pms)}</td><td>{money(item.price_ago)}</td><td>{money(item.price_ik)}</td></tr>)}</tbody></table></div>
           {!visibleTowns.length && <p className="govuk-inset-text">No town prices match your search.</p>}
           <p className="govuk-hint">* Major city. These are maximum prices, not necessarily the price charged at every station.</p>
+          {nairobiHistory.length > 1 && <div className="epra-trend" aria-labelledby="epra-trend-heading"><h3 id="epra-trend-heading" className="govuk-heading-m">Nairobi Super Petrol price trend</h3><p className="govuk-body-s">Maximum retail price across the available pricing cycles.</p><svg className="epra-trend__chart" viewBox="0 0 720 260" role="img" aria-label="Line graph showing Nairobi Super Petrol prices over time"><line x1="48" y1="20" x2="48" y2="220" stroke="#505a5f" /><line x1="48" y1="220" x2="700" y2="220" stroke="#505a5f" />{(() => { const min = Math.min(...nairobiHistory.map((item) => item.petrol)); const max = Math.max(...nairobiHistory.map((item) => item.petrol)); const range = max - min || 1; const points = nairobiHistory.map((item, index) => `${48 + (index * 652) / Math.max(1, nairobiHistory.length - 1)},${210 - ((item.petrol - min) / range) * 175}`).join(" "); return <><polyline points={points} fill="none" stroke="#006b3f" strokeWidth="4" strokeLinejoin="round" strokeLinecap="round" />{nairobiHistory.map((item, index) => <circle key={`${item.date}-${index}`} cx={48 + (index * 652) / Math.max(1, nairobiHistory.length - 1)} cy={210 - ((item.petrol - min) / range) * 175} r="5" fill="#006b3f"><title>{`${date(item.date)}: ${money(item.petrol)}`}</title></circle>)}</>; })()}</svg><p className="govuk-hint">Hover or focus a point to see the exact price. The line connects the available records; it does not estimate missing months.</p></div>}
           {lpg.length > 0 && <details className="govuk-details"><summary className="govuk-details__summary"><span className="govuk-details__summary-text">LPG refill prices</span></summary><div className="govuk-details__text"><p className="govuk-body">Indicative refill prices for 6 kg and 13 kg cylinders in selected towns.</p><div className="govuk-table-wrapper"><table className="govuk-table"><thead><tr><th>Town</th><th>6 kg refill</th><th>13 kg refill</th></tr></thead><tbody>{lpg.map((item) => <tr key={item.id}><th scope="row">{item.town_name}</th><td>{money(item.refill_price_6kg)}</td><td>{money(item.refill_price_13kg)}</td></tr>)}</tbody></table></div></div></details>}
         </>
       )}
-      <details className="govuk-details"><summary className="govuk-details__summary"><span className="govuk-details__summary-text">Fuel terms explained</span></summary><div className="govuk-details__text"><dl className="govuk-summary-list"><div className="govuk-summary-list__row"><dt className="govuk-summary-list__key">PMS</dt><dd className="govuk-summary-list__value">Premium Motor Spirit, commonly called petrol.</dd></div><div className="govuk-summary-list__row"><dt className="govuk-summary-list__key">AGO</dt><dd className="govuk-summary-list__value">Automotive Gas Oil, commonly called diesel.</dd></div><div className="govuk-summary-list__row"><dt className="govuk-summary-list__key">IK</dt><dd className="govuk-summary-list__value">Illuminating kerosene.</dd></div></dl></div></details>
       <p className="govuk-body-s">Source: Energy and Petroleum Regulatory Authority. CitizenGuide.KE presents this information for reference and is not EPRA.</p>
-      <style>{`.epra-fuel-panel{border-top:4px solid #1d70b8;margin:2.5rem 0;padding-top:1.5rem}.epra-cycle-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem;margin:1.5rem 0;padding:1rem;background:#f3f2f1}.epra-cycle-summary div{display:flex;flex-direction:column;gap:.25rem}@media(max-width:640px){.epra-cycle-summary{grid-template-columns:1fr}.epra-fuel-panel .govuk-table{min-width:620px}}`}</style>
+      <style>{`.epra-fuel-panel{border-top:4px solid #1d70b8;margin:2.5rem 0;padding-top:1.5rem}.epra-cycle-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem;margin:1.5rem 0;padding:1rem;background:#f3f2f1}.epra-cycle-summary div{display:flex;flex-direction:column;gap:.25rem}.epra-trend{margin:2rem 0;padding:1rem 0;border-top:1px solid #b1b4b6}.epra-trend__chart{display:block;width:100%;height:auto;overflow:visible;background:#f8f8f8}@media(max-width:640px){.epra-cycle-summary{grid-template-columns:1fr}.epra-fuel-panel .govuk-table{min-width:620px}}`}</style>
     </section>
   );
 }
