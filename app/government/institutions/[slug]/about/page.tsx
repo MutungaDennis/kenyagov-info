@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { createPublicClient } from "@/lib/supabase/public";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import EPRAFuelSection from "@/components/epra/EPRAFuelSection";
@@ -10,7 +10,7 @@ type Props = { params: Promise<{ slug: string }> };
 
 export default async function InstitutionAboutPage({ params }: Props) {
   const { slug } = await params;
-  if (slug !== "energy-petroleum-regulatory-authority") notFound();
+  if (slug !== "energy-petroleum-regulatory-authority") redirect(`/government/institutions/${slug}/about/overview`);
   const supabase = createPublicClient();
   const { data: institution, error } = await supabase.from("institutions").select("name,description,mandate,website").eq("slug", slug).eq("is_active", true).maybeSingle();
   if (error || !institution) notFound();

@@ -539,8 +539,8 @@ export default function InstitutionProfileClient({ people }: { people?: ReactNod
 
           </div>
         </div>
-        <div className="institution-profile-people">{people}</div>
         {slug === "energy-petroleum-regulatory-authority" && <EPRAFuelSection compact />}
+        <div className="institution-profile-people">{people}</div>
         <div className="govuk-grid-row">
           <div className="govuk-grid-column-two-thirds">
             {(institution.current_head || institution.head_title || institution.board_chair) && (
