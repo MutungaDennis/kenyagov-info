@@ -6,6 +6,13 @@ import { createBrowserClientAsync } from "@/lib/supabase/client";
 import { searchSite } from "@/lib/search/search";
 import { resultHref, type SearchHit } from "@/lib/search/results";
 
+declare module "react" {
+  interface FormHTMLAttributes<T> {
+    toolname?: string;
+    tooldescription?: string;
+  }
+}
+
 interface Props {
   initialQuery?: string;
   onSelect?: (suggestion: SearchHit) => void;
