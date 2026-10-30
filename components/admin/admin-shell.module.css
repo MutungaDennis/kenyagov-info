@@ -1,12 +1,16 @@
-.shell { display: grid; grid-template-columns: 245px minmax(0, 1fr); gap: 32px; max-width: 1500px; margin: 0 auto; padding: 30px; align-items: start; }
-.sidebar { position: sticky; top: 16px; max-height: calc(100vh - 32px); overflow-y: auto; border-right: 1px solid #b1b4b6; padding-right: 20px; }
+.shell { display: grid; grid-template-columns: minmax(0, 260px) minmax(0, 1fr); gap: clamp(16px, 3vw, 32px); max-width: 1500px; width: 100%; margin: 0 auto; padding: clamp(16px, 3vw, 30px); align-items: start; box-sizing: border-box; }
+.sidebar { min-width: 0; position: sticky; top: 16px; max-height: calc(100vh - 32px); overflow-y: auto; overflow-x: hidden; border-right: 1px solid #b1b4b6; padding-right: 20px; }
+.navigation { min-width: 0; }
 .navigation section { margin-bottom: 24px; }
-.navigation h2 { margin-bottom: 8px; }
-.navigation li { margin: 0; }
-.navigation a { display: block; padding: 8px 10px; font-size: 17px; }
+.navigation h2 { margin-bottom: 8px; overflow-wrap: anywhere; }
+.navigation li { margin: 0; min-width: 0; }
+.navigation a { display: block; min-width: 0; padding: 8px 10px; font-size: 17px; line-height: 1.35; overflow-wrap: anywhere; word-break: normal; }
 .current { border-left: 4px solid #00703c; background: #e8f2ed; font-weight: 700; color: #0b0c0c; text-decoration: none; }
 .current:focus { background: #ffdd00; outline: 3px solid transparent; box-shadow: 0 3px #0b0c0c; }
-.main { min-width: 0; }
-.main :global(.govuk-width-container) { margin: 0; max-width: none; }
-.toggle { display: none; }
-@media (max-width: 900px) { .shell { display: block; padding: 20px 15px; } .sidebar { position: static; max-height: none; border-right: 0; padding: 0; margin-bottom: 24px; } .toggle { display: block; width: 100%; text-align: left; } .navigation { display: none; } .navigation.open { display: block; } }
+.main { min-width: 0; max-width: 100%; overflow-x: hidden; }
+.main :global(.govuk-width-container) { margin: 0; max-width: none; min-width: 0; }
+.main :global(table) { max-width: 100%; }
+.main :global(.govuk-table-wrapper) { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.toggle { display: none; width: 100%; margin: 0 0 12px; }
+@media (max-width: 900px) { .shell { display: block; padding: 16px 12px 28px; } .sidebar { position: static; max-height: none; border-right: 0; padding: 0; margin-bottom: 20px; overflow: visible; } .toggle { display: block; } .navigation { display: none; border: 1px solid #b1b4b6; padding: 8px 12px; background: #fff; } .navigation.open { display: block; } .navigation section { margin-bottom: 16px; } .navigation a { padding: 10px 8px; } }
+@media (max-width: 480px) { .shell { padding-inline: 8px; } .main { overflow-wrap: anywhere; } }
