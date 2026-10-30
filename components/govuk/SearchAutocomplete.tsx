@@ -59,7 +59,7 @@ export default function SearchAutocomplete({ initialQuery = "", onSelect, placeh
   }
   const show = open && suggestions.length > 0;
   return <div className={`${className} autocomplete-wrapper`} style={{ position: "relative" }} onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false); }}>
-    <form action="/search" method="get" role="search" aria-label="Search the whole website" className="autocomplete-form" style={{ display: "flex" }} onSubmit={event => {
+    <form action="/search" method="get" role="search" aria-label="Search the whole website" className="autocomplete-form" toolname="search_citizenguide" tooldescription="Search CitizenGuide.KE for Kenyan government institutions, services, leaders, laws, elections and civic information." style={{ display: "flex" }} onSubmit={event => {
       if (show && active >= 0 && suggestions[active]) { event.preventDefault(); select(suggestions[active]); }
       else if (!query.trim()) event.preventDefault();
     }}>
