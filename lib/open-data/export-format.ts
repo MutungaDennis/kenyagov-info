@@ -12,6 +12,15 @@ export function rowsToCsv(rows: ExportRow[], fields: readonly string[]) {
   return [fields.join(","), ...rows.map(row => fields.map(field => csvCell(row[field])).join(","))].join("\r\n") + "\r\n";
 }
 
+function xmlEscape(value: unknown): string {
+  return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&apos;");
+}
+
+export function rowsToXml(rows: ExportRow[], fields: readonly string[], dataset: string) {
+  const elements = rows.map((row) => `  <record>\n${fields.map((field) => `    <${field}>${xmlEscape(row[field])}</${field}>`).join("\n")}\n  </record>`).join("\n");
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<dataset name="${xmlEscape(dataset)}">\n${elements}\n</dataset>\n`;
+}
+
 /** Fetch every page; never return a successful truncated download after an error. */
 export async function collectExportRows(
   fetchPage: (from: number, to: number) => PromiseLike<{ data: ExportRow[] | null; error: unknown }>,

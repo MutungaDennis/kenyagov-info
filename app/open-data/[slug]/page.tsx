@@ -89,7 +89,7 @@ export default async function OpenDataDatasetPage({ params }: PageProps) {
                 key: "Formats",
                 value:
                   ds.formats.length > 0
-                    ? ds.formats.map((f) => f.toUpperCase()).join(", ")
+                    ? [...new Set([...ds.formats, ...(ds.exportEndpoint ? ["xml"] : [])])].map((f) => f.toUpperCase()).join(", ")
                     : "Summary only (no bulk export yet)",
               },
               {
