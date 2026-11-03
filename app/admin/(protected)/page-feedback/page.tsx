@@ -47,7 +47,7 @@ function isTestPath(path: string): boolean {
 }
 
 type SearchParams = {
-  view?: string; // "table" | "charts"
+  view?: string; // "table" | "charts" | "hours"
   q?: string;
   days?: string;
   min?: string;
@@ -134,6 +134,41 @@ function buildQuery(params: Record<string, string | undefined>) {
 
 function toDayKey(iso: string) {
   return iso.slice(0, 10);
+}
+
+function HourChart({
+  series,
+}: {
+  series: { label: string; color: string; values: number[] }[];
+}) {
+  const width = 760;
+  const height = 300;
+  const padding = { top: 24, right: 18, bottom: 48, left: 44 };
+  const innerW = width - padding.left - padding.right;
+  const innerH = height - padding.top - padding.bottom;
+  const max = Math.max(1, ...series.flatMap((item) => item.values));
+  const x = (hour: number) => padding.left + (hour / 23) * innerW;
+  const y = (value: number) => padding.top + innerH - (value / max) * innerH;
+
+  return (
+    <div className="govuk-!-margin-bottom-8">
+      <h3 className="govuk-heading-s">Feedback by hour of day</h3>
+      <p className="govuk-body-s">Times are shown in East Africa Time (EAT).</p>
+      <div style={{ overflowX: "auto" }}>
+        <svg viewBox={`0 0 ${width} ${height}`} width="100%" style={{ maxWidth: width, height: "auto" }} role="img" aria-label="Feedback by hour of day">
+          {[0, 0.25, 0.5, 0.75, 1].map((step) => {
+            const yy = y(max * step);
+            return <g key={step}><line x1={padding.left} x2={width - padding.right} y1={yy} y2={yy} stroke="#b1b4b6" /><text x={padding.left - 8} y={yy + 4} textAnchor="end" fontSize="11" fill="#505a5f">{Math.round(max * step)}</text></g>;
+          })}
+          {series.map((item) => <polyline key={item.label} fill="none" stroke={item.color} strokeWidth="3" points={item.values.map((value, hour) => `${x(hour)},${y(value)}`).join(" ")} />)}
+          {Array.from({ length: 24 }, (_, hour) => <text key={hour} x={x(hour)} y={height - 18} textAnchor="middle" fontSize="10" fill="#505a5f">{hour}</text>)}
+        </svg>
+      </div>
+      <div className="govuk-!-display-flex govuk-!-flex-wrap-wrap govuk-!-margin-top-2" style={{ gap: "1rem" }}>
+        {series.map((item) => <span key={item.label} className="govuk-body-s govuk-!-margin-bottom-0"><span aria-hidden="true" style={{ display: "inline-block", width: 12, height: 3, background: item.color, verticalAlign: "middle", marginRight: 6 }} />{item.label}</span>)}
+      </div>
+    </div>
+  );
 }
 
 /** Simple SVG line chart – no client JS, no extra DB load */
@@ -334,7 +369,7 @@ export default async function AdminPageFeedbackPage({
   searchParams: Promise<SearchParams>;
 }) {
   const sp = await searchParams;
-  const view = sp.view === "charts" ? "charts" : "table";
+  const view = sp.view === "charts" ? "charts" : sp.view === "hours" ? "hours" : "table";
   const q = (sp.q || "").trim().toLowerCase();
   const days = parseInt(sp.days || "0", 10);
   const minVotes = Math.max(0, parseInt(sp.min || "0", 10) || 0);
@@ -552,6 +587,14 @@ export default async function AdminPageFeedbackPage({
     day,
     value: dailyTotal.get(day) || 0,
   }));
+  const hourly = { all: Array(24).fill(0) as number[], useful: Array(24).fill(0) as number[], notUseful: Array(24).fill(0) as number[] };
+  for (const vote of filteredVotes) {
+    const hour = Number(new Intl.DateTimeFormat("en-GB", { timeZone: "Africa/Nairobi", hour: "2-digit", hourCycle: "h23" }).format(new Date(vote.created_at)));
+    hourly.all[hour] += 1;
+    if (vote.is_useful) hourly.useful[hour] += 1;
+    else hourly.notUseful[hour] += 1;
+  }
+
   const pctPoints = allDays.map((day) => {
     const y = dailyYes.get(day) || 0;
     const t = dailyTotal.get(day) || 0;
@@ -619,13 +662,16 @@ export default async function AdminPageFeedbackPage({
               Trends
             </Link>
           </li>
+          <li className={`govuk-tabs__list-item${view === "hours" ? " govuk-tabs__list-item--selected" : ""}`}>
+            <Link className="govuk-tabs__tab" href={buildQuery({ ...baseParams, view: "hours" })}>By hour</Link>
+          </li>
         </ul>
       </div>
 
       {/* Filter panel */}
       <div className="govuk-form-group govuk-!-margin-bottom-6">
         <form method="get" className="govuk-grid-row">
-          <input type="hidden" name="view" value={view === "charts" ? "charts" : ""} />
+              <input type="hidden" name="view" value={view === "charts" || view === "hours" ? view : ""} />
           {view === "table" && (
             <>
               <div className="govuk-grid-column-one-quarter">
@@ -1192,6 +1238,14 @@ export default async function AdminPageFeedbackPage({
               )}
             </>
           )}
+        </>
+      )}
+
+      {view === "hours" && (
+        <>
+          <div className="govuk-inset-text govuk-!-margin-bottom-6"><p className="govuk-body govuk-!-margin-bottom-0">This view shows when page feedback is submitted, grouped by hour. Use it to identify the busiest times for citizen responses.</p></div>
+          <HourChart series={[{ label: "All", color: "#1d70b8", values: hourly.all }, { label: "Useful", color: "#00703c", values: hourly.useful }, { label: "Not useful", color: "#d4351c", values: hourly.notUseful }]} />
+          {filteredVotes.length === 0 && !error && <div className="govuk-inset-text">No feedback in this period to chart.</div>}
         </>
       )}
 
