@@ -1,4 +1,4 @@
-﻿import { taskGuides } from '@/lib/guides/task-guides';
+import { taskGuides } from '@/lib/guides/task-guides';
 import { sections as hgwSections } from './how-government-works/_shared';
 import { sections as hpmSections } from './how-public-money-works/_shared';
 import { MetadataRoute } from 'next';
@@ -61,6 +61,8 @@ async function fetchAllSlugs(
   table: string,
   options: {
     /** Extra PostgREST filters applied after select (eq/neq). */
+    // Supabase's table name is dynamic here, so the generated builder cannot be narrowed further.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     apply?: (q: any) => any;
     pageSize?: number;
     maxRows?: number;
@@ -74,6 +76,7 @@ async function fetchAllSlugs(
     const supabase = createPublicClient();
     for (let from = 0; from < maxRows; from += pageSize) {
       const to = from + pageSize - 1;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let q: any = supabase.from(table).select('slug, updated_at').range(from, to);
       if (options.apply) {
         q = options.apply(q);
@@ -206,13 +209,6 @@ async function getSupabaseUrls(): Promise<SitemapEntry[]> {
       'is_active=eq.true&record_kind=eq.institution',
       2000,
     );
-    if (institutions.length === 0) {
-      institutions = await fetchSlugsViaRest(
-        'institutions',
-        'record_kind=eq.institution',
-        2000,
-      );
-    }
   }
   for (const inst of institutions) {
     urls.push({
@@ -284,7 +280,11 @@ async function getSupabaseUrls(): Promise<SitemapEntry[]> {
   }
 
   try {
-    const services = await fetchAllSlugs('government_services', { maxRows: 10000, pageSize: 500 });
+    const services = await fetchAllSlugs('government_services', {
+      apply: (q) => q.eq('is_published', true),
+      maxRows: 10000,
+      pageSize: 500,
+    });
     for (const service of services) urls.push({ url: `${BASE_URL}/${service.slug}`, changeFrequency: 'weekly', priority: 0.7 });
     for (let offset = 0; ; offset += 500) {
       const { data, error } = await createPublicClient().from('hansard_sittings').select('slug,updated_at').order('id').range(offset,offset+499);
@@ -572,7 +572,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...sanityUrls,
   ];
 
-  const unique = Array.from(new Map(allUrls.map((u) => [u.url, u])).values());
+  const unique = Array.from(
+    new Map(
+      allUrls.map((entry) => {
+        const url = new URL(entry.url);
+        url.hash = '';
+        url.search = '';
+        if (url.pathname !== '/') url.pathname = url.pathname.replace(/\/+$/, '');
+        return [url.toString(), { ...entry, url: url.toString() }];
+      }),
+    ).values(),
+  );
 
   return unique.map((entry) => ({
     url: entry.url,

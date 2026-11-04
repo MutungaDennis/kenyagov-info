@@ -81,5 +81,5 @@ export default async function ServicesHubPage({ searchParams }: PageProps) {
   );
 }
 
-// Publication changes must take effect without serving a cached draft.
-export const dynamic = "force-dynamic";
+// Directory content is read-heavy and can safely be refreshed hourly.
+export const revalidate = 3600;
