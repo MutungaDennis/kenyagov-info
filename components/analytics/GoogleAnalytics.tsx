@@ -1,5 +1,11 @@
 "use client";
 
+declare global {
+  interface Window {
+    dataLayer?: unknown[];
+  }
+}
+
 import { useEffect, useState } from "react";
 import Script from "next/script";
 
