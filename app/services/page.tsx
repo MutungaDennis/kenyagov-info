@@ -5,12 +5,6 @@ import { redirect } from "next/navigation";
 import { getServiceDirectory } from "@/lib/services/queries";
 import ServicesClientView from "./ServicesClientView";
 
-export const metadata: Metadata = {
-  title: "Government services in Kenya",
-  description:
-    "Find Kenyan government services, requirements, fees, responsible institutions and official application links in one reliable public directory.",
-};
-
 export interface GovernmentServiceSummary {
   _id: string;
   title: string;
