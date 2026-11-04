@@ -36,7 +36,7 @@ export default function OpenDataStandardsPage() {
           <ul className="govuk-list govuk-list--bullet">
             <li>Structured extracts we maintain (Supabase / Sanity)</li>
             <li>Plain-language summaries and small visual aggregates</li>
-            <li>CSV/JSON downloads where an export route exists</li>
+            <li>CSV, JSON and XML downloads where an export route exists</li>
             <li>Links to official portals we do not host</li>
           </ul>
 
@@ -86,11 +86,12 @@ export default function OpenDataStandardsPage() {
 
           <h2 className="govuk-heading-m">Using the downloads and API</h2>
           <ul className="govuk-list govuk-list--bullet">
-            <li>Use the dataset’s export link with <code>?format=csv</code> or <code>?format=json</code>. No account or API key is needed.</li>
+            <li>Use the dataset’s export link with <code>?format=csv</code>, <code>?format=json</code> or <code>?format=xml</code>. No account or API key is needed.</li>
+            <li>XML exports use UTF-8 and a stable <code>&lt;dataset&gt;</code> root with one <code>&lt;record&gt;</code> element per row, making them suitable for system-to-system exchange.</li>
             <li>CSV uses UTF-8, stable field names and quoted cells. Missing values are blank; zero remains zero. JSON preserves nulls, numbers and text identifiers.</li>
             <li>Import identifier columns as text to preserve leading zeros. CSV text that could be interpreted as a spreadsheet formula is prefixed with an apostrophe; JSON preserves the original string.</li>
             <li>Ward exports accept <code>county</code>, <code>constituency</code> and <code>q</code>. Polling-station exports also accept <code>ward</code>. Use exact place names and URL-encode values.</li>
-            <li>Example: <a className="govuk-link" href="/api/data/exports/wards?format=json&amp;county=Nairobi%20County">Nairobi wards as JSON</a>.</li>
+            <li>Example: <Link className="govuk-link" href="/api/data/exports/wards?format=json&amp;county=Nairobi%20County">Nairobi wards as JSON</Link>.</li>
             <li>Downloads fetch all matching pages, rather than the first 1,000 records. Failed downloads return an error instead of a successful partial extract.</li>
             <li>Response headers include <code>X-Total-Count</code> and <code>X-Generated-At</code>. Generation time is not the date the underlying information was verified.</li>
             <li>These are live extracts, not versioned statistical releases. Records can change while a large download is being generated. Retain your downloaded file when citing it.</li>

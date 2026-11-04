@@ -30,7 +30,7 @@ export type OpenDataset = {
   sourceSystem: "supabase" | "sanity";
   tableName?: string;
   exportEndpoint?: string;
-  formats: ("csv" | "json")[];
+  formats: ("csv" | "json" | "xml")[];
   temporalCoverage: string;
   geographicCoverage: string;
   updateFrequency: string;
@@ -123,7 +123,7 @@ export const OPEN_DATASETS: OpenDataset[] = [
     sourceSystem: "supabase",
     tableName: "counties",
     exportEndpoint: "/api/data/exports/counties",
-    formats: ["csv", "json"],
+    formats: ["csv", "json", "xml"],
     temporalCoverage: "Ongoing snapshot (fields vary by last compile)",
     geographicCoverage: "National — 47 counties",
     updateFrequency: "Updated when we refresh county records",
@@ -200,7 +200,7 @@ export const OPEN_DATASETS: OpenDataset[] = [
     sourceSystem: "supabase",
     tableName: "wards",
     exportEndpoint: "/api/data/exports/wards",
-    formats: ["csv", "json"],
+    formats: ["csv", "json", "xml"],
     temporalCoverage: "2022 registration figures where present",
     geographicCoverage: "National — wards",
     updateFrequency: "Updated when ward records are refreshed",
@@ -235,7 +235,7 @@ export const OPEN_DATASETS: OpenDataset[] = [
     sourceSystem: "supabase",
     tableName: "polling_stations_2022",
     exportEndpoint: "/api/data/exports/polling-stations",
-    formats: ["csv", "json"],
+    formats: ["csv", "json", "xml"],
     temporalCoverage: "2022 general election snapshot",
     geographicCoverage: "National — polling stations",
     updateFrequency: "Static snapshot unless we import a new electoral cycle",
@@ -279,7 +279,7 @@ export const OPEN_DATASETS: OpenDataset[] = [
     sourceSystem: "supabase",
     tableName: "institutions",
     exportEndpoint: "/api/data/exports/institutions",
-    formats: ["csv", "json"],
+    formats: ["csv", "json", "xml"],
     temporalCoverage: "Ongoing directory snapshot",
     geographicCoverage: "National and county institutions where recorded",
     updateFrequency: "Updated when institutional records change",
@@ -319,7 +319,7 @@ export const OPEN_DATASETS: OpenDataset[] = [
     sourceSystem: "supabase",
     tableName: "leaders",
     exportEndpoint: "/api/data/exports/leaders",
-    formats: ["csv", "json"],
+    formats: ["csv", "json", "xml"],
     temporalCoverage: "Ongoing — current office holders as held",
     geographicCoverage: "National and county roles where recorded",
     updateFrequency: "Updated when leadership records are edited",

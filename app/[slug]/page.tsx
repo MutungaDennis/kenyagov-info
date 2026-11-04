@@ -5,6 +5,8 @@ import { Metadata } from "next";
 import { getServiceBySlug } from "@/lib/services/queries";
 import ServiceClientView from "./ServiceClientView";
 
+const SITE_URL = "https://www.citizenguide.ke";
+
 interface PageProps {
   params: Promise<{ slug: string }>;
 }
@@ -23,6 +25,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title: `${service.title} - citizenguide.Ke`,
     description: service.summary,
+    alternates: {
+      canonical: `${SITE_URL}/${encodeURIComponent(slug)}`,
+    },
   };
 }
 
@@ -43,5 +48,5 @@ export default async function ServicePage({ params }: PageProps) {
   return <ServiceClientView service={service} />;
 }
 
-// Publication changes must take effect without serving a cached draft.
-export const dynamic = "force-dynamic";
+// Service content is read-heavy and can safely be refreshed hourly.
+export const revalidate = 3600;

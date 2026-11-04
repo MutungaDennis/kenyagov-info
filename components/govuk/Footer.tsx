@@ -85,7 +85,7 @@ export default function GovUKFooter() {
                   href="/government/counties"
                   className="govuk-footer__link"
                 >
-                  Counties
+                  Counties of Kenya
                 </Link>
               </li>
               <li className="govuk-footer__list-item">
@@ -101,7 +101,7 @@ export default function GovUKFooter() {
                   href="/government/people"
                   className="govuk-footer__link"
                 >
-                  Officials
+                  Government officials
                 </Link>
               </li>
               <li className="govuk-footer__list-item">

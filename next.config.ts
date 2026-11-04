@@ -64,6 +64,9 @@ const productionAdminBase =
   getProductionAdminBase();
 
 const nextConfig: NextConfig = {
+  // Keep every internal link and sitemap URL on one canonical path form.
+  trailingSlash: false,
+
   // Resolve pdfjs-dist from node_modules at runtime.
   serverExternalPackages: ["pdfjs-dist"],
 

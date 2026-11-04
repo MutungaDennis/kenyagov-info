@@ -1,5 +1,6 @@
 import React, { Suspense } from "react";
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { getServiceDirectory } from "@/lib/services/queries";
 import ServicesClientView from "../ServicesClientView";
 
@@ -25,6 +26,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function ServiceCategoryPage({ params }: Props) {
   const { slug } = await params;
   const { services, categories } = await getServiceDirectory();
+  const category = categories.find((item) => item.slug === slug);
+
+  if (!category) notFound();
 
   return (
     <Suspense
@@ -45,4 +49,4 @@ export default async function ServiceCategoryPage({ params }: Props) {
   );
 }
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;

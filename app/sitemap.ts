@@ -1,4 +1,4 @@
-﻿import { taskGuides } from '@/lib/guides/task-guides';
+import { taskGuides } from '@/lib/guides/task-guides';
 import { sections as hgwSections } from './how-government-works/_shared';
 import { sections as hpmSections } from './how-public-money-works/_shared';
 import { MetadataRoute } from 'next';
@@ -61,6 +61,8 @@ async function fetchAllSlugs(
   table: string,
   options: {
     /** Extra PostgREST filters applied after select (eq/neq). */
+    // Supabase's table name is dynamic here, so the generated builder cannot be narrowed further.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     apply?: (q: any) => any;
     pageSize?: number;
     maxRows?: number;
@@ -74,6 +76,7 @@ async function fetchAllSlugs(
     const supabase = createPublicClient();
     for (let from = 0; from < maxRows; from += pageSize) {
       const to = from + pageSize - 1;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let q: any = supabase.from(table).select('slug, updated_at').range(from, to);
       if (options.apply) {
         q = options.apply(q);
@@ -206,13 +209,6 @@ async function getSupabaseUrls(): Promise<SitemapEntry[]> {
       'is_active=eq.true&record_kind=eq.institution',
       2000,
     );
-    if (institutions.length === 0) {
-      institutions = await fetchSlugsViaRest(
-        'institutions',
-        'record_kind=eq.institution',
-        2000,
-      );
-    }
   }
   for (const inst of institutions) {
     urls.push({
@@ -284,7 +280,11 @@ async function getSupabaseUrls(): Promise<SitemapEntry[]> {
   }
 
   try {
-    const services = await fetchAllSlugs('government_services', { maxRows: 10000, pageSize: 500 });
+    const services = await fetchAllSlugs('government_services', {
+      apply: (q) => q.eq('is_published', true),
+      maxRows: 10000,
+      pageSize: 500,
+    });
     for (const service of services) urls.push({ url: `${BASE_URL}/${service.slug}`, changeFrequency: 'weekly', priority: 0.7 });
     for (let offset = 0; ; offset += 500) {
       const { data, error } = await createPublicClient().from('hansard_sittings').select('slug,updated_at').order('id').range(offset,offset+499);
@@ -468,6 +468,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/elections/about`, changeFrequency: 'yearly', priority: 0.6 },
 
     { url: `${BASE_URL}/constitution`, changeFrequency: 'weekly', priority: 0.9 },
+    { url: `${BASE_URL}/constitution/article/7`, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${BASE_URL}/constitution/article/209`, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${BASE_URL}/constitution/article/225`, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${BASE_URL}/constitution/article/245`, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${BASE_URL}/constitution/article/248`, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${BASE_URL}/constitution/article/250`, changeFrequency: 'monthly', priority: 0.8 },
     { url: `${BASE_URL}/legislation/acts`, changeFrequency: 'weekly', priority: 0.8 },
 
     { url: `${BASE_URL}/documents`, changeFrequency: 'weekly', priority: 0.7 },
@@ -475,6 +481,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     { url: `${BASE_URL}/search`, changeFrequency: 'weekly', priority: 0.85 },
     { url: `${BASE_URL}/open-data`, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${BASE_URL}/open-data/datasets`, changeFrequency: 'weekly', priority: 0.75 },
+    { url: `${BASE_URL}/open-data/standards`, changeFrequency: 'monthly', priority: 0.6 },
+    { url: `${BASE_URL}/open-data/counties`, changeFrequency: 'monthly', priority: 0.7 },
+    { url: `${BASE_URL}/open-data/wards`, changeFrequency: 'monthly', priority: 0.7 },
+    { url: `${BASE_URL}/open-data/institutions`, changeFrequency: 'monthly', priority: 0.7 },
+    { url: `${BASE_URL}/open-data/polling-stations`, changeFrequency: 'monthly', priority: 0.7 },
+    { url: `${BASE_URL}/open-data/political-parties`, changeFrequency: 'monthly', priority: 0.65 },
+    { url: `${BASE_URL}/open-data/epra-fuel-prices`, changeFrequency: 'weekly', priority: 0.75 },
+    { url: `${BASE_URL}/open-data/themes/elections`, changeFrequency: 'monthly', priority: 0.6 },
+    { url: `${BASE_URL}/open-data/themes/geography`, changeFrequency: 'monthly', priority: 0.6 },
+    { url: `${BASE_URL}/open-data/collections/energy-prices`, changeFrequency: 'weekly', priority: 0.65 },
 
     { url: `${BASE_URL}/guides`, changeFrequency: 'weekly', priority: 0.7 },
     { url: `${BASE_URL}/society-and-culture`, changeFrequency: 'monthly', priority: 0.6 },
@@ -484,6 +501,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/national-events/devolution-sensitisation-week`, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${BASE_URL}/national-events/kenya-music-festival`, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${BASE_URL}/national-events/kenya-national-drama-and-film-festival`, changeFrequency: 'monthly', priority: 0.7 },
+    { url: `${BASE_URL}/national-events/official-national-days`, changeFrequency: 'yearly', priority: 0.65 },
+    { url: `${BASE_URL}/national-events/civic-and-public-participation-events`, changeFrequency: 'monthly', priority: 0.65 },
+    { url: `${BASE_URL}/society-and-culture/holidays`, changeFrequency: 'yearly', priority: 0.65 },
+
     { url: `${BASE_URL}/national-symbols`, changeFrequency: 'yearly', priority: 0.7 },
     { url: `${BASE_URL}/religion-and-faith`, changeFrequency: 'monthly', priority: 0.6 },
     { url: `${BASE_URL}/services`, changeFrequency: 'weekly', priority: 0.8 },
@@ -506,7 +527,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/complain-about-government`, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${BASE_URL}/access-to-information`, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${BASE_URL}/scams`, changeFrequency: 'monthly', priority: 0.7 },
-    { url: `${BASE_URL}/emergency-and-safety`, changeFrequency: 'monthly', priority: 0.6 },
+    { url: `${BASE_URL}/emergency-safety`, changeFrequency: 'monthly', priority: 0.6 },
     { url: `${BASE_URL}/kenya-gazette`, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${BASE_URL}/guides/having-a-baby`, changeFrequency: 'monthly', priority: 0.75 },
     { url: `${BASE_URL}/guides/registering-a-death`, changeFrequency: 'monthly', priority: 0.75 },
@@ -572,7 +593,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...sanityUrls,
   ];
 
-  const unique = Array.from(new Map(allUrls.map((u) => [u.url, u])).values());
+  const unique = Array.from(
+    new Map(
+      allUrls.map((entry) => {
+        const url = new URL(entry.url);
+        url.hash = '';
+        url.search = '';
+        if (url.pathname !== '/') url.pathname = url.pathname.replace(/\/+$/, '');
+        return [url.toString(), { ...entry, url: url.toString() }];
+      }),
+    ).values(),
+  );
 
   return unique.map((entry) => ({
     url: entry.url,

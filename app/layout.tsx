@@ -167,6 +167,22 @@ export default function RootLayout({
     },
   };
 
+  const siteNavigationSchema = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "@id": `${SITE_URL}/#site-navigation`,
+    name: "CitizenGuide.KE primary navigation",
+    itemListElement: [
+      { "@type": "SiteNavigationElement", position: 1, name: "Government services", url: `${SITE_URL}/services` },
+      { "@type": "SiteNavigationElement", position: 2, name: "Government of Kenya", url: `${SITE_URL}/government` },
+      { "@type": "SiteNavigationElement", position: 3, name: "Counties of Kenya", url: `${SITE_URL}/government/counties` },
+      { "@type": "SiteNavigationElement", position: 4, name: "Government officials", url: `${SITE_URL}/government/people` },
+      { "@type": "SiteNavigationElement", position: 5, name: "Elections and voting", url: `${SITE_URL}/elections` },
+      { "@type": "SiteNavigationElement", position: 6, name: "Constitution of Kenya", url: `${SITE_URL}/constitution` },
+      { "@type": "SiteNavigationElement", position: 7, name: "Open government data", url: `${SITE_URL}/open-data` },
+    ],
+  };
+
   const organizationSchema = {
     "@context": "https://schema.org",
     "@type": "Organization",
@@ -203,6 +219,11 @@ export default function RootLayout({
   );
 
   const organizationSchemaJson = JSON.stringify(organizationSchema).replace(
+    /</g,
+    "\\u003c"
+  );
+
+  const siteNavigationSchemaJson = JSON.stringify(siteNavigationSchema).replace(
     /</g,
     "\\u003c"
   );
@@ -252,6 +273,15 @@ export default function RootLayout({
           strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
             __html: organizationSchemaJson,
+          }}
+        />
+
+        <Script
+          id="site-navigation-schema"
+          type="application/ld+json"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{
+            __html: siteNavigationSchemaJson,
           }}
         />
 

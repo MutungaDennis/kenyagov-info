@@ -1,6 +1,6 @@
 import "server-only";
 import { createPublicClient } from "@/lib/supabase/public";
-import { collectExportRows, rowsToCsv } from "./export-format";
+import { collectExportRows, rowsToCsv, rowsToXml } from "./export-format";
 
 // Only the five previously published exports. Never accept a table/column from the URL.
 const EXPORTS = {
@@ -15,7 +15,7 @@ export type ExportDataset = keyof typeof EXPORTS;
 export async function datasetExport(request: Request, dataset: ExportDataset) {
   const params = new URL(request.url).searchParams;
   const format = (params.get("format") || "csv").toLowerCase();
-  if (format !== "csv" && format !== "json") return Response.json({ error: "Choose format=csv or format=json." }, { status: 400 });
+  if (format !== "csv" && format !== "json" && format !== "xml") return Response.json({ error: "Choose format=csv, format=json or format=xml." }, { status: 400 });
   const filterable = dataset === "wards" || dataset === "polling-stations";
   const allowed = new Set(["format", ...(filterable ? ["county", "constituency", "q"] : []), ...(dataset === "polling-stations" ? ["ward"] : [])]);
   if ([...params.keys()].some(key => !allowed.has(key))) return Response.json({ error: "Unsupported filter. See /open-data/standards for export parameters." }, { status: 400 });
@@ -55,7 +55,7 @@ export async function datasetExport(request: Request, dataset: ExportDataset) {
     });
     const generated = new Date().toISOString();
     const headers = {
-      "Content-Type": format === "csv" ? "text/csv; charset=utf-8" : "application/json; charset=utf-8",
+      "Content-Type": format === "csv" ? "text/csv; charset=utf-8" : format === "xml" ? "application/xml; charset=utf-8" : "application/json; charset=utf-8",
       "Content-Disposition": `attachment; filename="kenya-${dataset}-${generated.slice(0, 10)}.${format}"`,
       "Cache-Control": "no-store",
       "Access-Control-Allow-Origin": "*",
@@ -65,7 +65,8 @@ export async function datasetExport(request: Request, dataset: ExportDataset) {
       "X-Generated-At": generated,
       "Link": `</open-data/${dataset}>; rel="describedby", </open-data/standards>; rel="license"`,
     };
-    return new Response(format === "csv" ? rowsToCsv(rows, config.fields) : JSON.stringify(rows), { headers });
+    const body = format === "csv" ? rowsToCsv(rows, config.fields) : format === "xml" ? rowsToXml(rows, config.fields, dataset) : JSON.stringify(rows);
+    return new Response(body, { headers });
   } catch {
     return Response.json({ error: "The complete export could not be generated. Please try again or use a county/constituency filter for polling stations." }, { status: 503, headers: { "Cache-Control": "no-store" } });
   }
