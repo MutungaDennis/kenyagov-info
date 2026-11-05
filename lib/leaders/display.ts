@@ -266,15 +266,13 @@ export function formatTermRange(
   start?: string | null,
   end?: string | null,
 ): string {
-  const fmt = (d: string) =>
-    new Date(d.slice(0, 10) + "T12:00:00").toLocaleDateString("en-KE", {
-      month: "short",
-      year: "numeric",
-    });
+  const year = (date: string) => date.slice(0, 4);
   if (!start && !end) return "";
-  if (start && !end) return `${fmt(start)} – present`;
-  if (!start && end) return `until ${fmt(end)}`;
-  return `${fmt(start!)} – ${fmt(end!)}`;
+  if (start && !end) return `${year(start)} – present`;
+  if (!start && end) return `until ${year(end)}`;
+  const startYear = year(start!);
+  const endYear = year(end!);
+  return startYear === endYear ? startYear : `${startYear} – ${endYear}`;
 }
 
 export function sortRolesChronologically<T extends LeaderRoleLike>(
