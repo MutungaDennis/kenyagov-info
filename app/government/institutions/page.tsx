@@ -187,10 +187,8 @@ export default function GovernmentInstitutionsPage() {
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [allInstitutions, searchTerm]);
 
-  const [includeSchools, setIncludeSchools] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [schoolCount, setSchoolCount] = useState<number | null>(null);
-  const [schoolMatches, setSchoolMatches] = useState<number | null>(null);
   const [selectedDirectorate, setSelectedDirectorate] = useState("");
   const [schoolBrowserVersion, setSchoolBrowserVersion] = useState(0);
   const [loadError, setLoadError] = useState("");
@@ -231,16 +229,10 @@ export default function GovernmentInstitutionsPage() {
         const request = db.from("education_schools").select("id", { count: "exact", head: true }).eq("ownership", "public").eq("is_published", true).in("main_tier", ["primary", "junior", "senior_secondary"]);
         const { count, error } = await request;
         if (!cancelled && !error) setSchoolCount(count);
-        if (includeSchools && searchTerm.trim()) {
-          const responses = await Promise.all(["directorate-primary-education", "directorate-secondary-education"].map(directorate =>
-            db.rpc("search_public_schools", { q: searchTerm, directorate, page_size: 1 })
-          ));
-          if (!cancelled) setSchoolMatches(responses.some(result => result.error) ? null : responses.reduce((total, result) => total + Number(result.data?.total || 0), 0));
-        } else if (!cancelled) setSchoolMatches(count);
-      } catch { if (!cancelled) setSchoolMatches(null); }
+      } catch { if (!cancelled) setSchoolCount(null); }
     }, 250);
     return () => { cancelled = true; window.clearTimeout(timer); };
-  }, [includeSchools, searchTerm]);
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -518,7 +510,6 @@ export default function GovernmentInstitutionsPage() {
               window.history.replaceState(null, "", url);
             }}>Clear search</button>}
           </div>
-          <div className="govuk-hint govuk-!-margin-bottom-0" id="search-hint">Search by institution name, abbreviation, type or responsibility.</div>
         </section>
 
         <div className="govuk-grid-row directory-layout">
@@ -576,19 +567,6 @@ export default function GovernmentInstitutionsPage() {
               </div>
             </div>
 
-            <details className="directory-options">
-              <summary className="govuk-link">Public school count</summary>
-              <div className="directory-options__content">
-                <div className="govuk-checkboxes govuk-checkboxes--small">
-                  <div className="govuk-checkboxes__item">
-                    <input className="govuk-checkboxes__input" id="include-school-count" type="checkbox" checked={includeSchools} onChange={event => setIncludeSchools(event.target.checked)} />
-                    <label className="govuk-label govuk-checkboxes__label" htmlFor="include-school-count">Include public schools in the total count</label>
-                    {includeSchools && <div className="govuk-hint govuk-checkboxes__hint" role="status">{searchTerm.trim() ? schoolMatches == null ? "School count unavailable" : `${schoolMatches.toLocaleString()} public schools also match` : schoolCount == null ? "School count unavailable" : `${schoolCount.toLocaleString()} public schools`}</div>}
-                  </div>
-                </div>
-                {!searchTerm.trim() && <p className="govuk-body-s govuk-!-margin-bottom-0">Public schools are listed under their education directorate.</p>}
-              </div>
-            </details>
           </aside>
           <div className="govuk-grid-column-two-thirds directory-main">
             <div id="directorate-school-browser" tabIndex={-1}>
@@ -642,9 +620,11 @@ export default function GovernmentInstitutionsPage() {
         .institution-history { color: #505a5f; margin: 6px 0 10px; line-height: 1.5; }
         .institution-directory .govuk-link, .institution-directory .govuk-details__summary-text { overflow-wrap: anywhere; }
         .directory-index { background: #f3f2f1; border-left: 4px solid #1d70b8; padding: 16px 20px; margin-bottom: 28px; }
-        .directory-index summary { cursor: pointer; list-style-position: outside; }
+        .directory-index summary { cursor: pointer; list-style-position: outside; position: relative; padding-right: 24px; }
+        .directory-index summary::after { content: "⌄"; position: absolute; right: 0; color: #1d70b8; font-size: 1.25rem; line-height: 1; }
+        .directory-index[open] summary::after { content: "⌃"; }
         .directory-index summary::-webkit-details-marker { color: #1d70b8; }
-        .directory-index__list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 24px; list-style: none; margin: 0; padding: 0; }
+        .directory-index__list { display: grid; grid-template-columns: 1fr; gap: 0; list-style: none; margin: 0; padding: 0; }
         .directory-index__list li { border-top: 1px solid #b1b4b6; padding: 8px 0; }
         .directory-index__list a { display: flex; justify-content: space-between; gap: 12px; text-decoration: none; }
         .directory-index__list a:hover { text-decoration: underline; }
