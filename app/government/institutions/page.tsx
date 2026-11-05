@@ -485,6 +485,19 @@ export default function GovernmentInstitutionsPage() {
           <p className="govuk-body-s govuk-!-margin-bottom-0">Browse by arm of government, or search for a specific institution. Open a heading to see the bodies and agencies connected to it.</p>
         </header>
 
+        {!searchTerm.trim() && categoryGroups.length > 0 && (
+          <nav className="directory-index" aria-label="Browse institution categories">
+            <h2 className="govuk-heading-s govuk-!-margin-bottom-3">Browse by category</h2>
+            <ul className="directory-index__list">
+              {categoryGroups.map((group) => (
+                <li key={group.slug}>
+                  <a className="govuk-link" href={`#institutions-${group.slug}`}>{group.title}<span>{group.count.toLocaleString()}</span></a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        )}
+
         <section className="directory-search">
           <label className="govuk-label" htmlFor="search-institutions">Search for a government institution</label>
           <div className="directory-search__row">
@@ -622,6 +635,12 @@ export default function GovernmentInstitutionsPage() {
         .institution-directory .govuk-table { min-width: 540px; }
         .institution-history { color: #505a5f; margin: 6px 0 10px; line-height: 1.5; }
         .institution-directory .govuk-link, .institution-directory .govuk-details__summary-text { overflow-wrap: anywhere; }
+        .directory-index { background: #f3f2f1; border-left: 4px solid #1d70b8; padding: 20px 24px; margin-bottom: 28px; }
+        .directory-index__list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 24px; list-style: none; margin: 0; padding: 0; }
+        .directory-index__list li { border-top: 1px solid #b1b4b6; padding: 8px 0; }
+        .directory-index__list a { display: flex; justify-content: space-between; gap: 12px; text-decoration: none; }
+        .directory-index__list a:hover { text-decoration: underline; }
+        .directory-index__list span { color: #505a5f; white-space: nowrap; }
         .directory-category { border-top: 4px solid #1d70b8; padding-top: 16px; margin-bottom: 40px; }
         .directory-category__heading { display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap; margin-bottom: 8px; }
         .directory-category__count { color: #505a5f; font-size: 1rem; font-weight: 400; white-space: nowrap; }
@@ -630,7 +649,7 @@ export default function GovernmentInstitutionsPage() {
         .directory-search__row { display: flex; align-items: flex-end; gap: 12px; max-width: 760px; }
         .directory-search__row .govuk-input { flex: 1; min-width: 0; }
         .directory-search__row .govuk-button { margin-bottom: 0; white-space: nowrap; }
-        @media (max-width: 640px) { .directory-search { padding: 16px; } .directory-search__row { display: block; } .directory-search__row .govuk-button { margin-top: 12px; } }
+        @media (max-width: 640px) { .directory-search { padding: 16px; } .directory-search__row { display: block; } .directory-search__row .govuk-button { margin-top: 12px; } .directory-index { padding: 16px; } .directory-index__list { grid-template-columns: 1fr; } }
         .institution-directory nav li { padding: 5px 0; }
         .institution-directory .govuk-accordion__section-content > ul > li { padding: 12px 0; border-bottom: 1px solid #d8dde0; }
         @media(max-width: 640px) { .institution-directory-heading h1 { font-size: 32px; line-height: 1.15; } .institution-directory .govuk-button { white-space: normal; } }
