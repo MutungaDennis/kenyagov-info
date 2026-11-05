@@ -9,7 +9,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import HomeSearch from "@/components/site/HomeSearch";
+import GovernmentChat from "@/components/site/GovernmentChat";
 
 const MENU_SECTIONS: {
   heading: string;
@@ -191,7 +191,7 @@ export default function HomeMasthead() {
               Find clear, factual information about the Government of Kenya 
             </p>
 
-            <HomeSearch variant="inverse" />
+            <GovernmentChat />
           </div>
         </div>
       </div>

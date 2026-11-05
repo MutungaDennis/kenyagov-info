@@ -119,6 +119,53 @@ body {
 /* Homepage masthead — GOV.UK-style hero, CitizenGuide brand green            */
 /* -------------------------------------------------------------------------- */
 
+.government-chat {
+  width: min(100%, 820px);
+  margin: 2.25rem 0 0;
+  padding: 1.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.96);
+  color: #0b0c0c;
+  box-shadow: 0 18px 45px rgba(0, 43, 32, 0.18);
+}
+
+.government-chat__eyebrow {
+  margin: 0 0 0.35rem;
+  color: #047857;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.government-chat__title { margin: 0; font-size: clamp(1.65rem, 3vw, 2.25rem); line-height: 1.1; }
+.government-chat__lead { max-width: 38rem; margin: 0.55rem 0 1rem; color: #505a5f; font-size: 1.05rem; }
+.government-chat__form { padding: 0.65rem; border: 2px solid #047857; border-radius: 14px; background: #fff; }
+.government-chat__form textarea { display: block; width: 100%; min-height: 4.5rem; resize: vertical; border: 0; outline: 0; color: #0b0c0c; font: inherit; line-height: 1.45; }
+.government-chat__form textarea::placeholder { color: #505a5f; }
+.government-chat__form-actions { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding-top: 0.45rem; }
+.government-chat__form-actions .govuk-button { margin: 0; }
+.government-chat__privacy, .government-chat__disclaimer { color: #505a5f; font-size: 0.875rem; }
+.government-chat__examples { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin-top: 0.85rem; }
+.government-chat__examples-label { font-size: 0.875rem; font-weight: 700; }
+.government-chat__examples button { padding: 0.4rem 0.65rem; border: 1px solid #b1b4b6; border-radius: 999px; background: #fff; color: #0b0c0c; font: inherit; font-size: 0.875rem; text-align: left; cursor: pointer; }
+.government-chat__examples button:hover, .government-chat__examples button:focus { border-color: #047857; background: #e1ede5; }
+.government-chat__conversation { margin-top: 1.25rem; border-top: 1px solid #d8dde0; }
+.government-chat__turn { padding-top: 1rem; }
+.government-chat__question { margin: 0 0 0.5rem; font-weight: 700; }
+.government-chat__answer { margin-left: 1rem; padding: 0.9rem 1rem; border-left: 4px solid #047857; background: #f3f8f4; }
+.government-chat__answer p { margin: 0; }
+.government-chat__sources { margin-top: 0.75rem !important; font-size: 0.9rem; }
+.government-chat__disclaimer { margin: 1rem 0 0; }
+
+@media (max-width: 640px) {
+  .government-chat { margin-top: 1.5rem; padding: 1rem; border-radius: 12px; }
+  .government-chat__form-actions { align-items: flex-start; flex-direction: column; }
+  .government-chat__form-actions .govuk-button { width: 100%; }
+}
+
+
 /* Home main is full-width so the green masthead can span the viewport */
 .app-main--home {
   padding-top: 0;
