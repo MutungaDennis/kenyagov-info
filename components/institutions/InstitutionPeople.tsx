@@ -49,14 +49,21 @@ type Legacy = {
   image_url: string | null;
 };
 
-function dateLabel(date: string | null) {
-  if (!date) return "Date not recorded";
-  return new Date(`${date}T00:00:00Z`).toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    timeZone: "UTC",
-  });
+function yearLabel(date: string | null) {
+  if (!date) return null;
+  const match = /^\d{4}/.exec(date);
+  return match ? match[0] : null;
+}
+
+function serviceDateRange(start: string | null, end: string | null, current: boolean) {
+  const startYear = yearLabel(start);
+  const endYear = yearLabel(end);
+
+  if (!startYear && !endYear) return "Dates not recorded";
+  if (!startYear) return `Until ${endYear}`;
+  if (!endYear) return current ? `${startYear} to present` : `From ${startYear}`;
+  if (startYear === endYear) return startYear;
+  return `${startYear} to ${endYear}`;
 }
 
 function PeopleCards({
@@ -121,12 +128,7 @@ function PeopleCards({
                     {!hideDates && (
                       <>
                         <br />
-                        {dateLabel(role.start)} to{" "}
-                        {role.end
-                          ? dateLabel(role.end)
-                          : current
-                            ? "present"
-                            : "end date not recorded"}
+                        {serviceDateRange(role.start, role.end, current)}
                       </>
                     )}
                     {role.status &&
