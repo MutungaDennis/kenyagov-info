@@ -188,6 +188,7 @@ export default function GovernmentInstitutionsPage() {
   }, [allInstitutions, searchTerm]);
 
   const [includeSchools, setIncludeSchools] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const [schoolCount, setSchoolCount] = useState<number | null>(null);
   const [schoolMatches, setSchoolMatches] = useState<number | null>(null);
   const [selectedDirectorate, setSelectedDirectorate] = useState("");
@@ -202,6 +203,13 @@ export default function GovernmentInstitutionsPage() {
     window.history.pushState(null, "", url);
     window.setTimeout(() => document.getElementById("directorate-school-browser")?.focus(), 0);
   };
+  useEffect(() => {
+    const media = window.matchMedia("(max-width: 640px)");
+    const updateMobile = () => setIsMobile(media.matches);
+    updateMobile();
+    media.addEventListener("change", updateMobile);
+    return () => media.removeEventListener("change", updateMobile);
+  }, []);
   useEffect(() => {
     const readUrl = () => {
       const params = new URLSearchParams(window.location.search);
@@ -481,22 +489,8 @@ export default function GovernmentInstitutionsPage() {
       <main className="govuk-main-wrapper institution-directory" id="main-content" role="main">
         <header className="institution-directory-heading">
           <h1 className="govuk-heading-xl govuk-!-margin-bottom-3">Departments, agencies and public institutions</h1>
-          <p className="govuk-body govuk-!-margin-bottom-2">Find the ministries, agencies, commissions and other public bodies that make up Kenya’s government.</p>
-          <p className="govuk-body-s govuk-!-margin-bottom-0">Browse by arm of government, or search for a specific institution. Open a heading to see the bodies and agencies connected to it.</p>
-        </header>
 
-        {!searchTerm.trim() && categoryGroups.length > 0 && (
-          <nav className="directory-index" aria-label="Browse institution categories">
-            <h2 className="govuk-heading-s govuk-!-margin-bottom-3">Browse by category</h2>
-            <ul className="directory-index__list">
-              {categoryGroups.map((group) => (
-                <li key={group.slug}>
-                  <a className="govuk-link" href={`#institutions-${group.slug}`}>{group.title}<span>{group.count.toLocaleString()}</span></a>
-                </li>
-              ))}
-            </ul>
-          </nav>
-        )}
+        </header>
 
         <section className="directory-search">
           <label className="govuk-label" htmlFor="search-institutions">Search for a government institution</label>
@@ -529,6 +523,18 @@ export default function GovernmentInstitutionsPage() {
 
         <div className="govuk-grid-row directory-layout">
           <aside className="govuk-grid-column-one-third directory-sidebar" aria-label="Directory information">
+            {!searchTerm.trim() && categoryGroups.length > 0 && (
+              <details className="directory-index" open={!isMobile}>
+                <summary className="govuk-heading-s">Browse by category</summary>
+                <ul className="directory-index__list">
+                  {categoryGroups.map((group) => (
+                    <li key={group.slug}>
+                      <a className="govuk-link" href={`#institutions-${group.slug}`}>{group.title}<span>{group.count.toLocaleString()}</span></a>
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            )}
             <div className="directory-counts">
               <p className="directory-result-count" role="status" aria-live="polite">
                 <strong className="directory-counts__number">
@@ -635,7 +641,9 @@ export default function GovernmentInstitutionsPage() {
         .institution-directory .govuk-table { min-width: 540px; }
         .institution-history { color: #505a5f; margin: 6px 0 10px; line-height: 1.5; }
         .institution-directory .govuk-link, .institution-directory .govuk-details__summary-text { overflow-wrap: anywhere; }
-        .directory-index { background: #f3f2f1; border-left: 4px solid #1d70b8; padding: 20px 24px; margin-bottom: 28px; }
+        .directory-index { background: #f3f2f1; border-left: 4px solid #1d70b8; padding: 16px 20px; margin-bottom: 28px; }
+        .directory-index summary { cursor: pointer; list-style-position: outside; }
+        .directory-index summary::-webkit-details-marker { color: #1d70b8; }
         .directory-index__list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 24px; list-style: none; margin: 0; padding: 0; }
         .directory-index__list li { border-top: 1px solid #b1b4b6; padding: 8px 0; }
         .directory-index__list a { display: flex; justify-content: space-between; gap: 12px; text-decoration: none; }
