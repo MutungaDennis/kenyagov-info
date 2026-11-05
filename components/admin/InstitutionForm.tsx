@@ -25,9 +25,7 @@ import {
   parseMultiValueField,
 } from "@/lib/institutions/fields";
 import InstitutionLinkPicker from "@/components/admin/InstitutionLinkPicker";
-import LeaderLinkPicker, {
-  type LeaderPickResult,
-} from "@/components/admin/LeaderLinkPicker";
+import type { LeaderPickResult } from "@/components/admin/LeaderLinkPicker";
 import SuggestField from "@/components/admin/SuggestField";
 import {
   SOCIAL_PLATFORM_OPTIONS,
@@ -440,7 +438,6 @@ export default function InstitutionForm({
   form,
   onChange,
   onHierarchyChange,
-  onHeadLeaderChange,
   onSocialLinksChange,
   onSubmit,
   submitting,
@@ -1684,82 +1681,6 @@ export default function InstitutionForm({
         </div>
       </div>}
 
-      {!isTemporaryBody && <>
-      <h2 className="govuk-heading-m">Leadership</h2>
-      <p className="govuk-hint">
-        Link the current head to an existing leader so the public page can open
-        their profile. Fill head title and appointment date for this role at the
-        institution.
-      </p>
-      {onHeadLeaderChange && (
-        <LeaderLinkPicker
-          id="current_head_leader"
-          label="Current head (from leaders)"
-          hint="Search the officials directory. Creates a proper link on the public site."
-          valueId={form.current_head_id}
-          valueLabel={form.current_head}
-          onChange={onHeadLeaderChange}
-        />
-      )}
-      <div className="govuk-grid-row">
-        <div className="govuk-grid-column-one-half">
-          <Field
-            id="current_head"
-            label="Current head name"
-            hint="Auto-filled when you pick a leader; you can also type a name if they are not in the directory yet."
-          >
-            <input
-              className="govuk-input"
-              id="current_head"
-              name="current_head"
-              value={form.current_head}
-              onChange={onChange}
-            />
-          </Field>
-        </div>
-        <div className="govuk-grid-column-one-half">
-          <Field
-            id="head_title"
-            label="Head title"
-            hint="Role at this institution (e.g. Cabinet Secretary, Chairperson, Director General)"
-          >
-            <input
-              className="govuk-input"
-              id="head_title"
-              name="head_title"
-              value={form.head_title}
-              onChange={onChange}
-              placeholder="e.g. Cabinet Secretary"
-            />
-          </Field>
-        </div>
-      </div>
-      <div className="govuk-grid-row">
-        <div className="govuk-grid-column-one-half">
-          <Field id="head_appointment_date" label="Head appointment date">
-            <input
-              className="govuk-input"
-              id="head_appointment_date"
-              name="head_appointment_date"
-              type="date"
-              value={form.head_appointment_date}
-              onChange={onChange}
-            />
-          </Field>
-        </div>
-        <div className="govuk-grid-column-one-half">
-          <Field id="board_chair" label="Board chair">
-            <input
-              className="govuk-input"
-              id="board_chair"
-              name="board_chair"
-              value={form.board_chair}
-              onChange={onChange}
-            />
-          </Field>
-        </div>
-      </div>
-      </>}
 
       {!isTemporaryBody && <>
       <h2 className="govuk-heading-m">Contact & location</h2>

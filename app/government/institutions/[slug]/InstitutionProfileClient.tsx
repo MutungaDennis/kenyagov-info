@@ -43,6 +43,17 @@ type Institution = {
   institution_type?: string | null;
   description?: string | null;
   mandate?: string | null;
+  vision?: string | null;
+  mission?: string | null;
+  functions?: string | null;
+  target_population?: string | null;
+  service_delivery_modes?: string | null;
+  offers_public_services?: boolean | null;
+  has_online_services?: boolean | null;
+  portal_url?: string | null;
+  citizen_charter_url?: string | null;
+  complaints_mechanism_url?: string | null;
+  procurement_portal_url?: string | null;
   current_head_id?: string | null;
   current_head?: string | null;
   head_title?: string | null;
@@ -53,6 +64,10 @@ type Institution = {
   phone?: string | null;
   headquarters?: string | null;
   physical_address?: string | null;
+  postal_address?: string | null;
+  fax?: string | null;
+  toll_free?: string | null;
+  whatsapp?: string | null;
   status?: string | null;
   status_effective_date?: string | null;
   parent_institution_id?: string | null;
@@ -483,6 +498,30 @@ export default function InstitutionProfileClient({ people }: { people?: ReactNod
                 Read more about the mandate, history, and corporate information
               </Link>
             </p>
+            {(institution.vision || institution.mission || institution.functions || institution.target_population || institution.service_delivery_modes || institution.offers_public_services || institution.has_online_services) && (
+              <section className="govuk-!-margin-top-7" aria-labelledby="institution-information-heading">
+                <h2 id="institution-information-heading" className="govuk-heading-l">About this institution</h2>
+                {institution.vision && <><h3 className="govuk-heading-s">Vision</h3><p className="govuk-body">{institution.vision}</p></>}
+                {institution.mission && <><h3 className="govuk-heading-s">Mission</h3><p className="govuk-body">{institution.mission}</p></>}
+                {institution.functions && <><h3 className="govuk-heading-s">Main functions</h3><ul className="govuk-list govuk-list--bullet">{institution.functions.split(/[,\n]+/).map((item) => item.trim()).filter(Boolean).map((item) => <li key={item}>{item}</li>)}</ul></>}
+                {(institution.target_population || institution.service_delivery_modes) && <dl className="govuk-summary-list">
+                  {institution.target_population && <div className="govuk-summary-list__row"><dt className="govuk-summary-list__key">Who it serves</dt><dd className="govuk-summary-list__value">{institution.target_population}</dd></div>}
+                  {institution.service_delivery_modes && <div className="govuk-summary-list__row"><dt className="govuk-summary-list__key">How services are delivered</dt><dd className="govuk-summary-list__value">{institution.service_delivery_modes}</dd></div>}
+                </dl>}
+                {(institution.offers_public_services || institution.has_online_services) && <p className="govuk-body">{institution.offers_public_services ? "Offers public services" : ""}{institution.offers_public_services && institution.has_online_services ? " · " : ""}{institution.has_online_services ? "Online services available" : ""}</p>}
+              </section>
+            )}
+            {(institution.portal_url || institution.citizen_charter_url || institution.complaints_mechanism_url || institution.procurement_portal_url) && (
+              <section className="govuk-!-margin-top-7" aria-labelledby="institution-links-heading">
+                <h2 id="institution-links-heading" className="govuk-heading-l">Useful links</h2>
+                <ul className="govuk-list govuk-list--bullet">
+                  {institution.portal_url && <li><a className="govuk-link" href={institution.portal_url}>Online service portal</a></li>}
+                  {institution.citizen_charter_url && <li><a className="govuk-link" href={institution.citizen_charter_url}>Citizen charter</a></li>}
+                  {institution.complaints_mechanism_url && <li><a className="govuk-link" href={institution.complaints_mechanism_url}>Complaints and feedback</a></li>}
+                  {institution.procurement_portal_url && <li><a className="govuk-link" href={institution.procurement_portal_url}>Procurement portal</a></li>}
+                </ul>
+              </section>
+            )}
 
             {(temporaryBodies.length > 0 || temporaryBodiesError) && (
               <section
@@ -696,7 +735,7 @@ export default function InstitutionProfileClient({ people }: { people?: ReactNod
               </>
             )}
 
-            {(institution.website_url || institution.email || institution.phone || institution.headquarters) && (
+            {(institution.website_url || institution.email || institution.phone || institution.headquarters || institution.physical_address || institution.postal_address || institution.fax || institution.toll_free || institution.whatsapp) && (
               <>
                 <h2 className="govuk-heading-l govuk-!-margin-top-9">Contact {institution.short_name || institution.name}</h2>
                 <dl className="govuk-summary-list">
@@ -721,12 +760,16 @@ export default function InstitutionProfileClient({ people }: { people?: ReactNod
                       <dd className="govuk-summary-list__value"><a href={`mailto:${institution.email}`} className="govuk-link">{institution.email}</a></dd>
                     </div>
                   )}
+                  {institution.postal_address && <div className="govuk-summary-list__row"><dt className="govuk-summary-list__key">Postal address</dt><dd className="govuk-summary-list__value">{institution.postal_address}</dd></div>}
                   {institution.phone && (
                     <div className="govuk-summary-list__row">
                       <dt className="govuk-summary-list__key">Phone</dt>
                       <dd className="govuk-summary-list__value"><a href={`tel:${institution.phone}`} className="govuk-link">{institution.phone}</a></dd>
                     </div>
                   )}
+                  {institution.toll_free && <div className="govuk-summary-list__row"><dt className="govuk-summary-list__key">Toll-free phone</dt><dd className="govuk-summary-list__value"><a href={`tel:${institution.toll_free}`} className="govuk-link">{institution.toll_free}</a></dd></div>}
+                  {institution.fax && <div className="govuk-summary-list__row"><dt className="govuk-summary-list__key">Fax</dt><dd className="govuk-summary-list__value">{institution.fax}</dd></div>}
+                  {institution.whatsapp && <div className="govuk-summary-list__row"><dt className="govuk-summary-list__key">WhatsApp</dt><dd className="govuk-summary-list__value"><a href={`https://wa.me/${institution.whatsapp.replace(/[^0-9+]/g, "")}`} className="govuk-link">{institution.whatsapp}</a></dd></div>}
                 </dl>
               </>
             )}
