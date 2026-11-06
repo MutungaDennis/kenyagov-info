@@ -237,7 +237,7 @@ export default async function CabinetPage() {
                 {official.imageUrl ? (
                   <img
                     src={official.imageUrl}
-                    alt=""
+                    alt={`Portrait of ${official.fullName}`}
                     className="cabinet-person__image"
                     loading="lazy"
                   />
@@ -286,7 +286,7 @@ export default async function CabinetPage() {
                 {official.imageUrl ? (
                   <img
                     src={official.imageUrl}
-                    alt=""
+                    alt={`Portrait of ${official.fullName}`}
                     className="cabinet-person__image"
                     loading="lazy"
                   />
@@ -335,7 +335,7 @@ export default async function CabinetPage() {
                 {official.imageUrl ? (
                   <img
                     src={official.imageUrl}
-                    alt=""
+                    alt={`Portrait of ${official.fullName}`}
                     className="cabinet-person__image"
                     loading="lazy"
                   />

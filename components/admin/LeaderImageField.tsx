@@ -203,7 +203,7 @@ export default function LeaderImageField({
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={value.trim()}
-            alt=""
+            alt="Portrait preview"
             className="app-leader-image-preview"
             onError={() => setPreviewBroken(true)}
           />
