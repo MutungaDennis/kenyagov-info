@@ -26,7 +26,10 @@ import type { SocialLink } from "@/lib/leaders/titles-social";
 
 // 🚀 Import the IndexNow helper
 import { triggerIndexNow } from "@/lib/indexnow";
-import { parliamentaryChamberForInstitution } from "@/lib/parliament/chambers";
+function isParliamentInstitution(slug: string, name: string) {
+  const value = `${slug} ${name}`.toLowerCase();
+  return value.includes("national-assembly") || value.includes("national assembly") || value.includes("senate");
+}
 
 function leaderDisplayName(d: Record<string, unknown>): string {
   const parts = [d.first_name, d.other_names, d.surname]
@@ -578,7 +581,7 @@ export default function EditInstitutionPage({
               institutionId={id}
               institutionName={form.name || form.official_name || ""}
             />
-            {parliamentaryChamberForInstitution(
+            {isParliamentInstitution(
               form.slug || "",
               `${form.name || ""} ${form.official_name || ""}`,
             ) && (
