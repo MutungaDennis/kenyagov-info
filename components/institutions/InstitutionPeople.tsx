@@ -90,7 +90,7 @@ function PeopleCards({
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={person.image}
-                alt=""
+                alt={`Portrait of ${person.name}`}
                 width={160}
                 height={160}
                 loading="lazy"
