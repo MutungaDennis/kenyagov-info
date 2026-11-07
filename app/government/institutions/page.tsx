@@ -563,7 +563,6 @@ export default function GovernmentInstitutionsPage() {
                   window.history.replaceState(null, "", url);
                 }} />
                 <label className="govuk-label govuk-checkboxes__label" htmlFor="include-historical">Show historical and former institutions</label>
-                <div id="history-hint" className="govuk-hint govuk-checkboxes__hint">Includes dissolved, merged, renamed, split and defunct bodies. Their public profiles and service histories remain available.</div>
               </div>
             </div>
 
@@ -602,6 +601,9 @@ export default function GovernmentInstitutionsPage() {
                       </h2>
                       {group.description && <p className="govuk-body directory-category__description">{group.description}</p>}
                       <NestedInstitutionList nodes={group.institutions} isSearchActive={false} onBrowse={browseSchools} />
+                      <p className="directory-category__back-to-top">
+                        <a className="govuk-link" href="#main-content">Back to top</a>
+                      </p>
                     </section>
                   ))}
                 </div>
@@ -612,14 +614,14 @@ export default function GovernmentInstitutionsPage() {
       </main>
 
       <style>{`
-        .institution-directory-heading { border-bottom: 1px solid #b1b4b6; margin-bottom: 24px; padding-bottom: 16px; max-width: 100%; }
+        .institution-directory-heading { border-bottom: 1px solid #b1b4b6; margin-bottom: 12px; padding-bottom: 12px; max-width: 100%; }
         .institution-directory-heading h1 { max-width: 900px; }
         .institution-directory .govuk-grid-column-one-third, .institution-directory .govuk-grid-column-two-thirds { min-width: 0; }
         .institution-directory .govuk-table-responsive { overflow-x: auto; }
         .institution-directory .govuk-table { min-width: 540px; }
         .institution-history { color: #505a5f; margin: 6px 0 10px; line-height: 1.5; }
         .institution-directory .govuk-link, .institution-directory .govuk-details__summary-text { overflow-wrap: anywhere; }
-        .directory-index { background: #f3f2f1; border-left: 4px solid #1d70b8; padding: 16px 20px; margin-bottom: 28px; }
+        .directory-index { background: #E1EDE5; border-left: 4px solid #00703c; padding: 14px 18px; margin-bottom: 12px; }
         .directory-index summary { cursor: pointer; list-style-position: outside; position: relative; padding-right: 24px; }
         .directory-index summary::after { content: "⌄"; position: absolute; right: 0; color: #1d70b8; font-size: 1.25rem; line-height: 1; }
         .directory-index[open] summary::after { content: "⌃"; }
@@ -633,11 +635,12 @@ export default function GovernmentInstitutionsPage() {
         .directory-category__heading { display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap; margin-bottom: 8px; }
         .directory-category__count { color: #505a5f; font-size: 1rem; font-weight: 400; white-space: nowrap; }
         .directory-category__description { max-width: 760px; color: #505a5f; }
-        .directory-search { background: #f3f2f1; padding: 20px; margin-bottom: 28px; }
+        .directory-category__back-to-top { border-top: 1px solid #d8dde0; margin: 24px 0 0; padding-top: 12px; }
+        .directory-search { background: transparent; padding: 0; margin-bottom: 14px; color: #0b0c0c; }
         .directory-search__row { display: flex; align-items: flex-end; gap: 12px; max-width: 760px; }
         .directory-search__row .govuk-input { flex: 1; min-width: 0; }
         .directory-search__row .govuk-button { margin-bottom: 0; white-space: nowrap; }
-        @media (max-width: 640px) { .directory-search { padding: 16px; } .directory-search__row { display: block; } .directory-search__row .govuk-button { margin-top: 12px; } .directory-index { padding: 16px; } .directory-index__list { grid-template-columns: 1fr; } }
+        @media (max-width: 640px) { .directory-search { padding: 0; } .directory-search__row { display: block; } .directory-search__row .govuk-button { margin-top: 12px; } .directory-index { padding: 16px; } .directory-index__list { grid-template-columns: 1fr; } }
         .institution-directory nav li { padding: 5px 0; }
         .institution-directory .govuk-accordion__section-content > ul > li { padding: 12px 0; border-bottom: 1px solid #d8dde0; }
         @media(max-width: 640px) { .institution-directory-heading h1 { font-size: 32px; line-height: 1.15; } .institution-directory .govuk-button { white-space: normal; } }
@@ -645,7 +648,7 @@ export default function GovernmentInstitutionsPage() {
         .institution-children { margin-left: 12px; padding-left: 24px !important; border-left: 3px solid #b1b4b6 !important; }
         .institution-children .institution-children { border-left-color: #00703c !important; }
         #directorate-school-browser { scroll-margin-top: 24px; }
-        .institution-directory .govuk-accordion__section { scroll-margin-top: 20px; }
+        .institution-directory .govuk-accordion__section, #main-content { scroll-margin-top: 20px; }
         .institution-directory .govuk-accordion__section-header:focus-visible { outline: 3px solid #ffdd00; }
         @media (max-width: 640px) { .institution-children { margin-left: 4px; padding-left: 12px !important; } }
         .institutions-controls {
@@ -892,11 +895,14 @@ export default function GovernmentInstitutionsPage() {
 
         .institution-directory-heading {
           border-bottom: 1px solid #b1b4b6;
-          margin-bottom: 24px;
-          padding-bottom: 20px;
+          margin-bottom: 12px;
+          padding-bottom: 12px;
         }
         .directory-search {
-          margin-bottom: 16px;
+          background: transparent;
+          margin-bottom: 14px;
+          padding: 0;
+          color: #0b0c0c;
         }
         .directory-search__row {
           display: flex;
