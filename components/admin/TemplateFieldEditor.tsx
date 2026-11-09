@@ -20,6 +20,10 @@ function readData(value: string): Record<string, unknown> {
 function draftsFromValue(value: string, fields: { key: string; kind: "text" | "list" }[]): Drafts {
   const data = readData(value);
   return Object.fromEntries(fields.map((field) => {
+    if (field.key === "quickLinks") {
+      const links = Array.isArray(data[field.key]) ? (data[field.key] as { label?: string; href?: string }[]) : [];
+      return [field.key, links.map((link) => `${link.label || ""} | ${link.href || ""}`).join("\n")];
+    }
     if (field.key === "faqs") {
       const faqs = Array.isArray(data[field.key]) ? (data[field.key] as FAQ[]) : [];
       return [field.key, faqs.map((faq) => `${faq.question || ""} | ${faq.answer || ""}`).join("\n")];
@@ -40,7 +44,9 @@ export default function TemplateFieldEditor({ templateKey, value, onChange }: Pr
     const nextData: Record<string, unknown> = {};
     for (const field of template.fields) {
       const draft = nextDrafts[field.key] || "";
-      if (field.key === "faqs") {
+      if (field.key === "quickLinks") {
+        nextData[field.key] = draft.split("\n").map((item) => { const [label, ...href] = item.split("|"); return { label: label.trim(), href: href.join("|").trim() }; }).filter((link) => link.label && link.href);
+      } else if (field.key === "faqs") {
         nextData[field.key] = draft.split("\n").map((item) => {
           const [question, ...answer] = item.split("|");
           return { question: question.trim(), answer: answer.join("|").trim() };

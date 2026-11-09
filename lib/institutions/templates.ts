@@ -26,6 +26,12 @@ export const INSTITUTION_TEMPLATES: InstitutionTemplate[] = [
     sections: ["How to get care", "Services", "Departments and clinics", "Emergency care", "Visiting patients", "Payment and insurance", "Common questions", "Contact"],
     fields: [
       { key: "heroIntro", label: "Intro for patients", description: "One short sentence explaining how this hospital helps patients.", kind: "text" },
+      { key: "mandate", label: "Short mandate", description: "One or two sentences about the hospital's role.", kind: "text" },
+      { key: "emergencyMain", label: "Emergency / A&E number", description: "The number shown at the top of every hospital page.", kind: "text" },
+      { key: "referralLine", label: "Referral line", description: "The number for referrals and appointments.", kind: "text" },
+      { key: "ambulance", label: "National ambulance number", description: "Usually 922.", kind: "text" },
+      { key: "mapUrl", label: "Google Maps link", description: "Paste the Google Maps share link for this facility. It appears as an accessible Open map action.", kind: "text" },
+      { key: "quickLinks", label: "Additional links", description: "Use the format Link label | /path, one per line.", kind: "list" },
       { key: "patientNotice", label: "Before you visit", description: "Referral letters, appointment or registration instructions.", kind: "text" },
       { key: "services", label: "Services and clinics", description: "One service per line. For richer pages use: Name | description | category | referral needed | clinic days | location | how to access | first visit | emergency note | detail 1; detail 2.", kind: "list" },
       { key: "departments", label: "Departments and clinics", description: "One department or clinic per line.", kind: "list" },
