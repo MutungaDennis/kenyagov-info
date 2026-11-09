@@ -24,7 +24,7 @@ function draftsFromValue(value: string, fields: { key: string; kind: "text" | "l
       const faqs = Array.isArray(data[field.key]) ? (data[field.key] as FAQ[]) : [];
       return [field.key, faqs.map((faq) => `${faq.question || ""} | ${faq.answer || ""}`).join("\n")];
     }
-    return [field.key, field.kind === "list" ? (Array.isArray(data[field.key]) ? data[field.key].join("\n") : "") : String(data[field.key] || "")];
+    return [field.key, field.kind === "list" ? (Array.isArray(data[field.key]) ? (data[field.key] as unknown[]).map(String).join("\n") : "") : String(data[field.key] || "")];
   }));
 }
 
