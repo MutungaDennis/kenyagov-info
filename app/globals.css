@@ -14,6 +14,65 @@
   background: transparent;
 }
 
+.healthcare-profile {
+  margin: 2rem 0 3rem;
+}
+
+.healthcare-profile__hero {
+  background: #e8f3ee;
+  border-left: 0.35rem solid var(--app-brand-green);
+  padding: 1.5rem;
+  margin: 2rem 0;
+}
+
+.healthcare-profile__hero .govuk-heading-xl {
+  margin-bottom: 1rem;
+}
+
+.healthcare-profile__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+.healthcare-profile__actions .govuk-button {
+  margin-bottom: 0;
+}
+
+.healthcare-profile__section {
+  border-top: 1px solid #b1b4b6;
+  margin-top: 2rem;
+  padding-top: 1.25rem;
+}
+
+.healthcare-profile__emergency {
+  border-left: 0.35rem solid #d4351c;
+  padding-left: 1rem;
+}
+
+.healthcare-profile__card {
+  background: #f3f2f1;
+  border-top: 0.35rem solid var(--app-brand-green);
+  padding: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.healthcare-profile__card .govuk-summary-list__row {
+  display: block;
+  padding: 0.75rem 0;
+}
+
+@media (max-width: 40.0525em) {
+  .healthcare-profile__hero {
+    padding: 1rem;
+  }
+  .healthcare-profile__actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
 .service-directory-header {
   background: #dceee1;
   border-top: 1px solid #a8c9b0;

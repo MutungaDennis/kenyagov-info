@@ -19,6 +19,7 @@ import {
   relationshipTypeMeta,
 } from "@/lib/institutions/lineage";
 import type { InstitutionOffice } from "@/lib/institutions/offices";
+import ReferralHospitalProfile from "@/components/healthcare/ReferralHospitalProfile";
 
 function formatGovUKDate(dateStr: string | null | undefined): string {
   if (!dateStr) return "";
@@ -65,6 +66,8 @@ type Institution = {
   appointing_authority?: string | null;
   term_start_date?: string | null;
   term_end_date?: string | null;
+  template_key?: string | null;
+  template_data?: Record<string, unknown> | null;
 };
 
 type LinkedInstitution = {
@@ -381,6 +384,9 @@ export default function InstitutionProfileClient({ people }: { people?: ReactNod
             <span className="govuk-caption-l">{institution.institution_type || "Public body"}</span>
             <h1 className="govuk-heading-xl">{institution.name}</h1>
             {["directorate-primary-education", "directorate-secondary-education"].includes(slug) && <PublicSchools fixedDirectorate={slug} />}
+            {institution.template_key === "healthcare-referral-hospital" && (
+              <ReferralHospitalProfile institution={institution} />
+            )}
 
             {earmarked && (
               <div className="govuk-warning-text">
