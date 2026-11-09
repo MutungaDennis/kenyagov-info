@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { createBrowserClientAsync } from "@/lib/supabase/client";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
-import InstitutionPeople from "@/components/institutions/InstitutionPeople";
+import InstitutionPeoplePreview from "@/components/institutions/InstitutionPeoplePreview";
 
 function formatGovUKDate(dateStr: string | null | undefined): string {
   if (!dateStr) return "";
@@ -448,7 +448,7 @@ export default function InstitutionAboutPage() {
         {institutionId && (
           <section className="govuk-grid-column-one-third govuk-!-margin-top-6" aria-labelledby="about-people-heading">
             <h2 className="govuk-heading-l" id="about-people-heading">People who work here</h2>
-            <InstitutionPeople institutionId={institutionId} status={institution.status} />
+            <InstitutionPeoplePreview institutionId={institutionId} />
           </section>
         )}
       </main>
