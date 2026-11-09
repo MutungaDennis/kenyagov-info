@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { createBrowserClientAsync } from "@/lib/supabase/client";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
+import InstitutionPeople from "@/components/institutions/InstitutionPeople";
 
 function formatGovUKDate(dateStr: string | null | undefined): string {
   if (!dateStr) return "";
@@ -87,6 +88,7 @@ export default function InstitutionAboutPage() {
   const slug = params.slug as string;
 
   const [institution, setInstitution] = useState<Institution | null>(null);
+  const [institutionId, setInstitutionId] = useState<string | null>(null);
   const [parentChain, setParentChain] = useState<LinkedInstitution[]>([]);
   const [directParent, setDirectParent] = useState<LinkedInstitution | null>(null);
   const [supervisingMinistry, setSupervisingMinistry] = useState<LinkedInstitution | null>(null);
@@ -116,6 +118,7 @@ export default function InstitutionAboutPage() {
 
         if (!data) return;
         setInstitution(data as Institution);
+        setInstitutionId(data.id);
 
         const nameLower = (data.name || "").toLowerCase();
         const isCountyAssembly =
@@ -442,6 +445,12 @@ export default function InstitutionAboutPage() {
             )}
           </div>
         </div>
+        {institutionId && (
+          <section className="govuk-grid-column-one-third govuk-!-margin-top-6" aria-labelledby="about-people-heading">
+            <h2 className="govuk-heading-l" id="about-people-heading">People who work here</h2>
+            <InstitutionPeople institutionId={institutionId} status={institution.status} />
+          </section>
+        )}
       </main>
     </div>
   );

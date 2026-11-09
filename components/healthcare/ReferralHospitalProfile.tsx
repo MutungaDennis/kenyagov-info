@@ -35,12 +35,6 @@ export default function ReferralHospitalProfile({ institution }: Props) {
 
   return (
     <div className="healthcare-profile">
-      <header className="healthcare-profile__header">
-        <p className="govuk-caption-l">National referral hospital</p>
-        <h1 className="govuk-heading-xl">{institution.name}</h1>
-        <p className="govuk-body-l">{data.heroIntro || institution.description || "Specialist care, referrals and patient services."}</p>
-      </header>
-
       <div className="healthcare-emergency-bar" role="region" aria-label="Emergency contacts">
         <strong>Emergency / A&amp;E</strong>
         <a href={`tel:${emergencyMain}`}>{emergencyMain}</a>
@@ -48,13 +42,11 @@ export default function ReferralHospitalProfile({ institution }: Props) {
         <span>National ambulance: <a href={`tel:${ambulance}`}>{ambulance}</a></span>
       </div>
 
-      <nav className="healthcare-profile__nav" aria-label="Hospital navigation">
-        <Link href={`${hospitalUrl}/services`}>Services &amp; clinics</Link>
-        <Link href={`${hospitalUrl}/patient-information`}>Patient information</Link>
-        <Link href={`${hospitalUrl}/how-to-get-care`}>How to get care</Link>
-        <Link href={`${hospitalUrl}/contact`}>Contact &amp; location</Link>
-        <Link href={`${hospitalUrl}/about`}>About</Link>
-      </nav>
+      <header className="healthcare-profile__header">
+        <p className="govuk-caption-l">National referral hospital</p>
+        <h1 className="govuk-heading-xl">{institution.name}</h1>
+        <p className="govuk-body-l">{data.heroIntro || institution.description || "Specialist care, referrals and patient services."}</p>
+      </header>
 
       <section className="healthcare-profile__intro">
         <h2 className="govuk-heading-l">What do you need to do?</h2>
@@ -91,5 +83,5 @@ export default function ReferralHospitalProfile({ institution }: Props) {
 }
 
 function ActionCard({ title, text, href, emergency = false }: { title: string; text: string; href: string; emergency?: boolean }) {
-  return <Link className={`healthcare-action-card${emergency ? " healthcare-action-card--emergency" : ""}`} href={href}><h3 className="govuk-heading-m">{title}</h3><p className="govuk-body">{text}</p><span className="govuk-link">Open</span></Link>;
+  return <Link className={`healthcare-action-card${emergency ? " healthcare-action-card--emergency" : ""}`} href={href}><h3 className="govuk-heading-m">{title}<span className="healthcare-card-arrow" aria-hidden="true">→</span></h3><p className="govuk-body">{text}</p></Link>;
 }
