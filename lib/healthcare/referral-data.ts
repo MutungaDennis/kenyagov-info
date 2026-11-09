@@ -30,6 +30,10 @@ export function toService(value: string | ReferralService): ReferralService {
   return { name, description, category, referralRequired, clinicDays, location, access, firstVisit, emergencyNote, details: details ? details.split(";").map((item) => item.trim()).filter(Boolean) : undefined };
 }
 
+export function categorySlug(category: string) {
+  return category.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+}
+
 export function serviceSlug(service: ReferralService) {
   return (service.slug || service.name).toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 }
