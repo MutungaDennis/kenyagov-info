@@ -63,6 +63,65 @@
   margin-bottom: 0;
 }
 
+.healthcare-page-shell {
+  max-width: 60rem;
+}
+
+.healthcare-service-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+  gap: 1rem;
+  margin: 2rem 0;
+}
+
+.healthcare-service-card {
+  border: 1px solid #b1b4b6;
+  border-left: 0.35rem solid var(--app-brand-green);
+  padding: 1.25rem;
+  text-decoration: none;
+  color: inherit;
+}
+
+.healthcare-service-card:hover,
+.healthcare-service-card:focus-visible {
+  border-color: #1d70b8;
+  box-shadow: 0 0 0 3px #1d70b8;
+}
+
+.healthcare-service-card h2 {
+  color: #1d70b8;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.healthcare-service-links {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.healthcare-service-links li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.healthcare-service-links span {
+  color: #505a5f;
+}
+
+.healthcare-service-detail {
+  max-width: 42rem;
+}
+
+.healthcare-facts {
+  background: #f3f2f1;
+  border-left: 0.35rem solid var(--app-brand-green);
+  padding: 1.25rem;
+  margin: 2rem 0;
+}
+
 .healthcare-profile__section {
   border-top: 1px solid #b1b4b6;
   margin-top: 2rem;

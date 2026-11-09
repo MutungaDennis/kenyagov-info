@@ -27,7 +27,7 @@ export const INSTITUTION_TEMPLATES: InstitutionTemplate[] = [
     fields: [
       { key: "heroIntro", label: "Intro for patients", description: "One short sentence explaining how this hospital helps patients.", kind: "text" },
       { key: "patientNotice", label: "Before you visit", description: "Referral letters, appointment or registration instructions.", kind: "text" },
-      { key: "services", label: "Services", description: "One service per line, for example Cancer Care.", kind: "list" },
+      { key: "services", label: "Services and clinics", description: "One service per line. For richer pages use: Name | description | category | referral needed | clinic days | location | how to access | first visit | emergency note | detail 1; detail 2.", kind: "list" },
       { key: "departments", label: "Departments and clinics", description: "One department or clinic per line.", kind: "list" },
       { key: "emergency", label: "Emergency care", description: "Where to go and what to do in an emergency.", kind: "text" },
       { key: "visiting", label: "Visiting patients", description: "Visiting hours and visitor guidance.", kind: "text" },

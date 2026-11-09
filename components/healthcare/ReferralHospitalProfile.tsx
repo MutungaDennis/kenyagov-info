@@ -1,9 +1,10 @@
 import Link from "next/link";
+import { getServices, serviceSlug, type ReferralTemplateData } from "@/lib/healthcare/referral-data";
 
 type HospitalData = {
   heroIntro?: string;
   patientNotice?: string;
-  services?: string[];
+  services?: ReferralTemplateData["services"];
   departments?: string[];
   visiting?: string;
   emergency?: string;
@@ -15,6 +16,7 @@ type HospitalData = {
 type Props = {
   institution: {
     name: string;
+    slug: string;
     short_name?: string | null;
     description?: string | null;
     website_url?: string | null;
@@ -25,12 +27,11 @@ type Props = {
   };
 };
 
-const textList = (value: unknown): string[] =>
-  Array.isArray(value) ? value.map(String).filter(Boolean) : [];
+const textList = (value: unknown): string[] => Array.isArray(value) ? value.map(String).filter(Boolean) : [];
 
 export default function ReferralHospitalProfile({ institution }: Props) {
   const data = institution.template_data || {};
-  const services = textList(data.services);
+  const services = getServices(data);
   const departments = textList(data.departments);
   const faqs = Array.isArray(data.faqs) ? data.faqs.filter((faq) => faq?.question && faq?.answer) : [];
   const quickLinks = Array.isArray(data.quickLinks) ? data.quickLinks.filter((link) => link?.label && link?.href) : [];
@@ -51,7 +52,7 @@ export default function ReferralHospitalProfile({ institution }: Props) {
 
       <div className="govuk-grid-row healthcare-profile__grid">
         <div className="govuk-grid-column-two-thirds">
-          {services.length > 0 && <section id="services" className="healthcare-profile__section"><h3 className="govuk-heading-l">Services</h3><ul className="govuk-list govuk-list--bullet">{services.map((service) => <li key={service}>{service}</li>)}</ul></section>}
+          {services.length > 0 && <section id="services" className="healthcare-profile__section"><h3 className="govuk-heading-l">Services</h3><ul className="govuk-list healthcare-service-links">{services.map((service) => <li key={serviceSlug(service)}><Link className="govuk-link" href={`/government/institutions/${institution.slug}/services/${serviceSlug(service)}`}>{service.name}</Link>{service.description && <span>{service.description}</span>}</li>)}</ul><p className="govuk-body"><Link className="govuk-link" href={`/government/institutions/${institution.slug}/services`}>View all services and clinics</Link></p></section>}
           {departments.length > 0 && <section className="healthcare-profile__section"><h3 className="govuk-heading-l">Departments and clinics</h3><ul className="govuk-list govuk-list--bullet">{departments.map((department) => <li key={department}>{department}</li>)}</ul></section>}
           {data.emergency && <section className="healthcare-profile__section healthcare-profile__emergency"><h3 className="govuk-heading-l">Emergency care</h3><p className="govuk-body">{data.emergency}</p></section>}
           {data.visiting && <section className="healthcare-profile__section"><h3 className="govuk-heading-l">Visiting patients</h3><p className="govuk-body">{data.visiting}</p></section>}
