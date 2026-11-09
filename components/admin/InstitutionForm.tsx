@@ -724,7 +724,7 @@ export default function InstitutionForm({
           <option value="healthcare-facility">Healthcare facility</option>
         </select>
       </Field>
-      <TemplateFieldEditor templateKey={form.template_key} value={form.template_data} onChange={(value) => setForm((previous) => ({ ...previous, template_data: value }))} />
+      <TemplateFieldEditor key={form.template_key} templateKey={form.template_key} value={form.template_data} onChange={(value) => setForm((previous) => ({ ...previous, template_data: value }))} />
       <Field
         id="former_names"
         label="Former names"
