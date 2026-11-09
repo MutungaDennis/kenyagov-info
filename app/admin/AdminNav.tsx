@@ -29,6 +29,7 @@ const NAV_SECTIONS: NavSection[] = [
     heading: "Government directory",
     items: [
       { segment: "institutions", label: "Institutions" },
+      { segment: "templates", label: "Institution templates" },
       { segment: "schools", label: "Schools" },
       { segment: "officials", label: "National officials" },
       { segment: "mcas", label: "County MCAs" },

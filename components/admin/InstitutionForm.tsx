@@ -25,6 +25,7 @@ import {
   parseMultiValueField,
 } from "@/lib/institutions/fields";
 import InstitutionLinkPicker from "@/components/admin/InstitutionLinkPicker";
+import TemplateFieldEditor from "@/components/admin/TemplateFieldEditor";
 import LeaderLinkPicker, {
   type LeaderPickResult,
 } from "@/components/admin/LeaderLinkPicker";
@@ -723,15 +724,7 @@ export default function InstitutionForm({
           <option value="healthcare-facility">Healthcare facility</option>
         </select>
       </Field>
-      {form.template_key.startsWith("healthcare-") && (
-        <Field
-          id="template_data"
-          label="Template-specific content (JSON)"
-          hint='Use keys such as heroIntro, patientNotice, services, visiting, departments, emergency, insurance and faqs. Existing institution fields are used as fallbacks.'
-        >
-          <textarea className="govuk-textarea" id="template_data" name="template_data" rows={12} value={form.template_data} onChange={onChange} spellCheck={false} />
-        </Field>
-      )}
+      <TemplateFieldEditor templateKey={form.template_key} value={form.template_data} onChange={(value) => setForm((previous) => ({ ...previous, template_data: value }))} />
       <Field
         id="former_names"
         label="Former names"
@@ -2411,8 +2404,17 @@ export function institutionFormToPayload(
     return UUID_LIKE.test(v) ? v : null;
   };
 
+  let templateData: Record<string, unknown> = {};
+  try {
+    const parsed = JSON.parse(form.template_data || "{}");
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) templateData = parsed;
+  } catch {
+    templateData = {};
+  }
+
   return {
     ...rest,
+    template_data: templateData,
     social_media: (social_links || []).filter((l) => l.platform && l.url.trim()),
     current_head_id: fk(form.current_head_id),
     parent_institution_id: fk(form.parent_institution_id),

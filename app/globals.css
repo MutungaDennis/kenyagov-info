@@ -14,6 +14,29 @@
   background: transparent;
 }
 
+.template-catalogue {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr));
+  gap: 1.5rem;
+}
+
+.template-catalogue__card {
+  border: 1px solid #b1b4b6;
+  border-top: 0.35rem solid var(--app-brand-green);
+  padding: 1.5rem;
+  background: #fff;
+}
+
+.template-catalogue__card .govuk-button {
+  margin-bottom: 0;
+}
+
+.template-field-editor {
+  border-left: 0.35rem solid var(--app-brand-green);
+  padding-left: 1rem;
+  margin: 1.5rem 0 2rem;
+}
+
 .healthcare-profile {
   margin: 2rem 0 3rem;
 }
