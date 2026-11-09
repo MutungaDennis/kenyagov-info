@@ -110,6 +110,8 @@ export const INSTITUTION_WRITABLE_FIELDS = [
   "data_source",
   "source_url",
   "source_document",
+  "template_key",
+  "template_data",
 ] as const;
 
 export type InstitutionWritableField =
@@ -147,6 +149,7 @@ const JSON_FIELDS = new Set<string>([
   "social_media",
   "core_services",
   "key_performance_indicators",
+  "template_data",
 ]);
 
 const DATE_FIELDS = new Set<string>([

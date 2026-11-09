@@ -152,6 +152,8 @@ export type InstitutionFormState = {
   has_organisational_change: boolean;
   data_source: string;
   source_url: string;
+  template_key: string;
+  template_data: string;
 };
 
 export const emptyInstitutionForm = (): InstitutionFormState => ({
@@ -253,6 +255,8 @@ export const emptyInstitutionForm = (): InstitutionFormState => ({
   has_organisational_change: false,
   data_source: "",
   source_url: "",
+  template_key: "",
+  template_data: "{}",
 });
 
 export function institutionFormFromRow(
@@ -375,6 +379,8 @@ export function institutionFormFromRow(
     }),
     data_source: s("data_source"),
     source_url: s("source_url"),
+    template_key: s("template_key"),
+    template_data: data.template_data ? JSON.stringify(data.template_data, null, 2) : "{}",
   };
 }
 
@@ -706,6 +712,26 @@ export default function InstitutionForm({
           required
         />
       </Field>
+      <Field
+        id="template_key"
+        label="Frontend template"
+        hint="Referral hospitals use a guided healthcare profile; leave blank for the default institution profile."
+      >
+        <select className="govuk-select" id="template_key" name="template_key" value={form.template_key} onChange={onChange}>
+          <option value="">Default institution profile</option>
+          <option value="healthcare-referral-hospital">Kenya referral hospital</option>
+          <option value="healthcare-facility">Healthcare facility</option>
+        </select>
+      </Field>
+      {form.template_key.startsWith("healthcare-") && (
+        <Field
+          id="template_data"
+          label="Template-specific content (JSON)"
+          hint='Use keys such as heroIntro, patientNotice, services, visiting, departments, emergency, insurance and faqs. Existing institution fields are used as fallbacks.'
+        >
+          <textarea className="govuk-textarea" id="template_data" name="template_data" rows={12} value={form.template_data} onChange={onChange} spellCheck={false} />
+        </Field>
+      )}
       <Field
         id="former_names"
         label="Former names"
