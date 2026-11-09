@@ -360,6 +360,17 @@ export default function InstitutionProfileClient({ people }: { people?: ReactNod
   const earmarked = isInstitutionEarmarked(institution.status);
   const judicial = isJudicialAnnulmentStatus(institution.status);
 
+  if (institution.template_key === "healthcare-referral-hospital") {
+    return (
+      <div className="govuk-width-container institution-profile-container">
+        <GovUKBreadcrumbs items={[{ text: "Home", href: "/" }, { text: "Government", href: "/government" }, { text: "Institutions", href: "/government/institutions" }, { text: institution.name }]} />
+        <main className="govuk-main-wrapper" id="main-content" role="main">
+          <ReferralHospitalProfile institution={institution} />
+        </main>
+      </div>
+    );
+  }
+
   const lineageOutgoing = relationships.filter(
     (r) => r.from_institution_id === institution.id,
   );
@@ -384,10 +395,6 @@ export default function InstitutionProfileClient({ people }: { people?: ReactNod
             <span className="govuk-caption-l">{institution.institution_type || "Public body"}</span>
             <h1 className="govuk-heading-xl">{institution.name}</h1>
             {["directorate-primary-education", "directorate-secondary-education"].includes(slug) && <PublicSchools fixedDirectorate={slug} />}
-            {institution.template_key === "healthcare-referral-hospital" && (
-              <ReferralHospitalProfile institution={institution} />
-            )}
-
             {earmarked && (
               <div className="govuk-warning-text">
                 <span className="govuk-warning-text__icon" aria-hidden="true">!</span>
