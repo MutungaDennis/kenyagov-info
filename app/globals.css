@@ -58,6 +58,7 @@
 }
 
 .healthcare-emergency-bar a { color: white; font-weight: 700; }
+.healthcare-emergency-bar span { white-space: nowrap; }
 
 .healthcare-profile__nav {
   display: flex;
@@ -86,6 +87,10 @@
 
 .healthcare-action-card:hover, .healthcare-action-card:focus-visible { box-shadow: 0 0 0 3px #1d70b8; }
 .healthcare-action-card .govuk-body { flex: 1; }
+.healthcare-action-card h3, .healthcare-service-card h3 { align-items: center; display: flex; justify-content: space-between; gap: 1rem; }
+.healthcare-card-arrow { color: #005eb8; font-size: 1.75rem; line-height: 1; }
+.healthcare-profile { background: #f0f4f5; margin-left: -1rem; margin-right: -1rem; padding: 1.25rem 1rem 0; }
+.healthcare-profile__section, .healthcare-profile__intro { max-width: 60rem; }
 .healthcare-action-card--emergency { border-top-color: #d4351c; background: #fef7f7; }
 
 .healthcare-contact-summary { align-items: center; display: flex; flex-wrap: wrap; gap: 1.5rem; justify-content: space-between; }
@@ -139,8 +144,9 @@
 }
 
 .healthcare-service-card {
-  border: 1px solid #b1b4b6;
-  border-left: 0.35rem solid var(--app-brand-green);
+  background: #fff;
+  border: 1px solid #d8dde0;
+  border-bottom: 3px solid #d8dde0;
   padding: 1.25rem;
   text-decoration: none;
   color: inherit;
