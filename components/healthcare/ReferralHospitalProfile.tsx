@@ -55,13 +55,13 @@ export default function ReferralHospitalProfile({ institution }: Props) {
         <h2 className="govuk-heading-l">What do you need to do?</h2>
         <p className="govuk-body">Start with the information most people need when they are planning care or visiting the hospital.</p>
         <ul className="healthcare-task-list">
-          <li><Link href={`${hospitalUrl}/contact#emergency`}><span className="healthcare-task-list__arrow" aria-hidden="true">→</span><span><strong>Emergency / A&amp;E</strong><small>Open 24 hours. Find emergency contacts and what to do now.</small></span></Link></li>
-          <li><Link href={`${hospitalUrl}/how-to-get-care`}><span className="healthcare-task-list__arrow" aria-hidden="true">→</span><span><strong>How to get care</strong><small>Referrals, appointments, clinic booking and what to expect.</small></span></Link></li>
-          <li><Link href={`${hospitalUrl}/services`}><span className="healthcare-task-list__arrow" aria-hidden="true">→</span><span><strong>Find a service or clinic</strong><small>Surgical, medical, cancer, renal, diagnostics, paediatrics and more.</small></span></Link></li>
-          <li><Link href={`${hospitalUrl}/patient-information#visiting`}><span className="healthcare-task-list__arrow" aria-hidden="true">→</span><span><strong>Visiting hours</strong><small>Check visiting guidance and what to bring when visiting a patient.</small></span></Link></li>
-          <li><Link href={`${hospitalUrl}/patient-information`}><span className="healthcare-task-list__arrow" aria-hidden="true">→</span><span><strong>Patient information</strong><small>Admission, discharge, documents, bills and insurance.</small></span></Link></li>
-          <li><Link href={`${hospitalUrl}/contact`}><span className="healthcare-task-list__arrow" aria-hidden="true">→</span><span><strong>Contact &amp; find us</strong><small>Phone numbers, address, opening hours and directions.</small></span></Link></li>
-          <li><Link href={`${hospitalUrl}/about`}><span className="healthcare-task-list__arrow" aria-hidden="true">→</span><span><strong>About this hospital</strong><small>Read about the hospital, its role, leadership and responsibilities.</small></span></Link></li>
+          <li><Link href={`${hospitalUrl}/contact#emergency`}><span className="healthcare-task-list__arrow" aria-hidden="true">→</span><span><strong>Emergency / A&amp;E</strong></span></Link></li>
+          <li><Link href={`${hospitalUrl}/how-to-get-care`}><span className="healthcare-task-list__arrow" aria-hidden="true">→</span><span><strong>How to get care</strong></span></Link></li>
+          <li><Link href={`${hospitalUrl}/services`}><span className="healthcare-task-list__arrow" aria-hidden="true">→</span><span><strong>Find a service or clinic</strong></span></Link></li>
+          <li><Link href={`${hospitalUrl}/patient-information#visiting`}><span className="healthcare-task-list__arrow" aria-hidden="true">→</span><span><strong>Visiting hours</strong></span></Link></li>
+          <li><Link href={`${hospitalUrl}/patient-information`}><span className="healthcare-task-list__arrow" aria-hidden="true">→</span><span><strong>Patient information</strong></span></Link></li>
+          <li><Link href={`${hospitalUrl}/contact`}><span className="healthcare-task-list__arrow" aria-hidden="true">→</span><span><strong>Contact &amp; find us</strong></span></Link></li>
+          <li><Link href={`${hospitalUrl}/about`}><span className="healthcare-task-list__arrow" aria-hidden="true">→</span><span><strong>About this hospital</strong></span></Link></li>
         </ul>
       </section>
 
