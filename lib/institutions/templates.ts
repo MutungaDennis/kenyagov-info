@@ -30,7 +30,8 @@ export const INSTITUTION_TEMPLATES: InstitutionTemplate[] = [
       { key: "services", label: "Services", description: "One service per line. Add a description after a pipe, for example: Immunisation | Childhood vaccines and routine immunisation.", kind: "list" },
       { key: "patientNotice", label: "Before you visit", description: "What a patient should bring or know before attending.", kind: "text" },
       { key: "referralGuidance", label: "Referral guidance", description: "When patients should be referred to a higher or lower level.", kind: "text" },
-      { key: "relatedFacilities", label: "Related facilities", description: "Use Facility name | /government/institutions/slug, one per line, to suggest nearby or higher-level care.", kind: "list" },
+      { key: "referralLine", label: "Referral line", description: "The phone number patients should call for referrals and appointments.", kind: "text" },
+      { key: "relatedFacilities", label: "Related facilities", description: "Search for facilities already in the database and add them as nearby or higher-level care options.", kind: "list" },
     ],
   },
   {
