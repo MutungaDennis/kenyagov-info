@@ -54,15 +54,15 @@ export default function ReferralHospitalProfile({ institution }: Props) {
       <section className="healthcare-profile__intro">
         <h2 className="govuk-heading-l">What do you need to do?</h2>
         <p className="govuk-body">Start with the information most people need when they are planning care or visiting the hospital.</p>
-        <div className="healthcare-action-grid">
-          <ActionCard title="Emergency / A&E" text="Open 24 hours. Find emergency contacts and what to do now." href={`${hospitalUrl}/contact#emergency`} emergency />
-          <ActionCard title="How to get care" text="Referrals, appointments, clinic booking and what to expect." href={`${hospitalUrl}/how-to-get-care`} />
-          <ActionCard title="Find a service or clinic" text="Surgical, medical, cancer, renal, diagnostics, paediatrics and more." href={`${hospitalUrl}/services`} />
-          <ActionCard title="Visiting hours" text="Check visiting guidance and what to bring when visiting a patient." href={`${hospitalUrl}/patient-information#visiting`} />
-          <ActionCard title="Patient information" text="Admission, discharge, documents, bills and insurance." href={`${hospitalUrl}/patient-information`} />
-          <ActionCard title="Contact & find us" text="Phone numbers, address, opening hours and directions." href={`${hospitalUrl}/contact`} />
-          <ActionCard title="About this hospital" text="Read about the hospital, its role, leadership and responsibilities." href={`${hospitalUrl}/about`} />
-        </div>
+        <ul className="healthcare-task-list">
+          <li><Link href={`${hospitalUrl}/contact#emergency`}><span className="healthcare-task-list__arrow" aria-hidden="true">→</span><span><strong>Emergency / A&amp;E</strong><small>Open 24 hours. Find emergency contacts and what to do now.</small></span></Link></li>
+          <li><Link href={`${hospitalUrl}/how-to-get-care`}><span className="healthcare-task-list__arrow" aria-hidden="true">→</span><span><strong>How to get care</strong><small>Referrals, appointments, clinic booking and what to expect.</small></span></Link></li>
+          <li><Link href={`${hospitalUrl}/services`}><span className="healthcare-task-list__arrow" aria-hidden="true">→</span><span><strong>Find a service or clinic</strong><small>Surgical, medical, cancer, renal, diagnostics, paediatrics and more.</small></span></Link></li>
+          <li><Link href={`${hospitalUrl}/patient-information#visiting`}><span className="healthcare-task-list__arrow" aria-hidden="true">→</span><span><strong>Visiting hours</strong><small>Check visiting guidance and what to bring when visiting a patient.</small></span></Link></li>
+          <li><Link href={`${hospitalUrl}/patient-information`}><span className="healthcare-task-list__arrow" aria-hidden="true">→</span><span><strong>Patient information</strong><small>Admission, discharge, documents, bills and insurance.</small></span></Link></li>
+          <li><Link href={`${hospitalUrl}/contact`}><span className="healthcare-task-list__arrow" aria-hidden="true">→</span><span><strong>Contact &amp; find us</strong><small>Phone numbers, address, opening hours and directions.</small></span></Link></li>
+          <li><Link href={`${hospitalUrl}/about`}><span className="healthcare-task-list__arrow" aria-hidden="true">→</span><span><strong>About this hospital</strong><small>Read about the hospital, its role, leadership and responsibilities.</small></span></Link></li>
+        </ul>
       </section>
 
       <section className="healthcare-profile__section" id="services">
@@ -84,8 +84,4 @@ export default function ReferralHospitalProfile({ institution }: Props) {
       <footer className="healthcare-profile__footer"><div><h2 className="govuk-heading-m">Contact</h2><p>{institution.name}<br />{institution.physical_address || "Address not provided"}<br />Main: {institution.phone || "Not provided"}<br />Referral: {referralLine}<br />{institution.email || "Email not provided"}</p></div><div><h2 className="govuk-heading-m">Quick links</h2><ul className="govuk-list"><li><Link href={`${hospitalUrl}/services`}>Services &amp; clinics</Link></li><li><Link href={`${hospitalUrl}/patient-information`}>Patient information</Link></li><li><Link href={`${hospitalUrl}/how-to-get-care`}>How to get care</Link></li><li><Link href={`${hospitalUrl}/contact`}>Contact &amp; location</Link></li></ul></div><div><h2 className="govuk-heading-m">More</h2><ul className="govuk-list"><li><Link href={`${hospitalUrl}/about`}>About</Link></li><li><Link href="/government/institutions">Other institutions</Link></li></ul></div></footer>
     </div>
   );
-}
-
-function ActionCard({ title, text, href, emergency = false }: { title: string; text: string; href: string; emergency?: boolean }) {
-  return <Link className={`healthcare-action-card${emergency ? " healthcare-action-card--emergency" : ""}`} href={href}><h3 className="govuk-heading-m">{title}<span className="healthcare-card-arrow" aria-hidden="true">→</span></h3><p className="govuk-body">{text}</p></Link>;
 }
