@@ -344,6 +344,15 @@ body {
 
 
 
+/* Keep the first page content close to the site-wide beta banner. */
+.govuk-phase-banner {
+  margin-bottom: 0;
+}
+
+.govuk-breadcrumbs {
+  margin-top: 0;
+}
+
 /* Home main is full-width so the green masthead can span the viewport */
 .app-main--home {
   padding-top: 0;
