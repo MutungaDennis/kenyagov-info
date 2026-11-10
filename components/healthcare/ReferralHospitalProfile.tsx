@@ -45,6 +45,16 @@ export default function ReferralHospitalProfile({ institution }: Props) {
 
   return (
     <div className="healthcare-profile">
+      <div className="healthcare-masthead">
+        <div className="healthcare-masthead__inner">
+          <Link className="healthcare-brand" href={hospitalUrl}>{institution.short_name || institution.name}</Link>
+          <nav aria-label="Healthcare navigation" className="healthcare-masthead__nav">
+            <Link href={`${hospitalUrl}/services`}>Services</Link>
+            <Link href={`${hospitalUrl}/about`}>About</Link>
+            <Link href={`${hospitalUrl}/contact`}>Contact</Link>
+          </nav>
+        </div>
+      </div>
       <div className="healthcare-emergency-bar" role="region" aria-label="Emergency contacts">
         <strong>Emergency / A&amp;E</strong>
         <a href={`tel:${emergencyMain}`}>{emergencyMain}</a>
@@ -53,9 +63,13 @@ export default function ReferralHospitalProfile({ institution }: Props) {
       </div>
 
       <header className="healthcare-profile__header">
+        <div className="healthcare-profile__hero">
+          <p className="govuk-caption-l">Healthcare information</p>
+          <p className="govuk-body-l">{data.heroIntro || "Find services, referral information and practical advice for your visit."}</p>
+        </div>
         <p className="govuk-caption-l">{data.healthcareLevel === "level-6" || institution.template_key === "healthcare-referral-hospital" ? "Level 6 · National teaching and referral hospital" : data.healthcareLevel ? data.healthcareLevel.replace("level-", "Level ") : "Healthcare facility"}</p>
         <h1 className="govuk-heading-xl">{institution.name}</h1>
-        <p className="govuk-body-l">{data.heroIntro || institution.description || "Specialist care, referrals and patient services."}</p>
+        <p className="govuk-body-l">{institution.description || "Specialist care, referrals and patient services."}</p>
       </header>
 
       <section className="healthcare-profile__intro">
