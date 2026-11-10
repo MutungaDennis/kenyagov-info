@@ -48,7 +48,7 @@
 
 .healthcare-emergency-bar {
   align-items: center;
-  background: #d4351c;
+  background: #005eb8;
   color: white;
   display: flex;
   flex-wrap: wrap;
@@ -71,7 +71,7 @@
 .healthcare-task-list {
   display: grid;
   gap: .9rem 2rem;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   list-style: none;
   margin: 1.5rem 0 0;
   padding: 0;
@@ -86,8 +86,7 @@
 }
 
 .healthcare-task-list a:hover strong, .healthcare-task-list a:focus-visible strong { text-decoration: underline; }
-.healthcare-task-list strong { display: block; font-size: 1.1rem; line-height: 1.3; }
-.healthcare-task-list small { color: #505a5f; display: block; font-size: .95rem; line-height: 1.4; margin-top: .2rem; }
+.healthcare-task-list strong { display: block; font-size: 1.35rem; line-height: 1.25; }
 .healthcare-task-list__arrow {
   align-items: center;
   background: #d8e9f7;
@@ -112,8 +111,9 @@
 
 .healthcare-profile {
   background: #f0f4f5; margin-left: -1rem; margin-right: -1rem; padding: 1.25rem 1rem 0; }
-.healthcare-profile__section, .healthcare-profile__intro { max-width: 60rem; }
-.healthcare-action-card--emergency { border-top-color: #d4351c; background: #fef7f7; }
+.healthcare-profile__section { max-width: 60rem; }
+.healthcare-profile__intro { background: #fff; margin: 0 -1rem; max-width: none; padding: 2rem 1rem; }
+.healthcare-action-card--emergency { border-top-color: #005eb8; background: #fff; }
 
 .healthcare-related-links { display: grid; gap: .75rem; }
 .healthcare-related-links li { display: flex; flex-direction: column; gap: .15rem; }
@@ -230,7 +230,7 @@
 }
 
 .healthcare-profile__emergency {
-  border-left: 0.35rem solid #d4351c;
+  border-left: 0.35rem solid #005eb8;
   padding-left: 1rem;
 }
 
