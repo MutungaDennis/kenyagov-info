@@ -735,16 +735,14 @@ export default function InstitutionForm({
       <Field
         id="template_key"
         label="Frontend template"
-        hint="Choose Healthcare to reveal the Kenya level-of-care selector, or choose a specialist profile."
+        hint="Choose a main category. Healthcare reveals a required Kenya level-of-care subcategory; other template categories can be added later."
       >
         <select className="govuk-select" id="template_key" name="template_key" value={form.template_key} onChange={onChange}>
           <option value="">Default institution profile</option>
-          <option value="healthcare">Healthcare facility (Kenya levels 1–6)</option>
-          <option value="healthcare-referral-hospital">National referral hospital (Level 6)</option>
-          <option value="healthcare-facility">Healthcare facility</option>
+          <option value="healthcare">Healthcare</option>
         </select>
       </Field>
-      {form.template_key === "healthcare" && <Field id="healthcare_level" label="Healthcare level" hint="This appears in search and on the facility profile."><select className="govuk-select" id="healthcare_level" value={readTemplateLevel(form.template_data)} onChange={(event) => onChange({ target: { name: "template_data", value: setTemplateLevel(form.template_data, event.target.value) } } as ChangeEvent<HTMLInputElement>)}><option value="">Select a level</option>{HEALTHCARE_LEVELS.map((level) => <option value={level.key} key={level.key}>{level.label}</option>)}</select></Field>}
+      {form.template_key === "healthcare" && <Field id="healthcare_level" label="Healthcare level" hint="Healthcare is the main category. Select exactly one level-of-care subcategory; it appears in search and on the facility profile."><select required className="govuk-select" id="healthcare_level" value={readTemplateLevel(form.template_data)} onChange={(event) => onChange({ target: { name: "template_data", value: setTemplateLevel(form.template_data, event.target.value) } } as ChangeEvent<HTMLInputElement>)}><option value="">Select a level</option>{HEALTHCARE_LEVELS.map((level) => <option value={level.key} key={level.key}>{level.label}</option>)}</select></Field>}
       <TemplateFieldEditor key={form.template_key} templateKey={form.template_key} value={form.template_data} onChange={(value) => onChange({ target: { name: "template_data", value } } as ChangeEvent<HTMLInputElement>)} />
       <Field
         id="former_names"

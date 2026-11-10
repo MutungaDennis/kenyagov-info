@@ -21,7 +21,7 @@ export const INSTITUTION_TEMPLATES: InstitutionTemplate[] = [
   {
     key: "healthcare",
     name: "Healthcare facility",
-    summary: "A six-level Kenya healthcare profile that adapts information to the level of care.",
+    summary: "The Healthcare main category with six level-of-care subcategories for Kenya.",
     audience: "Community units, dispensaries, health centres, sub-county, county referral and national referral facilities",
     sections: ["How to get care", "Services", "Opening hours", "Contact", "Referral guidance"],
     fields: [
