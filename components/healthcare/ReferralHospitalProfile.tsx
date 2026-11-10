@@ -7,8 +7,8 @@ type HospitalData = ReferralTemplateData & {
   emergencyMain?: string;
   referralLine?: string;
   ambulance?: string;
-  quickLinks?: { label: string; href: string }[];
-  relatedFacilities?: (string | { name: string; href: string; reason?: string })[];
+  quickLinks?: { label: string; href?: string | null }[];
+  relatedFacilities?: (string | { name: string; href?: string | null; reason?: string })[];
   healthcareLevel?: string;
 };
 
@@ -34,7 +34,7 @@ export default function ReferralHospitalProfile({ institution }: Props) {
   const referralLine = data.referralLine || "Referral line not provided";
   const ambulance = data.ambulance || "922";
   const hospitalUrl = `/government/institutions/${institution.slug}`;
-  const quickLinks = data.quickLinks || [];
+  const quickLinks = (data.quickLinks || []).filter((link): link is { label: string; href: string } => Boolean(link.href));
 
   return (
     <div className="healthcare-profile">
@@ -77,7 +77,7 @@ export default function ReferralHospitalProfile({ institution }: Props) {
         {data.mapUrl && <a className="govuk-button govuk-button--secondary" href={data.mapUrl} target="_blank" rel="noreferrer">Open map</a>}
       </section>
 
-      {data.relatedFacilities && data.relatedFacilities.length > 0 && <section className="healthcare-profile__section"><h2 className="govuk-heading-l">Other facilities to consider</h2><p className="govuk-body">You may also find this service at these related facilities.</p><ul className="govuk-list healthcare-related-links">{data.relatedFacilities.map((facility) => { const [name, href, reason] = typeof facility === "string" ? facility.split("|").map((part) => part.trim()) : [facility.name, facility.href, facility.reason]; return <li key={`${name}-${href}`}><Link className="govuk-link" href={href}>{name}</Link>{reason && <span>{reason}</span>}</li>; })}</ul></section>}
+      {data.relatedFacilities && data.relatedFacilities.length > 0 && <section className="healthcare-profile__section"><h2 className="govuk-heading-l">Other facilities to consider</h2><p className="govuk-body">You may also find this service at these related facilities.</p><ul className="govuk-list healthcare-related-links">{data.relatedFacilities.map((facility) => { const [name, href, reason] = typeof facility === "string" ? facility.split("|").map((part) => part.trim()) : [facility.name, facility.href || "", facility.reason]; if (!href) return null; return <li key={`${name}-${href}`}><Link className="govuk-link" href={href}>{name}</Link>{reason && <span>{reason}</span>}</li>; })}</ul></section>}
 
       {quickLinks.length > 0 && <section className="healthcare-profile__section"><h2 className="govuk-heading-l">More information</h2><ul className="govuk-list">{quickLinks.map((link) => <li key={link.href}><Link className="govuk-link" href={link.href}>{link.label}</Link></li>)}</ul></section>}
 
