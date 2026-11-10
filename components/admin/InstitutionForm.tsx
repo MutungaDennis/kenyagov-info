@@ -385,8 +385,8 @@ export function institutionFormFromRow(
     last_annual_report_year: n("last_annual_report_year"),
     last_audit_opinion: s("last_audit_opinion"),
     transparency_score: n("transparency_score"),
-    number_of_employees: n("number_of_employees"),
-    annual_budget_estimate: n("annual_budget_estimate"),
+    number_of_employees: n("number_of_employees").replace(/[,\s]/g, ""),
+    annual_budget_estimate: n("annual_budget_estimate").replace(/[,\sKES]/gi, ""),
     status: s("status") || "Active",
     verification_status: s("verification_status") || "Unverified",
     is_active: data.is_active !== false,
@@ -2143,6 +2143,9 @@ export default function InstitutionForm({
               className="govuk-input"
               id="number_of_employees"
               name="number_of_employees"
+              type="number"
+              min="0"
+              inputMode="numeric"
               value={form.number_of_employees}
               onChange={onChange}
             />
@@ -2154,6 +2157,10 @@ export default function InstitutionForm({
               className="govuk-input"
               id="annual_budget_estimate"
               name="annual_budget_estimate"
+              type="number"
+              min="0"
+              step="0.01"
+              inputMode="decimal"
               value={form.annual_budget_estimate}
               onChange={onChange}
             />

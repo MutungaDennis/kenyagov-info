@@ -976,7 +976,8 @@ export function buildInstitutionRow(
 }
 
     if (NUMBER_FIELDS.has(key)) {
-      const n = Number(val);
+      const normalized = typeof val === "string" ? val.replace(/[,\s]/g, "").replace(/KES/gi, "") : val;
+      const n = Number(normalized);
       row[key] = Number.isFinite(n) ? n : null;
       continue;
     }
