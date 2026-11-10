@@ -96,6 +96,10 @@
 .healthcare-profile__section, .healthcare-profile__intro { max-width: 60rem; }
 .healthcare-action-card--emergency { border-top-color: #d4351c; background: #fef7f7; }
 
+.healthcare-related-links { display: grid; gap: .75rem; }
+.healthcare-related-links li { display: flex; flex-direction: column; gap: .15rem; }
+.healthcare-related-links span { color: #505a5f; }
+
 .healthcare-people-grid { display: grid; gap: 1rem; }
 .healthcare-person-card { border-left: 4px solid #005eb8; background: #fff; padding: 1rem; }
 

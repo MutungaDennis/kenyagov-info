@@ -12,7 +12,7 @@ export default async function InstitutionServicesPage({ params }: Props) {
   const supabase = createPublicClient();
   const { data: institution, error } = await supabase.from("institutions").select("name,short_name,slug,template_key,template_data").eq("slug", slug).eq("is_active", true).maybeSingle();
   if (error) throw new Error("The institution directory is temporarily unavailable.");
-  if (!institution || institution.template_key !== "healthcare-referral-hospital") notFound();
+  if (!institution || !["healthcare-referral-hospital", "healthcare"].includes(institution.template_key || "")) notFound();
   const services = getServices(institution.template_data as ReferralTemplateData);
 
   return (

@@ -32,6 +32,8 @@ type Institution = {
   historySearchNames?: string[];
   is_active?: boolean | null;
   record_kind?: string | null;
+  template_key?: string | null;
+  template_data?: { healthcareLevel?: string } | null;
 };
 
 type InstitutionNode = Institution & {
@@ -252,7 +254,7 @@ export default function GovernmentInstitutionsPage() {
               `id, slug, name, short_name, official_name, institution_type, institution_category,
                arm_of_government, government_level, parent_institution_id, supervising_ministry_id,
                description, aliases, former_names, status, is_active, predecessor_institution_id, successor_institution_id,
-               record_kind, name_history:institution_name_history(name,end_date)`
+               record_kind, template_key, template_data, name_history:institution_name_history(name,end_date)`
             )
             .eq("is_active", true)
             .eq("record_kind", "institution")
@@ -277,7 +279,7 @@ export default function GovernmentInstitutionsPage() {
               `id, slug, name, short_name, official_name, institution_type, institution_category,
                arm_of_government, government_level, parent_institution_id, supervising_ministry_id,
                description, aliases, former_names, status, is_active, predecessor_institution_id, successor_institution_id,
-               name_history:institution_name_history(name,end_date)`
+               template_key, template_data, name_history:institution_name_history(name,end_date)`
             )
             .eq("is_active", true)
             .order("name")
@@ -583,7 +585,7 @@ export default function GovernmentInstitutionsPage() {
                         <Link href={`/government/institutions/${institution.slug}`} className="govuk-link govuk-link--no-visited-state govuk-!-font-weight-bold">{institution.name}</Link>
                         {institution.short_name && <span className="govuk-body-s govuk-!-margin-left-1 govuk-text-secondary">({institution.short_name})</span>}
                         <p className="govuk-body-s govuk-!-margin-top-1 govuk-!-margin-bottom-0">
-                          {[institution.institution_type, parent ? `Part of ${parent.name}` : institution.arm_of_government, institution.government_level].filter(Boolean).join(" · ") || "Government institution"}
+                          {[institution.template_data?.healthcareLevel ? `Healthcare ${institution.template_data.healthcareLevel.replace("level-", "Level ")}` : null, institution.institution_type, parent ? `Part of ${parent.name}` : institution.arm_of_government, institution.government_level].filter(Boolean).join(" · ") || "Government institution"}
                         </p>
                       </li>;
                     })}
