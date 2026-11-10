@@ -88,7 +88,7 @@
 .healthcare-action-card:hover, .healthcare-action-card:focus-visible { box-shadow: 0 0 0 3px #1d70b8; }
 .healthcare-action-card .govuk-body { flex: 1; }
 .healthcare-action-card h3, .healthcare-service-card h3 { align-items: center; display: flex; justify-content: space-between; gap: 1rem; }
-.healthcare-card-arrow { color: #005eb8; font-size: 1.75rem; line-height: 1; }
+.healthcare-card-arrow { color: #005eb8; font-size: 1.75rem; line-height: 1; text-decoration: none; }
 .institution-profile-container .govuk-main-wrapper { padding-top: 0; }
 
 .healthcare-profile {

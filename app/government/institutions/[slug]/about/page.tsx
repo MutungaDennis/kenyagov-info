@@ -49,6 +49,7 @@ type Institution = {
   complaints_mechanism_url?: string | null;
   procurement_portal_url?: string | null;
   lifecycle_change_reason?: string | null;
+  template_data?: { mandate?: string; heroIntro?: string } | null;
 };
 
 type LinkedInstitution = {
@@ -56,6 +57,7 @@ type LinkedInstitution = {
   slug: string;
   name: string;
   short_name?: string | null;
+  parent_institution_id?: string | null;
 };
 
 type ChildInstitution = {
@@ -111,7 +113,7 @@ export default function InstitutionAboutPage() {
             legal_basis_name, legal_basis_reference, established_date, operational_model, constitutional_status,
             jurisdiction_scope, funding_model, appointing_authority, cofog_division, cofog_group, mtef_sector,
             parent_institution_id, supervising_ministry_id, predecessor_institution_id,
-            citizen_charter_url, complaints_mechanism_url, procurement_portal_url, lifecycle_change_reason
+            citizen_charter_url, complaints_mechanism_url, procurement_portal_url, lifecycle_change_reason, template_data
           `)
           .eq("slug", slug)
           .maybeSingle();
@@ -157,7 +159,7 @@ export default function InstitutionAboutPage() {
           if (!parentData) break;
           chain.unshift(parentData as LinkedInstitution);
           if (chain.length === 1) setDirectParent(parentData as LinkedInstitution);
-          parentId = (parentData as any).parent_institution_id;
+          parentId = (parentData as LinkedInstitution).parent_institution_id;
         }
         setParentChain(chain);
 
@@ -322,6 +324,7 @@ export default function InstitutionAboutPage() {
                 {/* ========================================== */}
                 <h2 className="govuk-heading-l">Overview</h2>
                 {institution.description && <p className="govuk-body">{institution.description}</p>}
+                {institution.template_data?.mandate && <p className="govuk-body">{institution.template_data.mandate}</p>}
                 {institution.vision && <p className="govuk-body"><strong>Vision:</strong> {institution.vision}</p>}
                 {institution.mission && <p className="govuk-body"><strong>Mission:</strong> {institution.mission}</p>}
 

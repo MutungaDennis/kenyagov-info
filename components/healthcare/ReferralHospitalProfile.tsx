@@ -61,10 +61,9 @@ export default function ReferralHospitalProfile({ institution }: Props) {
           <ActionCard title="Visiting hours" text="Check visiting guidance and what to bring when visiting a patient." href={`${hospitalUrl}/patient-information#visiting`} />
           <ActionCard title="Patient information" text="Admission, discharge, documents, bills and insurance." href={`${hospitalUrl}/patient-information`} />
           <ActionCard title="Contact & find us" text="Phone numbers, address, opening hours and directions." href={`${hospitalUrl}/contact`} />
+          <ActionCard title="About this hospital" text="Read about the hospital, its role, leadership and responsibilities." href={`${hospitalUrl}/about`} />
         </div>
       </section>
-
-      {data.mandate && <section className="healthcare-profile__section"><h2 className="govuk-heading-l">About this hospital</h2><p className="govuk-body">{data.mandate}</p></section>}
 
       <section className="healthcare-profile__section" id="services">
         <h2 className="govuk-heading-l">Services overview</h2>
