@@ -500,7 +500,6 @@ export default function InstitutionForm({
   const cofogGroupOptions = withCurrentOption(
     mergeOptionLists(
       groupsForDivisionValue(form.cofog_division).map((g) => g.value),
-      db("cofog_group"),
       selectedCofogGroups,
     ),
     "",
