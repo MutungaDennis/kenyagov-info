@@ -169,31 +169,56 @@
 
 .healthcare-service-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 2rem;
   margin: 2rem 0;
 }
 
 .healthcare-service-card {
-  background: #fff;
-  border: 1px solid #d8dde0;
-  border-bottom: 3px solid #d8dde0;
-  padding: 1.25rem;
+  align-items: stretch;
+  background: #005eb8;
+  border: 0;
+  border-bottom: 3px solid #41b6e6;
+  color: #fff;
+  display: flex;
+  min-height: 14rem;
+  padding: 2.75rem 3.25rem 2rem;
   text-decoration: none;
-  color: inherit;
 }
 
 .healthcare-service-card:hover,
 .healthcare-service-card:focus-visible {
-  border-color: #1d70b8;
-  box-shadow: 0 0 0 3px #1d70b8;
+  background: #004f9e;
+  box-shadow: 0 0 0 4px #41b6e6;
 }
 
-.healthcare-service-card h2 {
-  color: #1d70b8;
+.healthcare-service-card h3 {
+  align-items: flex-start;
+  color: #fff;
   display: flex;
-  justify-content: space-between;
+  font-size: 2rem;
   gap: 1rem;
+  justify-content: space-between;
+  line-height: 1.35;
+  margin: 0;
+  width: 100%;
+}
+
+.healthcare-service-card h3 span {
+  color: #41b6e6;
+  flex: 0 0 auto;
+  font-size: 2.5rem;
+  line-height: .9;
+}
+
+@media (max-width: 60rem) {
+  .healthcare-service-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 40.05rem) {
+  .healthcare-service-grid { grid-template-columns: 1fr; gap: 1rem; }
+  .healthcare-service-card { min-height: 10rem; padding: 1.75rem 2rem; }
+  .healthcare-service-card h3 { font-size: 1.75rem; }
 }
 
 .healthcare-service-links {
