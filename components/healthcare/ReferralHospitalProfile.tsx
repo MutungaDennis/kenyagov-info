@@ -69,7 +69,6 @@ export default function ReferralHospitalProfile({ institution }: Props) {
         </div>
         <p className="govuk-caption-l">{data.healthcareLevel === "level-6" || institution.template_key === "healthcare-referral-hospital" ? "Level 6 · National teaching and referral hospital" : data.healthcareLevel ? data.healthcareLevel.replace("level-", "Level ") : "Healthcare facility"}</p>
         <h1 className="govuk-heading-xl">{institution.name}</h1>
-        <p className="govuk-body-l">{institution.description || "Specialist care, referrals and patient services."}</p>
       </header>
 
       <section className="healthcare-profile__intro">
@@ -85,7 +84,7 @@ export default function ReferralHospitalProfile({ institution }: Props) {
         </div>
       </section>
 
-      {data.mandate && <section className="healthcare-profile__section"><h2 className="govuk-heading-l">About this hospital</h2><p className="govuk-body">{data.mandate}</p></section>}
+      {(institution.description || data.mandate) && <section className="healthcare-profile__section healthcare-profile__about"><h2 className="govuk-heading-l">About this hospital</h2>{institution.description && <p className="govuk-body-l">{institution.description}</p>}{data.mandate && <p className="govuk-body">{data.mandate}</p>}<Link className="govuk-link" href={`${hospitalUrl}/about`}>Read more about this hospital</Link></section>}
 
       <section className="healthcare-profile__section" id="services">
         <h2 className="govuk-heading-l">Services overview</h2>
