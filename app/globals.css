@@ -169,20 +169,21 @@
 
 .healthcare-service-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 2rem;
   margin: 2rem 0;
 }
 
 .healthcare-service-card {
   align-items: stretch;
+  aspect-ratio: 1.75 / 1;
   background: #005eb8;
   border: 0;
   border-bottom: 3px solid #41b6e6;
   color: #fff;
   display: flex;
-  min-height: 14rem;
-  padding: 2.75rem 3.25rem 2rem;
+  min-height: 0;
+  padding: 2rem;
   text-decoration: none;
 }
 
@@ -196,8 +197,8 @@
   align-items: flex-start;
   color: #fff;
   display: flex;
-  font-size: 2rem;
-  gap: 1rem;
+  font-size: 1.5rem;
+  gap: 0.75rem;
   justify-content: space-between;
   line-height: 1.35;
   margin: 0;
@@ -207,7 +208,7 @@
 .healthcare-service-card h3 span {
   color: #41b6e6;
   flex: 0 0 auto;
-  font-size: 2.5rem;
+  font-size: 2rem;
   line-height: .9;
 }
 
@@ -217,8 +218,9 @@
 
 @media (max-width: 40.05rem) {
   .healthcare-service-grid { grid-template-columns: 1fr; gap: 1rem; }
-  .healthcare-service-card { min-height: 10rem; padding: 1.75rem 2rem; }
-  .healthcare-service-card h3 { font-size: 1.75rem; }
+  .healthcare-service-card { aspect-ratio: 1.75 / 1; padding: 1.5rem; }
+  .healthcare-service-card h3 { font-size: 1.25rem; }
+  .healthcare-service-card h3 span { font-size: 1.75rem; }
 }
 
 .healthcare-service-links {
