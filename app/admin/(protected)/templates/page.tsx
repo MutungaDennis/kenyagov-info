@@ -14,7 +14,7 @@ export default function AdminTemplatesPage() {
         <h1 className="govuk-heading-xl">Institution templates</h1>
         <p className="govuk-body-l">Templates control which information people see first and how an institution page is organised. Assign one while editing an institution to use its patient or service-focused layout.</p>
         <div className="template-catalogue">
-          {INSTITUTION_TEMPLATES.map((template) => (
+          {INSTITUTION_TEMPLATES.filter((template) => ["default", "healthcare"].includes(template.key)).map((template) => (
             <article className="template-catalogue__card" key={template.key}>
               <p className="govuk-caption-m">{template.key === "default" ? "Default" : "Available template"}</p>
               <h2 className="govuk-heading-l">{template.name}</h2>

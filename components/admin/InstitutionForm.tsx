@@ -42,6 +42,25 @@ import {
   mergeOptionLists,
 } from "@/lib/institutions/cofog";
 
+export const HEALTHCARE_LEVELS = [
+  { key: "level-1", label: "Level 1 — Community health units", mandate: "Preventive care, health promotion and community follow-up." },
+  { key: "level-2", label: "Level 2 — Dispensaries and clinics", mandate: "Basic outpatient care, common ailments, simple tests and immunisation." },
+  { key: "level-3", label: "Level 3 — Health centres", mandate: "Comprehensive outpatient care, normal maternity, minor procedures and chronic disease care." },
+  { key: "level-4", label: "Level 4 — Sub-county hospitals", mandate: "Primary referral care, specialist clinics, surgery, imaging and emergency care." },
+  { key: "level-5", label: "Level 5 — County referral hospitals", mandate: "Regional specialist care, ICU/HDU, advanced imaging and multidisciplinary surgery." },
+  { key: "level-6", label: "Level 6 — National teaching and referral hospitals", mandate: "Highly specialised care, research, training and complex rehabilitation." },
+] as const;
+
+function readTemplateLevel(value: string) {
+  try { return (JSON.parse(value || "{}").healthcareLevel as string) || ""; } catch { return ""; }
+}
+
+function setTemplateLevel(value: string, level: string) {
+  let data: Record<string, unknown> = {};
+  try { data = JSON.parse(value || "{}"); } catch { data = {}; }
+  return JSON.stringify({ ...data, healthcareLevel: level }, null, 2);
+}
+
 export type InstitutionFormState = {
   name: string;
   short_name: string;
@@ -481,7 +500,6 @@ export default function InstitutionForm({
   const cofogGroupOptions = withCurrentOption(
     mergeOptionLists(
       groupsForDivisionValue(form.cofog_division).map((g) => g.value),
-      db("cofog_group"),
       selectedCofogGroups,
     ),
     "",
@@ -716,14 +734,14 @@ export default function InstitutionForm({
       <Field
         id="template_key"
         label="Frontend template"
-        hint="Referral hospitals use a guided healthcare profile; leave blank for the default institution profile."
+        hint="Choose a main category. Healthcare reveals a required Kenya level-of-care subcategory; other template categories can be added later."
       >
         <select className="govuk-select" id="template_key" name="template_key" value={form.template_key} onChange={onChange}>
           <option value="">Default institution profile</option>
-          <option value="healthcare-referral-hospital">Kenya referral hospital</option>
-          <option value="healthcare-facility">Healthcare facility</option>
+          <option value="healthcare">Healthcare</option>
         </select>
       </Field>
+      {form.template_key === "healthcare" && <Field id="healthcare_level" label="Healthcare level" hint="Healthcare is the main category. Select exactly one level-of-care subcategory; it appears in search and on the facility profile."><select required className="govuk-select" id="healthcare_level" value={readTemplateLevel(form.template_data)} onChange={(event) => onChange({ target: { name: "template_data", value: setTemplateLevel(form.template_data, event.target.value) } } as ChangeEvent<HTMLInputElement>)}><option value="">Select a level</option>{HEALTHCARE_LEVELS.map((level) => <option value={level.key} key={level.key}>{level.label}</option>)}</select></Field>}
       <TemplateFieldEditor key={form.template_key} templateKey={form.template_key} value={form.template_data} onChange={(value) => onChange({ target: { name: "template_data", value } } as ChangeEvent<HTMLInputElement>)} />
       <Field
         id="former_names"

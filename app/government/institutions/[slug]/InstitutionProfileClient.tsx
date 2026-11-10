@@ -360,7 +360,7 @@ export default function InstitutionProfileClient({ people }: { people?: ReactNod
   const earmarked = isInstitutionEarmarked(institution.status);
   const judicial = isJudicialAnnulmentStatus(institution.status);
 
-  if (institution.template_key === "healthcare-referral-hospital") {
+  if (institution.template_key === "healthcare-referral-hospital" || institution.template_key === "healthcare") {
     return (
       <div className="govuk-width-container institution-profile-container">
         <GovUKBreadcrumbs items={[{ text: "Home", href: "/" }, { text: "Government", href: "/government" }, { text: "Institutions", href: "/government/institutions" }, { text: institution.name }]} />
