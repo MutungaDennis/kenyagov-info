@@ -12,6 +12,8 @@ type HospitalData = ReferralTemplateData & {
   healthcareLevel?: string;
 };
 
+type SocialLink = { platform: string; url: string };
+
 type Props = {
   institution: {
     name: string;
@@ -19,6 +21,7 @@ type Props = {
     short_name?: string | null;
     description?: string | null;
     website_url?: string | null;
+    social_media?: unknown;
     phone?: string | null;
     email?: string | null;
     physical_address?: string | null;
@@ -35,6 +38,12 @@ export default function ReferralHospitalProfile({ institution }: Props) {
   const ambulance = data.ambulance || "922";
   const hospitalUrl = `/government/institutions/${institution.slug}`;
   const quickLinks = (data.quickLinks || []).filter((link): link is { label: string; href: string } => Boolean(link.href));
+  const socialLinks: SocialLink[] = Array.isArray(institution.social_media)
+    ? institution.social_media.filter((link): link is SocialLink => Boolean(link && typeof link === "object" && "url" in link && typeof link.url === "string"))
+    : institution.social_media && typeof institution.social_media === "object"
+      ? Object.entries(institution.social_media).filter(([, url]) => typeof url === "string").map(([platform, url]) => ({ platform, url }))
+      : [];
+  const socialLabel = (platform: string) => platform.replace(/[-_]/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
 
   return (
     <div className="healthcare-profile">
@@ -72,8 +81,16 @@ export default function ReferralHospitalProfile({ institution }: Props) {
       </section>
 
       <section className="healthcare-profile__section healthcare-contact-summary" id="contact">
-        <div><h2 className="govuk-heading-l">Contact &amp; location</h2><p className="govuk-body">{institution.physical_address || "Address not provided"}</p><p className="govuk-body">Main: {institution.phone || "Not provided"}<br />Email: {institution.email || "Not provided"}</p><Link className="govuk-link" href={`${hospitalUrl}/contact`}>Full contact and location details</Link></div>
-        {data.mapUrl && <a className="govuk-button govuk-button--secondary" href={data.mapUrl} target="_blank" rel="noreferrer">Open map</a>}
+        <div>
+          <h2 className="govuk-heading-l">Contact &amp; find us</h2>
+          <p className="govuk-body">{institution.physical_address || "Address not provided"}</p>
+          <p className="govuk-body">Main: {institution.phone || "Not provided"}<br />Email: {institution.email || "Not provided"}</p>
+          <div className="healthcare-contact-actions">
+            {data.mapUrl && <a className="govuk-button govuk-button--secondary" href={data.mapUrl} target="_blank" rel="noreferrer">Open Google Maps</a>}
+            {institution.website_url && <a className="govuk-button govuk-button--secondary" href={institution.website_url} target="_blank" rel="noreferrer">Official website</a>}
+          </div>
+          {socialLinks.length > 0 && <div className="healthcare-social-links" aria-label="Social media links">{socialLinks.map((link) => <a className="healthcare-social-link" href={link.url} target="_blank" rel="noreferrer" key={`${link.platform}-${link.url}`}><span aria-hidden="true">{socialLabel(link.platform).slice(0, 2).toUpperCase()}</span><strong>{socialLabel(link.platform)}</strong></a>)}</div>}
+        </div>
       </section>
 
       {data.relatedFacilities && data.relatedFacilities.length > 0 && <section className="healthcare-profile__section"><h2 className="govuk-heading-l">Other facilities to consider</h2><p className="govuk-body">You may also find this service at these related facilities.</p><ul className="govuk-list healthcare-related-links">{data.relatedFacilities.map((facility) => { const [name, href, reason] = typeof facility === "string" ? facility.split("|").map((part) => part.trim()) : [facility.name, facility.href || "", facility.reason]; if (!href) return null; return <li key={`${name}-${href}`}><Link className="govuk-link" href={href}>{name}</Link>{reason && <span>{reason}</span>}</li>; })}</ul></section>}

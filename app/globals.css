@@ -223,6 +223,56 @@
   .healthcare-service-card h3 span { font-size: 1.75rem; }
 }
 
+.healthcare-service-directory-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.25rem;
+  margin: 1.5rem 0 2.5rem;
+}
+
+.healthcare-service-directory-card {
+  background: #fff;
+  border: 1px solid #b1b4b6;
+  border-bottom: 4px solid #005eb8;
+  color: #0b0c0c;
+  display: flex;
+  flex-direction: column;
+  min-height: 11rem;
+  padding: 1.5rem;
+  text-decoration: none;
+}
+
+.healthcare-service-directory-card:hover,
+.healthcare-service-directory-card:focus-visible {
+  border-color: #005eb8;
+  box-shadow: 0 0 0 3px #41b6e6;
+}
+
+.healthcare-service-directory-card h3 {
+  align-items: flex-start;
+  color: #005eb8;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  margin: 0 0 1rem;
+}
+
+.healthcare-service-directory-card p { margin: auto 0 0; }
+
+.healthcare-contact-actions { display: flex; flex-wrap: wrap; gap: .75rem; }
+.healthcare-social-links { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 1.5rem; }
+.healthcare-social-link { align-items: center; color: #005eb8; display: inline-flex; gap: .6rem; text-decoration: none; }
+.healthcare-social-link:hover, .healthcare-social-link:focus-visible { text-decoration: underline; }
+.healthcare-social-link span { align-items: center; background: #005eb8; border-radius: 50%; color: #fff; display: inline-flex; font-size: .8rem; font-weight: 700; height: 2.5rem; justify-content: center; width: 2.5rem; }
+
+@media (max-width: 60rem) {
+  .healthcare-service-directory-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 40.05rem) {
+  .healthcare-service-directory-grid { grid-template-columns: 1fr; }
+}
+
 .healthcare-service-links {
   display: flex;
   flex-direction: column;
