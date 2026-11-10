@@ -53,7 +53,6 @@ export default function ReferralHospitalProfile({ institution }: Props) {
 
       <section className="healthcare-profile__intro">
         <h2 className="govuk-heading-l">What do you need to do?</h2>
-        <p className="govuk-body">Start with the information most people need when they are planning care or visiting the hospital.</p>
         <ul className="healthcare-task-list">
           <li><Link href={`${hospitalUrl}/contact#emergency`}><span className="healthcare-task-list__arrow" aria-hidden="true">→</span><span><strong>Emergency / A&amp;E</strong></span></Link></li>
           <li><Link href={`${hospitalUrl}/how-to-get-care`}><span className="healthcare-task-list__arrow" aria-hidden="true">→</span><span><strong>How to get care</strong></span></Link></li>
@@ -68,7 +67,7 @@ export default function ReferralHospitalProfile({ institution }: Props) {
       <section className="healthcare-profile__section" id="services">
         <h2 className="govuk-heading-l">Services overview</h2>
         <p className="govuk-body">Browse services and clinics to find access information, locations and what to expect.</p>
-        {services.length > 0 ? <div className="healthcare-service-grid">{services.slice(0, 9).map((service) => <Link className="healthcare-service-card" href={`${hospitalUrl}/services/${serviceSlug(service)}`} key={serviceSlug(service)}><h3 className="govuk-heading-m">{service.name}<span aria-hidden="true">→</span></h3><p className="govuk-body">{service.description || "View service information"}</p></Link>)}</div> : <p className="govuk-body">Services and clinics will be listed here when they are added.</p>}
+        {services.length > 0 ? <div className="healthcare-service-grid">{services.slice(0, 9).map((service) => <Link className="healthcare-service-card" href={`${hospitalUrl}/services/${serviceSlug(service)}`} key={serviceSlug(service)}><h3 className="govuk-heading-m">{service.name}<span aria-hidden="true">→</span></h3></Link>)}</div> : <p className="govuk-body">Services and clinics will be listed here when they are added.</p>}
         <Link className="govuk-link" href={`${hospitalUrl}/services`}>View all services and clinics</Link>
       </section>
 
