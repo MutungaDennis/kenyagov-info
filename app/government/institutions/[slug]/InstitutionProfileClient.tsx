@@ -383,7 +383,7 @@ export default function InstitutionProfileClient({ people }: { people?: ReactNod
     { type: "email" as const, label: "Email" },
   ].map((group) => ({ ...group, points: contactPoints.filter((point) => point.type === group.type) })).filter((group) => group.points.length > 0);
 
-  if (institution.template_key === "healthcare-referral-hospital" || institution.template_key === "healthcare") {
+  if (institution.template_key === "healthcare-referral-hospital" || institution.template_key === "healthcare" || institution.template_key === "healthcare-facility") {
     return (
       <div className="govuk-width-container institution-profile-container">
         <GovUKBreadcrumbs items={[{ text: "Home", href: "/" }, { text: "Government", href: "/government" }, { text: "Institutions", href: "/government/institutions" }, { text: institution.name }]} />

@@ -3,7 +3,17 @@ import type { ReactNode } from "react";
 import ExternalLink from "@/components/site/ExternalLink";
 import { getServices, serviceSlug, type ReferralTemplateData } from "@/lib/healthcare/referral-data";
 
+type HealthcareContentEntry = { title: string; description?: string; linkLabel?: string; href?: string };
 type HospitalData = ReferralTemplateData & {
+  careVisitsTitle?: string;
+  careVisits?: HealthcareContentEntry[];
+  servicesTitle?: string;
+  serviceLinks?: HealthcareContentEntry[];
+  featuredTitle?: string;
+  featured?: HealthcareContentEntry[];
+  moreInformationTitle?: string;
+  moreInformation?: HealthcareContentEntry[];
+  footerColumns?: HealthcareContentEntry[];
   mandate?: string;
   mapUrl?: string;
   emergencyMain?: string;
@@ -64,6 +74,20 @@ function readContactPoints(value: unknown): ContactPoint[] {
   });
 }
 
+function readContentEntries(value: unknown): HealthcareContentEntry[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((item) => {
+    if (!item || typeof item !== "object" || typeof item.title !== "string" || !item.title.trim()) return [];
+    const href = typeof item.href === "string" && (safeExternalUrl(item.href) || isInternalHref(item.href)) ? item.href : "";
+    return [{
+      title: item.title.trim(),
+      description: typeof item.description === "string" ? item.description.trim() : "",
+      linkLabel: typeof item.linkLabel === "string" ? item.linkLabel.trim() : "",
+      href,
+    }];
+  });
+}
+
 function readReferralLines(value: unknown): string[] {
   const entries = Array.isArray(value) ? value : typeof value === "string" ? value.split(/[;\n]/) : [];
   return entries.flatMap((entry) => typeof entry === "string" ? entry.split(/[;\n]/).map((line) => line.trim()).filter(Boolean) : []);
@@ -98,6 +122,17 @@ type Props = {
 export default function ReferralHospitalProfile({ institution }: Props) {
   const data = institution.template_data || {};
   const services = getServices(data);
+  const careVisits = readContentEntries(data.careVisits);
+  const serviceLinks = readContentEntries(data.serviceLinks);
+  const featured = readContentEntries(data.featured);
+  const moreInformation = readContentEntries(data.moreInformation);
+  const footerColumns = readContentEntries(data.footerColumns);
+  const groupedFooterLinks = footerColumns.reduce<{ title: string; links: HealthcareContentEntry[] }[]>((groups, entry) => {
+    const existing = groups.find((group) => group.title === entry.title);
+    if (existing) existing.links.push(entry);
+    else groups.push({ title: entry.title, links: [entry] });
+    return groups;
+  }, []);
   const emergencyMain = data.emergencyMain || institution.phone || "Emergency number not provided";
   const referralLines = readReferralLines(data.referralLine);
   const ambulance = data.ambulance || "922";
@@ -157,34 +192,54 @@ export default function ReferralHospitalProfile({ institution }: Props) {
     <div className="healthcare-profile">
       <div className="healthcare-masthead">
         <div className="healthcare-masthead__inner">
-          <h1 className="healthcare-brand"><Link href={hospitalUrl}>{institution.name}</Link></h1>
+          <div className="healthcare-brand"><Link href={hospitalUrl}>{institution.name}</Link></div>
           <nav aria-label="Healthcare navigation" className="healthcare-masthead__nav">
-            <Link href={`${hospitalUrl}/services`}>Services</Link>
+            <Link href="#services">Services</Link>
+            {careVisits.length > 0 && <Link href="#care-visits-heading">Manage care and visits</Link>}
             <Link href={`${hospitalUrl}/about`}>About</Link>
           </nav>
         </div>
       </div>
       <div className="healthcare-emergency-bar" role="region" aria-label="Emergency contacts">
         <strong>Emergency / A&amp;E</strong>
-        <a href={`tel:${emergencyMain}`}>{emergencyMain}</a>
+        <a href={`tel:${emergencyMain.replace(/[^\d+]/g, "")}`}>{emergencyMain}</a>
         <span>Referral line: {referralLines.length > 0 ? referralLines.map((line, index) => <span key={`${line}-${index}`}>{index > 0 && " · "}<a href={`tel:${line.replace(/[^\d+]/g, "")}`}>{line}</a></span>) : "Referral line not provided"}</span>
         <span>National ambulance: <a href={`tel:${ambulance}`}>{ambulance}</a></span>
       </div>
 
-      <header className="healthcare-profile__header">
-        <div className="healthcare-profile__hero" role="note" aria-label="Hospital information">
-          <span className="healthcare-profile__info-icon" aria-hidden="true">!</span>
-          <div>
-            <p className="govuk-caption-l">Healthcare information</p>
-            <p className="govuk-body-l">{data.heroIntro || "Find services, referral information and practical advice for your visit."}</p>
+      <header className="healthcare-profile__hero-wrap">
+        <div className="healthcare-profile__hero">
+          <p className="healthcare-profile__eyebrow">Healthcare facility information</p>
+          <h1>{institution.name}: services and patient information</h1>
+          <p className="healthcare-profile__hero-intro">{data.heroIntro || "Find services, referral information and practical advice for a visit."}</p>
+          <div className="healthcare-profile__hero-meta">
+            <span>{data.healthcareLevel || "Healthcare facility"}</span>
+            <span>{institution.headquarters || institution.physical_address || "Location not provided"}</span>
           </div>
         </div>
       </header>
 
-      <section className="healthcare-profile__section" id="services">
-        <h2 className="govuk-heading-l">Services overview</h2>
-        <p className="govuk-body">Browse services and clinics to find access information, locations and what to expect.</p>
-        {services.length > 0 ? <div className="healthcare-service-grid">{services.slice(0, 9).map((service) => <Link className="healthcare-service-card" href={`${hospitalUrl}/services/${serviceSlug(service)}`} key={serviceSlug(service)}><h3 className="govuk-heading-m">{service.name}<span aria-hidden="true">→</span></h3></Link>)}</div> : <p className="govuk-body">Services and clinics will be listed here when they are added.</p>}
+      {careVisits.length > 0 && (
+        <section className="healthcare-profile__section healthcare-home-section" aria-labelledby="care-visits-heading">
+          <h2 className="govuk-heading-l" id="care-visits-heading">{data.careVisitsTitle || "Manage your care and visits"}</h2>
+          <ul className="healthcare-popular-links">
+            {careVisits.map((entry, index) => <li key={`${entry.title}-${index}`}>
+              <span className="healthcare-popular-links__arrow" aria-hidden="true">→</span>
+              <div>{entry.href ? <ProfileLink href={entry.href} className="healthcare-popular-links__title">{entry.title}</ProfileLink> : <strong className="healthcare-popular-links__title">{entry.title}</strong>}
+                {entry.description && <p>{entry.description}</p>}
+              </div>
+            </li>)}
+          </ul>
+        </section>
+      )}
+
+      <section className="healthcare-profile__section healthcare-home-section" id="services" aria-labelledby="services-heading">
+        <h2 className="govuk-heading-l" id="services-heading">{data.servicesTitle || "Services"}</h2>
+        {serviceLinks.length > 0 && <ul className="healthcare-service-links">{serviceLinks.map((entry, index) => <li key={`${entry.title}-${index}`}>
+          {entry.href ? <ProfileLink href={entry.href} className="healthcare-service-links__link">{entry.title}<span aria-hidden="true">›</span></ProfileLink> : <strong>{entry.title}</strong>}
+          {entry.description && <p>{entry.description}</p>}
+        </li>)}</ul>}
+        {services.length > 0 ? <div className="healthcare-service-grid">{services.slice(0, 9).map((service) => <Link className="healthcare-service-card" href={`${hospitalUrl}/services/${serviceSlug(service)}`} key={serviceSlug(service)}><h3 className="govuk-heading-m">{service.name}<span aria-hidden="true">→</span></h3></Link>)}</div> : serviceLinks.length === 0 ? <p className="govuk-body">Service information will be added when available.</p> : null}
         <Link className="govuk-link" href={`${hospitalUrl}/services`}>View all services and clinics</Link>
       </section>
 
@@ -250,11 +305,21 @@ export default function ReferralHospitalProfile({ institution }: Props) {
         </div>
       </section>
 
+      {featured.length > 0 && <section className="healthcare-profile__section healthcare-home-section" aria-labelledby="featured-heading"><h2 className="govuk-heading-l" id="featured-heading">{data.featuredTitle || "Featured"}</h2><div className="healthcare-featured-grid">{featured.map((entry, index) => <article className="healthcare-featured-card" key={`${entry.title}-${index}`}><h3>{entry.href ? <ProfileLink href={entry.href}>{entry.title}</ProfileLink> : entry.title}</h3>{entry.description && <p>{entry.description}</p>}{entry.href && <ProfileLink href={entry.href} className="healthcare-featured-card__action">{entry.linkLabel || `Read about ${entry.title}`}<span aria-hidden="true"> →</span></ProfileLink>}</article>)}</div></section>}
+
+      {moreInformation.length > 0 && <section className="healthcare-profile__section healthcare-home-section" aria-labelledby="more-information-heading"><h2 className="govuk-heading-l" id="more-information-heading">{data.moreInformationTitle || "More information and advice"}</h2><ul className="healthcare-advice-grid">{moreInformation.map((entry, index) => <li key={`${entry.title}-${index}`}><h3>{entry.href ? <ProfileLink href={entry.href}>{entry.title}</ProfileLink> : entry.title}</h3>{entry.description && <p>{entry.description}</p>}</li>)}</ul></section>}
+
       {relatedFacilities.length > 0 && <section className="healthcare-profile__section"><h2 className="govuk-heading-l">Other facilities to consider</h2><p className="govuk-body">You may also find this service at these related facilities.</p><ul className="govuk-list healthcare-related-links">{relatedFacilities.map((facility) => <li key={`${facility.name}-${facility.href}`}><ProfileLink href={facility.href}>{facility.name}</ProfileLink>{facility.reason && <span>{facility.reason}</span>}</li>)}</ul></section>}
 
       {quickLinks.length > 0 && <section className="healthcare-profile__section"><h2 className="govuk-heading-l">More information</h2><ul className="govuk-list">{quickLinks.map((link) => <li key={link.href}><ProfileLink href={link.href}>{link.label}</ProfileLink></li>)}</ul></section>}
 
-      <footer className="healthcare-profile__footer"><div><h2 className="govuk-heading-m">Contact</h2><p>{institution.name}<br />{institution.physical_address || "Address not provided"}<br />Main: {institution.phone || "Not provided"}<br />Referral: {referralLines.length ? referralLines.join(" · ") : "Not provided"}<br />{institution.email || "Email not provided"}</p></div><div><h2 className="govuk-heading-m">Quick links</h2><ul className="govuk-list"><li><Link href={`${hospitalUrl}/services`}>Services &amp; clinics</Link></li><li><Link href={`${hospitalUrl}/patient-information`}>Patient information</Link></li><li><Link href={`${hospitalUrl}/how-to-get-care`}>How to get care</Link></li><li><Link href={`${hospitalUrl}/contact`}>Contact &amp; location</Link></li></ul></div><div><h2 className="govuk-heading-m">More</h2><ul className="govuk-list"><li><Link href={`${hospitalUrl}/about`}>About</Link></li><li><Link href="/government/institutions">Other institutions</Link></li></ul></div></footer>
+      <footer className="healthcare-profile__footer">
+        {groupedFooterLinks.length > 0 ? groupedFooterLinks.map((group) => <div key={group.title}><h2 className="govuk-heading-m">{group.title}</h2><ul className="govuk-list">{group.links.map((entry, index) => <li key={`${entry.title}-${entry.href}-${index}`}>{entry.href ? <ProfileLink href={entry.href}>{entry.linkLabel || entry.title}</ProfileLink> : entry.linkLabel || entry.title}</li>)}</ul></div>) : <>
+          <div><h2 className="govuk-heading-m">Contact</h2><p>{institution.name}<br />{institution.physical_address || "Address not provided"}<br />Main: {institution.phone || "Not provided"}<br />Referral: {referralLines.length ? referralLines.join(" · ") : "Not provided"}<br />{institution.email || "Email not provided"}</p></div>
+          <div><h2 className="govuk-heading-m">Patient information</h2><ul className="govuk-list"><li><Link href={`${hospitalUrl}/services`}>Services and clinics</Link></li><li><Link href={`${hospitalUrl}/patient-information`}>Patient information</Link></li><li><Link href={`${hospitalUrl}/how-to-get-care`}>How to get care</Link></li><li><Link href={`${hospitalUrl}/contact`}>Contact and location</Link></li></ul></div>
+          <div><h2 className="govuk-heading-m">About and other institutions</h2><ul className="govuk-list"><li><Link href={`${hospitalUrl}/about`}>About this facility</Link></li><li><Link href="/government/institutions">Other institutions</Link></li></ul></div>
+        </>}
+      </footer>
     </div>
   );
 }
