@@ -118,13 +118,15 @@
 .healthcare-profile__section, .healthcare-profile__intro { max-width: 60rem; margin-left: auto; margin-right: auto; }
 .healthcare-masthead { background: #005eb8; color: #fff; margin: 0 -1rem; }
 .healthcare-masthead__inner { align-items: center; display: flex; flex-wrap: wrap; gap: 1rem 2rem; justify-content: space-between; margin: 0 auto; max-width: 60rem; padding: 1rem; }
-.healthcare-brand { color: #fff; flex: 1 1 18rem; font-size: 1.35rem; font-weight: 700; min-width: 0; overflow-wrap: anywhere; text-decoration: none; }
+.healthcare-brand { color: #fff; flex: 1 1 18rem; font-size: 1.35rem; font-weight: 700; margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.healthcare-brand a { color: inherit; text-decoration: none; }
 .healthcare-masthead__nav { display: flex; flex-wrap: wrap; gap: .75rem 1.25rem; }
 .healthcare-masthead__nav a { color: #fff; font-weight: 700; text-decoration: underline; text-underline-offset: .2em; }
 .healthcare-profile__header { background: #fff; margin: 0 auto; max-width: 60rem; padding: 1.5rem 0 2rem; }
-.healthcare-profile__hero { background: #005eb8; border: 0; color: #fff; margin: 0 0 1.5rem; padding: 1.25rem 1.5rem; }
-.healthcare-profile__hero .govuk-caption-l, .healthcare-profile__hero .govuk-body-l { color: #fff; margin-bottom: .35rem; }
-.healthcare-profile__header > .govuk-caption-l { margin-top: 1rem; }
+.healthcare-profile__hero { align-items: flex-start; background: transparent; border: 0; color: #0b0c0c; display: flex; gap: .75rem; margin: 0 0 1.5rem; padding: 0; }
+.healthcare-profile__hero .govuk-caption-l, .healthcare-profile__hero .govuk-body-l { color: #0b0c0c; margin-bottom: .35rem; }
+.healthcare-profile__hero .govuk-caption-l { font-weight: 700; }
+.healthcare-profile__info-icon { align-items: center; border: 2px solid #005eb8; border-radius: 50%; color: #005eb8; display: inline-flex; flex: 0 0 1.75rem; font-size: 1rem; font-weight: 700; height: 1.75rem; justify-content: center; line-height: 1; margin-top: .1rem; width: 1.75rem; }
 .healthcare-profile__section { background: #fff; padding: 1.5rem; }
 .healthcare-profile__intro { background: #fff; margin: 0 -1rem; max-width: none; padding: 2rem 1rem; }
 .healthcare-action-card { background: #fff; border: 0; border-bottom: 4px solid #005eb8; min-height: 9rem; }
@@ -156,16 +158,24 @@
 .healthcare-profile__footer a { color: white; }
 .healthcare-profile__footer .govuk-list { margin-bottom: 0; }
 
-.healthcare-profile__hero {
-  background: #003b6f;
-  border-left: 0;
-  color: #fff;
-  padding: 1.5rem;
-  margin: 0 0 1.5rem;
-}
-
-.healthcare-profile__hero .govuk-heading-xl { margin-bottom: 1rem; }
-.healthcare-profile__hero .govuk-body-l { color: #fff; }
+.healthcare-contact-summary { align-items: flex-start; justify-content: flex-start; }
+.healthcare-contact-summary__content { max-width: 48rem; width: 100%; }
+.healthcare-contact-details { margin: 1rem 0 1.5rem; }
+.healthcare-contact-details__row { border-bottom: 1px solid #b1b4b6; display: grid; gap: .25rem 1rem; grid-template-columns: minmax(10rem, 1fr) 2fr; padding: .75rem 0; }
+.healthcare-contact-details__row dt { font-weight: 700; }
+.healthcare-contact-details__row dd { margin: 0; }
+.healthcare-contact-actions { display: flex; flex-wrap: wrap; gap: .75rem; margin: 1rem 0; }
+.healthcare-contact-actions .govuk-button { margin-bottom: 0; }
+.healthcare-visiting-hours { margin: 0 0 1.5rem; }
+.healthcare-visiting-hours__period { border-bottom: 1px solid #b1b4b6; display: grid; gap: .25rem 1rem; grid-template-columns: minmax(8rem, 1fr) 2fr; padding: .75rem 0; }
+.healthcare-visiting-hours__period dt { font-weight: 700; }
+.healthcare-visiting-hours__period dd { margin: 0; }
+.healthcare-visiting-hours__period dd span { color: #505a5f; display: block; margin-top: .25rem; }
+.healthcare-visiting-instructions { margin-top: 1.5rem; }
+.template-visiting-hours__row { border: 0; border-bottom: 1px solid #b1b4b6; display: grid; gap: .5rem .75rem; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.2fr) auto; margin: 0 0 1rem; padding: 0 0 1rem; }
+.template-visiting-hours__row legend { grid-column: 1 / -1; }
+.template-visiting-hours__row .govuk-form-group { margin-bottom: 0; }
+.template-visiting-hours__row .govuk-button { align-self: end; margin-bottom: 0; }
 
 .healthcare-profile__actions {
   display: flex;
@@ -342,13 +352,13 @@
 
 @media (max-width: 40.0525em) {
   .healthcare-masthead__inner { align-items: flex-start; flex-direction: column; }
+  .healthcare-brand { flex: 0 1 auto; }
   .healthcare-masthead__nav { gap: .5rem 1rem; }
-  .healthcare-profile__hero { padding: 1rem; }
   .healthcare-profile__section, .healthcare-profile__intro { padding: 1rem; }
   .healthcare-emergency-bar { align-items: flex-start; flex-direction: column; }
-  .healthcare-profile__hero {
-    padding: 1rem;
-  }
+  .healthcare-contact-details__row, .healthcare-visiting-hours__period { grid-template-columns: 1fr; }
+  .template-visiting-hours__row { grid-template-columns: 1fr; }
+  .template-visiting-hours__row legend { grid-column: auto; }
   .healthcare-profile__actions {
     flex-direction: column;
     align-items: stretch;

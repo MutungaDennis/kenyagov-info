@@ -1,4 +1,4 @@
-export type TemplateField = { key: string; label: string; description: string; kind: "text" | "list" };
+export type TemplateField = { key: string; label: string; description: string; kind: "text" | "list" | "schedule" };
 
 export type InstitutionTemplate = {
   key: string;
@@ -29,6 +29,9 @@ export const INSTITUTION_TEMPLATES: InstitutionTemplate[] = [
       { key: "mandate", label: "Primary mandate", description: "What this level of care is designed to provide.", kind: "text" },
       { key: "services", label: "Services", description: "One service per line. Add a description after a pipe, for example: Immunisation | Childhood vaccines and routine immunisation.", kind: "list" },
       { key: "patientNotice", label: "Before you visit", description: "What a patient should bring or know before attending.", kind: "text" },
+      { key: "visitingHours", label: "Visiting schedule", description: "Add each day or day group and its visiting times. You can also add a note for a period.", kind: "schedule" },
+      { key: "visitingInstructions", label: "Visiting instructions", description: "Add one instruction per line, such as visitor limits, check-in steps or ward-specific guidance.", kind: "list" },
+      { key: "visiting", label: "Additional visiting information", description: "Optional general guidance for visitors. Existing free-text guidance remains supported.", kind: "text" },
       { key: "referralGuidance", label: "Referral guidance", description: "When patients should be referred to a higher or lower level.", kind: "text" },
       { key: "referralLine", label: "Referral line", description: "The phone number patients should call for referrals and appointments.", kind: "text" },
       { key: "relatedFacilities", label: "Related facilities", description: "Search for facilities already in the database and add them as nearby or higher-level care options.", kind: "list" },
@@ -52,7 +55,9 @@ export const INSTITUTION_TEMPLATES: InstitutionTemplate[] = [
       { key: "services", label: "Services and clinics", description: "One service per line. For richer pages use: Name | description | category | referral needed | clinic days | location | how to access | first visit | emergency note | detail 1; detail 2.", kind: "list" },
       { key: "departments", label: "Departments and clinics", description: "One department or clinic per line.", kind: "list" },
       { key: "emergency", label: "Emergency care", description: "Where to go and what to do in an emergency.", kind: "text" },
-      { key: "visiting", label: "Visiting patients", description: "Visiting hours and visitor guidance.", kind: "text" },
+      { key: "visitingHours", label: "Visiting schedule", description: "Add each day or day group and its visiting times. You can also add a note for a period.", kind: "schedule" },
+      { key: "visitingInstructions", label: "Visiting instructions", description: "Add one instruction per line, such as visitor limits, check-in steps or ward-specific guidance.", kind: "list" },
+      { key: "visiting", label: "Additional visiting information", description: "Optional general guidance for visitors. Existing free-text guidance remains supported.", kind: "text" },
       { key: "insurance", label: "Payment and insurance", description: "SHA, insurance and payment information.", kind: "text" },
       { key: "faqs", label: "Common questions", description: "Add questions and answers when patients need extra guidance.", kind: "list" },
     ],
