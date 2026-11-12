@@ -2,11 +2,49 @@
 
 import { useMemo, useState } from "react";
 import { getInstitutionTemplate } from "@/lib/institutions/templates";
+import InstitutionLinkPicker from "@/components/admin/InstitutionLinkPicker";
 
 type Props = { templateKey: string; value: string; onChange: (value: string) => void };
 type FAQ = { question: string; answer: string };
 
 type Drafts = Record<string, string>;
+
+function RelatedFacilitiesEditor({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+  const facilities = value.split("\\n").map((line) => line.trim()).filter(Boolean);
+  return (
+    <div>
+      <InstitutionLinkPicker
+        id="template-relatedFacilities-picker"
+        label="Add a related facility"
+        hint="Search the institution database, then select a facility to add it below."
+        valueId=""
+        valueLabel=""
+        onChange={(pick) => {
+          if (!pick.slug) return;
+          const entry = `${pick.label} | /government/institutions/${pick.slug}`;
+          if (!facilities.some((facility) => facility.endsWith(`| /government/institutions/${pick.slug}`))) {
+            onChange([...facilities, entry].join("\\n"));
+          }
+        }}
+      />
+      {facilities.length > 0 && (
+        <ul className="govuk-list govuk-list--bullet">
+          {facilities.map((facility, index) => {
+            const [name] = facility.split("|");
+            return (
+              <li key={`${facility}-${index}`}>
+                {name.trim()} {" "}
+                <button type="button" className="govuk-link" onClick={() => onChange(facilities.filter((_, itemIndex) => itemIndex !== index).join("\\n"))}>
+                  Remove
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 function readData(value: string): Record<string, unknown> {
   try {
@@ -70,13 +108,17 @@ export default function TemplateFieldEditor({ templateKey, value, onChange }: Pr
         <div className="govuk-form-group" key={field.key}>
           <label className="govuk-label govuk-label--m" htmlFor={`template-${field.key}`}>{field.label}</label>
           <p className="govuk-hint">{field.description}{field.key === "faqs" ? " Write one per line as: Question | Answer." : ""}</p>
-          <textarea
-            className="govuk-textarea"
-            id={`template-${field.key}`}
-            rows={field.kind === "list" ? 4 : 3}
-            value={drafts[field.key] || ""}
-            onChange={(event) => update(field.key, event.target.value)}
-          />
+          {field.key === "relatedFacilities" ? (
+            <RelatedFacilitiesEditor value={drafts[field.key] || ""} onChange={(value) => update(field.key, value)} />
+          ) : (
+            <textarea
+              className="govuk-textarea"
+              id={`template-${field.key}`}
+              rows={field.kind === "list" ? 4 : 3}
+              value={drafts[field.key] || ""}
+              onChange={(event) => update(field.key, event.target.value)}
+            />
+          )}
         </div>
       ))}
       <p className="govuk-hint">This editor saves the content for the selected template. You do not need to write JSON.</p>

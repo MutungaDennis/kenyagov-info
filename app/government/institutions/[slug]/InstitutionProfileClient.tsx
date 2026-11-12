@@ -52,6 +52,7 @@ type Institution = {
   head_appointment_date?: string | null;
   board_chair?: string | null;
   website_url?: string | null;
+  social_media?: unknown;
   email?: string | null;
   phone?: string | null;
   contact_points?: InstitutionContactPoint[] | null;

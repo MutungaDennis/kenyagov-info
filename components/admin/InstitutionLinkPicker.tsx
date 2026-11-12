@@ -17,7 +17,7 @@ type Props = {
   valueId: string;
   valueLabel: string;
   excludeId?: string;
-  onChange: (pick: { id: string; label: string }) => void;
+  onChange: (pick: { id: string; label: string; slug?: string | null }) => void;
 };
 
 /**
@@ -163,6 +163,7 @@ export default function InstitutionLinkPicker({
                     label: r.short_name
                       ? `${r.name} (${r.short_name})`
                       : r.name,
+                    slug: r.slug,
                   });
                   setSearch("");
                   setOpen(false);

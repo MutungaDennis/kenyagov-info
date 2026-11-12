@@ -229,7 +229,7 @@ export default function RootLayout({
   );
 
   return (
-    <html lang="en-KE" className="govuk-template">
+    <html lang="en-KE" className="govuk-template" suppressHydrationWarning>
       <head>
         <Script
           id="cookie-consent-bootstrap"

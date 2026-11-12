@@ -7,10 +7,12 @@ type HospitalData = ReferralTemplateData & {
   emergencyMain?: string;
   referralLine?: string;
   ambulance?: string;
-  quickLinks?: { label: string; href: string }[];
-  relatedFacilities?: (string | { name: string; href: string; reason?: string })[];
+  quickLinks?: { label: string; href?: string | null }[];
+  relatedFacilities?: (string | { name: string; href?: string | null; reason?: string })[];
   healthcareLevel?: string;
 };
+
+type SocialLink = { platform: string; url: string };
 
 type Props = {
   institution: {
@@ -19,6 +21,7 @@ type Props = {
     short_name?: string | null;
     description?: string | null;
     website_url?: string | null;
+    social_media?: unknown;
     phone?: string | null;
     email?: string | null;
     physical_address?: string | null;
@@ -34,7 +37,7 @@ export default function ReferralHospitalProfile({ institution }: Props) {
   const referralLine = data.referralLine || "Referral line not provided";
   const ambulance = data.ambulance || "922";
   const hospitalUrl = `/government/institutions/${institution.slug}`;
-  const quickLinks = (data.quickLinks || []).filter((link) => typeof link?.label === "string" && typeof link?.href === "string" && link.href.length > 0);
+  const quickLinks = (data.quickLinks || []).filter((link): link is { label: string; href: string } => typeof link?.label === "string" && typeof link?.href === "string" && link.href.length > 0);
   const relatedFacilities = (data.relatedFacilities || []).map((facility) => {
     if (typeof facility === "string") {
       const [name, href, reason] = facility.split("|").map((part) => part.trim());
@@ -42,6 +45,12 @@ export default function ReferralHospitalProfile({ institution }: Props) {
     }
     return facility?.name && facility?.href ? facility : null;
   }).filter((facility): facility is { name: string; href: string; reason?: string } => Boolean(facility));
+  const socialLinks: SocialLink[] = Array.isArray(institution.social_media)
+    ? institution.social_media.filter((link): link is SocialLink => Boolean(link && typeof link === "object" && "url" in link && typeof link.url === "string"))
+    : institution.social_media && typeof institution.social_media === "object"
+      ? Object.entries(institution.social_media).filter(([, url]) => typeof url === "string").map(([platform, url]) => ({ platform, url }))
+      : [];
+  const socialLabel = (platform: string) => platform.replace(/[-_]/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
 
   return (
     <div className="healthcare-profile">
@@ -73,15 +82,15 @@ export default function ReferralHospitalProfile({ institution }: Props) {
 
       <section className="healthcare-profile__intro">
         <h2 className="govuk-heading-l">What do you need to do?</h2>
-        <p className="govuk-body">Start with the information most people need when they are planning care or visiting the hospital.</p>
-        <div className="healthcare-action-grid">
-          <ActionCard title="Emergency / A&E" text="Open 24 hours. Find emergency contacts and what to do now." href={`${hospitalUrl}/contact#emergency`} emergency />
-          <ActionCard title="How to get care" text="Referrals, appointments, clinic booking and what to expect." href={`${hospitalUrl}/how-to-get-care`} />
-          <ActionCard title="Find a service or clinic" text="Surgical, medical, cancer, renal, diagnostics, paediatrics and more." href={`${hospitalUrl}/services`} />
-          <ActionCard title="Visiting hours" text="Check visiting guidance and what to bring when visiting a patient." href={`${hospitalUrl}/patient-information#visiting`} />
-          <ActionCard title="Patient information" text="Admission, discharge, documents, bills and insurance." href={`${hospitalUrl}/patient-information`} />
-          <ActionCard title="Contact & find us" text="Phone numbers, address, opening hours and directions." href={`${hospitalUrl}/contact`} />
-        </div>
+        <ul className="healthcare-task-list">
+          <li><Link href={`${hospitalUrl}/contact#emergency`}><span className="healthcare-task-list__arrow" aria-hidden="true">→</span><span><strong>Emergency / A&amp;E</strong></span></Link></li>
+          <li><Link href={`${hospitalUrl}/how-to-get-care`}><span className="healthcare-task-list__arrow" aria-hidden="true">→</span><span><strong>How to get care</strong></span></Link></li>
+          <li><Link href={`${hospitalUrl}/services`}><span className="healthcare-task-list__arrow" aria-hidden="true">→</span><span><strong>Find a service or clinic</strong></span></Link></li>
+          <li><Link href={`${hospitalUrl}/patient-information#visiting`}><span className="healthcare-task-list__arrow" aria-hidden="true">→</span><span><strong>Visiting hours</strong></span></Link></li>
+          <li><Link href={`${hospitalUrl}/patient-information`}><span className="healthcare-task-list__arrow" aria-hidden="true">→</span><span><strong>Patient information</strong></span></Link></li>
+          <li><Link href={`${hospitalUrl}/contact`}><span className="healthcare-task-list__arrow" aria-hidden="true">→</span><span><strong>Contact &amp; find us</strong></span></Link></li>
+          <li><Link href={`${hospitalUrl}/about`}><span className="healthcare-task-list__arrow" aria-hidden="true">→</span><span><strong>About this hospital</strong></span></Link></li>
+        </ul>
       </section>
 
       {(institution.description || data.mandate) && <section className="healthcare-profile__section healthcare-profile__about"><h2 className="govuk-heading-l">About this hospital</h2>{institution.description && <p className="govuk-body-l">{institution.description}</p>}{data.mandate && <p className="govuk-body">{data.mandate}</p>}<Link className="govuk-link" href={`${hospitalUrl}/about`}>Read more about this hospital</Link></section>}
@@ -89,13 +98,21 @@ export default function ReferralHospitalProfile({ institution }: Props) {
       <section className="healthcare-profile__section" id="services">
         <h2 className="govuk-heading-l">Services overview</h2>
         <p className="govuk-body">Browse services and clinics to find access information, locations and what to expect.</p>
-        {services.length > 0 ? <div className="healthcare-service-grid">{services.slice(0, 9).map((service) => <Link className="healthcare-service-card" href={`${hospitalUrl}/services/${serviceSlug(service)}`} key={serviceSlug(service)}><h3 className="govuk-heading-m">{service.name}<span aria-hidden="true">→</span></h3><p className="govuk-body">{service.description || "View service information"}</p></Link>)}</div> : <p className="govuk-body">Services and clinics will be listed here when they are added.</p>}
+        {services.length > 0 ? <div className="healthcare-service-grid">{services.slice(0, 9).map((service) => <Link className="healthcare-service-card" href={`${hospitalUrl}/services/${serviceSlug(service)}`} key={serviceSlug(service)}><h3 className="govuk-heading-m">{service.name}<span aria-hidden="true">→</span></h3></Link>)}</div> : <p className="govuk-body">Services and clinics will be listed here when they are added.</p>}
         <Link className="govuk-link" href={`${hospitalUrl}/services`}>View all services and clinics</Link>
       </section>
 
       <section className="healthcare-profile__section healthcare-contact-summary" id="contact">
-        <div><h2 className="govuk-heading-l">Contact &amp; location</h2><p className="govuk-body">{institution.physical_address || "Address not provided"}</p><p className="govuk-body">Main: {institution.phone || "Not provided"}<br />Email: {institution.email || "Not provided"}</p><Link className="govuk-link" href={`${hospitalUrl}/contact`}>Full contact and location details</Link></div>
-        {data.mapUrl && <a className="govuk-button govuk-button--secondary" href={data.mapUrl} target="_blank" rel="noreferrer">Open map</a>}
+        <div>
+          <h2 className="govuk-heading-l">Contact &amp; find us</h2>
+          <p className="govuk-body">{institution.physical_address || "Address not provided"}</p>
+          <p className="govuk-body">Main: {institution.phone || "Not provided"}<br />Email: {institution.email || "Not provided"}</p>
+          <div className="healthcare-contact-actions">
+            {data.mapUrl && <a className="govuk-button govuk-button--secondary" href={data.mapUrl} target="_blank" rel="noreferrer">Open Google Maps</a>}
+            {institution.website_url && <a className="govuk-button govuk-button--secondary" href={institution.website_url} target="_blank" rel="noreferrer">Official website</a>}
+          </div>
+          {socialLinks.length > 0 && <div className="healthcare-social-links" aria-label="Social media links">{socialLinks.map((link) => <a className="healthcare-social-link" href={link.url} target="_blank" rel="noreferrer" key={`${link.platform}-${link.url}`}><span aria-hidden="true">{socialLabel(link.platform).slice(0, 2).toUpperCase()}</span><strong>{socialLabel(link.platform)}</strong></a>)}</div>}
+        </div>
       </section>
 
       {relatedFacilities.length > 0 && <section className="healthcare-profile__section"><h2 className="govuk-heading-l">Other facilities to consider</h2><p className="govuk-body">You may also find this service at these related facilities.</p><ul className="govuk-list healthcare-related-links">{relatedFacilities.map((facility) => <li key={`${facility.name}-${facility.href}`}><Link className="govuk-link" href={facility.href}>{facility.name}</Link>{facility.reason && <span>{facility.reason}</span>}</li>)}</ul></section>}
@@ -105,8 +122,4 @@ export default function ReferralHospitalProfile({ institution }: Props) {
       <footer className="healthcare-profile__footer"><div><h2 className="govuk-heading-m">Contact</h2><p>{institution.name}<br />{institution.physical_address || "Address not provided"}<br />Main: {institution.phone || "Not provided"}<br />Referral: {referralLine}<br />{institution.email || "Email not provided"}</p></div><div><h2 className="govuk-heading-m">Quick links</h2><ul className="govuk-list"><li><Link href={`${hospitalUrl}/services`}>Services &amp; clinics</Link></li><li><Link href={`${hospitalUrl}/patient-information`}>Patient information</Link></li><li><Link href={`${hospitalUrl}/how-to-get-care`}>How to get care</Link></li><li><Link href={`${hospitalUrl}/contact`}>Contact &amp; location</Link></li></ul></div><div><h2 className="govuk-heading-m">More</h2><ul className="govuk-list"><li><Link href={`${hospitalUrl}/about`}>About</Link></li><li><Link href="/government/institutions">Other institutions</Link></li></ul></div></footer>
     </div>
   );
-}
-
-function ActionCard({ title, text, href, emergency = false }: { title: string; text: string; href: string; emergency?: boolean }) {
-  return <Link className={`healthcare-action-card${emergency ? " healthcare-action-card--emergency" : ""}`} href={href}><h3 className="govuk-heading-m">{title}<span className="healthcare-card-arrow" aria-hidden="true">→</span></h3><p className="govuk-body">{text}</p></Link>;
 }
