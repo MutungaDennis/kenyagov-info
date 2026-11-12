@@ -44,6 +44,10 @@ const FACET_COLUMNS = [
   "status",
   "verification_status",
   "head_title",
+  "last_annual_report_year",
+  "last_audit_opinion",
+  "number_of_employees",
+  "annual_budget_estimate",
 ] as const;
 
 function collectFacet(
@@ -82,11 +86,13 @@ export async function GET(request: NextRequest) {
       arm_of_government, institution_category, institution_type, institution_subtype,
       institution_nature, government_level, constitutional_status, mtef_sector,
       operational_model, legal_basis_type, funding_model, jurisdiction_scope,
-      cofog_division, cofog_group, status, verification_status, head_title
+      cofog_division, cofog_group, status, verification_status, head_title,
+      last_annual_report_year, last_audit_opinion, number_of_employees, annual_budget_estimate
     `;
     const FACET_SELECT_MINIMAL = `
       arm_of_government, institution_category, institution_type,
-      mtef_sector, institution_nature, status
+      mtef_sector, institution_nature, status, last_annual_report_year,
+      last_audit_opinion, number_of_employees, annual_budget_estimate
     `;
 
     for (let i = 0; i < 50; i++) {
@@ -151,6 +157,10 @@ export async function GET(request: NextRequest) {
         status: sorted("status"),
         verification_status: sorted("verification_status"),
         head_title: sorted("head_title"),
+        last_annual_report_year: sorted("last_annual_report_year"),
+        last_audit_opinion: sorted("last_audit_opinion"),
+        number_of_employees: sorted("number_of_employees"),
+        annual_budget_estimate: sorted("annual_budget_estimate"),
       },
     });
   }

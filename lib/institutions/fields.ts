@@ -70,6 +70,7 @@ export const INSTITUTION_WRITABLE_FIELDS = [
   "portal_url",
   "email",
   "phone",
+  "contact_points",
   "fax",
   "toll_free",
   "whatsapp",
@@ -147,6 +148,7 @@ const ARRAY_FIELDS = new Set<string>([
 /** jsonb columns */
 const JSON_FIELDS = new Set<string>([
   "social_media",
+  "contact_points",
   "core_services",
   "key_performance_indicators",
   "template_data",
@@ -189,10 +191,7 @@ export function isTemporaryBodySchemaUnavailable(message: string): boolean {
 const NUMBER_FIELDS = new Set<string>([
   "latitude",
   "longitude",
-  "last_annual_report_year",
   "transparency_score",
-  "number_of_employees",
-  "annual_budget_estimate",
 ]);
 
 // —— Enum options (from live distinct values + safe extensions) ——
@@ -976,7 +975,8 @@ export function buildInstitutionRow(
 }
 
     if (NUMBER_FIELDS.has(key)) {
-      const n = Number(val);
+      const normalized = typeof val === "string" ? val.replace(/[,\s]/g, "").replace(/KES/gi, "") : val;
+      const n = Number(normalized);
       row[key] = Number.isFinite(n) ? n : null;
       continue;
     }

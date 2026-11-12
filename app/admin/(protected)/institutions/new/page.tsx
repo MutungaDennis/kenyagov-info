@@ -16,7 +16,6 @@ import InstitutionForm, {
   institutionFormToPayload,
   type InstitutionFormState,
 } from "@/components/admin/InstitutionForm";
-import type { LeaderPickResult } from "@/components/admin/LeaderLinkPicker";
 import type { SocialLink } from "@/lib/leaders/titles-social";
 
 // 🚀 Import the IndexNow helper
@@ -183,19 +182,6 @@ export default function NewInstitutionPage() {
     setSuccess(null);
   };
 
-  const onHeadLeaderChange = (pick: LeaderPickResult) => {
-    setForm((prev) => ({
-      ...prev,
-      current_head_id: pick.id,
-      current_head: pick.label || prev.current_head,
-      head_title: prev.head_title.trim()
-        ? prev.head_title
-        : pick.title || prev.head_title,
-    }));
-    setError(null);
-    setSuccess(null);
-  };
-
   const onSocialLinksChange = (links: SocialLink[]) => {
     setForm((prev) => ({ ...prev, social_links: links }));
     setError(null);
@@ -293,9 +279,8 @@ export default function NewInstitutionPage() {
         <InstitutionForm
           form={form}
           onChange={onChange}
-          onHierarchyChange={onHierarchyChange}
-          onHeadLeaderChange={onHeadLeaderChange}
-          onSocialLinksChange={onSocialLinksChange}
+        onHierarchyChange={onHierarchyChange}
+        onSocialLinksChange={onSocialLinksChange}
           onSubmit={onSubmit}
           submitting={submitting}
           canSave={canSave}

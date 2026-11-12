@@ -110,10 +110,26 @@
 .institution-profile-container .govuk-main-wrapper { padding-top: 0; }
 
 .healthcare-profile {
-  background: #f0f4f5; margin-left: -1rem; margin-right: -1rem; padding: 1.25rem 1rem 0; }
-.healthcare-profile__section { max-width: 60rem; }
+  background: #f0f4f5;
+  margin-left: -1rem;
+  margin-right: -1rem;
+  padding: 1.25rem 1rem 2rem;
+}
+.healthcare-profile__section, .healthcare-profile__intro { max-width: 60rem; margin-left: auto; margin-right: auto; }
+.healthcare-masthead { background: #005eb8; color: #fff; margin: 0 -1rem; }
+.healthcare-masthead__inner { align-items: center; display: flex; flex-wrap: wrap; gap: 1rem 2rem; justify-content: space-between; margin: 0 auto; max-width: 60rem; padding: 1rem; }
+.healthcare-brand { color: #fff; font-size: 1.35rem; font-weight: 700; text-decoration: none; }
+.healthcare-masthead__nav { display: flex; flex-wrap: wrap; gap: .75rem 1.25rem; }
+.healthcare-masthead__nav a { color: #fff; font-weight: 700; text-decoration: underline; text-underline-offset: .2em; }
+.healthcare-profile__header { background: #fff; margin: 0 auto; max-width: 60rem; padding: 1.5rem 0 2rem; }
+.healthcare-profile__hero { background: #005eb8; border: 0; color: #fff; margin: 0 0 1.5rem; padding: 1.25rem 1.5rem; }
+.healthcare-profile__hero .govuk-caption-l, .healthcare-profile__hero .govuk-body-l { color: #fff; margin-bottom: .35rem; }
+.healthcare-profile__header > .govuk-caption-l { margin-top: 1rem; }
+.healthcare-profile__section { background: #fff; padding: 1.5rem; }
 .healthcare-profile__intro { background: #fff; margin: 0 -1rem; max-width: none; padding: 2rem 1rem; }
-.healthcare-action-card--emergency { border-top-color: #005eb8; background: #fff; }
+.healthcare-action-card { background: #fff; border: 0; border-bottom: 4px solid #005eb8; min-height: 9rem; }
+.healthcare-action-card--emergency { border-bottom-color: #d4351c; border-top-color: #005eb8; background: #fff; }
+.healthcare-action-card h3 { color: #005eb8; text-decoration: underline; text-underline-offset: .15em; }
 
 .healthcare-related-links { display: grid; gap: .75rem; }
 .healthcare-related-links li { display: flex; flex-direction: column; gap: .15rem; }
@@ -140,15 +156,15 @@
 .healthcare-profile__footer .govuk-list { margin-bottom: 0; }
 
 .healthcare-profile__hero {
-  background: #e8f3ee;
-  border-left: 0.35rem solid var(--app-brand-green);
+  background: #003b6f;
+  border-left: 0;
+  color: #fff;
   padding: 1.5rem;
-  margin: 2rem 0;
+  margin: 0 0 1.5rem;
 }
 
-.healthcare-profile__hero .govuk-heading-xl {
-  margin-bottom: 1rem;
-}
+.healthcare-profile__hero .govuk-heading-xl { margin-bottom: 1rem; }
+.healthcare-profile__hero .govuk-body-l { color: #fff; }
 
 .healthcare-profile__actions {
   display: flex;
@@ -324,6 +340,11 @@
 }
 
 @media (max-width: 40.0525em) {
+  .healthcare-masthead__inner { align-items: flex-start; flex-direction: column; }
+  .healthcare-masthead__nav { gap: .5rem 1rem; }
+  .healthcare-profile__hero { padding: 1rem; }
+  .healthcare-profile__section, .healthcare-profile__intro { padding: 1rem; }
+  .healthcare-emergency-bar { align-items: flex-start; flex-direction: column; }
   .healthcare-profile__hero {
     padding: 1rem;
   }
