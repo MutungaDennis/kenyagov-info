@@ -17,6 +17,24 @@ beforeEach(() => {
   auth.isAdmin.mockResolvedValue(true);
 });
 
+it("redirects the public admin login to a setup message when Supabase is not configured", async () => {
+  vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "");
+  vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "");
+  vi.stubEnv("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY", "");
+  const result = await updateSession(new NextRequest("https://www.citizenguide.ke/custom-admin/login"));
+  expect(result.headers.get("location")).toContain("error=database-unavailable");
+  expect(auth.user).not.toHaveBeenCalled();
+});
+
+it("fails closed for protected admin pages when Supabase is not configured", async () => {
+  vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "");
+  vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "");
+  vi.stubEnv("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY", "");
+  const result = await updateSession(new NextRequest("https://www.citizenguide.ke/custom-admin/leaders"));
+  expect(result.status).toBe(503);
+  expect(auth.user).not.toHaveBeenCalled();
+});
+
 it("keeps password recovery reachable for an authenticated admin", async () => {
   const result = await updateSession(new NextRequest("https://www.citizenguide.ke/custom-admin/reset-password"));
   expect(result.headers.get("location")).toBeNull();

@@ -19,9 +19,21 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
   const forwarded = new Headers(request.headers);
   forwarded.set("x-pathname", pathname);
   let response = NextResponse.next({ request: { headers: forwarded } });
+  const relative = pathname.slice(getAdminBasePath().length).replace(/^\//, "");
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
   const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.trim() || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
-  if (!url || !key) return NextResponse.json({ error: "Authentication service unavailable" }, { status: 503, headers: { "Cache-Control": "no-store" } });
+  if (!url || !key) {
+    if (!api && relative === "login") {
+      if (request.nextUrl.searchParams.get("error") !== "database-unavailable") {
+        const login = request.nextUrl.clone();
+        login.searchParams.set("error", "database-unavailable");
+        return NextResponse.redirect(login);
+      }
+      response.headers.set("Cache-Control", "private, no-store");
+      return response;
+    }
+    return NextResponse.json({ error: "Authentication service unavailable" }, { status: 503, headers: { "Cache-Control": "no-store" } });
+  }
   const supabase = createServerClient(url, key, {
     cookies: {
       getAll: () => request.cookies.getAll(),
@@ -39,7 +51,6 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
   const { data, error } = await supabase.auth.getClaims();
   const authenticated = !error && Boolean(data?.claims?.sub);
   if (api) return authenticated ? response : withCookies(response, NextResponse.json({ error: "Unauthorized" }, { status: 401, headers: { "Cache-Control": "no-store" } }));
-  const relative = pathname.slice(getAdminBasePath().length).replace(/^\//, "");
   // Never redirect here based on roles: this avoids loops for non-admin users
   // redirected back by requireAdmin(), and keeps recovery sessions reachable.
   if (["login", "forgot-password", "reset-password"].includes(relative)) return response;

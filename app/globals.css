@@ -370,8 +370,8 @@
   gap: 0.2rem;
 }
 
-.healthcare-service-links span {
-  color: #505a5f;
+.healthcare-service-links__arrow {
+  color: #fff;
 }
 
 .healthcare-service-detail {
