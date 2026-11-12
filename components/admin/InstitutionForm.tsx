@@ -58,7 +58,7 @@ function setTemplateLevel(value: string, level: string) {
   return JSON.stringify({ ...data, healthcareLevel: level }, null, 2);
 }
 
-type InstitutionContactPoint = { type: "email" | "phone"; purpose: string; value: string };
+type InstitutionContactPoint = { type: "email" | "telephone" | "mobile"; purpose: string; value: string };
 
 function contactPointsFromRow(data: Record<string, unknown>): InstitutionContactPoint[] {
   const raw = data.contact_points;
@@ -74,7 +74,7 @@ function contactPointsFromRow(data: Record<string, unknown>): InstitutionContact
     return points.flatMap((item) => {
       if (!item || typeof item !== "object") return [];
       const point = item as Record<string, unknown>;
-      const type = point.type === "email" ? "email" : point.type === "phone" ? "phone" : null;
+      const type = point.type === "email" ? "email" : point.type === "mobile" ? "mobile" : point.type === "telephone" || point.type === "phone" ? "telephone" : null;
       const value = String(point.value ?? "").trim();
       if (!type || !value) return [];
       return [{ type, purpose: String(point.purpose ?? "General inquiries"), value }];
@@ -82,9 +82,9 @@ function contactPointsFromRow(data: Record<string, unknown>): InstitutionContact
   }
   return [
     ...(data.email ? [{ type: "email" as const, purpose: "General inquiries", value: String(data.email) }] : []),
-    ...(data.phone ? [{ type: "phone" as const, purpose: "General inquiries", value: String(data.phone) }] : []),
-    ...(data.toll_free ? [{ type: "phone" as const, purpose: "Toll-free", value: String(data.toll_free) }] : []),
-    ...(data.whatsapp ? [{ type: "phone" as const, purpose: "WhatsApp", value: String(data.whatsapp) }] : []),
+    ...(data.phone ? [{ type: "telephone" as const, purpose: "General inquiries", value: String(data.phone) }] : []),
+    ...(data.toll_free ? [{ type: "telephone" as const, purpose: "Toll-free", value: String(data.toll_free) }] : []),
+    ...(data.whatsapp ? [{ type: "mobile" as const, purpose: "WhatsApp", value: String(data.whatsapp) }] : []),
   ];
 }
 
@@ -95,7 +95,7 @@ function parseContactPoints(value: string): InstitutionContactPoint[] {
       ? points.flatMap((item) => {
           if (!item || typeof item !== "object") return [];
           const point = item as Record<string, unknown>;
-          const type = point.type === "email" ? "email" : point.type === "phone" ? "phone" : null;
+          const type = point.type === "email" ? "email" : point.type === "mobile" ? "mobile" : point.type === "telephone" || point.type === "phone" ? "telephone" : null;
           const value = String(point.value ?? "").trim();
           if (!type) return [];
           return [{ type, purpose: String(point.purpose ?? "General inquiries").trim(), value }];
@@ -179,6 +179,7 @@ export type InstitutionFormState = {
   headquarters: string;
   physical_address: string;
   postal_address: string;
+  map_url: string;
   website_url: string;
   portal_url: string;
   email: string;
@@ -290,6 +291,7 @@ export const emptyInstitutionForm = (): InstitutionFormState => ({
   headquarters: "",
   physical_address: "",
   postal_address: "",
+  map_url: "",
   website_url: "",
   portal_url: "",
   email: "",
@@ -409,6 +411,7 @@ export function institutionFormFromRow(
     headquarters: s("headquarters"),
     physical_address: s("physical_address"),
     postal_address: s("postal_address"),
+    map_url: s("map_url"),
     website_url: s("website_url"),
     portal_url: s("portal_url"),
   email: s("email"),
@@ -1860,6 +1863,16 @@ export default function InstitutionForm({
           </Field>
         </div>
       </div>
+      <Field id="map_url" label="Google Maps pin link" hint="Paste the share link for the facility pin. It will appear in the Contact & find us section.">
+        <input
+          className="govuk-input"
+          id="map_url"
+          name="map_url"
+          type="url"
+          value={form.map_url}
+          onChange={onChange}
+        />
+      </Field>
       <div className="govuk-grid-row">
         <div className="govuk-grid-column-one-half">
           <Field id="website_url" label="Website">
@@ -1888,7 +1901,7 @@ export default function InstitutionForm({
       </div>
       <fieldset className="govuk-fieldset govuk-!-margin-bottom-4">
         <legend className="govuk-fieldset__legend govuk-fieldset__legend--s">Contact methods</legend>
-        <p className="govuk-hint">Add as many email addresses or phone numbers as needed, with a purpose for each.</p>
+        <p className="govuk-hint">Add email addresses, telephone lines or mobile numbers in any order. The public profile groups them by type.</p>
         {contactPoints.length > 0 && (
           <div className="govuk-!-margin-bottom-4">
             {contactPoints.map((point, index) => (
@@ -1901,12 +1914,13 @@ export default function InstitutionForm({
                     value={point.type}
                     onChange={(event) => {
                       const next = [...contactPoints];
-                      next[index] = { ...point, type: event.target.value as "email" | "phone" };
+                      next[index] = { ...point, type: event.target.value as InstitutionContactPoint["type"] };
                       emitField("contact_points", JSON.stringify(next));
                     }}
                   >
                     <option value="email">Email</option>
-                    <option value="phone">Phone</option>
+                    <option value="telephone">Telephone</option>
+                    <option value="mobile">Mobile</option>
                   </select>
                 </div>
                 <div className="govuk-grid-column-one-quarter">
@@ -2477,9 +2491,9 @@ export function institutionFormToPayload(
     ...rest,
     contact_points: contacts,
     email: contacts.find((point) => point.type === "email")?.value || null,
-    phone: contacts.find((point) => point.type === "phone" && !/toll.?free|whats.?app/i.test(point.purpose))?.value || null,
-    toll_free: contacts.find((point) => point.type === "phone" && /toll.?free/i.test(point.purpose))?.value || null,
-    whatsapp: contacts.find((point) => point.type === "phone" && /whats.?app/i.test(point.purpose))?.value || null,
+    phone: contacts.find((point) => point.type === "telephone" && !/toll.?free|whats.?app/i.test(point.purpose))?.value || null,
+    toll_free: contacts.find((point) => point.type === "telephone" && /toll.?free/i.test(point.purpose))?.value || null,
+    whatsapp: contacts.find((point) => (point.type === "mobile" || point.type === "telephone") && /whats.?app/i.test(point.purpose))?.value || null,
     template_data: templateData,
     social_media: (social_links || []).filter((l) => l.platform && l.url.trim()),
     parent_institution_id: fk(form.parent_institution_id),
