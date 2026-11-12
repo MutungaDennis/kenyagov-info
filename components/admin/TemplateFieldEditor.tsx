@@ -41,9 +41,10 @@ export default function TemplateFieldEditor({ templateKey, value, onChange }: Pr
   const update = (key: string, next: string) => {
     const nextDrafts = { ...drafts, [key]: next };
     setDrafts(nextDrafts);
-    const nextData: Record<string, unknown> = {};
+    const nextData: Record<string, unknown> = { ...readData(value) };
     for (const field of template.fields) {
       const draft = nextDrafts[field.key] || "";
+      delete nextData[field.key];
       if (field.key === "quickLinks") {
         nextData[field.key] = draft.split("\n").map((item) => { const [label, ...href] = item.split("|"); return { label: label.trim(), href: href.join("|").trim() }; }).filter((link) => link.label && link.href);
       } else if (field.key === "faqs") {
@@ -63,7 +64,7 @@ export default function TemplateFieldEditor({ templateKey, value, onChange }: Pr
   return (
     <div className="template-field-editor">
       <div className="govuk-inset-text">
-        <strong>{template.name}</strong><br />Complete only the information this facility needs. Existing institution fields are used automatically when these fields are left blank.
+        <strong>{template.name} — additional details</strong><br />These fields add template-specific information. Shared institution fields remain available below and are saved alongside this template data.
       </div>
       {template.fields.map((field) => (
         <div className="govuk-form-group" key={field.key}>

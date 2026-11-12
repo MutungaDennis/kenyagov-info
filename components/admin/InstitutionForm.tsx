@@ -742,7 +742,10 @@ export default function InstitutionForm({
         </select>
       </Field>
       {form.template_key === "healthcare" && <Field id="healthcare_level" label="Healthcare level" hint="Healthcare is the main category. Select exactly one level-of-care subcategory; it appears in search and on the facility profile."><select required className="govuk-select" id="healthcare_level" value={readTemplateLevel(form.template_data)} onChange={(event) => onChange({ target: { name: "template_data", value: setTemplateLevel(form.template_data, event.target.value) } } as ChangeEvent<HTMLInputElement>)}><option value="">Select a level</option>{HEALTHCARE_LEVELS.map((level) => <option value={level.key} key={level.key}>{level.label}</option>)}</select></Field>}
+      {form.template_key && <p className="govuk-inset-text">Template-specific fields add to the shared institution record. All standard fields below remain available and are saved for every template.</p>}
       <TemplateFieldEditor key={form.template_key} templateKey={form.template_key} value={form.template_data} onChange={(value) => onChange({ target: { name: "template_data", value } } as ChangeEvent<HTMLInputElement>)} />
+      <h2 className="govuk-heading-m">Shared institution details</h2>
+      <p className="govuk-hint">These fields are available for default institutions and every selected template.</p>
       <Field
         id="former_names"
         label="Former names"
