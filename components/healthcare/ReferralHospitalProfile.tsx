@@ -7,7 +7,7 @@ type HospitalData = ReferralTemplateData & {
   mandate?: string;
   mapUrl?: string;
   emergencyMain?: string;
-  referralLine?: string;
+  referralLine?: string | string[];
   ambulance?: string;
   quickLinks?: { label: string; href?: string | null }[];
   relatedFacilities?: (string | { name: string; href?: string | null; reason?: string })[];
@@ -15,7 +15,8 @@ type HospitalData = ReferralTemplateData & {
 };
 
 type SocialLink = { platform: string; url: string };
-type ContactPoint = { type: "email" | "phone"; purpose?: string; value: string };
+type ContactType = "email" | "telephone" | "mobile" | "fax";
+type ContactPoint = { type: ContactType; purpose?: string; value: string };
 
 function safeExternalUrl(value?: string | null) {
   if (!value) return null;
@@ -49,13 +50,23 @@ function readContactPoints(value: unknown): ContactPoint[] {
   }
   if (!Array.isArray(points)) return [];
   return points.flatMap((point) => {
-    if (!point || typeof point !== "object" || (point.type !== "email" && point.type !== "phone") || typeof point.value !== "string" || !point.value.trim()) return [];
+    if (!point || typeof point !== "object" || typeof point.value !== "string" || !point.value.trim()) return [];
+    const type: ContactType | null = point.type === "email" ? "email"
+      : point.type === "mobile" ? "mobile"
+        : point.type === "telephone" || point.type === "phone" ? "telephone"
+          : null;
+    if (!type) return [];
     return [{
-      type: point.type,
+      type,
       value: point.value.trim(),
       purpose: typeof point.purpose === "string" ? point.purpose.trim() : "",
     }];
   });
+}
+
+function readReferralLines(value: unknown): string[] {
+  const entries = Array.isArray(value) ? value : typeof value === "string" ? value.split(/[;\n]/) : [];
+  return entries.flatMap((entry) => typeof entry === "string" ? entry.split(/[;\n]/).map((line) => line.trim()).filter(Boolean) : []);
 }
 
 type Props = {
@@ -76,6 +87,7 @@ type Props = {
     physical_address?: string | null;
     postal_address?: string | null;
     portal_url?: string | null;
+    map_url?: string | null;
     latitude?: number | string | null;
     longitude?: number | string | null;
     template_key?: string | null;
@@ -87,7 +99,7 @@ export default function ReferralHospitalProfile({ institution }: Props) {
   const data = institution.template_data || {};
   const services = getServices(data);
   const emergencyMain = data.emergencyMain || institution.phone || "Emergency number not provided";
-  const referralLine = data.referralLine || "Referral line not provided";
+  const referralLines = readReferralLines(data.referralLine);
   const ambulance = data.ambulance || "922";
   const hospitalUrl = `/government/institutions/${institution.slug}`;
   const quickLinks = (data.quickLinks || []).filter((link): link is { label: string; href: string } =>
@@ -115,14 +127,20 @@ export default function ReferralHospitalProfile({ institution }: Props) {
   const contactPoints = readContactPoints(institution.contact_points);
   const contactMethods = [
     ...contactPoints,
-    ...(institution.phone ? [{ type: "phone" as const, purpose: "General inquiries", value: institution.phone }] : []),
+    ...(institution.phone ? [{ type: "telephone" as const, purpose: "General inquiries", value: institution.phone }] : []),
     ...(institution.email ? [{ type: "email" as const, purpose: "General inquiries", value: institution.email }] : []),
-    ...(institution.toll_free ? [{ type: "phone" as const, purpose: "Toll-free", value: institution.toll_free }] : []),
-    ...(institution.whatsapp ? [{ type: "phone" as const, purpose: "WhatsApp", value: institution.whatsapp }] : []),
+    ...(institution.toll_free ? [{ type: "telephone" as const, purpose: "Toll-free", value: institution.toll_free }] : []),
+    ...(institution.whatsapp ? [{ type: "mobile" as const, purpose: "WhatsApp", value: institution.whatsapp }] : []),
     ...(institution.fax ? [{ type: "fax" as const, purpose: "Fax", value: institution.fax }] : []),
   ].filter((point, index, points) => points.findIndex((candidate) => candidate.type === point.type && candidate.value === point.value) === index);
+  const contactGroups = [
+    { type: "telephone" as const, label: "Telephone" },
+    { type: "mobile" as const, label: "Mobile" },
+    { type: "email" as const, label: "Email" },
+    { type: "fax" as const, label: "Fax" },
+  ].map((group) => ({ ...group, points: contactMethods.filter((point) => point.type === group.type) })).filter((group) => group.points.length > 0);
   const physicalAddresses = [institution.headquarters, institution.physical_address].filter((address, index, addresses): address is string => Boolean(address && addresses.indexOf(address) === index));
-  const mapUrl = safeExternalUrl(data.mapUrl) || (institution.latitude != null && institution.longitude != null
+  const mapUrl = safeExternalUrl(institution.map_url) || safeExternalUrl(data.mapUrl) || (institution.latitude != null && institution.longitude != null
     ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${institution.latitude},${institution.longitude}`)}`
     : null);
   const websiteUrl = safeExternalUrl(institution.website_url);
@@ -149,7 +167,7 @@ export default function ReferralHospitalProfile({ institution }: Props) {
       <div className="healthcare-emergency-bar" role="region" aria-label="Emergency contacts">
         <strong>Emergency / A&amp;E</strong>
         <a href={`tel:${emergencyMain}`}>{emergencyMain}</a>
-        <span>Referral line: <a href={`tel:${referralLine}`}>{referralLine}</a></span>
+        <span>Referral line: {referralLines.length > 0 ? referralLines.map((line, index) => <span key={`${line}-${index}`}>{index > 0 && " · "}<a href={`tel:${line.replace(/[^\d+]/g, "")}`}>{line}</a></span>) : "Referral line not provided"}</span>
         <span>National ambulance: <a href={`tel:${ambulance}`}>{ambulance}</a></span>
       </div>
 
@@ -200,15 +218,21 @@ export default function ReferralHospitalProfile({ institution }: Props) {
         <div className="healthcare-contact-summary__content">
           <h2 className="govuk-heading-l">Contact &amp; find us</h2>
           {physicalAddresses.length > 0 ? physicalAddresses.map((address, index) => (
-            <p className="govuk-body" key={`${address}-${index}`}><strong>{index === 0 ? "Address" : "Physical address"}</strong><br />{address}</p>
-          )) : <p className="govuk-body">Address not provided</p>}
+            <p className="govuk-body" key={`${address}-${index}`}><strong>{index === 0 ? "Headquarters" : "Physical address"}</strong><br />{address}</p>
+          )) : <p className="govuk-body">Headquarters not provided</p>}
           {institution.postal_address && <p className="govuk-body"><strong>Postal address</strong><br />{institution.postal_address}</p>}
-          {contactMethods.length > 0 && (
+          {contactGroups.length > 0 && (
             <dl className="healthcare-contact-details">
-              {contactMethods.map((point, index) => (
-                <div className="healthcare-contact-details__row" key={`${point.type}-${point.purpose}-${index}`}>
-                  <dt>{point.type === "email" ? "Email" : point.type === "fax" ? "Fax" : "Phone"}{point.purpose && point.type !== "fax" ? ` · ${point.purpose}` : ""}</dt>
-                  <dd><a className="govuk-link" href={point.type === "email" ? `mailto:${point.value}` : `tel:${point.value.replace(/[^\d+]/g, "")}`}>{point.value}</a></dd>
+              {contactGroups.map((group) => (
+                <div className="healthcare-contact-details__row" key={group.type}>
+                  <dt>{group.label}</dt>
+                  <dd>{group.points.map((point, index) => (
+                    <span key={`${point.value}-${index}`}>
+                      {index > 0 && " · "}
+                      <a className="govuk-link" href={group.type === "email" ? `mailto:${point.value}` : `tel:${point.value.replace(/[^\d+]/g, "")}`}>{point.value}</a>
+                      {point.purpose && <span className="govuk-hint"> ({point.purpose})</span>}
+                    </span>
+                  ))}</dd>
                 </div>
               ))}
             </dl>
@@ -230,7 +254,7 @@ export default function ReferralHospitalProfile({ institution }: Props) {
 
       {quickLinks.length > 0 && <section className="healthcare-profile__section"><h2 className="govuk-heading-l">More information</h2><ul className="govuk-list">{quickLinks.map((link) => <li key={link.href}><ProfileLink href={link.href}>{link.label}</ProfileLink></li>)}</ul></section>}
 
-      <footer className="healthcare-profile__footer"><div><h2 className="govuk-heading-m">Contact</h2><p>{institution.name}<br />{institution.physical_address || "Address not provided"}<br />Main: {institution.phone || "Not provided"}<br />Referral: {referralLine}<br />{institution.email || "Email not provided"}</p></div><div><h2 className="govuk-heading-m">Quick links</h2><ul className="govuk-list"><li><Link href={`${hospitalUrl}/services`}>Services &amp; clinics</Link></li><li><Link href={`${hospitalUrl}/patient-information`}>Patient information</Link></li><li><Link href={`${hospitalUrl}/how-to-get-care`}>How to get care</Link></li><li><Link href={`${hospitalUrl}/contact`}>Contact &amp; location</Link></li></ul></div><div><h2 className="govuk-heading-m">More</h2><ul className="govuk-list"><li><Link href={`${hospitalUrl}/about`}>About</Link></li><li><Link href="/government/institutions">Other institutions</Link></li></ul></div></footer>
+      <footer className="healthcare-profile__footer"><div><h2 className="govuk-heading-m">Contact</h2><p>{institution.name}<br />{institution.physical_address || "Address not provided"}<br />Main: {institution.phone || "Not provided"}<br />Referral: {referralLines.length ? referralLines.join(" · ") : "Not provided"}<br />{institution.email || "Email not provided"}</p></div><div><h2 className="govuk-heading-m">Quick links</h2><ul className="govuk-list"><li><Link href={`${hospitalUrl}/services`}>Services &amp; clinics</Link></li><li><Link href={`${hospitalUrl}/patient-information`}>Patient information</Link></li><li><Link href={`${hospitalUrl}/how-to-get-care`}>How to get care</Link></li><li><Link href={`${hospitalUrl}/contact`}>Contact &amp; location</Link></li></ul></div><div><h2 className="govuk-heading-m">More</h2><ul className="govuk-list"><li><Link href={`${hospitalUrl}/about`}>About</Link></li><li><Link href="/government/institutions">Other institutions</Link></li></ul></div></footer>
     </div>
   );
 }

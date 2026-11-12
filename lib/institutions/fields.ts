@@ -66,6 +66,7 @@ export const INSTITUTION_WRITABLE_FIELDS = [
   "headquarters",
   "physical_address",
   "postal_address",
+  "map_url",
   "website_url",
   "portal_url",
   "email",

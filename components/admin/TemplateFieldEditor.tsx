@@ -99,6 +99,10 @@ function draftsFromValue(value: string, fields: { key: string; kind: TemplateFie
   const data = readData(value);
   return Object.fromEntries(fields.map((field) => {
     if (field.kind === "schedule") return [field.key, ""];
+    if (field.key === "referralLine") {
+      const lines = Array.isArray(data[field.key]) ? data[field.key] as unknown[] : String(data[field.key] || "").split(/[;\n]/);
+      return [field.key, lines.map(String).map((line) => line.trim()).filter(Boolean).join("\n")];
+    }
     if (field.key === "quickLinks") {
       const links = Array.isArray(data[field.key]) ? (data[field.key] as { label?: string; href?: string }[]) : [];
       return [field.key, links.map((link) => `${link.label || ""} | ${link.href || ""}`).join("\n")];
@@ -132,6 +136,8 @@ export default function TemplateFieldEditor({ templateKey, value, onChange }: Pr
           const [question, ...answer] = item.split("|");
           return { question: question.trim(), answer: answer.join("|").trim() };
         }).filter((faq) => faq.question && faq.answer);
+      } else if (field.key === "referralLine") {
+        nextData[field.key] = draft.split(/[;\n]/).map((item) => item.trim()).filter(Boolean);
       } else if (field.kind === "list") {
         nextData[field.key] = draft.split("\n").map((item) => item.trim()).filter(Boolean);
       } else if (draft.trim()) {

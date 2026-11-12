@@ -35,7 +35,7 @@ function formatGovUKDate(dateStr: string | null | undefined): string {
   return `${day} ${month} ${year}`;
 }
 
-type InstitutionContactPoint = { type: "email" | "phone"; purpose: string; value: string };
+type InstitutionContactPoint = { type: "email" | "phone" | "telephone" | "mobile"; purpose: string; value: string };
 
 type Institution = {
   id: string;
@@ -63,6 +63,7 @@ type Institution = {
   physical_address?: string | null;
   postal_address?: string | null;
   portal_url?: string | null;
+  map_url?: string | null;
   latitude?: number | string | null;
   longitude?: number | string | null;
   status?: string | null;
@@ -370,12 +371,17 @@ export default function InstitutionProfileClient({ people }: { people?: ReactNod
   const historical = isInstitutionHistorical(institution.status);
   const earmarked = isInstitutionEarmarked(institution.status);
   const judicial = isJudicialAnnulmentStatus(institution.status);
-  const contactPoints = institution.contact_points?.length
+  const contactPoints = (institution.contact_points?.length
     ? institution.contact_points
     : [
         ...(institution.email ? [{ type: "email" as const, purpose: "General inquiries", value: institution.email }] : []),
-        ...(institution.phone ? [{ type: "phone" as const, purpose: "General inquiries", value: institution.phone }] : []),
-      ];
+        ...(institution.phone ? [{ type: "telephone" as const, purpose: "General inquiries", value: institution.phone }] : []),
+      ]).map((point) => ({ ...point, type: point.type === "phone" ? "telephone" as const : point.type }));
+  const contactGroups = [
+    { type: "telephone" as const, label: "Telephone" },
+    { type: "mobile" as const, label: "Mobile" },
+    { type: "email" as const, label: "Email" },
+  ].map((group) => ({ ...group, points: contactPoints.filter((point) => point.type === group.type) })).filter((group) => group.points.length > 0);
 
   if (institution.template_key === "healthcare-referral-hospital" || institution.template_key === "healthcare") {
     return (
@@ -732,7 +738,7 @@ export default function InstitutionProfileClient({ people }: { people?: ReactNod
                 <dl className="govuk-summary-list">
                   {institution.headquarters && (
                     <div className="govuk-summary-list__row">
-                      <dt className="govuk-summary-list__key">Address</dt>
+                      <dt className="govuk-summary-list__key">Headquarters</dt>
                       <dd className="govuk-summary-list__value">
                         {institution.headquarters}
                         {institution.physical_address && <><br/>{institution.physical_address}</>}
@@ -745,16 +751,17 @@ export default function InstitutionProfileClient({ people }: { people?: ReactNod
                       <dd className="govuk-summary-list__value"><a href={institution.website_url} className="govuk-link">{institution.website_url}</a></dd>
                     </div>
                   )}
-                  {contactPoints.map((point, index) => (
-                    <div className="govuk-summary-list__row" key={`${point.type}-${point.purpose}-${index}`}>
-                      <dt className="govuk-summary-list__key">{point.type === "email" ? "Email" : "Phone"} — {point.purpose || "General inquiries"}</dt>
+                  {contactGroups.map((group) => (
+                    <div className="govuk-summary-list__row" key={group.type}>
+                      <dt className="govuk-summary-list__key">{group.label}</dt>
                       <dd className="govuk-summary-list__value">
-                        <a
-                          href={point.type === "email" ? `mailto:${point.value}` : `tel:${point.value.replace(/[^\d+]/g, "")}`}
-                          className="govuk-link"
-                        >
-                          {point.value}
-                        </a>
+                        {group.points.map((point, index) => (
+                          <span key={`${point.value}-${index}`}>
+                            {index > 0 && <br />}
+                            <a href={group.type === "email" ? `mailto:${point.value}` : `tel:${point.value.replace(/[^\d+]/g, "")}`} className="govuk-link">{point.value}</a>
+                            {point.purpose && ` — ${point.purpose}`}
+                          </span>
+                        ))}
                       </dd>
                     </div>
                   ))}
