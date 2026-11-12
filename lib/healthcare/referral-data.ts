@@ -13,6 +13,12 @@ export type ReferralService = {
   details?: string[];
 };
 
+export type VisitingPeriod = {
+  days: string;
+  hours: string;
+  note?: string;
+};
+
 export type ReferralTemplateData = {
   heroIntro?: string;
   patientNotice?: string;
@@ -20,6 +26,8 @@ export type ReferralTemplateData = {
   departments?: string[];
   emergency?: string;
   visiting?: string;
+  visitingHours?: VisitingPeriod[];
+  visitingInstructions?: string[];
   insurance?: string;
   faqs?: { question: string; answer: string }[];
 };

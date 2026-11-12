@@ -55,9 +55,16 @@ type Institution = {
   social_media?: unknown;
   email?: string | null;
   phone?: string | null;
+  fax?: string | null;
+  toll_free?: string | null;
+  whatsapp?: string | null;
   contact_points?: InstitutionContactPoint[] | null;
   headquarters?: string | null;
   physical_address?: string | null;
+  postal_address?: string | null;
+  portal_url?: string | null;
+  latitude?: number | string | null;
+  longitude?: number | string | null;
   status?: string | null;
   status_effective_date?: string | null;
   parent_institution_id?: string | null;
