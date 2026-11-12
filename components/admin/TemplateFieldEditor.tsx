@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { getInstitutionTemplate } from "@/lib/institutions/templates";
+import { DEFAULT_CARE_VISITS } from "@/lib/healthcare/referral-data";
 import InstitutionLinkPicker from "@/components/admin/InstitutionLinkPicker";
 
 type Props = { templateKey: string; value: string; onChange: (value: string) => void };
@@ -107,8 +108,8 @@ function ContentCollectionEditor({ fieldKey, value, onChange }: { fieldKey: stri
             <input className="govuk-input" id={`${fieldKey}-${index}-linkLabel`} value={entry.linkLabel || ""} onChange={(event) => updateEntry(index, { linkLabel: event.target.value })} />
           </div>
           <div className="govuk-form-group">
-            <label className="govuk-label" htmlFor={`${fieldKey}-${index}-href`}>Link destination (optional)</label>
-            <input className="govuk-input" id={`${fieldKey}-${index}-href`} placeholder="/government/institutions/slug or https://…" value={entry.href || ""} onChange={(event) => updateEntry(index, { href: event.target.value })} />
+            <label className="govuk-label" htmlFor={`${fieldKey}-${index}-href`}>Internal path or external URL (optional)</label>
+            <input className="govuk-input" id={`${fieldKey}-${index}-href`} placeholder="/government/institutions/… or https://…" value={entry.href || ""} onChange={(event) => updateEntry(index, { href: event.target.value })} />
           </div>
           <button type="button" className="govuk-button govuk-button--secondary" onClick={() => onChange(value.filter((_, entryIndex) => entryIndex !== index))}>Remove item</button>
         </fieldset>
@@ -131,7 +132,7 @@ function draftsFromValue(value: string, fields: { key: string; kind: TemplateFie
   const data = readData(value);
   return Object.fromEntries(fields.map((field) => {
     if (field.kind === "schedule") return [field.key, ""];
-    if (field.kind === "collection") return [field.key, JSON.stringify(Array.isArray(data[field.key]) ? data[field.key] : [])];
+    if (field.kind === "collection") return [field.key, JSON.stringify(Array.isArray(data[field.key]) ? data[field.key] : field.key === "careVisits" ? DEFAULT_CARE_VISITS : [])];
     if (field.key === "referralLine") {
       const lines = Array.isArray(data[field.key]) ? data[field.key] as unknown[] : String(data[field.key] || "").split(/[;\n]/);
       return [field.key, lines.map(String).map((line) => line.trim()).filter(Boolean).join("\n")];

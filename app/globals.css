@@ -197,8 +197,10 @@
 .healthcare-service-layout { align-items: start; display: grid; gap: 1.75rem; grid-template-columns: minmax(0, 1fr) minmax(19rem, 1fr); }
 .healthcare-service-links { grid-template-columns: 1fr; margin-top: 1rem; }
 .healthcare-service-links li { background: #005eb8; border: 0; padding: 0; }
-.healthcare-service-links__link { color: #fff; display: flex; font-size: 1rem; justify-content: space-between; padding: .85rem 1rem; text-decoration: none; }
+.healthcare-service-links__link { align-items: center; color: #fff; display: flex; font-size: 1rem; font-weight: 700; justify-content: space-between; padding: .85rem 1rem; text-decoration: none; }
+.healthcare-service-links__arrow { color: inherit; flex: 0 0 auto; font-size: 2rem; font-weight: 400; line-height: .8; margin-left: 1rem; }
 .healthcare-service-links__link:hover { background: #004b91; color: #fff; text-decoration: underline; }
+.healthcare-service-links__link:focus-visible { outline: 3px solid #ffdd00; outline-offset: 2px; }
 .healthcare-service-links li p { background: #fff; padding: .2rem .75rem .7rem; }
 .healthcare-urgent-panel { background: #f0f4f5; border-left: 4px solid #005eb8; padding: 1.5rem; }
 .healthcare-urgent-panel .govuk-heading-m { color: #005eb8; }
@@ -374,6 +376,18 @@
 
 .healthcare-service-detail {
   max-width: 42rem;
+}
+
+.healthcare-detail-section {
+  border-top: 1px solid #d8dde0;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+}
+
+.healthcare-detail-section:first-of-type {
+  border-top: 0;
+  margin-top: 0;
+  padding-top: 0;
 }
 
 .healthcare-facts {

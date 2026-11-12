@@ -20,7 +20,9 @@ function AdminLoginForm() {
     ? "This account does not have administrator access."
     : params.get("error") === "recovery-expired"
       ? "The password reset link is invalid or expired. Request a new link."
-      : null;
+      : params.get("error") === "database-unavailable"
+        ? "The Supabase database connection is not configured. Connect Supabase to this project before using the admin console."
+        : null;
 
   useEffect(() => {
     // Clear any existing non-admin session so a different account can sign in.
@@ -53,7 +55,7 @@ function AdminLoginForm() {
       // A fresh request sends the new cookies to the authoritative server guards.
       window.location.assign(adminPath());
     } catch {
-      setError("The sign-in service is unavailable. Please try again.");
+      setError("The Supabase connection is unavailable or not configured. Connect Supabase to this project, then try again.");
       setToken("");
       setResetKey(value => value + 1);
     } finally { setPending(false); }

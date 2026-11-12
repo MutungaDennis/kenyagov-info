@@ -8,6 +8,8 @@ import { redirect } from "next/navigation";
 
 import { adminPath } from "@/lib/admin-path";
 import { isAdminUserId } from "@/lib/supabase/admin-access";
+import { isPublicSupabaseConfigured } from "@/lib/supabase/public";
+import { hasServiceRoleKey } from "@/lib/supabase/service";
 import { resolveSupabasePublicEnv } from "@/lib/supabase/env";
 
 /**
@@ -103,6 +105,10 @@ export async function isCurrentUserAdmin(): Promise<boolean> {
  * also wraps the login page.
  */
 export async function requireAdmin(): Promise<User> {
+  if (!isPublicSupabaseConfigured() || !hasServiceRoleKey()) {
+    redirect(`${adminPath("login")}?error=database-unavailable`);
+  }
+
   const user =
     await getCurrentUser();
 

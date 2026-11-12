@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import ExternalLink from "@/components/site/ExternalLink";
-import { getServices, serviceSlug, type ReferralTemplateData } from "@/lib/healthcare/referral-data";
+import { DEFAULT_CARE_VISITS, getServices, serviceSlug, type ReferralTemplateData } from "@/lib/healthcare/referral-data";
 
 type HealthcareContentEntry = { title: string; description?: string; linkLabel?: string; href?: string };
 type HospitalData = ReferralTemplateData & {
@@ -45,11 +45,14 @@ function ProfileLink({ href, children, className = "govuk-link" }: { href: strin
   return null;
 }
 
-function readContentEntries(value: unknown): HealthcareContentEntry[] {
+function readContentEntries(value: unknown, slug?: string): HealthcareContentEntry[] {
   if (!Array.isArray(value)) return [];
   return value.flatMap((item) => {
     if (!item || typeof item !== "object" || typeof item.title !== "string" || !item.title.trim()) return [];
-    const href = typeof item.href === "string" && (safeExternalUrl(item.href) || isInternalHref(item.href)) ? item.href : "";
+    const rawHref = typeof item.href === "string" ? item.href.trim() : "";
+    const href = rawHref && (safeExternalUrl(rawHref) || isInternalHref(rawHref))
+      ? rawHref.replaceAll("{slug}", slug || "")
+      : "";
     return [{
       title: item.title.trim(),
       description: typeof item.description === "string" ? item.description.trim() : "",
@@ -93,11 +96,15 @@ type Props = {
 export default function ReferralHospitalProfile({ institution }: Props) {
   const data = institution.template_data || {};
   const services = getServices(data);
-  const careVisits = readContentEntries(data.careVisits);
-  const serviceLinks = readContentEntries(data.serviceLinks);
-  const featured = readContentEntries(data.featured);
-  const moreInformation = readContentEntries(data.moreInformation);
-  const footerColumns = readContentEntries(data.footerColumns);
+  const hospitalUrl = `/government/institutions/${institution.slug}`;
+  const savedCareVisits = readContentEntries(data.careVisits, institution.slug);
+  const careVisits = savedCareVisits.length > 0
+    ? savedCareVisits
+    : readContentEntries(DEFAULT_CARE_VISITS, institution.slug);
+  const serviceLinks = readContentEntries(data.serviceLinks, institution.slug);
+  const featured = readContentEntries(data.featured, institution.slug);
+  const moreInformation = readContentEntries(data.moreInformation, institution.slug);
+  const footerColumns = readContentEntries(data.footerColumns, institution.slug);
   const groupedFooterLinks = footerColumns.reduce<{ title: string; links: HealthcareContentEntry[] }[]>((groups, entry) => {
     const existing = groups.find((group) => group.title === entry.title);
     if (existing) existing.links.push(entry);
@@ -107,7 +114,6 @@ export default function ReferralHospitalProfile({ institution }: Props) {
   const emergencyMain = data.emergencyMain || institution.phone || "Emergency number not provided";
   const referralLines = readReferralLines(data.referralLine);
   const ambulance = data.ambulance || "922";
-  const hospitalUrl = `/government/institutions/${institution.slug}`;
   const quickLinks = (data.quickLinks || []).filter((link): link is { label: string; href: string } =>
     typeof link?.label === "string" && typeof link.href === "string" &&
     (Boolean(safeExternalUrl(link.href)) || isInternalHref(link.href)),
@@ -141,11 +147,10 @@ export default function ReferralHospitalProfile({ institution }: Props) {
       </div>
       <nav aria-label="Primary navigation" className="healthcare-primary-nav">
         <div className="healthcare-primary-nav__inner">
-          <Link href="#services">Health &amp; clinics A to Z</Link>
-          <Link href="#services">Hospital services</Link>
-          <Link href="#care-visits-heading">Patient &amp; visitor guide</Link>
-          <Link href="#urgent-care">Urgent &amp; emergency care</Link>
-          <Link href="#more-information-heading">More information</Link>
+          <Link href={`${hospitalUrl}/services`}>Health &amp; clinics A to Z</Link>
+          <Link href={`${hospitalUrl}/patient-information`}>Patient &amp; visitor guide</Link>
+          <Link href={`${hospitalUrl}/how-to-get-care#emergency`}>Urgent &amp; emergency care</Link>
+          <Link href={`${hospitalUrl}/about`}>About the hospital</Link>
         </div>
       </nav>
 
@@ -180,9 +185,9 @@ export default function ReferralHospitalProfile({ institution }: Props) {
           <div>
             <h2 className="govuk-heading-l" id="services-heading">{data.servicesTitle || "Hospital services"}</h2>
             {serviceLinks.length > 0 ? <ul className="healthcare-service-links">{serviceLinks.map((entry, index) => <li key={`${entry.title}-${index}`}>
-              {entry.href ? <ProfileLink href={entry.href} className="healthcare-service-links__link">{entry.title}<span aria-hidden="true">›</span></ProfileLink> : <strong className="healthcare-service-links__link">{entry.title}<span aria-hidden="true">›</span></strong>}
+              <ProfileLink href={entry.href || `${hospitalUrl}/services`} className="healthcare-service-links__link">{entry.title}<span className="healthcare-service-links__arrow" aria-hidden="true">›</span></ProfileLink>
               {entry.description && <p>{entry.description}</p>}
-            </li>)}</ul> : services.length > 0 ? <ul className="healthcare-service-links">{services.slice(0, 5).map((service) => <li key={serviceSlug(service)}><Link className="healthcare-service-links__link" href={`${hospitalUrl}/services/${serviceSlug(service)}`}>{service.name}<span aria-hidden="true">›</span></Link></li>)}</ul> : <p className="govuk-body">Service information will be added when available.</p>}
+            </li>)}</ul> : services.length > 0 ? <ul className="healthcare-service-links">{services.slice(0, 5).map((service) => <li key={serviceSlug(service)}><Link className="healthcare-service-links__link" href={`${hospitalUrl}/services/${serviceSlug(service)}`}>{service.name}<span className="healthcare-service-links__arrow" aria-hidden="true">›</span></Link></li>)}</ul> : <p className="govuk-body">Service information will be added when available.</p>}
             <Link className="govuk-link" href={`${hospitalUrl}/services`}>Find other clinical departments</Link>
           </div>
           <aside className="healthcare-urgent-panel" id="urgent-care" aria-labelledby="urgent-care-heading">
