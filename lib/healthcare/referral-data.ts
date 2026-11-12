@@ -19,6 +19,36 @@ export type VisitingPeriod = {
   note?: string;
 };
 
+export type HealthcareContentEntry = {
+  title: string;
+  description?: string;
+  linkLabel?: string;
+  href?: string;
+};
+
+export const DEFAULT_CARE_VISITS: HealthcareContentEntry[] = [
+  {
+    title: "Prepare for your visit",
+    description: "Find out what to bring, how referral letters work, and how to check in for a clinic appointment.",
+    href: "/government/institutions/{slug}/how-to-get-care#appointments",
+  },
+  {
+    title: "Check visiting hours",
+    description: "See daily visiting times, ward entry rules, and guidance for family and friends.",
+    href: "/government/institutions/{slug}/patient-information#visiting",
+  },
+  {
+    title: "Find emergency care",
+    description: "Learn where to go in an emergency, ambulance numbers, and 24-hour walk-in rules.",
+    href: "/government/institutions/{slug}/how-to-get-care#emergency",
+  },
+  {
+    title: "Pay for care and insurance",
+    description: "Check details on Social Health Authority (SHA) cover, M-Pesa, cash, and credit support.",
+    href: "/government/institutions/{slug}/patient-information#billing",
+  },
+];
+
 export type ReferralTemplateData = {
   heroIntro?: string;
   patientNotice?: string;

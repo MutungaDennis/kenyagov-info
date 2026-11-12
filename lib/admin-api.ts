@@ -9,7 +9,8 @@ import type {
 } from "@supabase/supabase-js";
 
 import { isAdminUserId } from "@/lib/supabase/admin-access";
-import { createServiceClient } from "@/lib/supabase/service";
+import { isPublicSupabaseConfigured } from "@/lib/supabase/public";
+import { createServiceClient, hasServiceRoleKey } from "@/lib/supabase/service";
 import { getCurrentUser } from "@/lib/supabase/server";
 
 type AdminApiSuccess = {
@@ -45,8 +46,26 @@ function apiError(
 }
 
 export async function requireAdminApi(): Promise<AdminApiResult> {
-  const user =
-    await getCurrentUser();
+  if (!isPublicSupabaseConfigured()) {
+    return {
+      ok: false,
+      response: apiError(
+        "The institution database is not configured. Connect Supabase and try again.",
+        503,
+      ),
+    };
+  }
+
+  let user: User | null;
+  try {
+    user = await getCurrentUser();
+  } catch (error) {
+    console.error("Could not connect to the institution database:", error);
+    return {
+      ok: false,
+      response: apiError("The institution database is temporarily unavailable.", 503),
+    };
+  }
 
   if (!user) {
     return {
@@ -54,6 +73,16 @@ export async function requireAdminApi(): Promise<AdminApiResult> {
       response: apiError(
         "Unauthorized",
         401,
+      ),
+    };
+  }
+
+  if (!hasServiceRoleKey()) {
+    return {
+      ok: false,
+      response: apiError(
+        "Admin database access is not configured. Connect Supabase and try again.",
+        503,
       ),
     };
   }
@@ -98,7 +127,7 @@ export async function requireAdminApi(): Promise<AdminApiResult> {
       ok: false,
       response: apiError(
         "Admin database service unavailable",
-        500,
+        503,
       ),
     };
   }

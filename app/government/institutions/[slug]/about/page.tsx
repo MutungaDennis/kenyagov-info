@@ -49,7 +49,7 @@ type Institution = {
   complaints_mechanism_url?: string | null;
   procurement_portal_url?: string | null;
   lifecycle_change_reason?: string | null;
-  template_data?: { mandate?: string; heroIntro?: string } | null;
+  template_data?: { mandate?: string; heroIntro?: string; aboutOverview?: string } | null;
 };
 
 type LinkedInstitution = {
@@ -100,6 +100,7 @@ export default function InstitutionAboutPage() {
   const [countyFact, setCountyFact] = useState<CountyFact>({ statistic: null, tip: null });
   
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -213,6 +214,7 @@ export default function InstitutionAboutPage() {
 
       } catch (err) {
         console.error("Error fetching institution data:", err);
+        setLoadError("The institution profile could not be loaded because the directory database is unavailable. Please try again later.");
       } finally {
         setIsLoading(false);
       }
@@ -220,7 +222,8 @@ export default function InstitutionAboutPage() {
     fetchData();
   }, [slug]);
 
-  if (isLoading) return <div className="govuk-width-container"><main className="govuk-main-wrapper"><p className="govuk-body">Loading...</p></main></div>;
+  if (isLoading) return <div className="govuk-width-container"><main className="govuk-main-wrapper"><p className="govuk-body">Loading institution information…</p></main></div>;
+  if (loadError) return <div className="govuk-width-container"><main className="govuk-main-wrapper"><h1 className="govuk-heading-xl">About information unavailable</h1><p className="govuk-body">{loadError}</p><Link className="govuk-link" href={`/government/institutions/${slug}`}>Return to the institution profile</Link></main></div>;
   if (!institution) return <div className="govuk-width-container"><main className="govuk-main-wrapper"><h1 className="govuk-heading-xl">Page not found</h1></main></div>;
 
   const nameLower = (institution.name || "").toLowerCase();
@@ -322,9 +325,11 @@ export default function InstitutionAboutPage() {
                 {/* ========================================== */}
                 {/* STANDARD INSTITUTION DETAILED VIEW */}
                 {/* ========================================== */}
-                <h2 className="govuk-heading-l">Overview</h2>
-                {institution.description && <p className="govuk-body">{institution.description}</p>}
-                {institution.template_data?.mandate && <p className="govuk-body">{institution.template_data.mandate}</p>}
+                <h2 className="govuk-heading-l">About this organisation</h2>
+                {institution.description && <p className="govuk-body-l">{institution.description}</p>}
+                {institution.template_data?.aboutOverview && <p className="govuk-body">{institution.template_data.aboutOverview}</p>}
+                {!institution.description && !institution.template_data?.aboutOverview && institution.template_data?.heroIntro && <p className="govuk-body-l">{institution.template_data.heroIntro}</p>}
+                {institution.template_data?.mandate && <p className="govuk-body"><strong>Mandate: </strong>{institution.template_data.mandate}</p>}
                 {institution.vision && <p className="govuk-body"><strong>Vision:</strong> {institution.vision}</p>}
                 {institution.mission && <p className="govuk-body"><strong>Mission:</strong> {institution.mission}</p>}
 
