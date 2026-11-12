@@ -98,9 +98,13 @@ export default function ReferralHospitalProfile({ institution }: Props) {
   const services = getServices(data);
   const hospitalUrl = `/government/institutions/${institution.slug}`;
   const savedCareVisits = readContentEntries(data.careVisits, institution.slug);
-  const careVisits = savedCareVisits.length > 0
+  const defaultCareVisitLinks = new Map(DEFAULT_CARE_VISITS.map((entry) => [entry.title, entry.href || ""]));
+  const careVisits = (savedCareVisits.length > 0
     ? savedCareVisits
-    : readContentEntries(DEFAULT_CARE_VISITS, institution.slug);
+    : readContentEntries(DEFAULT_CARE_VISITS, institution.slug)).map((entry) => ({
+      ...entry,
+      href: entry.href || defaultCareVisitLinks.get(entry.title)?.replaceAll("{slug}", institution.slug) || "",
+    }));
   const serviceLinks = readContentEntries(data.serviceLinks, institution.slug);
   const featured = readContentEntries(data.featured, institution.slug);
   const moreInformation = readContentEntries(data.moreInformation, institution.slug);
@@ -204,7 +208,7 @@ export default function ReferralHospitalProfile({ institution }: Props) {
         </div>
       </section>
 
-      {featured.length > 0 && <section className="healthcare-profile__section healthcare-home-section" aria-labelledby="featured-heading"><h2 className="govuk-heading-l" id="featured-heading">{data.featuredTitle || "Featured"}</h2><div className="healthcare-featured-grid">{featured.map((entry, index) => <article className="healthcare-featured-card" key={`${entry.title}-${index}`}><h3>{entry.href ? <ProfileLink href={entry.href}>{entry.title}</ProfileLink> : entry.title}</h3>{entry.description && <p>{entry.description}</p>}{entry.href && <ProfileLink href={entry.href} className="healthcare-featured-card__action">{entry.linkLabel || `Read about ${entry.title}`}<span aria-hidden="true"> →</span></ProfileLink>}</article>)}</div></section>}
+      {featured.length > 0 && <section className="healthcare-profile__section healthcare-home-section" aria-labelledby="featured-heading"><h2 className="govuk-heading-l" id="featured-heading">{data.featuredTitle || "Featured updates and clinics"}</h2><div className="healthcare-featured-grid">{featured.map((entry, index) => <article className="healthcare-featured-card" key={`${entry.title}-${index}`}><h3>{entry.href ? <ProfileLink href={entry.href}>{entry.title}</ProfileLink> : entry.title}</h3>{entry.description && <p>{entry.description}</p>}{entry.href && <ProfileLink href={entry.href} className="healthcare-featured-card__action">{entry.linkLabel || `Read about ${entry.title}`}<span aria-hidden="true"> →</span></ProfileLink>}</article>)}</div></section>}
 
       {moreInformation.length > 0 && <section className="healthcare-profile__section healthcare-home-section" aria-labelledby="more-information-heading"><h2 className="govuk-heading-l" id="more-information-heading">{data.moreInformationTitle || "More information and advice"}</h2><ul className="healthcare-advice-grid">{moreInformation.map((entry, index) => <li key={`${entry.title}-${index}`}><h3>{entry.href ? <ProfileLink href={entry.href}>{entry.title}</ProfileLink> : entry.title}</h3>{entry.description && <p>{entry.description}</p>}</li>)}</ul></section>}
 

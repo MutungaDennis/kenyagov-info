@@ -1,12 +1,31 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-const mocks = vi.hoisted(() => ({ getUser: vi.fn(), isAdmin: vi.fn(), service: vi.fn() }));
+const mocks = vi.hoisted(() => ({
+  getUser: vi.fn(),
+  isAdmin: vi.fn(),
+  service: vi.fn(),
+  isPublicSupabaseConfigured: vi.fn(),
+  hasServiceRoleKey: vi.fn(),
+}));
 vi.mock("@/lib/supabase/server", () => ({ getCurrentUser: mocks.getUser }));
 vi.mock("@/lib/supabase/admin-access", () => ({ isAdminUserId: mocks.isAdmin }));
-vi.mock("@/lib/supabase/service", () => ({ createServiceClient: mocks.service }));
+vi.mock("@/lib/supabase/public", () => ({ isPublicSupabaseConfigured: mocks.isPublicSupabaseConfigured }));
+vi.mock("@/lib/supabase/service", () => ({ createServiceClient: mocks.service, hasServiceRoleKey: mocks.hasServiceRoleKey }));
 import { requireAdminApi } from "@/lib/admin-api";
 
 describe("admin authorization", () => {
-  beforeEach(() => { vi.resetAllMocks(); });
+  beforeEach(() => {
+    vi.resetAllMocks();
+    mocks.isPublicSupabaseConfigured.mockReturnValue(true);
+    mocks.hasServiceRoleKey.mockReturnValue(true);
+  });
+  it("returns 503 before authentication when public database config is missing", async () => {
+    mocks.isPublicSupabaseConfigured.mockReturnValue(false);
+    const result = await requireAdminApi();
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.response.status).toBe(503);
+    expect(mocks.getUser).not.toHaveBeenCalled();
+    expect(mocks.service).not.toHaveBeenCalled();
+  });
   it("returns 401 without creating a service client for signed-out users", async () => {
     mocks.getUser.mockResolvedValue(null);
     const result = await requireAdminApi();
@@ -21,6 +40,15 @@ describe("admin authorization", () => {
     const result = await requireAdminApi();
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.response.status).toBe(403);
+    expect(mocks.service).not.toHaveBeenCalled();
+  });
+  it("returns 503 when an authenticated request lacks admin database access", async () => {
+    mocks.getUser.mockResolvedValue({ id: "admin-user" });
+    mocks.hasServiceRoleKey.mockReturnValue(false);
+    const result = await requireAdminApi();
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.response.status).toBe(503);
+    expect(mocks.isAdmin).not.toHaveBeenCalled();
     expect(mocks.service).not.toHaveBeenCalled();
   });
   it("only authorizes the validated session user", async () => {
