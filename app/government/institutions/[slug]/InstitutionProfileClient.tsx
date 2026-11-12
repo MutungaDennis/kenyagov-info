@@ -35,6 +35,8 @@ function formatGovUKDate(dateStr: string | null | undefined): string {
   return `${day} ${month} ${year}`;
 }
 
+type InstitutionContactPoint = { type: "email" | "phone"; purpose: string; value: string };
+
 type Institution = {
   id: string;
   slug: string;
@@ -52,6 +54,7 @@ type Institution = {
   website_url?: string | null;
   email?: string | null;
   phone?: string | null;
+  contact_points?: InstitutionContactPoint[] | null;
   headquarters?: string | null;
   physical_address?: string | null;
   status?: string | null;
@@ -359,6 +362,12 @@ export default function InstitutionProfileClient({ people }: { people?: ReactNod
   const historical = isInstitutionHistorical(institution.status);
   const earmarked = isInstitutionEarmarked(institution.status);
   const judicial = isJudicialAnnulmentStatus(institution.status);
+  const contactPoints = institution.contact_points?.length
+    ? institution.contact_points
+    : [
+        ...(institution.email ? [{ type: "email" as const, purpose: "General inquiries", value: institution.email }] : []),
+        ...(institution.phone ? [{ type: "phone" as const, purpose: "General inquiries", value: institution.phone }] : []),
+      ];
 
   if (institution.template_key === "healthcare-referral-hospital" || institution.template_key === "healthcare") {
     return (
@@ -709,7 +718,7 @@ export default function InstitutionProfileClient({ people }: { people?: ReactNod
               </>
             )}
 
-            {(institution.website_url || institution.email || institution.phone || institution.headquarters) && (
+            {(institution.website_url || contactPoints.length > 0 || institution.headquarters) && (
               <>
                 <h2 className="govuk-heading-l govuk-!-margin-top-9">Contact {institution.short_name || institution.name}</h2>
                 <dl className="govuk-summary-list">
@@ -728,18 +737,19 @@ export default function InstitutionProfileClient({ people }: { people?: ReactNod
                       <dd className="govuk-summary-list__value"><a href={institution.website_url} className="govuk-link">{institution.website_url}</a></dd>
                     </div>
                   )}
-                  {institution.email && (
-                    <div className="govuk-summary-list__row">
-                      <dt className="govuk-summary-list__key">Email</dt>
-                      <dd className="govuk-summary-list__value"><a href={`mailto:${institution.email}`} className="govuk-link">{institution.email}</a></dd>
+                  {contactPoints.map((point, index) => (
+                    <div className="govuk-summary-list__row" key={`${point.type}-${point.purpose}-${index}`}>
+                      <dt className="govuk-summary-list__key">{point.type === "email" ? "Email" : "Phone"} — {point.purpose || "General inquiries"}</dt>
+                      <dd className="govuk-summary-list__value">
+                        <a
+                          href={point.type === "email" ? `mailto:${point.value}` : `tel:${point.value.replace(/[^\d+]/g, "")}`}
+                          className="govuk-link"
+                        >
+                          {point.value}
+                        </a>
+                      </dd>
                     </div>
-                  )}
-                  {institution.phone && (
-                    <div className="govuk-summary-list__row">
-                      <dt className="govuk-summary-list__key">Phone</dt>
-                      <dd className="govuk-summary-list__value"><a href={`tel:${institution.phone}`} className="govuk-link">{institution.phone}</a></dd>
-                    </div>
-                  )}
+                  ))}
                 </dl>
               </>
             )}

@@ -17,7 +17,6 @@ import InstitutionForm, {
   institutionFormToPayload,
   type InstitutionFormState,
 } from "@/components/admin/InstitutionForm";
-import type { LeaderPickResult } from "@/components/admin/LeaderLinkPicker";
 import InstitutionLifecyclePanel from "@/components/admin/InstitutionLifecyclePanel";
 import InstitutionOfficesPanel from "@/components/admin/InstitutionOfficesPanel";
 import InstitutionCommitteeAssignmentsPanel from "@/components/admin/InstitutionCommitteeAssignmentsPanel";
@@ -29,14 +28,6 @@ import { triggerIndexNow } from "@/lib/indexnow";
 function isParliamentInstitution(slug: string, name: string) {
   const value = `${slug} ${name}`.toLowerCase();
   return value.includes("national-assembly") || value.includes("national assembly") || value.includes("senate");
-}
-
-function leaderDisplayName(d: Record<string, unknown>): string {
-  const parts = [d.first_name, d.other_names, d.surname]
-    .filter(Boolean)
-    .join(" ")
-    .trim();
-  return parts || String(d.full_name || "").trim() || "";
 }
 
 export default function EditInstitutionPage({
@@ -146,25 +137,6 @@ export default function EditInstitutionPage({
           if (row.successor_institution_id) {
             base.successor_institution_label =
               labels[String(row.successor_institution_id)] || "";
-          }
-        }
-
-        // Resolve linked head label from leaders if needed
-        if (base.current_head_id && !base.current_head) {
-          try {
-            const lr = await fetch(
-              `/api/admin/leaders/${base.current_head_id}`,
-              { credentials: "include", cache: "no-store" },
-            );
-            const lj = await lr.json();
-            if (lr.ok && lj.data) {
-              base.current_head = leaderDisplayName(lj.data);
-              if (!base.head_title && lj.data.title) {
-                base.head_title = String(lj.data.title);
-              }
-            }
-          } catch {
-            /* ignore */
           }
         }
 
@@ -300,20 +272,6 @@ export default function EditInstitutionPage({
         reports_to_institution_label: pick.label,
       };
     });
-    setSuccess(null);
-    setError(null);
-  };
-
-  const onHeadLeaderChange = (pick: LeaderPickResult) => {
-    setForm((prev) => ({
-      ...prev,
-      current_head_id: pick.id,
-      current_head: pick.label || prev.current_head,
-      // Prefill title only when empty so role-at-institution can differ from leader snapshot
-      head_title: prev.head_title.trim()
-        ? prev.head_title
-        : pick.title || prev.head_title,
-    }));
     setSuccess(null);
     setError(null);
   };
@@ -544,9 +502,8 @@ export default function EditInstitutionPage({
         <InstitutionForm
           form={form}
           onChange={onChange}
-          onHierarchyChange={onHierarchyChange}
-          onHeadLeaderChange={onHeadLeaderChange}
-          onSocialLinksChange={onSocialLinksChange}
+        onHierarchyChange={onHierarchyChange}
+        onSocialLinksChange={onSocialLinksChange}
           onSubmit={onSubmit}
           submitting={submitting}
           canSave={canSave}

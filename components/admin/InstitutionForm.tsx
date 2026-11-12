@@ -26,9 +26,6 @@ import {
 } from "@/lib/institutions/fields";
 import InstitutionLinkPicker from "@/components/admin/InstitutionLinkPicker";
 import TemplateFieldEditor from "@/components/admin/TemplateFieldEditor";
-import LeaderLinkPicker, {
-  type LeaderPickResult,
-} from "@/components/admin/LeaderLinkPicker";
 import SuggestField from "@/components/admin/SuggestField";
 import {
   SOCIAL_PLATFORM_OPTIONS,
@@ -59,6 +56,54 @@ function setTemplateLevel(value: string, level: string) {
   let data: Record<string, unknown> = {};
   try { data = JSON.parse(value || "{}"); } catch { data = {}; }
   return JSON.stringify({ ...data, healthcareLevel: level }, null, 2);
+}
+
+type InstitutionContactPoint = { type: "email" | "phone"; purpose: string; value: string };
+
+function contactPointsFromRow(data: Record<string, unknown>): InstitutionContactPoint[] {
+  const raw = data.contact_points;
+  let points: unknown = raw;
+  if (typeof raw === "string") {
+    try {
+      points = JSON.parse(raw);
+    } catch {
+      points = [];
+    }
+  }
+  if (Array.isArray(points) && points.length) {
+    return points.flatMap((item) => {
+      if (!item || typeof item !== "object") return [];
+      const point = item as Record<string, unknown>;
+      const type = point.type === "email" ? "email" : point.type === "phone" ? "phone" : null;
+      const value = String(point.value ?? "").trim();
+      if (!type || !value) return [];
+      return [{ type, purpose: String(point.purpose ?? "General inquiries"), value }];
+    });
+  }
+  return [
+    ...(data.email ? [{ type: "email" as const, purpose: "General inquiries", value: String(data.email) }] : []),
+    ...(data.phone ? [{ type: "phone" as const, purpose: "General inquiries", value: String(data.phone) }] : []),
+    ...(data.toll_free ? [{ type: "phone" as const, purpose: "Toll-free", value: String(data.toll_free) }] : []),
+    ...(data.whatsapp ? [{ type: "phone" as const, purpose: "WhatsApp", value: String(data.whatsapp) }] : []),
+  ];
+}
+
+function parseContactPoints(value: string): InstitutionContactPoint[] {
+  try {
+    const points = JSON.parse(value) as unknown;
+    return Array.isArray(points)
+      ? points.flatMap((item) => {
+          if (!item || typeof item !== "object") return [];
+          const point = item as Record<string, unknown>;
+          const type = point.type === "email" ? "email" : point.type === "phone" ? "phone" : null;
+          const value = String(point.value ?? "").trim();
+          if (!type || !value) return [];
+          return [{ type, purpose: String(point.purpose ?? "General inquiries").trim(), value }];
+        })
+      : [];
+  } catch {
+    return [];
+  }
 }
 
 export type InstitutionFormState = {
@@ -138,6 +183,7 @@ export type InstitutionFormState = {
   portal_url: string;
   email: string;
   phone: string;
+  contact_points: string;
   fax: string;
   toll_free: string;
   whatsapp: string;
@@ -248,6 +294,7 @@ export const emptyInstitutionForm = (): InstitutionFormState => ({
   portal_url: "",
   email: "",
   phone: "",
+  contact_points: "[]",
   fax: "",
   toll_free: "",
   whatsapp: "",
@@ -364,9 +411,10 @@ export function institutionFormFromRow(
     postal_address: s("postal_address"),
     website_url: s("website_url"),
     portal_url: s("portal_url"),
-    email: s("email"),
-    phone: s("phone"),
-    fax: s("fax"),
+  email: s("email"),
+  phone: s("phone"),
+  contact_points: JSON.stringify(contactPointsFromRow(data)),
+  fax: s("fax"),
     toll_free: s("toll_free"),
     whatsapp: s("whatsapp"),
     latitude: n("latitude"),
@@ -382,11 +430,11 @@ export function institutionFormFromRow(
     citizen_charter_url: s("citizen_charter_url"),
     complaints_mechanism_url: s("complaints_mechanism_url"),
     procurement_portal_url: s("procurement_portal_url"),
-    last_annual_report_year: n("last_annual_report_year"),
-    last_audit_opinion: s("last_audit_opinion"),
-    transparency_score: n("transparency_score"),
-    number_of_employees: n("number_of_employees").replace(/[,\s]/g, ""),
-    annual_budget_estimate: n("annual_budget_estimate").replace(/[,\sKES]/gi, ""),
+  last_annual_report_year: s("last_annual_report_year"),
+  last_audit_opinion: s("last_audit_opinion"),
+  transparency_score: n("transparency_score"),
+  number_of_employees: s("number_of_employees"),
+  annual_budget_estimate: s("annual_budget_estimate"),
     status: s("status") || "Active",
     verification_status: s("verification_status") || "Unverified",
     is_active: data.is_active !== false,
@@ -419,8 +467,6 @@ type Props = {
       | "successor_institution",
     pick: { id: string; label: string },
   ) => void;
-  /** Link current head from leaders directory */
-  onHeadLeaderChange?: (pick: LeaderPickResult) => void;
   /** Social media rows */
   onSocialLinksChange?: (links: SocialLink[]) => void;
   onSubmit: (e: FormEvent) => void;
@@ -466,7 +512,6 @@ export default function InstitutionForm({
   form,
   onChange,
   onHierarchyChange,
-  onHeadLeaderChange,
   onSocialLinksChange,
   onSubmit,
   submitting,
@@ -513,6 +558,7 @@ export default function InstitutionForm({
   const fundingImpliesExchequer = fundingModelImpliesExchequer(
     form.funding_model || "",
   );
+  const contactPoints = parseContactPoints(form.contact_points);
 
   /** Emit a field change without a real DOM event (multi-select / sync) */
   const emitField = (name: string, value: string | boolean) => {
@@ -1056,7 +1102,10 @@ export default function InstitutionForm({
               id="cofog_division"
               name="cofog_division"
               value={form.cofog_division}
-              onChange={onChange}
+              onChange={(event) => {
+                onChange(event);
+                if (event.target.value !== form.cofog_division) emitField("cofog_group", "");
+              }}
             >
               <option value="">— Select —</option>
               {cofogDivisionOptions.map((o) => (
@@ -1067,7 +1116,7 @@ export default function InstitutionForm({
             </select>
           </Field>
         </div>
-        <div className="govuk-grid-column-one-third">
+        {form.cofog_division && <div className="govuk-grid-column-one-third">
           <Field
             id="cofog_group"
             label="COFOG group"
@@ -1085,8 +1134,7 @@ export default function InstitutionForm({
             >
               {cofogGroupOptions.length === 0 && (
                 <p className="govuk-hint">
-                  Select a COFOG division to list groups, or they will appear
-                  after you add free-text values below.
+                  No listed groups for this division. Add a group using the free-text field below.
                 </p>
               )}
               {cofogGroupOptions.map((o) => {
@@ -1142,7 +1190,7 @@ export default function InstitutionForm({
             {/* Hidden field keeps native form payload in sync for any legacy submit paths */}
             <input type="hidden" name="cofog_group" value={form.cofog_group} />
           </Field>
-        </div>
+        </div>}
       </div>
 
       <h2 className="govuk-heading-m">Legal basis & history</h2>
@@ -1554,6 +1602,46 @@ export default function InstitutionForm({
           funding model includes Exchequer. You do not need to tick it again.
         </p>
       )}
+      {form.funding_model.trim() && (
+        <>
+          <h3 className="govuk-heading-s">Funding characteristics</h3>
+          <div
+            className="govuk-checkboxes govuk-!-margin-bottom-4"
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(14rem, 1fr))",
+              columnGap: "1rem",
+              rowGap: "0.25rem",
+            }}
+          >
+            {(
+              [
+                ...(fundingImpliesExchequer
+                  ? []
+                  : ([["is_exchequer_funded", "Exchequer funded"]] as [string, string][])),
+                ["generates_own_revenue", "Generates own revenue"],
+                ["receives_donor_funding", "Receives donor funding"],
+                ["is_commercial_entity", "Commercial entity"],
+              ] as [string, string][]
+            ).map(([name, label]) => (
+              <div className="govuk-checkboxes__item" key={name}>
+                <input
+                  className="govuk-checkboxes__input"
+                  id={name}
+                  name={name}
+                  type="checkbox"
+                  checked={Boolean(form[name as keyof InstitutionFormState])}
+                  onChange={onChange}
+                />
+                <label className="govuk-label govuk-checkboxes__label" htmlFor={name}>
+                  {label}
+                </label>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+      <h3 className="govuk-heading-s">Services and transparency</h3>
       <div
         className="govuk-checkboxes govuk-!-margin-bottom-4"
         style={{
@@ -1565,15 +1653,6 @@ export default function InstitutionForm({
       >
         {(
           [
-            ...(fundingImpliesExchequer
-              ? []
-              : ([["is_exchequer_funded", "Exchequer funded"]] as [
-                  string,
-                  string,
-                ][])),
-            ["generates_own_revenue", "Generates own revenue"],
-            ["receives_donor_funding", "Receives donor funding"],
-            ["is_commercial_entity", "Commercial entity"],
             ["is_regulator", "Regulator"],
             ["offers_public_services", "Offers public services"],
             ["has_online_services", "Has online services"],
@@ -1590,22 +1669,17 @@ export default function InstitutionForm({
               id={name}
               name={name}
               type="checkbox"
-              checked={Boolean(
-                form[name as keyof InstitutionFormState],
-              )}
+              checked={Boolean(form[name as keyof InstitutionFormState])}
               onChange={onChange}
             />
-            <label
-              className="govuk-label govuk-checkboxes__label"
-              htmlFor={name}
-            >
+            <label className="govuk-label govuk-checkboxes__label" htmlFor={name}>
               {label}
             </label>
           </div>
         ))}
       </div>
       <div className="govuk-grid-row">
-        <div className="govuk-grid-column-one-half">
+        {form.is_regulator && <div className="govuk-grid-column-one-half">
           <Field
             id="regulated_sectors"
             label="Regulated sectors"
@@ -1619,8 +1693,8 @@ export default function InstitutionForm({
               onChange={onChange}
             />
           </Field>
-        </div>
-        <div className="govuk-grid-column-one-half">
+        </div>}
+        {form.offers_public_services && <div className="govuk-grid-column-one-half">
           <Field
             id="service_delivery_modes"
             label="Service delivery modes"
@@ -1634,7 +1708,7 @@ export default function InstitutionForm({
               onChange={onChange}
             />
           </Field>
-        </div>
+        </div>}
       </div>
 
         </>
@@ -1724,83 +1798,7 @@ export default function InstitutionForm({
         </div>
       </div>}
 
-      {!isTemporaryBody && <>
-      <h2 className="govuk-heading-m">Leadership</h2>
-      <p className="govuk-hint">
-        Link the current head to an existing leader so the public page can open
-        their profile. Fill head title and appointment date for this role at the
-        institution.
-      </p>
-      {onHeadLeaderChange && (
-        <LeaderLinkPicker
-          id="current_head_leader"
-          label="Current head (from leaders)"
-          hint="Search the officials directory. Creates a proper link on the public site."
-          valueId={form.current_head_id}
-          valueLabel={form.current_head}
-          onChange={onHeadLeaderChange}
-        />
-      )}
-      <div className="govuk-grid-row">
-        <div className="govuk-grid-column-one-half">
-          <Field
-            id="current_head"
-            label="Current head name"
-            hint="Auto-filled when you pick a leader; you can also type a name if they are not in the directory yet."
-          >
-            <input
-              className="govuk-input"
-              id="current_head"
-              name="current_head"
-              value={form.current_head}
-              onChange={onChange}
-            />
-          </Field>
-        </div>
-        <div className="govuk-grid-column-one-half">
-          <Field
-            id="head_title"
-            label="Head title"
-            hint="Role at this institution (e.g. Cabinet Secretary, Chairperson, Director General)"
-          >
-            <input
-              className="govuk-input"
-              id="head_title"
-              name="head_title"
-              value={form.head_title}
-              onChange={onChange}
-              placeholder="e.g. Cabinet Secretary"
-            />
-          </Field>
-        </div>
-      </div>
-      <div className="govuk-grid-row">
-        <div className="govuk-grid-column-one-half">
-          <Field id="head_appointment_date" label="Head appointment date">
-            <input
-              className="govuk-input"
-              id="head_appointment_date"
-              name="head_appointment_date"
-              type="date"
-              value={form.head_appointment_date}
-              onChange={onChange}
-            />
-          </Field>
-        </div>
-        <div className="govuk-grid-column-one-half">
-          <Field id="board_chair" label="Board chair">
-            <input
-              className="govuk-input"
-              id="board_chair"
-              name="board_chair"
-              value={form.board_chair}
-              onChange={onChange}
-            />
-          </Field>
-        </div>
-      </div>
-      </>}
-
+      {/* Institution leadership is derived from leader assignments, not edited here. */}
       {!isTemporaryBody && <>
       <h2 className="govuk-heading-m">Contact & location</h2>
       {historical && (
@@ -1888,53 +1886,71 @@ export default function InstitutionForm({
           </Field>
         </div>
       </div>
-      <div className="govuk-grid-row">
-        <div className="govuk-grid-column-one-quarter">
-          <Field id="email" label="Email">
-            <input
-              className="govuk-input"
-              id="email"
-              name="email"
-              type="email"
-              value={form.email}
-              onChange={onChange}
-            />
-          </Field>
-        </div>
-        <div className="govuk-grid-column-one-quarter">
-          <Field id="phone" label="Phone">
-            <input
-              className="govuk-input"
-              id="phone"
-              name="phone"
-              value={form.phone}
-              onChange={onChange}
-            />
-          </Field>
-        </div>
-        <div className="govuk-grid-column-one-quarter">
-          <Field id="toll_free" label="Toll free">
-            <input
-              className="govuk-input"
-              id="toll_free"
-              name="toll_free"
-              value={form.toll_free}
-              onChange={onChange}
-            />
-          </Field>
-        </div>
-        <div className="govuk-grid-column-one-quarter">
-          <Field id="whatsapp" label="WhatsApp">
-            <input
-              className="govuk-input"
-              id="whatsapp"
-              name="whatsapp"
-              value={form.whatsapp}
-              onChange={onChange}
-            />
-          </Field>
-        </div>
-      </div>
+      <fieldset className="govuk-fieldset govuk-!-margin-bottom-4">
+        <legend className="govuk-fieldset__legend govuk-fieldset__legend--s">Contact methods</legend>
+        <p className="govuk-hint">Add as many email addresses or phone numbers as needed, with a purpose for each.</p>
+        {contactPoints.map((point, index) => (
+          <div className="govuk-grid-row govuk-!-margin-bottom-2" key={`${index}-${point.type}`}>
+            <div className="govuk-grid-column-one-quarter">
+              <label className="govuk-label" htmlFor={`contact-type-${index}`}>Type</label>
+              <select
+                className="govuk-select"
+                id={`contact-type-${index}`}
+                value={point.type}
+                onChange={(event) => {
+                  const next = [...contactPoints];
+                  next[index] = { ...point, type: event.target.value as "email" | "phone" };
+                  emitField("contact_points", JSON.stringify(next));
+                }}
+              >
+                <option value="email">Email</option>
+                <option value="phone">Phone</option>
+              </select>
+            </div>
+            <div className="govuk-grid-column-one-quarter">
+              <label className="govuk-label" htmlFor={`contact-purpose-${index}`}>Purpose</label>
+              <input
+                className="govuk-input"
+                id={`contact-purpose-${index}`}
+                value={point.purpose}
+                onChange={(event) => {
+                  const next = [...contactPoints];
+                  next[index] = { ...point, purpose: event.target.value };
+                  emitField("contact_points", JSON.stringify(next));
+                }}
+              />
+            </div>
+            <div className="govuk-grid-column-one-third">
+              <label className="govuk-label" htmlFor={`contact-value-${index}`}>Contact detail</label>
+              <input
+                className="govuk-input"
+                id={`contact-value-${index}`}
+                type={point.type === "email" ? "email" : "tel"}
+                value={point.value}
+                onChange={(event) => {
+                  const next = [...contactPoints];
+                  next[index] = { ...point, value: event.target.value };
+                  emitField("contact_points", JSON.stringify(next));
+                }}
+              />
+            </div>
+            <div className="govuk-grid-column-one-sixth">
+              <span className="govuk-label" aria-hidden="true">&nbsp;</span>
+              <button
+                className="govuk-button govuk-button--secondary"
+                type="button"
+                aria-label={`Remove contact method ${index + 1}`}
+                onClick={() => emitField("contact_points", JSON.stringify(contactPoints.filter((_, i) => i !== index)))}
+              >Remove</button>
+            </div>
+          </div>
+        ))}
+        <button
+          className="govuk-button govuk-button--secondary"
+          type="button"
+          onClick={() => emitField("contact_points", JSON.stringify([...contactPoints, { type: "email", purpose: "General inquiries", value: "" }]))}
+        >Add contact method</button>
+      </fieldset>
       <div className="govuk-grid-row">
         <div className="govuk-grid-column-one-third">
           <Field id="fax" label="Fax">
@@ -2119,55 +2135,48 @@ export default function InstitutionForm({
       </div>
       <div className="govuk-grid-row">
         <div className="govuk-grid-column-one-quarter">
-          <Field id="last_annual_report_year" label="Last annual report year">
-            <input
-              className="govuk-input"
-              id="last_annual_report_year"
-              name="last_annual_report_year"
-              value={form.last_annual_report_year}
-              onChange={onChange}
-            />
-          </Field>
+          <SuggestField
+            id="last_annual_report_year"
+            name="last_annual_report_year"
+            label="Last annual report year"
+            value={form.last_annual_report_year}
+            onChange={onChange}
+            dbOptions={db("last_annual_report_year")}
+            placeholder="e.g. 2023/24"
+          />
         </div>
         <div className="govuk-grid-column-one-quarter">
-          <Field id="last_audit_opinion" label="Last audit opinion">
-            <input
-              className="govuk-input"
-              id="last_audit_opinion"
-              name="last_audit_opinion"
-              value={form.last_audit_opinion}
-              onChange={onChange}
-            />
-          </Field>
+          <SuggestField
+            id="last_audit_opinion"
+            name="last_audit_opinion"
+            label="Last audit opinion"
+            value={form.last_audit_opinion}
+            onChange={onChange}
+            dbOptions={db("last_audit_opinion")}
+            placeholder="e.g. Unqualified opinion"
+          />
         </div>
         <div className="govuk-grid-column-one-quarter">
-          <Field id="number_of_employees" label="Number of employees">
-            <input
-              className="govuk-input"
-              id="number_of_employees"
-              name="number_of_employees"
-              type="number"
-              min="0"
-              inputMode="numeric"
-              value={form.number_of_employees}
-              onChange={onChange}
-            />
-          </Field>
+          <SuggestField
+            id="number_of_employees"
+            name="number_of_employees"
+            label="Number of employees"
+            value={form.number_of_employees}
+            onChange={onChange}
+            dbOptions={db("number_of_employees")}
+            placeholder="e.g. 5,000+ where available"
+          />
         </div>
         <div className="govuk-grid-column-one-quarter">
-          <Field id="annual_budget_estimate" label="Annual budget estimate">
-            <input
-              className="govuk-input"
-              id="annual_budget_estimate"
-              name="annual_budget_estimate"
-              type="number"
-              min="0"
-              step="0.01"
-              inputMode="decimal"
-              value={form.annual_budget_estimate}
-              onChange={onChange}
-            />
-          </Field>
+          <SuggestField
+            id="annual_budget_estimate"
+            name="annual_budget_estimate"
+            label="Annual budget estimate"
+            value={form.annual_budget_estimate}
+            onChange={onChange}
+            dbOptions={db("annual_budget_estimate")}
+            placeholder="e.g. KES 10–15bn"
+          />
         </div>
       </div>
       </>}
@@ -2410,6 +2419,16 @@ export function institutionFormToPayload(
 ): Record<string, unknown> {
   const {
     social_links,
+    contact_points,
+    email,
+    phone,
+    toll_free,
+    whatsapp,
+    current_head_id,
+    current_head,
+    head_title,
+    head_appointment_date,
+    board_chair,
     parent_institution_label,
     supervising_ministry_label,
     reports_to_institution_label,
@@ -2424,6 +2443,15 @@ export function institutionFormToPayload(
   void predecessor_institution_label;
   void successor_institution_label;
   void has_organisational_change;
+  void email;
+  void phone;
+  void toll_free;
+  void whatsapp;
+  void current_head_id;
+  void current_head;
+  void head_title;
+  void head_appointment_date;
+  void board_chair;
 
   const fk = (id: string) => {
     const v = nullIfEmptyId(id);
@@ -2439,12 +2467,17 @@ export function institutionFormToPayload(
   } catch {
     templateData = {};
   }
+  const contacts = parseContactPoints(contact_points);
 
   return {
     ...rest,
+    contact_points: contacts,
+    email: contacts.find((point) => point.type === "email")?.value || null,
+    phone: contacts.find((point) => point.type === "phone" && !/toll.?free|whats.?app/i.test(point.purpose))?.value || null,
+    toll_free: contacts.find((point) => point.type === "phone" && /toll.?free/i.test(point.purpose))?.value || null,
+    whatsapp: contacts.find((point) => point.type === "phone" && /whats.?app/i.test(point.purpose))?.value || null,
     template_data: templateData,
     social_media: (social_links || []).filter((l) => l.platform && l.url.trim()),
-    current_head_id: fk(form.current_head_id),
     parent_institution_id: fk(form.parent_institution_id),
     supervising_ministry_id: fk(form.supervising_ministry_id),
     reports_to_institution_id: fk(form.reports_to_institution_id),
