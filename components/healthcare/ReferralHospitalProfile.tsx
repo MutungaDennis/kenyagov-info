@@ -24,10 +24,6 @@ type HospitalData = ReferralTemplateData & {
   healthcareLevel?: string;
 };
 
-type SocialLink = { platform: string; url: string };
-type ContactType = "email" | "telephone" | "mobile" | "fax";
-type ContactPoint = { type: ContactType; purpose?: string; value: string };
-
 function safeExternalUrl(value?: string | null) {
   if (!value) return null;
   try {
@@ -47,31 +43,6 @@ function ProfileLink({ href, children, className = "govuk-link" }: { href: strin
   if (externalHref) return <ExternalLink href={externalHref} className={className}>{children}</ExternalLink>;
   if (isInternalHref(href)) return <Link href={href} className={className}>{children}</Link>;
   return null;
-}
-
-function readContactPoints(value: unknown): ContactPoint[] {
-  let points = value;
-  if (typeof points === "string") {
-    try {
-      points = JSON.parse(points);
-    } catch {
-      points = [];
-    }
-  }
-  if (!Array.isArray(points)) return [];
-  return points.flatMap((point) => {
-    if (!point || typeof point !== "object" || typeof point.value !== "string" || !point.value.trim()) return [];
-    const type: ContactType | null = point.type === "email" ? "email"
-      : point.type === "mobile" ? "mobile"
-        : point.type === "telephone" || point.type === "phone" ? "telephone"
-          : null;
-    if (!type) return [];
-    return [{
-      type,
-      value: point.value.trim(),
-      purpose: typeof point.purpose === "string" ? point.purpose.trim() : "",
-    }];
-  });
 }
 
 function readContentEntries(value: unknown): HealthcareContentEntry[] {
@@ -150,62 +121,33 @@ export default function ReferralHospitalProfile({ institution }: Props) {
   }).filter((facility): facility is { name: string; href: string; reason?: string } =>
     Boolean(facility && typeof facility.href === "string" && (safeExternalUrl(facility.href) || isInternalHref(facility.href))),
   );
-  const rawSocialLinks: SocialLink[] = Array.isArray(institution.social_media)
-    ? institution.social_media.filter((link): link is SocialLink => Boolean(link && typeof link === "object" && "url" in link && typeof link.url === "string"))
-    : institution.social_media && typeof institution.social_media === "object"
-      ? Object.entries(institution.social_media).filter(([, url]) => typeof url === "string").map(([platform, url]) => ({ platform, url }))
-      : [];
-  const socialLinks = rawSocialLinks.flatMap((link) => {
-    const url = safeExternalUrl(link.url);
-    return url ? [{ ...link, url }] : [];
-  });
-  const contactPoints = readContactPoints(institution.contact_points);
-  const contactMethods = [
-    ...contactPoints,
-    ...(institution.phone ? [{ type: "telephone" as const, purpose: "General inquiries", value: institution.phone }] : []),
-    ...(institution.email ? [{ type: "email" as const, purpose: "General inquiries", value: institution.email }] : []),
-    ...(institution.toll_free ? [{ type: "telephone" as const, purpose: "Toll-free", value: institution.toll_free }] : []),
-    ...(institution.whatsapp ? [{ type: "mobile" as const, purpose: "WhatsApp", value: institution.whatsapp }] : []),
-    ...(institution.fax ? [{ type: "fax" as const, purpose: "Fax", value: institution.fax }] : []),
-  ].filter((point, index, points) => points.findIndex((candidate) => candidate.type === point.type && candidate.value === point.value) === index);
-  const contactGroups = [
-    { type: "telephone" as const, label: "Telephone" },
-    { type: "mobile" as const, label: "Mobile" },
-    { type: "email" as const, label: "Email" },
-    { type: "fax" as const, label: "Fax" },
-  ].map((group) => ({ ...group, points: contactMethods.filter((point) => point.type === group.type) })).filter((group) => group.points.length > 0);
-  const physicalAddresses = [institution.headquarters, institution.physical_address].filter((address, index, addresses): address is string => Boolean(address && addresses.indexOf(address) === index));
-  const mapUrl = safeExternalUrl(institution.map_url) || safeExternalUrl(data.mapUrl) || (institution.latitude != null && institution.longitude != null
-    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${institution.latitude},${institution.longitude}`)}`
-    : null);
-  const websiteUrl = safeExternalUrl(institution.website_url);
-  const portalUrl = safeExternalUrl(institution.portal_url);
-  const visitingHours = Array.isArray(data.visitingHours) ? data.visitingHours.filter((period) =>
-    Boolean(period && typeof period.days === "string" && period.days.trim() && typeof period.hours === "string" && period.hours.trim()),
-  ) : [];
-  const visitingInstructions = Array.isArray(data.visitingInstructions)
-    ? data.visitingInstructions.filter((instruction): instruction is string => typeof instruction === "string" && instruction.trim().length > 0)
-    : [];
-  const socialLabel = (platform: string) => platform.replace(/[-_]/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
 
   return (
     <div className="healthcare-profile">
-      <div className="healthcare-masthead">
-        <div className="healthcare-masthead__inner">
-          <div className="healthcare-brand"><Link href={hospitalUrl}>{institution.name}</Link></div>
-          <nav aria-label="Healthcare navigation" className="healthcare-masthead__nav">
-            <Link href="#services">Services</Link>
-            {careVisits.length > 0 && <Link href="#care-visits-heading">Manage care and visits</Link>}
-            <Link href={`${hospitalUrl}/about`}>About</Link>
-          </nav>
+      <div className="healthcare-emergency-bar" role="region" aria-label="Emergency contacts">
+        <div className="healthcare-emergency-bar__inner">
+          <span><strong>Emergency &amp; referral hotline:</strong> Call <a href={`tel:${emergencyMain.replace(/[^\d+]/g, "")}`}>{emergencyMain}</a>{referralLines.length > 0 && <> or {referralLines.map((line, index) => <span key={`${line}-${index}`}>{index > 0 && " or "}<a href={`tel:${line.replace(/[^\d+]/g, "")}`}>{line}</a></span>)}</>}</span>
+          <a className="healthcare-emergency-bar__urgent" href="#urgent-care">Urgent medical help</a>
         </div>
       </div>
-      <div className="healthcare-emergency-bar" role="region" aria-label="Emergency contacts">
-        <strong>Emergency / A&amp;E</strong>
-        <a href={`tel:${emergencyMain.replace(/[^\d+]/g, "")}`}>{emergencyMain}</a>
-        <span>Referral line: {referralLines.length > 0 ? referralLines.map((line, index) => <span key={`${line}-${index}`}>{index > 0 && " · "}<a href={`tel:${line.replace(/[^\d+]/g, "")}`}>{line}</a></span>) : "Referral line not provided"}</span>
-        <span>National ambulance: <a href={`tel:${ambulance}`}>{ambulance}</a></span>
+      <div className="healthcare-masthead">
+        <div className="healthcare-masthead__inner">
+          <div className="healthcare-brand">
+            <Link href={hospitalUrl}>{institution.name}</Link>
+            <span>{institution.short_name || "National referral and teaching hospital"} · Republic of Kenya</span>
+          </div>
+          <Link className="healthcare-referrals-button" href="#urgent-care">24/7 Referrals</Link>
+        </div>
       </div>
+      <nav aria-label="Primary navigation" className="healthcare-primary-nav">
+        <div className="healthcare-primary-nav__inner">
+          <Link href="#services">Health &amp; clinics A to Z</Link>
+          <Link href="#services">Hospital services</Link>
+          <Link href="#care-visits-heading">Patient &amp; visitor guide</Link>
+          <Link href="#urgent-care">Urgent &amp; emergency care</Link>
+          <Link href="#more-information-heading">More information</Link>
+        </div>
+      </nav>
 
       <header className="healthcare-profile__hero-wrap">
         <div className="healthcare-profile__hero">
@@ -234,74 +176,26 @@ export default function ReferralHospitalProfile({ institution }: Props) {
       )}
 
       <section className="healthcare-profile__section healthcare-home-section" id="services" aria-labelledby="services-heading">
-        <h2 className="govuk-heading-l" id="services-heading">{data.servicesTitle || "Services"}</h2>
-        {serviceLinks.length > 0 && <ul className="healthcare-service-links">{serviceLinks.map((entry, index) => <li key={`${entry.title}-${index}`}>
-          {entry.href ? <ProfileLink href={entry.href} className="healthcare-service-links__link">{entry.title}<span aria-hidden="true">›</span></ProfileLink> : <strong>{entry.title}</strong>}
-          {entry.description && <p>{entry.description}</p>}
-        </li>)}</ul>}
-        {services.length > 0 ? <div className="healthcare-service-grid">{services.slice(0, 9).map((service) => <Link className="healthcare-service-card" href={`${hospitalUrl}/services/${serviceSlug(service)}`} key={serviceSlug(service)}><h3 className="govuk-heading-m">{service.name}<span aria-hidden="true">→</span></h3></Link>)}</div> : serviceLinks.length === 0 ? <p className="govuk-body">Service information will be added when available.</p> : null}
-        <Link className="govuk-link" href={`${hospitalUrl}/services`}>View all services and clinics</Link>
-      </section>
-
-      <section className="healthcare-profile__section healthcare-visiting-card" aria-labelledby="visiting-hours-heading">
-        <h2 className="govuk-heading-l" id="visiting-hours-heading">Visiting hours</h2>
-        {visitingHours.length > 0 ? (
-          <dl className="healthcare-visiting-hours">
-            {visitingHours.map((period, index) => (
-              <div className="healthcare-visiting-hours__period" key={`${period.days}-${period.hours}-${index}`}>
-                <dt>{period.days}</dt>
-                <dd>{period.hours}{period.note && <span>{period.note}</span>}</dd>
-              </div>
-            ))}
-          </dl>
-        ) : !data.visiting ? (
-          <p className="govuk-body">Visiting guidance will be added by the hospital.</p>
-        ) : null}
-        {data.visiting && <p className="govuk-body">{data.visiting}</p>}
-        {visitingInstructions.length > 0 && (
-          <div className="healthcare-visiting-instructions">
-            <h3 className="govuk-heading-s">Visitor instructions</h3>
-            <ul className="govuk-list govuk-list--bullet">
-              {visitingInstructions.map((instruction, index) => <li key={`${instruction}-${index}`}>{instruction}</li>)}
-            </ul>
+        <div className="healthcare-service-layout">
+          <div>
+            <h2 className="govuk-heading-l" id="services-heading">{data.servicesTitle || "Hospital services"}</h2>
+            {serviceLinks.length > 0 ? <ul className="healthcare-service-links">{serviceLinks.map((entry, index) => <li key={`${entry.title}-${index}`}>
+              {entry.href ? <ProfileLink href={entry.href} className="healthcare-service-links__link">{entry.title}<span aria-hidden="true">›</span></ProfileLink> : <strong className="healthcare-service-links__link">{entry.title}<span aria-hidden="true">›</span></strong>}
+              {entry.description && <p>{entry.description}</p>}
+            </li>)}</ul> : services.length > 0 ? <ul className="healthcare-service-links">{services.slice(0, 5).map((service) => <li key={serviceSlug(service)}><Link className="healthcare-service-links__link" href={`${hospitalUrl}/services/${serviceSlug(service)}`}>{service.name}<span aria-hidden="true">›</span></Link></li>)}</ul> : <p className="govuk-body">Service information will be added when available.</p>}
+            <Link className="govuk-link" href={`${hospitalUrl}/services`}>Find other clinical departments</Link>
           </div>
-        )}
-        <Link className="govuk-link" href={`${hospitalUrl}/patient-information#visiting`}>More visiting information</Link>
-      </section>
-
-      <section className="healthcare-profile__section healthcare-contact-summary" id="contact">
-        <div className="healthcare-contact-summary__content">
-          <h2 className="govuk-heading-l">Contact &amp; find us</h2>
-          {physicalAddresses.length > 0 ? physicalAddresses.map((address, index) => (
-            <p className="govuk-body" key={`${address}-${index}`}><strong>{index === 0 ? "Headquarters" : "Physical address"}</strong><br />{address}</p>
-          )) : <p className="govuk-body">Headquarters not provided</p>}
-          {institution.postal_address && <p className="govuk-body"><strong>Postal address</strong><br />{institution.postal_address}</p>}
-          {contactGroups.length > 0 && (
-            <dl className="healthcare-contact-details">
-              {contactGroups.map((group) => (
-                <div className="healthcare-contact-details__row" key={group.type}>
-                  <dt>{group.label}</dt>
-                  <dd>{group.points.map((point, index) => (
-                    <span key={`${point.value}-${index}`}>
-                      {index > 0 && " · "}
-                      <a className="govuk-link" href={group.type === "email" ? `mailto:${point.value}` : `tel:${point.value.replace(/[^\d+]/g, "")}`}>{point.value}</a>
-                      {point.purpose && <span className="govuk-hint"> ({point.purpose})</span>}
-                    </span>
-                  ))}</dd>
-                </div>
-              ))}
-            </dl>
-          )}
-          <div className="healthcare-contact-actions">
-            {mapUrl && <ExternalLink className="govuk-button govuk-button--secondary" href={mapUrl}>Open Google Maps</ExternalLink>}
-            {websiteUrl && <ExternalLink className="govuk-button govuk-button--secondary" href={websiteUrl}>Official website</ExternalLink>}
-            {portalUrl && <ExternalLink className="govuk-button govuk-button--secondary" href={portalUrl}>Service portal</ExternalLink>}
-          </div>
-          {socialLinks.length > 0 && (
-            <div className="healthcare-social-links" aria-label="Social media links">
-              {socialLinks.map((link) => <ExternalLink className="healthcare-social-link" href={link.url} key={`${link.platform}-${link.url}`}><span aria-hidden="true">{socialLabel(link.platform).slice(0, 2).toUpperCase()}</span><strong>{socialLabel(link.platform)}</strong></ExternalLink>)}
+          <aside className="healthcare-urgent-panel" id="urgent-care" aria-labelledby="urgent-care-heading">
+            <h2 className="govuk-heading-m" id="urgent-care-heading"><span aria-hidden="true">✚</span> Urgent care &amp; emergency referrals</h2>
+            <p>If you need urgent medical advice or are referring an acute patient, contact the hospital using the lines below.</p>
+            <div className="healthcare-urgent-panel__lines">
+              <strong>Emergency and referral lines</strong>
+              <a href={`tel:${emergencyMain.replace(/[^\d+]/g, "")}`}>{emergencyMain}</a>
+              {referralLines.map((line, index) => <a href={`tel:${line.replace(/[^\d+]/g, "")}`} key={`${line}-${index}`}>{line}</a>)}
+              <span>National ambulance: <a href={`tel:${ambulance.replace(/[^\d+]/g, "")}`}>{ambulance}</a></span>
             </div>
-          )}
+            <p className="healthcare-urgent-panel__note">For life-threatening emergencies, go directly to the nearest emergency department.</p>
+          </aside>
         </div>
       </section>
 

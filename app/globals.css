@@ -47,17 +47,24 @@
 }
 
 .healthcare-emergency-bar {
-  align-items: center;
-  background: #005eb8;
+  background: #da291c;
   color: white;
+  margin: -1.25rem -1rem 0;
+  padding: .45rem 1rem;
+}
+
+.healthcare-emergency-bar__inner {
+  align-items: center;
   display: flex;
   flex-wrap: wrap;
-  gap: .5rem 1rem;
-  margin: 0 0 1rem;
-  padding: .85rem 1rem;
+  gap: .4rem 1rem;
+  justify-content: space-between;
+  margin: 0 auto;
+  max-width: 60rem;
 }
 
 .healthcare-emergency-bar a { color: white; font-weight: 700; }
+.healthcare-emergency-bar__urgent { text-transform: uppercase; }
 .healthcare-emergency-bar span { white-space: normal; }
 
 .healthcare-profile__nav {
@@ -122,10 +129,15 @@
 .healthcare-profile__section, .healthcare-profile__intro { max-width: 60rem; margin-left: auto; margin-right: auto; }
 .healthcare-masthead { background: #005eb8; color: #fff; margin: 0 -1rem; }
 .healthcare-masthead__inner { align-items: center; display: flex; flex-wrap: wrap; gap: 1rem 2rem; justify-content: space-between; margin: 0 auto; max-width: 60rem; padding: 1rem; }
-.healthcare-brand { color: #fff; flex: 1 1 18rem; font-size: 1.35rem; font-weight: 700; margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.healthcare-brand { color: #fff; display: flex; flex: 1 1 18rem; flex-direction: column; font-size: 1.35rem; font-weight: 700; margin: 0; min-width: 0; overflow-wrap: anywhere; }
 .healthcare-brand a { color: inherit; text-decoration: none; }
-.healthcare-masthead__nav { display: flex; flex-wrap: wrap; gap: .75rem 1.25rem; }
-.healthcare-masthead__nav a { color: #fff; font-weight: 700; text-decoration: underline; text-underline-offset: .2em; }
+.healthcare-brand span { color: #e8f1fa; font-size: .85rem; font-weight: 400; }
+.healthcare-referrals-button { background: #fff; color: #005eb8; font-size: .8rem; font-weight: 700; padding: .65rem 1rem; text-decoration: none; }
+.healthcare-primary-nav { background: #004b91; margin: 0 -1rem; }
+.healthcare-primary-nav__inner { display: flex; margin: 0 auto; max-width: 60rem; overflow-x: auto; }
+.healthcare-primary-nav a { border-bottom: 3px solid transparent; color: #fff; flex: 0 0 auto; font-size: .85rem; font-weight: 700; padding: .7rem .8rem; text-decoration: none; }
+.healthcare-primary-nav a:first-child { border-bottom-color: #fff; }
+.healthcare-primary-nav a:hover { background: #003078; text-decoration: underline; }
 .healthcare-profile__hero-wrap { background: #eef2f5; margin: 0 -1rem; padding: 2.5rem 1rem; }
 .healthcare-profile__hero { background: #005eb8; color: #fff; margin: 0 auto; max-width: 60rem; padding: 2rem; }
 .healthcare-profile__hero h1 { color: #fff; font-size: clamp(2rem, 4vw, 2.75rem); line-height: 1.12; margin: 0 0 1rem; }
@@ -151,17 +163,18 @@
 .healthcare-contact-summary .govuk-button { margin-bottom: 0; }
 
 .healthcare-profile__footer {
-  background: #003078;
-  color: white;
+  background: #f0f4f5;
+  border-top: 3px solid #005eb8;
+  color: #212b32;
   display: grid;
   gap: 2rem;
   grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
-  margin-top: 3rem;
-  padding: 2rem;
+  margin: 3rem -1rem 0;
+  padding: 2rem max(1rem, calc((100vw - 60rem) / 2));
 }
 
-.healthcare-profile__footer .govuk-heading-m { color: white; }
-.healthcare-profile__footer a { color: white; }
+.healthcare-profile__footer .govuk-heading-m { color: #212b32; }
+.healthcare-profile__footer a { color: #005eb8; }
 .healthcare-profile__footer .govuk-list { margin-bottom: 0; }
 .healthcare-home-section { border-top: 1px solid #d8dde0; margin-top: 1rem; padding-bottom: 2rem; padding-top: 2rem; }
 .healthcare-popular-links { display: grid; gap: 1.5rem 2rem; grid-template-columns: repeat(2, minmax(0, 1fr)); list-style: none; margin: 1.5rem 0 0; padding: 0; }
@@ -181,6 +194,23 @@
 .healthcare-advice-grid { display: grid; gap: 1.5rem 2rem; grid-template-columns: repeat(3, minmax(0, 1fr)); list-style: none; margin: 0; padding: 0; }
 .healthcare-advice-grid h3 { font-size: 1.05rem; line-height: 1.35; margin: 0 0 .5rem; }
 .healthcare-advice-grid p { font-size: .95rem; line-height: 1.5; margin: 0; }
+.healthcare-service-layout { align-items: start; display: grid; gap: 1.75rem; grid-template-columns: minmax(0, 1fr) minmax(19rem, 1fr); }
+.healthcare-service-links { grid-template-columns: 1fr; margin-top: 1rem; }
+.healthcare-service-links li { background: #005eb8; border: 0; padding: 0; }
+.healthcare-service-links__link { color: #fff; display: flex; font-size: 1rem; justify-content: space-between; padding: .85rem 1rem; text-decoration: none; }
+.healthcare-service-links__link:hover { background: #004b91; color: #fff; text-decoration: underline; }
+.healthcare-service-links li p { background: #fff; padding: .2rem .75rem .7rem; }
+.healthcare-urgent-panel { background: #f0f4f5; border-left: 4px solid #005eb8; padding: 1.5rem; }
+.healthcare-urgent-panel .govuk-heading-m { color: #005eb8; }
+.healthcare-urgent-panel .govuk-heading-m span { margin-right: .45rem; }
+.healthcare-urgent-panel > p { line-height: 1.55; }
+.healthcare-urgent-panel__lines { background: #fff; border: 1px solid #d8dde0; display: flex; flex-direction: column; gap: .35rem; padding: 1rem; }
+.healthcare-urgent-panel__lines strong { color: #4c6272; font-size: .75rem; text-transform: uppercase; }
+.healthcare-urgent-panel__lines > a { color: #005eb8; font-size: 1.35rem; font-weight: 700; text-decoration: none; }
+.healthcare-urgent-panel__lines > a:first-of-type { color: #da291c; }
+.healthcare-urgent-panel__lines span { color: #4c6272; font-size: .8rem; }
+.healthcare-urgent-panel__lines span a { color: #005eb8; font-weight: 700; }
+.healthcare-urgent-panel__note { font-size: .85rem; margin-bottom: 0; }
 .healthcare-content-editor__entry { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .healthcare-content-editor__entry legend, .healthcare-content-editor__entry button { grid-column: 1 / -1; }
 
@@ -376,13 +406,19 @@
   padding: 0.75rem 0;
 }
 
+@media (max-width: 52rem) {
+  .healthcare-service-layout { grid-template-columns: 1fr; }
+  .healthcare-featured-grid, .healthcare-advice-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
 @media (max-width: 40.0525em) {
   .healthcare-masthead__inner { align-items: flex-start; flex-direction: column; }
   .healthcare-brand { flex: 0 1 auto; }
   .healthcare-masthead__nav { gap: .5rem 1rem; }
   .healthcare-profile__section, .healthcare-profile__intro { padding: 1rem; }
-  .healthcare-emergency-bar { align-items: flex-start; flex-direction: column; }
+  .healthcare-emergency-bar__inner { align-items: flex-start; flex-direction: column; }
   .healthcare-contact-details__row, .healthcare-visiting-hours__period { grid-template-columns: 1fr; }
+  .healthcare-featured-grid, .healthcare-advice-grid { grid-template-columns: 1fr; }
   .template-visiting-hours__row { grid-template-columns: 1fr; }
   .template-visiting-hours__row legend { grid-column: auto; }
   .healthcare-profile__actions {
