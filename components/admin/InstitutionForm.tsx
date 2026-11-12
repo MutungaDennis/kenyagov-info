@@ -97,7 +97,7 @@ function parseContactPoints(value: string): InstitutionContactPoint[] {
           const point = item as Record<string, unknown>;
           const type = point.type === "email" ? "email" : point.type === "phone" ? "phone" : null;
           const value = String(point.value ?? "").trim();
-          if (!type || !value) return [];
+          if (!type) return [];
           return [{ type, purpose: String(point.purpose ?? "General inquiries").trim(), value }];
         })
       : [];
@@ -1889,62 +1889,66 @@ export default function InstitutionForm({
       <fieldset className="govuk-fieldset govuk-!-margin-bottom-4">
         <legend className="govuk-fieldset__legend govuk-fieldset__legend--s">Contact methods</legend>
         <p className="govuk-hint">Add as many email addresses or phone numbers as needed, with a purpose for each.</p>
-        {contactPoints.map((point, index) => (
-          <div className="govuk-grid-row govuk-!-margin-bottom-2" key={`${index}-${point.type}`}>
-            <div className="govuk-grid-column-one-quarter">
-              <label className="govuk-label" htmlFor={`contact-type-${index}`}>Type</label>
-              <select
-                className="govuk-select"
-                id={`contact-type-${index}`}
-                value={point.type}
-                onChange={(event) => {
-                  const next = [...contactPoints];
-                  next[index] = { ...point, type: event.target.value as "email" | "phone" };
-                  emitField("contact_points", JSON.stringify(next));
-                }}
-              >
-                <option value="email">Email</option>
-                <option value="phone">Phone</option>
-              </select>
-            </div>
-            <div className="govuk-grid-column-one-quarter">
-              <label className="govuk-label" htmlFor={`contact-purpose-${index}`}>Purpose</label>
-              <input
-                className="govuk-input"
-                id={`contact-purpose-${index}`}
-                value={point.purpose}
-                onChange={(event) => {
-                  const next = [...contactPoints];
-                  next[index] = { ...point, purpose: event.target.value };
-                  emitField("contact_points", JSON.stringify(next));
-                }}
-              />
-            </div>
-            <div className="govuk-grid-column-one-third">
-              <label className="govuk-label" htmlFor={`contact-value-${index}`}>Contact detail</label>
-              <input
-                className="govuk-input"
-                id={`contact-value-${index}`}
-                type={point.type === "email" ? "email" : "tel"}
-                value={point.value}
-                onChange={(event) => {
-                  const next = [...contactPoints];
-                  next[index] = { ...point, value: event.target.value };
-                  emitField("contact_points", JSON.stringify(next));
-                }}
-              />
-            </div>
-            <div className="govuk-grid-column-one-sixth">
-              <span className="govuk-label" aria-hidden="true">&nbsp;</span>
-              <button
-                className="govuk-button govuk-button--secondary"
-                type="button"
-                aria-label={`Remove contact method ${index + 1}`}
-                onClick={() => emitField("contact_points", JSON.stringify(contactPoints.filter((_, i) => i !== index)))}
-              >Remove</button>
-            </div>
+        {contactPoints.length > 0 && (
+          <div className="govuk-!-margin-bottom-4">
+            {contactPoints.map((point, index) => (
+              <div className="govuk-grid-row govuk-!-margin-bottom-3" key={`${index}-${point.type}`}>
+                <div className="govuk-grid-column-one-quarter">
+                  <label className="govuk-label" htmlFor={`contact-type-${index}`}>Type</label>
+                  <select
+                    className="govuk-select"
+                    id={`contact-type-${index}`}
+                    value={point.type}
+                    onChange={(event) => {
+                      const next = [...contactPoints];
+                      next[index] = { ...point, type: event.target.value as "email" | "phone" };
+                      emitField("contact_points", JSON.stringify(next));
+                    }}
+                  >
+                    <option value="email">Email</option>
+                    <option value="phone">Phone</option>
+                  </select>
+                </div>
+                <div className="govuk-grid-column-one-quarter">
+                  <label className="govuk-label" htmlFor={`contact-purpose-${index}`}>Purpose</label>
+                  <input
+                    className="govuk-input"
+                    id={`contact-purpose-${index}`}
+                    value={point.purpose}
+                    onChange={(event) => {
+                      const next = [...contactPoints];
+                      next[index] = { ...point, purpose: event.target.value };
+                      emitField("contact_points", JSON.stringify(next));
+                    }}
+                  />
+                </div>
+                <div className="govuk-grid-column-one-third">
+                  <label className="govuk-label" htmlFor={`contact-value-${index}`}>Contact detail</label>
+                  <input
+                    className="govuk-input"
+                    id={`contact-value-${index}`}
+                    type={point.type === "email" ? "email" : "tel"}
+                    value={point.value}
+                    onChange={(event) => {
+                      const next = [...contactPoints];
+                      next[index] = { ...point, value: event.target.value };
+                      emitField("contact_points", JSON.stringify(next));
+                    }}
+                  />
+                </div>
+                <div className="govuk-grid-column-one-sixth">
+                  <span className="govuk-label" aria-hidden="true">&nbsp;</span>
+                  <button
+                    className="govuk-button govuk-button--secondary"
+                    type="button"
+                    aria-label={`Remove contact method ${index + 1}`}
+                    onClick={() => emitField("contact_points", JSON.stringify(contactPoints.filter((_, i) => i !== index)))}
+                  >Remove</button>
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
+        )}
         <button
           className="govuk-button govuk-button--secondary"
           type="button"

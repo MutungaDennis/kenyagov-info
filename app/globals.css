@@ -118,7 +118,7 @@
 .healthcare-profile__section, .healthcare-profile__intro { max-width: 60rem; margin-left: auto; margin-right: auto; }
 .healthcare-masthead { background: #005eb8; color: #fff; margin: 0 -1rem; }
 .healthcare-masthead__inner { align-items: center; display: flex; flex-wrap: wrap; gap: 1rem 2rem; justify-content: space-between; margin: 0 auto; max-width: 60rem; padding: 1rem; }
-.healthcare-brand { color: #fff; font-size: 1.35rem; font-weight: 700; text-decoration: none; }
+.healthcare-brand { color: #fff; flex: 1 1 18rem; font-size: 1.35rem; font-weight: 700; min-width: 0; overflow-wrap: anywhere; text-decoration: none; }
 .healthcare-masthead__nav { display: flex; flex-wrap: wrap; gap: .75rem 1.25rem; }
 .healthcare-masthead__nav a { color: #fff; font-weight: 700; text-decoration: underline; text-underline-offset: .2em; }
 .healthcare-profile__header { background: #fff; margin: 0 auto; max-width: 60rem; padding: 1.5rem 0 2rem; }
@@ -139,6 +139,7 @@
 .healthcare-person-card { border-left: 4px solid #005eb8; background: #fff; padding: 1rem; }
 
 .healthcare-contact-summary { align-items: center; display: flex; flex-wrap: wrap; gap: 1.5rem; justify-content: space-between; }
+.healthcare-visiting-card { background: #fff; border-left: 4px solid #005eb8; }
 .healthcare-contact-summary .govuk-button { margin-bottom: 0; }
 
 .healthcare-profile__footer {

@@ -56,11 +56,10 @@ export default function ReferralHospitalProfile({ institution }: Props) {
     <div className="healthcare-profile">
       <div className="healthcare-masthead">
         <div className="healthcare-masthead__inner">
-          <Link className="healthcare-brand" href={hospitalUrl}>{institution.short_name || institution.name}</Link>
+          <Link className="healthcare-brand" href={hospitalUrl}>{institution.name}</Link>
           <nav aria-label="Healthcare navigation" className="healthcare-masthead__nav">
             <Link href={`${hospitalUrl}/services`}>Services</Link>
             <Link href={`${hospitalUrl}/about`}>About</Link>
-            <Link href={`${hospitalUrl}/contact`}>Contact</Link>
           </nav>
         </div>
       </div>
@@ -80,26 +79,17 @@ export default function ReferralHospitalProfile({ institution }: Props) {
         <h1 className="govuk-heading-xl">{institution.name}</h1>
       </header>
 
-      <section className="healthcare-profile__intro">
-        <h2 className="govuk-heading-l">What do you need to do?</h2>
-        <ul className="healthcare-task-list">
-          <li><Link href={`${hospitalUrl}/contact#emergency`}><span className="healthcare-task-list__arrow" aria-hidden="true">→</span><span><strong>Emergency / A&amp;E</strong></span></Link></li>
-          <li><Link href={`${hospitalUrl}/how-to-get-care`}><span className="healthcare-task-list__arrow" aria-hidden="true">→</span><span><strong>How to get care</strong></span></Link></li>
-          <li><Link href={`${hospitalUrl}/services`}><span className="healthcare-task-list__arrow" aria-hidden="true">→</span><span><strong>Find a service or clinic</strong></span></Link></li>
-          <li><Link href={`${hospitalUrl}/patient-information#visiting`}><span className="healthcare-task-list__arrow" aria-hidden="true">→</span><span><strong>Visiting hours</strong></span></Link></li>
-          <li><Link href={`${hospitalUrl}/patient-information`}><span className="healthcare-task-list__arrow" aria-hidden="true">→</span><span><strong>Patient information</strong></span></Link></li>
-          <li><Link href={`${hospitalUrl}/contact`}><span className="healthcare-task-list__arrow" aria-hidden="true">→</span><span><strong>Contact &amp; find us</strong></span></Link></li>
-          <li><Link href={`${hospitalUrl}/about`}><span className="healthcare-task-list__arrow" aria-hidden="true">→</span><span><strong>About this hospital</strong></span></Link></li>
-        </ul>
-      </section>
-
-      {(institution.description || data.mandate) && <section className="healthcare-profile__section healthcare-profile__about"><h2 className="govuk-heading-l">About this hospital</h2>{institution.description && <p className="govuk-body-l">{institution.description}</p>}{data.mandate && <p className="govuk-body">{data.mandate}</p>}<Link className="govuk-link" href={`${hospitalUrl}/about`}>Read more about this hospital</Link></section>}
-
       <section className="healthcare-profile__section" id="services">
         <h2 className="govuk-heading-l">Services overview</h2>
         <p className="govuk-body">Browse services and clinics to find access information, locations and what to expect.</p>
         {services.length > 0 ? <div className="healthcare-service-grid">{services.slice(0, 9).map((service) => <Link className="healthcare-service-card" href={`${hospitalUrl}/services/${serviceSlug(service)}`} key={serviceSlug(service)}><h3 className="govuk-heading-m">{service.name}<span aria-hidden="true">→</span></h3></Link>)}</div> : <p className="govuk-body">Services and clinics will be listed here when they are added.</p>}
         <Link className="govuk-link" href={`${hospitalUrl}/services`}>View all services and clinics</Link>
+      </section>
+
+      <section className="healthcare-profile__section healthcare-visiting-card" aria-labelledby="visiting-hours-heading">
+        <h2 className="govuk-heading-l" id="visiting-hours-heading">Visiting hours</h2>
+        <p className="govuk-body">{data.visiting || "Visiting guidance will be added by the hospital."}</p>
+        <Link className="govuk-link" href={`${hospitalUrl}/patient-information#visiting`}>More visiting information</Link>
       </section>
 
       <section className="healthcare-profile__section healthcare-contact-summary" id="contact">
