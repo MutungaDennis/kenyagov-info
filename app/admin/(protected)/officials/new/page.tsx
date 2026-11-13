@@ -28,6 +28,7 @@ import {
   normalizeVerificationStatus,
 } from "@/lib/verification";
 import LeaderImageField from "@/components/admin/LeaderImageField";
+import BiographyLinkEditor from "@/components/admin/BiographyLinkEditor";
 
 type FormState = {
   first_name: string;
@@ -80,6 +81,9 @@ export default function NewOfficialPage() {
     ...NATIONAL_HONOUR_OPTIONS,
   ]);
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
+  const [institutions, setInstitutions] = useState<
+    { id: string | number; name?: string | null; short_name?: string | null; slug?: string | null }[]
+  >([]);
   const [newTitleValue, setNewTitleValue] = useState("");
   const [newTitleLabel, setNewTitleLabel] = useState("");
   const [newHonourValue, setNewHonourValue] = useState("");
@@ -115,7 +119,7 @@ export default function NewOfficialPage() {
     (async () => {
       try {
         const res = await fetch(
-          "/api/admin/leaders/lookups?only=name_titles,national_honours",
+          "/api/admin/leaders/lookups?only=name_titles,national_honours,institutions",
           { credentials: "include", cache: "no-store" },
         );
         const json = await res.json();
@@ -127,6 +131,9 @@ export default function NewOfficialPage() {
           setHonourOptions(
             mergeNationalHonourOptions(json.national_honour_options),
           );
+        }
+        if (Array.isArray(json.institutions)) {
+          setInstitutions(json.institutions);
         }
       } catch {
         /* built-ins only */
@@ -562,18 +569,11 @@ export default function NewOfficialPage() {
           </div>
 
           <h2 className="govuk-heading-m">Biography &amp; contact</h2>
-          <div className="govuk-form-group">
-            <label className="govuk-label" htmlFor="bio">
-              Biography
-            </label>
-            <textarea
-              id="bio"
-              className="govuk-textarea"
-              rows={5}
-              value={form.bio}
-              onChange={(e) => setField("bio", e.target.value)}
-            />
-          </div>
+          <BiographyLinkEditor
+            value={form.bio}
+            onChange={(value) => setField("bio", value)}
+            institutions={institutions}
+          />
           <div className="govuk-grid-row">
             <div className="govuk-grid-column-one-third">
               <div className="govuk-form-group">

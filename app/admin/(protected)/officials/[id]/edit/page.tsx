@@ -50,6 +50,7 @@ import {
   normalizeVerificationStatus,
 } from "@/lib/verification";
 import LeaderImageField from "@/components/admin/LeaderImageField";
+import BiographyLinkEditor from "@/components/admin/BiographyLinkEditor";
 
 async function safeJsonResponse(res: Response) {
   const contentType = res.headers.get("content-type");
@@ -1914,18 +1915,11 @@ export default function EditOfficialPage({
           )}
 
           <h2 className="govuk-heading-m">Biography</h2>
-          <div className="govuk-form-group">
-            <label className="govuk-label" htmlFor="bio">
-              Biography
-            </label>
-            <textarea
-              id="bio"
-              className="govuk-textarea"
-              rows={6}
-              value={form.bio}
-              onChange={(e) => setField("bio", e.target.value)}
-            />
-          </div>
+          <BiographyLinkEditor
+            value={form.bio}
+            onChange={(value) => setField("bio", value)}
+            institutions={lookups.institutions}
+          />
 
           <h2 className="govuk-heading-m">Academic qualifications</h2>
           {qualifications.map((q, i) => (
