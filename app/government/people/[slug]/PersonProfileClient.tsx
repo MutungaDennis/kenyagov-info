@@ -1,10 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams } from "next/navigation";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import PageContents from "@/components/site/PageContents";
+import InstitutionLinkedText, {
+  buildInstitutionMatcher,
+  type InstitutionRecord,
+} from "@/components/site/InstitutionLinkedText";
+import LinkedBiography from "@/components/site/LinkedBiography";
 import { createBrowserClientAsync } from "@/lib/supabase/client";
 import {
   displayName,
@@ -26,6 +31,7 @@ import {
 
 type LeaderRole = LeaderRoleLike & {
   id: string;
+  institution_id?: string | number | null;
   title: string | null;
   organization: string | null;
   constituency: string | null;
@@ -73,9 +79,17 @@ type Leader = {
 };
 
 /** Client profile UI — existence is enforced by the server page (real HTTP 404). */
-export default function PersonProfileClient() {
+export default function PersonProfileClient({
+  institutions = [],
+}: {
+  institutions?: InstitutionRecord[];
+}) {
   const params = useParams();
   const slug = params.slug as string;
+  const institutionMatcher = useMemo(
+    () => buildInstitutionMatcher(institutions),
+    [institutions],
+  );
 
   const [person, setPerson] = useState<Leader | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -97,7 +111,7 @@ export default function PersonProfileClient() {
             `
             *,
             leader_roles!leader_roles_leader_id_fkey (
-              id, title, organization, constituency, county, ward, party,
+              id, title, organization, institution_id, constituency, county, ward, party,
               term_start_date, term_end_date, status, official_email,
               office_location, committees, display_priority
             )
@@ -116,7 +130,7 @@ export default function PersonProfileClient() {
               category, bio, current_organization, current_constituency,
               current_county, current_party, is_active, status,
               leader_roles (
-                id, title, organization, constituency, county, ward, party,
+                id, title, organization, institution_id, constituency, county, ward, party,
                 term_start_date, term_end_date, status, official_email,
                 office_location, committees, display_priority
               )
@@ -302,9 +316,15 @@ export default function PersonProfileClient() {
     displayRoleTitle = `Woman Representative for ${countyName}`;
   }
 
-  const orgName = primaryRole
-    ? primaryRole.organization || null
-    : person.current_organization || null;
+  const primaryInstitutionName = primaryRole?.institution_id
+    ? institutionMatcher.termsById.get(String(primaryRole.institution_id))?.label
+    : null;
+  const orgName =
+    primaryRole?.organization ||
+    (primary.isCurrent ? person.current_organization : null) ||
+    primaryInstitutionName ||
+    (!primaryRole ? person.current_organization : null) ||
+    null;
   const party = primaryRole
     ? primaryRole.party || null
     : person.current_party || null;
@@ -448,7 +468,11 @@ export default function PersonProfileClient() {
 
               {orgName && (
                 <p className="govuk-body govuk-!-margin-bottom-6">
-                  {orgName}
+                  <InstitutionLinkedText
+                    text={orgName}
+                    institutionId={primaryRole?.institution_id}
+                    matcher={institutionMatcher}
+                  />
                   {termLabel && (
                     <span className="govuk-hint">
                       {" "}· {primary.isCurrent ? "Serving" : "Served"} {termLabel}
@@ -465,11 +489,7 @@ export default function PersonProfileClient() {
                   <h2 id="biography-heading" className="govuk-heading-m">
                     Biography
                   </h2>
-                  {person.bio.split(/\n\n+/).map((para, i) => (
-                    <p key={i} className="govuk-body">
-                      {para}
-                    </p>
-                  ))}
+                  <LinkedBiography text={person.bio} />
                 </section>
               )}
 
@@ -546,14 +566,23 @@ export default function PersonProfileClient() {
                   </h2>
                   <div className="govuk-inset-text govuk-!-margin-top-0">
                     <ul className="govuk-list govuk-list--bullet govuk-!-margin-bottom-0">
-                      {otherActiveRoles.map((r, i) => (
+                      {otherActiveRoles.map((r, i) => {
+                        const roleHeadline = formatRoleHeadline(r);
+                        const institutionName = !r.organization && r.institution_id
+                          ? institutionMatcher.termsById.get(String(r.institution_id))?.label
+                          : null;
+                        return (
                         <li key={r.id ? `${r.id}-${i}` : `active-role-${i}`}>
-                          {formatRoleHeadline(r)}
+                          <InstitutionLinkedText
+                            text={institutionName ? `${roleHeadline} — ${institutionName}` : roleHeadline}
+                            matcher={institutionMatcher}
+                          />
                           {formatTermRange(r.term_start_date, r.term_end_date)
                             ? ` (${formatTermRange(r.term_start_date, r.term_end_date)})`
                             : ""}
                         </li>
-                      ))}
+                        );
+                      })}
                     </ul>
                   </div>
                 </section>
@@ -608,14 +637,19 @@ export default function PersonProfileClient() {
                               )}
                             </td>
                             <td className="govuk-table__cell">
-                              {[
-                                role.organization,
-                                role.constituency,
-                                role.county,
-                                role.ward,
-                              ]
-                                .filter(Boolean)
-                                .join(" · ") || "—"}
+                              <InstitutionLinkedText
+                                text={[
+                                  role.organization || (role.institution_id
+                                    ? institutionMatcher.termsById.get(String(role.institution_id))?.label
+                                    : null),
+                                  role.constituency,
+                                  role.county,
+                                  role.ward,
+                                ]
+                                  .filter(Boolean)
+                                  .join(" · ") || "—"}
+                                matcher={institutionMatcher}
+                              />
                             </td>
                             <td className="govuk-table__cell">
                               {formatTermRange(
