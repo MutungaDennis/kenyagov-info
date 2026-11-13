@@ -16,11 +16,18 @@ type Props = {
   institutions: InstitutionOption[];
 };
 
+type TextSelection = {
+  start: number;
+  end: number;
+  text: string;
+};
+
 export default function BiographyLinkEditor({ value, onChange, institutions }: Props) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [linkType, setLinkType] = useState<"internal" | "external">("internal");
-  const [institutionId, setInstitutionId] = useState("");
+  const [institutionQuery, setInstitutionQuery] = useState("");
   const [externalUrl, setExternalUrl] = useState("");
+  const [selection, setSelection] = useState<TextSelection>({ start: 0, end: 0, text: "" });
   const [status, setStatus] = useState("");
 
   const institutionOptions = useMemo(
@@ -32,36 +39,31 @@ export default function BiographyLinkEditor({ value, onChange, institutions }: P
     [institutions],
   );
 
-  const applyLink = () => {
-    const textarea = textareaRef.current;
-    if (!textarea) return;
+  const matchingInstitutions = useMemo(() => {
+    const query = institutionQuery.trim().toLocaleLowerCase("en");
+    if (!query) return [];
 
-    const { selectionStart, selectionEnd } = textarea;
-    const selectedText = value.slice(selectionStart, selectionEnd);
-    if (!selectedText.trim()) {
-      setStatus("Select the text you want to link in the biography first.");
+    return institutionOptions
+      .filter((institution) =>
+        `${institution.name || ""} ${institution.short_name || ""}`
+          .toLocaleLowerCase("en")
+          .includes(query),
+      )
+      .slice(0, 8);
+  }, [institutionOptions, institutionQuery]);
+
+  const captureSelection = (textarea: HTMLTextAreaElement) => {
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    setSelection({ start, end, text: value.slice(start, end) });
+    setStatus("");
+  };
+
+  const applyLink = (href: string) => {
+    const selectedText = selection.text;
+    if (!selectedText.trim() || selection.start === selection.end) {
+      setStatus("Highlight the words you want to link in the biography first.");
       return;
-    }
-
-    let href = "";
-    if (linkType === "internal") {
-      const institution = institutionOptions.find(
-        (item) => String(item.id) === institutionId,
-      );
-      if (!institution?.slug) {
-        setStatus("Choose an institution to create an internal link.");
-        return;
-      }
-      href = `/government/institutions/${encodeURIComponent(institution.slug)}`;
-    } else {
-      try {
-        const parsed = new URL(externalUrl.trim());
-        if (parsed.protocol !== "https:") throw new Error("HTTPS required");
-        href = parsed.toString().replace(/\(/g, "%28").replace(/\)/g, "%29");
-      } catch {
-        setStatus("Enter a valid external URL beginning with https://.");
-        return;
-      }
     }
 
     const label = selectedText
@@ -70,17 +72,32 @@ export default function BiographyLinkEditor({ value, onChange, institutions }: P
       .replace(/\]/g, "\\]");
     const markdownLink = `[${label}](${href})`;
     const nextValue =
-      value.slice(0, selectionStart) + markdownLink + value.slice(selectionEnd);
+      value.slice(0, selection.start) + markdownLink + value.slice(selection.end);
+    const nextCursor = selection.start + markdownLink.length;
 
     onChange(nextValue);
-    setStatus(`Linked “${selectedText}”.`);
+    setSelection({ start: nextCursor, end: nextCursor, text: "" });
+    setStatus(`Added a link for “${selectedText}”.`);
     requestAnimationFrame(() => {
       textareaRef.current?.focus();
-      textareaRef.current?.setSelectionRange(
-        selectionStart + markdownLink.length,
-        selectionStart + markdownLink.length,
-      );
+      textareaRef.current?.setSelectionRange(nextCursor, nextCursor);
     });
+  };
+
+  const addInstitutionLink = (institution: InstitutionOption) => {
+    if (!institution.slug) return;
+    applyLink(`/government/institutions/${encodeURIComponent(institution.slug)}`);
+  };
+
+  const addExternalLink = () => {
+    try {
+      const parsed = new URL(externalUrl.trim());
+      if (parsed.protocol !== "https:") throw new Error("HTTPS required");
+      const href = parsed.toString().replace(/\(/g, "%28").replace(/\)/g, "%29");
+      applyLink(href);
+    } catch {
+      setStatus("Enter a valid external URL beginning with https://.");
+    }
   };
 
   return (
@@ -89,7 +106,7 @@ export default function BiographyLinkEditor({ value, onChange, institutions }: P
         Biography
       </label>
       <p id="bio-link-help" className="govuk-hint">
-        Select a phrase, choose an internal institution page or an external website, then add the link.
+        Highlight a phrase, then choose where it should link. Internal institution pages are selected by default.
       </p>
       <textarea
         ref={textareaRef}
@@ -97,18 +114,35 @@ export default function BiographyLinkEditor({ value, onChange, institutions }: P
         className="govuk-textarea"
         rows={8}
         value={value}
+        onSelect={(event) => captureSelection(event.currentTarget)}
+        onKeyUp={(event) => captureSelection(event.currentTarget)}
+        onMouseUp={(event) => captureSelection(event.currentTarget)}
         onChange={(event) => {
           onChange(event.target.value);
+          setSelection({
+            start: event.target.selectionStart,
+            end: event.target.selectionEnd,
+            text: "",
+          });
           setStatus("");
         }}
         aria-describedby="bio-link-help"
       />
 
+      <div className="govuk-inset-text govuk-!-margin-top-4">
+        <strong>Selected text</strong>
+        <p className="govuk-body govuk-!-margin-bottom-0">
+          {selection.text.trim()
+            ? `“${selection.text}”`
+            : "Highlight a phrase in the biography above to choose link text."}
+        </p>
+      </div>
+
       <fieldset className="govuk-fieldset govuk-!-margin-top-4">
         <legend className="govuk-fieldset__legend govuk-fieldset__legend--s">
-          Link type
+          Link destination
         </legend>
-        <div className="govuk-radios govuk-radios--inline" data-module="govuk-radios">
+        <div className="govuk-radios govuk-radios--inline">
           <div className="govuk-radios__item">
             <input
               className="govuk-radios__input"
@@ -120,7 +154,7 @@ export default function BiographyLinkEditor({ value, onChange, institutions }: P
               onChange={() => setLinkType("internal")}
             />
             <label className="govuk-label govuk-radios__label" htmlFor="bio-link-internal">
-              Internal institution page
+              Institution page
             </label>
           </div>
           <div className="govuk-radios__item">
@@ -142,23 +176,41 @@ export default function BiographyLinkEditor({ value, onChange, institutions }: P
 
       {linkType === "internal" ? (
         <div className="govuk-form-group govuk-!-margin-top-4">
-          <label className="govuk-label" htmlFor="bio-link-institution">
-            Institution
+          <label className="govuk-label" htmlFor="bio-link-institution-search">
+            Search institutions
           </label>
-          <select
-            className="govuk-select"
-            id="bio-link-institution"
-            value={institutionId}
-            onChange={(event) => setInstitutionId(event.target.value)}
-          >
-            <option value="">Choose an institution</option>
-            {institutionOptions.map((institution) => (
-              <option key={String(institution.id)} value={String(institution.id)}>
-                {institution.name}
-                {institution.short_name ? ` (${institution.short_name})` : ""}
-              </option>
-            ))}
-          </select>
+          <input
+            className="govuk-input"
+            id="bio-link-institution-search"
+            type="search"
+            value={institutionQuery}
+            onChange={(event) => setInstitutionQuery(event.target.value)}
+            placeholder="For example, Law Society of Kenya"
+            autoComplete="off"
+          />
+          <p className="govuk-hint">
+            Choose a result to link the selected words directly to its profile.
+          </p>
+          {institutionQuery.trim() && matchingInstitutions.length > 0 && (
+            <ul className="govuk-list">
+              {matchingInstitutions.map((institution) => (
+                <li key={String(institution.id)}>
+                  <button
+                    className="govuk-button govuk-button--secondary"
+                    type="button"
+                    onClick={() => addInstitutionLink(institution)}
+                    aria-label={`Link selected text to ${institution.name}`}
+                  >
+                    {institution.name}
+                    {institution.short_name ? ` (${institution.short_name})` : ""}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          {institutionQuery.trim() && matchingInstitutions.length === 0 && (
+            <p className="govuk-body">No institutions match that search.</p>
+          )}
         </div>
       ) : (
         <div className="govuk-form-group govuk-!-margin-top-4">
@@ -174,12 +226,16 @@ export default function BiographyLinkEditor({ value, onChange, institutions }: P
             placeholder="https://example.org"
             autoComplete="url"
           />
+          <button
+            className="govuk-button govuk-!-margin-top-3"
+            type="button"
+            onClick={addExternalLink}
+          >
+            Add external link
+          </button>
         </div>
       )}
 
-      <button className="govuk-button govuk-button--secondary" type="button" onClick={applyLink}>
-        Link selected text
-      </button>
       <p className="govuk-hint" role="status" aria-live="polite">
         {status}
       </p>
