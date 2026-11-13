@@ -81,9 +81,6 @@ export default function NewOfficialPage() {
     ...NATIONAL_HONOUR_OPTIONS,
   ]);
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
-  const [institutions, setInstitutions] = useState<
-    { id: string | number; name?: string | null; short_name?: string | null; slug?: string | null }[]
-  >([]);
   const [newTitleValue, setNewTitleValue] = useState("");
   const [newTitleLabel, setNewTitleLabel] = useState("");
   const [newHonourValue, setNewHonourValue] = useState("");
@@ -119,7 +116,7 @@ export default function NewOfficialPage() {
     (async () => {
       try {
         const res = await fetch(
-          "/api/admin/leaders/lookups?only=name_titles,national_honours,institutions",
+          "/api/admin/leaders/lookups?only=name_titles,national_honours",
           { credentials: "include", cache: "no-store" },
         );
         const json = await res.json();
@@ -131,9 +128,6 @@ export default function NewOfficialPage() {
           setHonourOptions(
             mergeNationalHonourOptions(json.national_honour_options),
           );
-        }
-        if (Array.isArray(json.institutions)) {
-          setInstitutions(json.institutions);
         }
       } catch {
         /* built-ins only */
@@ -572,7 +566,6 @@ export default function NewOfficialPage() {
           <BiographyLinkEditor
             value={form.bio}
             onChange={(value) => setField("bio", value)}
-            institutions={institutions}
           />
           <div className="govuk-grid-row">
             <div className="govuk-grid-column-one-third">

@@ -1,5 +1,7 @@
 "use client";
 
+import { useDebounce } from "use-debounce";
+import useSWR from "swr";
 import { useMemo, useRef, useState } from "react";
 import LinkedBiography from "@/components/site/LinkedBiography";
 
@@ -8,12 +10,19 @@ type InstitutionOption = {
   name?: string | null;
   short_name?: string | null;
   slug?: string | null;
+  is_active?: boolean | null;
+};
+
+type InstitutionSearchResponse = {
+  data: InstitutionOption[];
+  total: number;
+  limit: number;
+  offset: number;
 };
 
 type Props = {
   value: string;
   onChange: (value: string) => void;
-  institutions: InstitutionOption[];
 };
 
 type TextSelection = {
@@ -22,35 +31,66 @@ type TextSelection = {
   text: string;
 };
 
-export default function BiographyLinkEditor({ value, onChange, institutions }: Props) {
+const INSTITUTION_PAGE_SIZE = 10;
+
+async function fetchInstitutionSearch(url: string): Promise<InstitutionSearchResponse> {
+  const response = await fetch(url, { credentials: "include", cache: "no-store" });
+  const result = (await response.json()) as Partial<InstitutionSearchResponse> & {
+    error?: string;
+  };
+
+  if (!response.ok) {
+    throw new Error(result.error || `Institution search failed (${response.status})`);
+  }
+
+  return {
+    data: Array.isArray(result.data) ? result.data : [],
+    total: typeof result.total === "number" ? result.total : 0,
+    limit: typeof result.limit === "number" ? result.limit : INSTITUTION_PAGE_SIZE,
+    offset: typeof result.offset === "number" ? result.offset : 0,
+  };
+}
+
+export default function BiographyLinkEditor({ value, onChange }: Props) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [linkType, setLinkType] = useState<"internal" | "external">("internal");
   const [institutionQuery, setInstitutionQuery] = useState("");
+  const [debouncedQuery] = useDebounce(institutionQuery.trim(), 250);
+  const [institutionOffset, setInstitutionOffset] = useState(0);
   const [externalUrl, setExternalUrl] = useState("");
   const [selection, setSelection] = useState<TextSelection>({ start: 0, end: 0, text: "" });
   const [status, setStatus] = useState("");
 
-  const institutionOptions = useMemo(
-    () =>
-      institutions
-        .filter((institution) => institution.name && institution.slug)
-        .slice()
-        .sort((a, b) => (a.name || "").localeCompare(b.name || "")),
-    [institutions],
-  );
+  const searchKey = useMemo(() => {
+    if (!debouncedQuery) return null;
 
-  const matchingInstitutions = useMemo(() => {
-    const query = institutionQuery.trim().toLocaleLowerCase("en");
-    if (!query) return [];
+    const params = new URLSearchParams({
+      q: debouncedQuery,
+      limit: String(INSTITUTION_PAGE_SIZE),
+      offset: String(institutionOffset),
+    });
+    return `/api/admin/institutions?${params.toString()}`;
+  }, [debouncedQuery, institutionOffset]);
 
-    return institutionOptions
-      .filter((institution) =>
-        `${institution.name || ""} ${institution.short_name || ""}`
-          .toLocaleLowerCase("en")
-          .includes(query),
-      )
-      .slice(0, 8);
-  }, [institutionOptions, institutionQuery]);
+  const {
+    data: searchResult,
+    error: searchError,
+    isLoading: isSearching,
+    isValidating,
+  } = useSWR(searchKey, fetchInstitutionSearch, {
+    revalidateOnFocus: false,
+  });
+
+  const hasSearchTerm = Boolean(institutionQuery.trim());
+  const searchIsCurrent = institutionQuery.trim() === debouncedQuery;
+  const currentPage =
+    searchIsCurrent && searchResult?.offset === institutionOffset
+      ? searchResult
+      : undefined;
+  const institutionResults = currentPage?.data ?? [];
+  const totalInstitutions = currentPage?.total ?? 0;
+  const currentPageNumber = Math.floor(institutionOffset / INSTITUTION_PAGE_SIZE) + 1;
+  const totalPages = Math.max(1, Math.ceil(totalInstitutions / INSTITUTION_PAGE_SIZE));
 
   const captureSelection = (textarea: HTMLTextAreaElement) => {
     const start = textarea.selectionStart;
@@ -177,38 +217,95 @@ export default function BiographyLinkEditor({ value, onChange, institutions }: P
       {linkType === "internal" ? (
         <div className="govuk-form-group govuk-!-margin-top-4">
           <label className="govuk-label" htmlFor="bio-link-institution-search">
-            Search institutions
+            Search all institutions
           </label>
           <input
             className="govuk-input"
             id="bio-link-institution-search"
             type="search"
             value={institutionQuery}
-            onChange={(event) => setInstitutionQuery(event.target.value)}
-            placeholder="For example, Law Society of Kenya"
+            onChange={(event) => {
+              setInstitutionQuery(event.target.value);
+              setInstitutionOffset(0);
+            }}
+            placeholder="Name, short name or slug"
             autoComplete="off"
+            aria-describedby="bio-link-institution-search-hint"
           />
-          <p className="govuk-hint">
-            Choose a result to link the selected words directly to its profile.
+          <p id="bio-link-institution-search-hint" className="govuk-hint">
+            Search the full institution catalogue, including unpublished records. Choose a result to link the selected words to its profile.
           </p>
-          {institutionQuery.trim() && matchingInstitutions.length > 0 && (
-            <ul className="govuk-list">
-              {matchingInstitutions.map((institution) => (
-                <li key={String(institution.id)}>
-                  <button
-                    className="govuk-button govuk-button--secondary"
-                    type="button"
-                    onClick={() => addInstitutionLink(institution)}
-                    aria-label={`Link selected text to ${institution.name}`}
-                  >
-                    {institution.name}
-                    {institution.short_name ? ` (${institution.short_name})` : ""}
-                  </button>
-                </li>
-              ))}
-            </ul>
+
+          {hasSearchTerm && !searchIsCurrent && (
+            <p className="govuk-body-s" role="status">
+              Searching all institutions…
+            </p>
           )}
-          {institutionQuery.trim() && matchingInstitutions.length === 0 && (
+          {hasSearchTerm && searchIsCurrent && isSearching && (
+            <p className="govuk-body-s" role="status">
+              Searching all institutions…
+            </p>
+          )}
+          {hasSearchTerm && searchIsCurrent && searchError && (
+            <p className="govuk-error-message" role="alert">
+              Institution search failed: {searchError.message}
+            </p>
+          )}
+          {hasSearchTerm && searchIsCurrent && currentPage && institutionResults.length > 0 && (
+            <>
+              <p className="govuk-body-s" aria-live="polite">
+                Showing {institutionOffset + 1}–
+                {institutionOffset + institutionResults.length} of {totalInstitutions} institutions
+                (page {currentPageNumber} of {totalPages}).
+              </p>
+              <ul className="govuk-list">
+                {institutionResults.map((institution) => (
+                  <li key={String(institution.id)}>
+                    <button
+                      className="govuk-button govuk-button--secondary"
+                      type="button"
+                      onClick={() => addInstitutionLink(institution)}
+                      disabled={!institution.slug}
+                      aria-label={`Link selected text to ${institution.name}${institution.is_active === false ? ", unpublished" : ""}${!institution.slug ? ", no profile URL" : ""}`}
+                    >
+                      {institution.name}
+                      {institution.short_name ? ` (${institution.short_name})` : ""}
+                      {institution.is_active === false ? " — Unpublished" : ""}
+                      {!institution.slug ? " — No profile URL" : ""}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              <div className="govuk-button-group">
+                <button
+                  className="govuk-button govuk-button--secondary"
+                  type="button"
+                  onClick={() =>
+                    setInstitutionOffset((offset) =>
+                      Math.max(0, offset - INSTITUTION_PAGE_SIZE),
+                    )
+                  }
+                  disabled={institutionOffset === 0 || isValidating || isSearching}
+                >
+                  Previous results
+                </button>
+                <button
+                  className="govuk-button govuk-button--secondary"
+                  type="button"
+                  onClick={() =>
+                    setInstitutionOffset((offset) => offset + INSTITUTION_PAGE_SIZE)
+                  }
+                  disabled={
+                    institutionOffset + institutionResults.length >= totalInstitutions ||
+                    isValidating || isSearching
+                  }
+                >
+                  Next results
+                </button>
+              </div>
+            </>
+          )}
+          {hasSearchTerm && searchIsCurrent && currentPage && institutionResults.length === 0 && (
             <p className="govuk-body">No institutions match that search.</p>
           )}
         </div>

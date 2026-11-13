@@ -1918,7 +1918,6 @@ export default function EditOfficialPage({
           <BiographyLinkEditor
             value={form.bio}
             onChange={(value) => setField("bio", value)}
-            institutions={lookups.institutions}
           />
 
           <h2 className="govuk-heading-m">Academic qualifications</h2>
