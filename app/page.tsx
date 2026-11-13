@@ -3,6 +3,7 @@ import Link from "next/link";
 import HomeMasthead from "@/components/site/HomeMasthead";
 import ChevronLinkList from "@/components/site/ChevronLinkList";
 import { getServiceDirectory } from "@/lib/services/queries";
+import { getHomepageHighlights } from "@/lib/homepage-highlights";
 import {
   buildPageMetadata,
   DEFAULT_DESCRIPTION,
@@ -75,7 +76,10 @@ const topics = [
 ];
 
 export default async function Home() {
-  const { categories } = await getServiceDirectory();
+  const [{ categories }, highlights] = await Promise.all([
+    getServiceDirectory(),
+    getHomepageHighlights(),
+  ]);
 
   return (
     <>
@@ -113,7 +117,13 @@ export default async function Home() {
         </div>
 
         <div className="govuk-grid-row">
-          <div className="govuk-grid-column-two-thirds">
+          <div
+            className={
+              highlights.items.length > 0
+                ? "govuk-grid-column-two-thirds"
+                : "govuk-grid-column-full"
+            }
+          >
             <h2 className="govuk-heading-m">Browse services by topic</h2>
             <p className="govuk-body">
               Find government services and information by choosing a topic.
@@ -132,24 +142,39 @@ export default async function Home() {
             </p>
           </div>
 
-          <div className="govuk-grid-column-one-third-from-desktop govuk-grid-column-full govuk-!-margin-top-4">
-            <div className="govuk-inset-text govuk-!-margin-top-0">
-              <h2 className="govuk-heading-s govuk-!-margin-top-0">
-                Coming up
-              </h2>
-              <p className="govuk-body govuk-!-margin-bottom-2">
-                <Link
-                  href="/elections/general-elections/timeline"
-                  className="govuk-link"
-                >
-                  2027 General Election timeline
-                </Link>
-              </p>
-              <p className="govuk-body govuk-!-margin-bottom-0">
-                IEBC milestones toward the 10 August 2027 poll.
-              </p>
+          {highlights.items.length > 0 && (
+            <div className="govuk-grid-column-one-third-from-desktop govuk-grid-column-full govuk-!-margin-top-4">
+              <aside aria-labelledby="homepage-highlights-title">
+                <div className="govuk-inset-text govuk-!-margin-top-0">
+                  <h2
+                    className="govuk-heading-s govuk-!-margin-top-0"
+                    id="homepage-highlights-title"
+                  >
+                    {highlights.sectionTitle}
+                  </h2>
+                  <ul className="govuk-list govuk-!-margin-bottom-0">
+                    {highlights.items.map((item) => (
+                      <li key={item.id} className="govuk-!-margin-bottom-4">
+                        <p className="govuk-body-s govuk-!-font-weight-bold govuk-!-margin-bottom-1">
+                          {item.category}
+                        </p>
+                        <p className="govuk-body govuk-!-margin-bottom-1">
+                          <Link href={item.href} className="govuk-link">
+                            {item.title}
+                          </Link>
+                        </p>
+                        {item.description && (
+                          <p className="govuk-body-s govuk-!-margin-bottom-0">
+                            {item.description}
+                          </p>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </aside>
             </div>
-          </div>
+          )}
         </div>
 
         <hr className="govuk-section-break govuk-section-break--l govuk-section-break--visible" />
