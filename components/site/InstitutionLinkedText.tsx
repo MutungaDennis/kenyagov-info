@@ -115,7 +115,11 @@ export default function InstitutionLinkedText({
     ? matcher.termsById.get(String(institutionId))
     : undefined;
   if (directInstitution) {
-    return <Link href={directInstitution.href}>{text}</Link>;
+    return (
+      <Link href={directInstitution.href} className="govuk-link">
+        {text}
+      </Link>
+    );
   }
 
   if (!matcher.pattern) return text;
@@ -136,7 +140,11 @@ export default function InstitutionLinkedText({
     if (item.start < cursor) continue;
     if (item.start > cursor) nodes.push(text.slice(cursor, item.start));
     nodes.push(
-      <Link href={item.term.href} key={`${item.start}-${index}`}>
+      <Link
+        href={item.term.href}
+        className="govuk-link"
+        key={`${item.start}-${index}`}
+      >
         {text.slice(item.start, item.end)}
       </Link>,
     );
