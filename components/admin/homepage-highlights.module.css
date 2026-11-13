@@ -1,0 +1,27 @@
+.items {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.item {
+  min-width: 0;
+  border: 1px solid #b1b4b6;
+  border-top: 0.35rem solid var(--app-brand-green);
+  padding: 1.25rem;
+  background: #fff;
+}
+
+.item legend {
+  padding: 0 0.5rem;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  align-items: baseline;
+}
+
+.actions button {
+  margin-bottom: 0;
+}

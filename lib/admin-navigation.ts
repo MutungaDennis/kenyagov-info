@@ -21,6 +21,7 @@ export const ADMIN_NAVIGATION = [
     { path: "page-feedback", label: "Page feedback" }, { path: "bug-reports", label: "Bug reports" },
   ] },
   { title: "Site management", items: [
+    { path: "homepage-highlights", label: "Homepage highlights" },
     { path: "analytics", label: "Analytics" }, { path: "site-status", label: "Site status" },
   ] },
 ] as const;
