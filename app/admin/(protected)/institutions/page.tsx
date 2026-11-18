@@ -21,8 +21,9 @@ type Institution = {
   is_active: boolean;
   status?: string | null;
   description?: string | null;
-  record_kind?: "institution" | "temporary_body";
+  record_kind?: "institution" | "temporary_body" | "fund_levy";
   temporary_body_type?: string | null;
+  fund_levy_type?: string | null;
 };
 
 const PAGE_SIZE = 50;
@@ -370,13 +371,13 @@ export default function AdminInstitutionsPage() {
                     <td className="govuk-table__cell">
                       <strong>{inst.name}</strong>
                       {inst.short_name && ` (${inst.short_name})`}
-                      {inst.record_kind === "temporary_body" && (
-                        <p className="govuk-body-s govuk-!-margin-bottom-0">
-                          <strong className="govuk-tag govuk-tag--blue">
-                            Temporary body · {inst.temporary_body_type || "Unclassified"}
-                          </strong>
-                        </p>
-                      )}
+        {(inst.record_kind === "temporary_body" || inst.record_kind === "fund_levy") && (
+          <p className="govuk-body-s govuk-!-margin-bottom-0">
+            <strong className="govuk-tag govuk-tag--blue">
+              {inst.record_kind === "fund_levy" ? `Fund / levy${inst.fund_levy_type ? ` · ${inst.fund_levy_type}` : ""}` : `Temporary body · ${inst.temporary_body_type || "Unclassified"}`}
+            </strong>
+          </p>
+        )}
                     </td>
                     <td className="govuk-table__cell">
                       {inst.institution_type || "—"}

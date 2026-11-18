@@ -156,8 +156,8 @@ export default function EditInstitutionPage({
   );
   const canSave =
     isDirty &&
-    (form.record_kind !== "temporary_body" ||
-      Boolean(form.parent_institution_id && form.temporary_body_type));
+    (form.record_kind === "institution" || Boolean(form.parent_institution_id)) &&
+    (form.record_kind !== "temporary_body" || Boolean(form.temporary_body_type));
 
   const onChange = (
     e: React.ChangeEvent<
@@ -171,7 +171,7 @@ export default function EditInstitutionPage({
         ...prev,
         [name]: type === "checkbox" ? checked : value,
       } as InstitutionFormState;
-      if (name === "record_kind" && value === "institution") {
+      if (name === "record_kind" && value !== "temporary_body") {
         next.temporary_body_type = "";
         next.term_start_date = "";
         next.term_end_date = "";
@@ -285,6 +285,10 @@ export default function EditInstitutionPage({
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isDirty || submitting) return;
+    if (form.record_kind === "fund_levy" && !form.parent_institution_id) {
+      setError("Select the institution administering this fund or levy.");
+      return;
+    }
     if (
       form.record_kind === "temporary_body" &&
       (!form.parent_institution_id || !form.temporary_body_type)
@@ -446,7 +450,11 @@ export default function EditInstitutionPage({
       />
       <main className="govuk-main-wrapper">
         <h1 className="govuk-heading-xl">
-          Edit {form.record_kind === "temporary_body" ? "temporary body" : "institution"}
+          Edit {form.record_kind === "temporary_body"
+            ? "temporary body"
+            : form.record_kind === "fund_levy"
+              ? "fund or levy"
+              : "institution"}
         </h1>
         <p className="govuk-body">
           {form.record_kind === "temporary_body"

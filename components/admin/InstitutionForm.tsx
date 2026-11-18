@@ -111,8 +111,15 @@ export type InstitutionFormState = {
   short_name: string;
   official_name: string;
   slug: string;
-  record_kind: "institution" | "temporary_body";
+  record_kind: "institution" | "temporary_body" | "fund_levy";
   temporary_body_type: string;
+  fund_levy_type: string;
+  fund_classification: string;
+  fund_legal_form: string;
+  accessibility_type: string;
+  funding_source: string;
+  application_url: string;
+  fund_operational_structure: string;
   term_start_date: string;
   term_end_date: string;
   /** Hierarchy — UUIDs linking to other institutions */
@@ -230,6 +237,13 @@ export const emptyInstitutionForm = (): InstitutionFormState => ({
   slug: "",
   record_kind: "institution",
   temporary_body_type: "",
+  fund_levy_type: "",
+  fund_classification: "",
+  fund_legal_form: "",
+  accessibility_type: "",
+  funding_source: "",
+  application_url: "",
+  fund_operational_structure: "",
   term_start_date: "",
   term_end_date: "",
   parent_institution_id: "",
@@ -348,8 +362,15 @@ export function institutionFormFromRow(
     short_name: s("short_name"),
     official_name: s("official_name"),
     slug: s("slug"),
-    record_kind: s("record_kind") === "temporary_body" ? "temporary_body" : "institution",
+    record_kind: s("record_kind") === "temporary_body" ? "temporary_body" : s("record_kind") === "fund_levy" ? "fund_levy" : "institution",
     temporary_body_type: s("temporary_body_type"),
+    fund_levy_type: s("fund_levy_type"),
+    fund_classification: s("fund_classification"),
+    fund_legal_form: s("fund_legal_form"),
+    accessibility_type: s("accessibility_type"),
+    funding_source: s("funding_source"),
+    application_url: s("application_url"),
+    fund_operational_structure: s("fund_operational_structure"),
     term_start_date: d("term_start_date"),
     term_end_date: d("term_end_date"),
     parent_institution_id: s("parent_institution_id"),
@@ -529,6 +550,7 @@ export default function InstitutionForm({
 }: Props) {
   const saveEnabled = canSave && !submitting;
   const isTemporaryBody = form.record_kind === "temporary_body";
+  const isFundLevy = form.record_kind === "fund_levy";
   const db = (key: string) => fieldOptions[key] || [];
   const typeOpts = db("institution_type").length
     ? db("institution_type")
@@ -721,11 +743,15 @@ export default function InstitutionForm({
           </label>
         </div>
       </div>
-      {isTemporaryBody && (
+      <div className="govuk-checkboxes govuk-!-margin-bottom-4">
+        <div className="govuk-checkboxes__item">
+          <input className="govuk-checkboxes__input" id="record_kind_fund_levy" type="checkbox" checked={isFundLevy} onChange={() => emitField("record_kind", isFundLevy ? "institution" : "fund_levy")} />
+          <label className="govuk-label govuk-checkboxes__label" htmlFor="record_kind_fund_levy">This is a fund or levy, not an institution</label>
+        </div>
+      </div>
+      {(isTemporaryBody || isFundLevy) && (
         <p className="govuk-inset-text">
-          Temporary bodies are recorded so their members’ service can be
-          assigned accurately. They are shown under their creating institution,
-          not in the public institutions directory.
+          {isFundLevy ? "Funds and levies are linked to their administering institution and are listed separately from the institution directory." : "Temporary bodies are recorded so their members’ service can be assigned accurately. They are shown under their creating institution, not in the public institutions directory."}
         </p>
       )}
       <Field id="name" label="Name *">
@@ -836,6 +862,19 @@ export default function InstitutionForm({
           </Field>
         </div>
       </div>
+
+      {isFundLevy && (
+        <>
+          <h2 className="govuk-heading-m">Fund or levy details</h2>
+          <InstitutionLinkPicker id="fund_levy_parent" label="Administering institution *" hint="Select the institution responsible for administering this fund or levy." valueId={form.parent_institution_id} valueLabel={form.parent_institution_label} excludeId={excludeInstitutionId} onChange={(pick) => onHierarchyChange?.("parent_institution", pick)} />
+          <div className="govuk-grid-row">
+            {([["fund_levy_type", "Fund / levy type"], ["fund_classification", "Classification"], ["fund_legal_form", "Legal form"], ["accessibility_type", "Accessibility type"], ["funding_source", "Funding source"], ["fund_operational_structure", "Operational structure"]] as const).map(([key, label]) => (
+              <div className="govuk-grid-column-one-half" key={key}><Field id={key} label={label}><input className="govuk-input" id={key} name={key} value={form[key]} onChange={onChange} /></Field></div>
+            ))}
+          </div>
+          <Field id="application_url" label="Application URL"><input className="govuk-input" id="application_url" name="application_url" type="url" value={form.application_url} onChange={onChange} /></Field>
+        </>
+      )}
 
       {isTemporaryBody && (
         <>

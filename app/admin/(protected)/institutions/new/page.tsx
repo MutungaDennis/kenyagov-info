@@ -59,8 +59,8 @@ export default function NewInstitutionPage() {
   const canSave =
     isDirty &&
     form.name.trim().length > 0 &&
-    (form.record_kind !== "temporary_body" ||
-      Boolean(form.parent_institution_id && form.temporary_body_type));
+    (form.record_kind === "institution" || Boolean(form.parent_institution_id)) &&
+    (form.record_kind !== "temporary_body" || Boolean(form.temporary_body_type));
 
   const onChange = (
     e: React.ChangeEvent<
@@ -74,7 +74,7 @@ export default function NewInstitutionPage() {
         ...prev,
         [name]: type === "checkbox" ? checked : value,
       } as InstitutionFormState;
-      if (name === "record_kind" && value === "institution") {
+      if (name === "record_kind" && value !== "temporary_body") {
         next.temporary_body_type = "";
         next.term_start_date = "";
         next.term_end_date = "";
@@ -191,6 +191,10 @@ export default function NewInstitutionPage() {
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!canSave || submitting) return;
+    if (form.record_kind === "fund_levy" && !form.parent_institution_id) {
+      setError("Select the institution administering this fund or levy.");
+      return;
+    }
     if (
       form.record_kind === "temporary_body" &&
       (!form.parent_institution_id || !form.temporary_body_type)
@@ -251,11 +255,13 @@ export default function NewInstitutionPage() {
         ]}
       />
       <main className="govuk-main-wrapper">
-        <h1 className="govuk-heading-xl">Add institution or temporary body</h1>
+        <h1 className="govuk-heading-xl">Add institution, temporary body, fund or levy</h1>
         <p className="govuk-body">
           {form.record_kind === "temporary_body"
             ? "Record a task force, working party, advisory panel or other time-limited public body. Choose its creating institution and body type; assign members through their leader roles."
-            : "Enter identity and classification details, optional leader head link, social profiles, and publish status. Verification defaults to Unverified."}
+            : form.record_kind === "fund_levy"
+              ? "Record a legally identifiable public fund or levy, its classification and public accessibility, and link it to the administering institution."
+              : "Enter identity and classification details, optional leader head link, social profiles, and publish status. Verification defaults to Unverified."}
         </p>
         {error && (
           <div className="govuk-error-summary" role="alert">
@@ -285,8 +291,10 @@ export default function NewInstitutionPage() {
           submitting={submitting}
           canSave={canSave}
           submitLabel={
-            form.record_kind === "temporary_body"
-              ? "Create temporary body"
+          form.record_kind === "temporary_body"
+            ? "Create temporary body"
+            : form.record_kind === "fund_levy"
+              ? "Create fund or levy"
               : "Create institution"
           }
           fieldOptions={fieldOptions}
