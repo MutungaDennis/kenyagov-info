@@ -35,6 +35,7 @@ type Leader = {
   surname: string | null;
   full_name: string | null;
   title: string | null;
+  level?: string | null;
   name_titles?: unknown;
   national_honours?: unknown;
   category: string | null;
@@ -44,6 +45,7 @@ type Leader = {
   current_constituency: string | null;
   current_county: string | null;
   current_party: string | null;
+  profile_visibility?: Record<string, boolean> | null;
   leader_roles: LeaderRole[] | null;
 };
 
@@ -127,6 +129,7 @@ function PeopleDirectoryContent() {
   const router = useRouter();
 
   const [allLeaders, setAllLeaders] = useState<Leader[]>([]);
+  const [globalVisibility, setGlobalVisibility] = useState<Record<string, Record<string, boolean>>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -168,15 +171,23 @@ function PeopleDirectoryContent() {
     const fetchData = async () => {
       try {
         const supabase = await createBrowserClientAsync();
+        const { data: visibilityRows } = await supabase
+          .from("official_profile_visibility_settings")
+          .select("scope, visibility");
+        if (visibilityRows && !cancelled) {
+          const nextVisibility: Record<string, Record<string, boolean>> = {};
+          for (const row of visibilityRows) nextVisibility[row.scope] = row.visibility || {};
+          setGlobalVisibility(nextVisibility);
+        }
 
         // 1. Fetch Active Leaders from Database
         const { data: leadersData, error: leadersError } = await fetchDirectoryPages((from, to) => supabase
           .from("leaders")
           .select(
             `
-            id, slug, first_name, other_names, surname, full_name, title,
+            id, slug, first_name, other_names, surname, full_name, title, level,
             name_titles, national_honours, category, bio, current_organization, current_constituency,
-            current_county, current_party,
+            current_county, current_party, profile_visibility,
             leader_roles!leader_roles_leader_id_fkey (
               id, title, organization, constituency, county, party,
               status, term_start_date, term_end_date, display_priority
@@ -271,6 +282,28 @@ function PeopleDirectoryContent() {
       cancelled = true;
     };
   }, []);
+
+  const isDirectoryFieldVisible = (leader: Leader, field: string) => {
+    const title = String(leaderPrimary(leader).role?.title || leader.title || "").toLowerCase();
+    const cohort = title.includes("member of parliament") || /^(mp|m\.p\.?)(\s|$)/i.test(title)
+      ? "mps"
+      : title.includes("senator")
+        ? "senators"
+        : title.includes("governor")
+          ? "governors"
+          : title.includes("woman representative")
+            ? "women_representatives"
+            : null;
+    const visibility = {
+      ...(globalVisibility.all_officials || {}),
+      ...(leader.level?.toLowerCase() === "national" || cohort === "mps" || cohort === "senators"
+        ? globalVisibility.national_officials || {}
+        : {}),
+      ...(cohort ? globalVisibility[cohort] || {} : {}),
+      ...(leader.profile_visibility || {}),
+    };
+    return visibility[field] !== false;
+  };
 
   const departments = useMemo(() => {
     const depts = new Set<string>();
@@ -588,15 +621,15 @@ function PeopleDirectoryContent() {
                           )}
                         </p>
 
-                        {(term || primary.role?.party || leader.current_party) && (
+                        {(term || (isDirectoryFieldVisible(leader, "party") && (primary.role?.party || leader.current_party))) && (
                           <p className="govuk-body-s govuk-!-margin-bottom-2">
-                            {[term, primary.role?.party || leader.current_party, primary.role?.county || leader.current_county]
+                            {[term, isDirectoryFieldVisible(leader, "party") ? primary.role?.party || leader.current_party : null, primary.role?.county || leader.current_county]
                               .filter(Boolean)
                               .join(" · ")}
                           </p>
                         )}
 
-                        {leader.bio && (
+                        {leader.bio && isDirectoryFieldVisible(leader, "biography") && (
                           <p className="govuk-body-s govuk-!-margin-bottom-2 govuk-text-secondary">
                             {truncateBio(leader.bio)}
                           </p>
