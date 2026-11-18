@@ -5,20 +5,36 @@ import useSWR from "swr";
 import { useMemo, useRef, useState } from "react";
 import LinkedBiography from "@/components/site/LinkedBiography";
 
-type InstitutionOption = {
-  id: string | number;
-  name?: string | null;
-  short_name?: string | null;
-  slug?: string | null;
-  is_active?: boolean | null;
+type EntityType = "institution" | "party" | "county" | "school";
+type SearchType = "all" | EntityType;
+
+type LinkableResult = {
+  id: string;
+  type: EntityType;
+  name: string;
+  detail: string;
+  href: string;
 };
 
-type InstitutionSearchResponse = {
-  data: InstitutionOption[];
+type BiographyLinkSearchResponse = {
+  data: LinkableResult[];
+  counts: Record<EntityType, number>;
   total: number;
   limit: number;
   offset: number;
+  type: SearchType;
 };
+
+const SEARCH_GROUPS: Array<{ value: EntityType; label: string }> = [
+  { value: "institution", label: "Institutions" },
+  { value: "party", label: "Political parties" },
+  { value: "county", label: "Counties" },
+  { value: "school", label: "Public schools" },
+];
+
+function isSearchType(value: unknown): value is SearchType {
+  return value === "all" || SEARCH_GROUPS.some((group) => group.value === value);
+}
 
 type Props = {
   value: string;
@@ -31,66 +47,91 @@ type TextSelection = {
   text: string;
 };
 
-const INSTITUTION_PAGE_SIZE = 10;
+const SEARCH_PAGE_SIZE = 8;
+const EMPTY_COUNTS: Record<EntityType, number> = {
+  institution: 0,
+  party: 0,
+  county: 0,
+  school: 0,
+};
 
-async function fetchInstitutionSearch(url: string): Promise<InstitutionSearchResponse> {
+async function fetchBiographyLinkSearch(url: string): Promise<BiographyLinkSearchResponse> {
   const response = await fetch(url, { credentials: "include", cache: "no-store" });
-  const result = (await response.json()) as Partial<InstitutionSearchResponse> & {
+  const result = (await response.json()) as Partial<BiographyLinkSearchResponse> & {
     error?: string;
   };
 
   if (!response.ok) {
-    throw new Error(result.error || `Institution search failed (${response.status})`);
+    throw new Error(result.error || `Search failed (${response.status})`);
   }
 
   return {
     data: Array.isArray(result.data) ? result.data : [],
+    counts: { ...EMPTY_COUNTS, ...result.counts },
     total: typeof result.total === "number" ? result.total : 0,
-    limit: typeof result.limit === "number" ? result.limit : INSTITUTION_PAGE_SIZE,
+    limit: typeof result.limit === "number" ? result.limit : SEARCH_PAGE_SIZE,
     offset: typeof result.offset === "number" ? result.offset : 0,
+    type: isSearchType(result.type) ? result.type : "all",
   };
 }
 
 export default function BiographyLinkEditor({ value, onChange }: Props) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [linkType, setLinkType] = useState<"internal" | "external">("internal");
-  const [institutionQuery, setInstitutionQuery] = useState("");
-  const [debouncedQuery] = useDebounce(institutionQuery.trim(), 250);
-  const [institutionOffset, setInstitutionOffset] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedQuery] = useDebounce(searchQuery.trim(), 250);
+  const [searchType, setSearchType] = useState<SearchType>("all");
+  const [searchOffset, setSearchOffset] = useState(0);
   const [externalUrl, setExternalUrl] = useState("");
   const [selection, setSelection] = useState<TextSelection>({ start: 0, end: 0, text: "" });
   const [status, setStatus] = useState("");
 
   const searchKey = useMemo(() => {
-    if (!debouncedQuery) return null;
+    if (debouncedQuery.length < 2) return null;
 
     const params = new URLSearchParams({
       q: debouncedQuery,
-      limit: String(INSTITUTION_PAGE_SIZE),
-      offset: String(institutionOffset),
+      type: searchType,
+      offset: String(searchOffset),
     });
-    return `/api/admin/institutions?${params.toString()}`;
-  }, [debouncedQuery, institutionOffset]);
+    return `/api/admin/biography-link-search?${params.toString()}`;
+  }, [debouncedQuery, searchOffset, searchType]);
 
   const {
     data: searchResult,
     error: searchError,
     isLoading: isSearching,
     isValidating,
-  } = useSWR(searchKey, fetchInstitutionSearch, {
+  } = useSWR(searchKey, fetchBiographyLinkSearch, {
     revalidateOnFocus: false,
   });
 
-  const hasSearchTerm = Boolean(institutionQuery.trim());
-  const searchIsCurrent = institutionQuery.trim() === debouncedQuery;
+  const hasSearchTerm = Boolean(searchQuery.trim());
+  const searchIsCurrent = searchQuery.trim() === debouncedQuery;
   const currentPage =
-    searchIsCurrent && searchResult?.offset === institutionOffset
+    searchIsCurrent && searchResult?.offset === searchOffset && searchResult.type === searchType
       ? searchResult
       : undefined;
-  const institutionResults = currentPage?.data ?? [];
-  const totalInstitutions = currentPage?.total ?? 0;
-  const currentPageNumber = Math.floor(institutionOffset / INSTITUTION_PAGE_SIZE) + 1;
-  const totalPages = Math.max(1, Math.ceil(totalInstitutions / INSTITUTION_PAGE_SIZE));
+  const resultGroups = SEARCH_GROUPS.map((group) => ({
+    ...group,
+    total: currentPage?.counts[group.value] ?? 0,
+    results: (currentPage?.data ?? []).filter((result) => result.type === group.value),
+  })).filter((group) =>
+    searchType === "all" ? group.results.length > 0 : group.value === searchType,
+  );
+  const visibleGroups = SEARCH_GROUPS.filter(
+    (group) => searchType === "all" || group.value === searchType,
+  );
+  const pageCount = Math.max(
+    1,
+    ...visibleGroups.map((group) =>
+      Math.ceil((currentPage?.counts[group.value] ?? 0) / SEARCH_PAGE_SIZE),
+    ),
+  );
+  const currentPageNumber = Math.floor(searchOffset / SEARCH_PAGE_SIZE) + 1;
+  const hasNextPage = visibleGroups.some(
+    (group) => (currentPage?.counts[group.value] ?? 0) > searchOffset + SEARCH_PAGE_SIZE,
+  );
 
   const captureSelection = (textarea: HTMLTextAreaElement) => {
     const start = textarea.selectionStart;
@@ -124,9 +165,8 @@ export default function BiographyLinkEditor({ value, onChange }: Props) {
     });
   };
 
-  const addInstitutionLink = (institution: InstitutionOption) => {
-    if (!institution.slug) return;
-    applyLink(`/government/institutions/${encodeURIComponent(institution.slug)}`);
+  const addInternalLink = (result: LinkableResult) => {
+    applyLink(result.href);
   };
 
   const addExternalLink = () => {
@@ -146,7 +186,7 @@ export default function BiographyLinkEditor({ value, onChange }: Props) {
         Biography
       </label>
       <p id="bio-link-help" className="govuk-hint">
-        Highlight a phrase, then choose where it should link. Internal institution pages are selected by default.
+        Highlight a phrase, then choose where it should link. Internal record pages are selected by default.
       </p>
       <textarea
         ref={textareaRef}
@@ -194,7 +234,7 @@ export default function BiographyLinkEditor({ value, onChange }: Props) {
               onChange={() => setLinkType("internal")}
             />
             <label className="govuk-label govuk-radios__label" htmlFor="bio-link-internal">
-              Institution page
+              Internal record
             </label>
           </div>
           <div className="govuk-radios__item">
@@ -216,97 +256,116 @@ export default function BiographyLinkEditor({ value, onChange }: Props) {
 
       {linkType === "internal" ? (
         <div className="govuk-form-group govuk-!-margin-top-4">
-          <label className="govuk-label" htmlFor="bio-link-institution-search">
-            Search all institutions
+          <label className="govuk-label" htmlFor="bio-link-record-search">
+            Search linkable records
           </label>
           <input
             className="govuk-input"
-            id="bio-link-institution-search"
+            id="bio-link-record-search"
             type="search"
-            value={institutionQuery}
+            value={searchQuery}
             onChange={(event) => {
-              setInstitutionQuery(event.target.value);
-              setInstitutionOffset(0);
+              setSearchQuery(event.target.value);
+              setSearchOffset(0);
             }}
-            placeholder="Name, short name or slug"
+            placeholder="Search by name, abbreviation or location"
             autoComplete="off"
-            aria-describedby="bio-link-institution-search-hint"
+            aria-describedby="bio-link-record-search-hint"
           />
-          <p id="bio-link-institution-search-hint" className="govuk-hint">
-            Search the full institution catalogue, including unpublished records. Choose a result to link the selected words to its profile.
+          <p id="bio-link-record-search-hint" className="govuk-hint">
+            Search institutions, political parties, counties and public schools. School results are limited to published public profiles.
           </p>
+          <label className="govuk-label govuk-!-margin-top-3" htmlFor="bio-link-search-type">
+            Search in
+          </label>
+          <select
+            className="govuk-select"
+            id="bio-link-search-type"
+            value={searchType}
+            onChange={(event) => {
+              setSearchType(event.target.value as SearchType);
+              setSearchOffset(0);
+            }}
+          >
+            <option value="all">All linkable data</option>
+            <option value="institution">Institutions</option>
+            <option value="party">Political parties</option>
+            <option value="county">Counties</option>
+            <option value="school">Public schools</option>
+          </select>
 
-          {hasSearchTerm && !searchIsCurrent && (
+          {hasSearchTerm && searchQuery.trim().length < 2 && (
             <p className="govuk-body-s" role="status">
-              Searching all institutions…
+              Enter at least 2 characters to search.
             </p>
           )}
-          {hasSearchTerm && searchIsCurrent && isSearching && (
+          {hasSearchTerm && searchIsCurrent && (isSearching || isValidating) && (
             <p className="govuk-body-s" role="status">
-              Searching all institutions…
+              Searching linkable records…
             </p>
           )}
           {hasSearchTerm && searchIsCurrent && searchError && (
             <p className="govuk-error-message" role="alert">
-              Institution search failed: {searchError.message}
+              Record search failed: {searchError.message}
             </p>
           )}
-          {hasSearchTerm && searchIsCurrent && currentPage && institutionResults.length > 0 && (
+          {hasSearchTerm && searchIsCurrent && currentPage && currentPage.total > 0 && (
+            <p className="govuk-body-s" aria-live="polite">
+              Page {currentPageNumber} of {pageCount}. Results are grouped by record type.
+            </p>
+          )}
+          {hasSearchTerm && searchIsCurrent && currentPage && resultGroups.length > 0 && (
             <>
-              <p className="govuk-body-s" aria-live="polite">
-                Showing {institutionOffset + 1}–
-                {institutionOffset + institutionResults.length} of {totalInstitutions} institutions
-                (page {currentPageNumber} of {totalPages}).
-              </p>
-              <ul className="govuk-list">
-                {institutionResults.map((institution) => (
-                  <li key={String(institution.id)}>
-                    <button
-                      className="govuk-button govuk-button--secondary"
-                      type="button"
-                      onClick={() => addInstitutionLink(institution)}
-                      disabled={!institution.slug}
-                      aria-label={`Link selected text to ${institution.name}${institution.is_active === false ? ", unpublished" : ""}${!institution.slug ? ", no profile URL" : ""}`}
-                    >
-                      {institution.name}
-                      {institution.short_name ? ` (${institution.short_name})` : ""}
-                      {institution.is_active === false ? " — Unpublished" : ""}
-                      {!institution.slug ? " — No profile URL" : ""}
-                    </button>
-                  </li>
-                ))}
-              </ul>
+              {resultGroups.map((group) => (
+                <section key={group.value} aria-labelledby={`bio-link-results-${group.value}`}>
+                  <h3
+                    className="govuk-heading-s govuk-!-margin-top-3 govuk-!-margin-bottom-2"
+                    id={`bio-link-results-${group.value}`}
+                  >
+                    {group.label} ({group.total.toLocaleString("en-KE")})
+                  </h3>
+                  <ul className="govuk-list">
+                    {group.results.map((result) => (
+                      <li key={`${result.type}-${result.id}`}>
+                        <button
+                          className="govuk-button govuk-button--secondary"
+                          type="button"
+                          onClick={() => addInternalLink(result)}
+                          aria-label={`Link selected text to ${result.name}, ${group.label}${result.detail ? `, ${result.detail}` : ""}`}
+                        >
+                          {result.name}
+                          {result.detail ? ` — ${result.detail}` : ""}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              ))}
               <div className="govuk-button-group">
                 <button
                   className="govuk-button govuk-button--secondary"
                   type="button"
-                  onClick={() =>
-                    setInstitutionOffset((offset) =>
-                      Math.max(0, offset - INSTITUTION_PAGE_SIZE),
-                    )
-                  }
-                  disabled={institutionOffset === 0 || isValidating || isSearching}
+                  onClick={() => setSearchOffset((offset) => Math.max(0, offset - SEARCH_PAGE_SIZE))}
+                  disabled={searchOffset === 0 || isValidating || isSearching}
                 >
                   Previous results
                 </button>
                 <button
                   className="govuk-button govuk-button--secondary"
                   type="button"
-                  onClick={() =>
-                    setInstitutionOffset((offset) => offset + INSTITUTION_PAGE_SIZE)
-                  }
-                  disabled={
-                    institutionOffset + institutionResults.length >= totalInstitutions ||
-                    isValidating || isSearching
-                  }
+                  onClick={() => setSearchOffset((offset) => offset + SEARCH_PAGE_SIZE)}
+                  disabled={!hasNextPage || isValidating || isSearching}
                 >
                   Next results
                 </button>
               </div>
             </>
           )}
-          {hasSearchTerm && searchIsCurrent && currentPage && institutionResults.length === 0 && (
-            <p className="govuk-body">No institutions match that search.</p>
+          {hasSearchTerm && searchIsCurrent && currentPage && currentPage.total === 0 && (
+            <p className="govuk-body">No linkable records match that search.</p>
+          )}
+          {hasSearchTerm && searchIsCurrent && currentPage && currentPage.total > 0 && resultGroups.length === 0 && (
+            <p className="govuk-body">There are no more results on this page.</p>
           )}
         </div>
       ) : (
