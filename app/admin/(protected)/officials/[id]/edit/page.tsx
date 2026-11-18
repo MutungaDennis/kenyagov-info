@@ -260,6 +260,7 @@ export default function EditOfficialPage({
   const [newHonourLabel, setNewHonourLabel] = useState("");
   const [catalogSaving, setCatalogSaving] = useState(false);
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
+  const [profileVisibility, setProfileVisibility] = useState<Record<string, boolean>>({});
   const [roleForm, setRoleForm] = useState<RoleForm>(emptyRole);
   const [editingRoleId, setEditingRoleId] = useState<string | null>(null);
   const [showRoleForm, setShowRoleForm] = useState(false);
@@ -627,6 +628,7 @@ export default function EditOfficialPage({
         parseNationalHonours(d.national_honours ?? d.awards),
       );
       setSocialLinks(parseSocialLinks(d.social_media));
+      setProfileVisibility(d.profile_visibility && typeof d.profile_visibility === "object" ? d.profile_visibility : {});
       setSnapOrgSearch(d.current_organization || "");
       setSnapOrgSelectedId("");
       setSnapOrgResults([]);
@@ -862,6 +864,7 @@ export default function EditOfficialPage({
       name_titles: nameTitles,
       national_honours: nationalHonours,
       social_media: socialLinks.filter((l) => l.platform && l.url.trim()),
+      profile_visibility: profileVisibility,
       academic_qualifications: qualifications
         .filter((q) => q.degree || q.institution)
         .map((q) => ({
@@ -1919,6 +1922,44 @@ export default function EditOfficialPage({
             value={form.bio}
             onChange={(value) => setField("bio", value)}
           />
+
+          <fieldset className="govuk-fieldset govuk-!-margin-top-4 govuk-!-margin-bottom-5">
+            <legend className="govuk-fieldset__legend govuk-fieldset__legend--m">Public profile visibility</legend>
+            <p className="govuk-hint">Override the global defaults for this official. By default, each section follows its group setting.</p>
+            {[
+              ["biography", "Biography"],
+              ["key_details", "Key details"],
+              ["party", "Political party"],
+              ["positions", "Positions held"],
+              ["qualifications", "Academic qualifications"],
+              ["committees", "Committee memberships"],
+              ["contact", "Contact details"],
+              ["social_media", "Social media links"],
+            ].map(([key, label]) => (
+              <div className="govuk-form-group" key={key}>
+                <label className="govuk-label" htmlFor={`profile-visibility-${key}`}>{label}</label>
+                <select
+                  className="govuk-select"
+                  id={`profile-visibility-${key}`}
+                  value={profileVisibility[key] === undefined ? "inherit" : profileVisibility[key] ? "show" : "hide"}
+                  onChange={(event) => {
+                    const value = event.target.value;
+                    setProfileVisibility((current) => {
+                      const next = { ...current };
+                      if (value === "inherit") delete next[key];
+                      else next[key] = value === "show";
+                      return next;
+                    });
+                    markPersonalDirty();
+                  }}
+                >
+                  <option value="inherit">Follow global setting</option>
+                  <option value="show">Always show</option>
+                  <option value="hide">Always hide</option>
+                </select>
+              </div>
+            ))}
+          </fieldset>
 
           <h2 className="govuk-heading-m">Academic qualifications</h2>
           {qualifications.map((q, i) => (

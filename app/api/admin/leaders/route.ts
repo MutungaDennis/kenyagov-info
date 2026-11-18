@@ -22,6 +22,7 @@ const OPTIONAL_INSERT_COLUMNS = [
   "name_titles",
   "national_honours",
   "social_media",
+  "profile_visibility",
   "verification_status",
   "verified_at",
   "is_active",
@@ -438,6 +439,18 @@ export async function POST(request: NextRequest) {
   if (level) row.level = level;
   if (row.verification_status === "Verified") {
     row.verified_at = new Date().toISOString();
+  }
+
+  if (body.profile_visibility != null) {
+    if (typeof body.profile_visibility !== "object" || Array.isArray(body.profile_visibility)) {
+      return NextResponse.json({ error: "profile_visibility must be an object" }, { status: 400 });
+    }
+    const input = body.profile_visibility as Record<string, unknown>;
+    const fields = ["biography", "key_details", "party", "positions", "qualifications", "committees", "contact", "social_media"];
+    if (Object.keys(input).some((field) => !fields.includes(field)) || Object.values(input).some((value) => typeof value !== "boolean")) {
+      return NextResponse.json({ error: "Invalid profile visibility settings" }, { status: 400 });
+    }
+    row.profile_visibility = input;
   }
 
   if (body.name_titles != null) {

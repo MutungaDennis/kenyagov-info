@@ -81,6 +81,7 @@ export default function NewOfficialPage() {
     ...NATIONAL_HONOUR_OPTIONS,
   ]);
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
+  const [profileVisibility, setProfileVisibility] = useState<Record<string, boolean>>({});
   const [newTitleValue, setNewTitleValue] = useState("");
   const [newTitleLabel, setNewTitleLabel] = useState("");
   const [newHonourValue, setNewHonourValue] = useState("");
@@ -231,6 +232,7 @@ export default function NewOfficialPage() {
         name_titles: nameTitles,
         national_honours: nationalHonours,
         social_media: socialLinks.filter((l) => l.platform && l.url.trim()),
+        profile_visibility: profileVisibility,
       };
       const res = await fetch("/api/admin/leaders", {
         method: "POST",
@@ -567,6 +569,34 @@ export default function NewOfficialPage() {
             value={form.bio}
             onChange={(value) => setField("bio", value)}
           />
+          <fieldset className="govuk-fieldset govuk-!-margin-top-4 govuk-!-margin-bottom-5">
+            <legend className="govuk-fieldset__legend govuk-fieldset__legend--m">Public profile visibility</legend>
+            <p className="govuk-hint">New profiles inherit global group settings unless you override a section here.</p>
+            {[
+              ["biography", "Biography"], ["key_details", "Key details"], ["party", "Political party"],
+              ["positions", "Positions held"], ["qualifications", "Academic qualifications"],
+              ["committees", "Committee memberships"], ["contact", "Contact details"], ["social_media", "Social media links"],
+            ].map(([key, label]) => (
+              <div className="govuk-form-group" key={key}>
+                <label className="govuk-label" htmlFor={`new-profile-visibility-${key}`}>{label}</label>
+                <select
+                  className="govuk-select"
+                  id={`new-profile-visibility-${key}`}
+                  value={profileVisibility[key] === undefined ? "inherit" : profileVisibility[key] ? "show" : "hide"}
+                  onChange={(event) => setProfileVisibility((current) => {
+                    const next = { ...current };
+                    if (event.target.value === "inherit") delete next[key];
+                    else next[key] = event.target.value === "show";
+                    return next;
+                  })}
+                >
+                  <option value="inherit">Follow global setting</option>
+                  <option value="show">Always show</option>
+                  <option value="hide">Always hide</option>
+                </select>
+              </div>
+            ))}
+          </fieldset>
           <div className="govuk-grid-row">
             <div className="govuk-grid-column-one-third">
               <div className="govuk-form-group">

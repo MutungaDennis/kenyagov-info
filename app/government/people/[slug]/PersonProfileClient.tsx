@@ -73,6 +73,7 @@ type Leader = {
   current_constituency: string | null;
   academic_qualifications?: unknown;
   education?: string | null;
+  profile_visibility?: Record<string, boolean> | null;
   is_active: boolean;
   status: string;
   leader_roles: LeaderRole[] | null;
@@ -92,6 +93,7 @@ export default function PersonProfileClient({
   );
 
   const [person, setPerson] = useState<Leader | null>(null);
+  const [globalVisibility, setGlobalVisibility] = useState<Record<string, Record<string, boolean>>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   /** Hide portrait if URL is missing/moved (broken image). */
@@ -103,7 +105,15 @@ export default function PersonProfileClient({
 
       try {
         const supabase = await createBrowserClientAsync();
-        
+        const { data: visibilityRows } = await supabase
+          .from("official_profile_visibility_settings")
+          .select("scope, visibility");
+        if (visibilityRows) {
+          const nextVisibility: Record<string, Record<string, boolean>> = {};
+          for (const row of visibilityRows) nextVisibility[row.scope] = row.visibility || {};
+          setGlobalVisibility(nextVisibility);
+        }
+
         // 1. Try fetching from leaders table
         const { data: leaderData, error: leaderError } = await supabase
           .from("leaders")
@@ -286,6 +296,25 @@ export default function PersonProfileClient({
   const primary = resolvePrimaryRole(person.leader_roles);
 
   const primaryRole = primary.role;
+  const profileRoleTitle = (primaryRole?.title || person.title || "").toLowerCase();
+  const cohortScope = profileRoleTitle.includes("member of parliament") || /^(mp|m\.p\.?)(\s|$)/i.test(profileRoleTitle)
+    ? "mps"
+    : profileRoleTitle.includes("senator")
+      ? "senators"
+      : profileRoleTitle.includes("governor")
+        ? "governors"
+        : profileRoleTitle.includes("woman representative")
+          ? "women_representatives"
+          : null;
+  const effectiveVisibility = {
+    ...(globalVisibility.all_officials || {}),
+    ...(person.level?.toLowerCase() === "national" || ["mps", "senators"].includes(cohortScope || "")
+      ? globalVisibility.national_officials || {}
+      : {}),
+    ...(cohortScope ? globalVisibility[cohortScope] || {} : {}),
+    ...(person.profile_visibility || {}),
+  };
+  const isVisible = (field: string) => effectiveVisibility[field] !== false;
   
   // 1. Enhanced Role Title: Automatically append seat details for elected reps to avoid redundancy
   let displayRoleTitle = primaryRole?.title || person.title || person.category || "Government official";
@@ -369,38 +398,36 @@ export default function PersonProfileClient({
   });
 
   // Check if we actually need to show the summary list (only if there are non-redundant extra details)
-  const hasExtraDetails = Boolean(party || showConstituency || showCounty || showWard || person.level || person.sub_category);
-
-  const hasContact = Boolean(
-    person.contact_email ||
-      person.phone ||
-      person.official_website ||
-      primaryRole?.official_email ||
-      primaryRole?.office_location ||
-      socialLinks.length > 0,
+  const hasExtraDetails = isVisible("key_details") && Boolean(
+    (isVisible("party") && party) || showConstituency || showCounty || showWard || person.level || person.sub_category
+  );
+  const hasContact = isVisible("contact") && Boolean(
+    person.contact_email || person.phone || person.official_website ||
+      primaryRole?.official_email || primaryRole?.office_location ||
+      (isVisible("social_media") && socialLinks.length > 0),
   );
 
   const contentsItems: { href: string; text: string }[] = [];
-  if (person.bio) contentsItems.push({ href: "#biography", text: "Biography" });
+  if (person.bio && isVisible("biography")) contentsItems.push({ href: "#biography", text: "Biography" });
   if (hasExtraDetails) {
     contentsItems.push({ href: "#key-details", text: "Key details" });
   }
-  if (otherActiveRoles.length > 0) {
+  if (isVisible("positions") && otherActiveRoles.length > 0) {
     contentsItems.push({
       href: "#other-current-roles",
       text: "Other current roles",
     });
   }
-  if (roles.length > 0) {
+  if (isVisible("positions") && roles.length > 0) {
     contentsItems.push({ href: "#positions-held", text: "Positions held" });
   }
-  if (qualifications.length > 0) {
+  if (isVisible("qualifications") && qualifications.length > 0) {
     contentsItems.push({
       href: "#academic-qualifications",
       text: "Academic qualifications",
     });
   }
-  if (committees.length > 0) {
+  if (isVisible("committees") && committees.length > 0) {
     contentsItems.push({
       href: "#committee-memberships",
       text: "Committee memberships",
@@ -484,7 +511,7 @@ export default function PersonProfileClient({
               {!orgName && <div className="govuk-!-margin-bottom-6" />}
 
               {/* 2. Biography */}
-              {person.bio && (
+              {person.bio && isVisible("biography") && (
                 <section id="biography" aria-labelledby="biography-heading">
                   <h2 id="biography-heading" className="govuk-heading-m">
                     Biography
@@ -495,8 +522,8 @@ export default function PersonProfileClient({
 
               {/* Separator before Key Details and subsequent sections */}
               {(hasExtraDetails ||
-                otherActiveRoles.length > 0 ||
-                roles.length > 0) && (
+                (isVisible("positions") && otherActiveRoles.length > 0) ||
+                (isVisible("positions") && roles.length > 0)) && (
                 <hr className="govuk-section-break govuk-section-break--l govuk-section-break--visible govuk-!-margin-top-6 govuk-!-margin-bottom-6" />
               )}
 
@@ -511,7 +538,7 @@ export default function PersonProfileClient({
                     Key details
                   </h2>
                   <dl className="govuk-summary-list">
-                    {party && (
+                    {isVisible("party") && party && (
                       <div className="govuk-summary-list__row">
                         <dt className="govuk-summary-list__key">Political party</dt>
                         <dd className="govuk-summary-list__value">{party}</dd>
@@ -552,7 +579,7 @@ export default function PersonProfileClient({
               )}
 
               {/* 4. Other Current Roles */}
-              {otherActiveRoles.length > 0 && (
+              {isVisible("positions") && otherActiveRoles.length > 0 && (
                 <section
                   id="other-current-roles"
                   className="govuk-!-margin-bottom-6"
@@ -589,7 +616,7 @@ export default function PersonProfileClient({
               )}
 
               {/* 5. Positions Held (Table) */}
-              {roles.length > 0 && (
+              {isVisible("positions") && roles.length > 0 && (
                 <section
                   id="positions-held"
                   aria-labelledby="positions-held-heading"
@@ -630,7 +657,7 @@ export default function PersonProfileClient({
                           >
                             <td className="govuk-table__cell">
                               <strong>{role.title || "—"}</strong>
-                              {role.party && (
+                              {isVisible("party") && role.party && (
                                 <div className="govuk-hint govuk-!-margin-bottom-0">
                                   {role.party}
                                 </div>
@@ -678,7 +705,7 @@ export default function PersonProfileClient({
               )}
 
               {/* 6. Academic Qualifications */}
-              {qualifications.length > 0 && (
+              {isVisible("qualifications") && qualifications.length > 0 && (
                 <section
                   id="academic-qualifications"
                   aria-labelledby="academic-qualifications-heading"
@@ -698,7 +725,7 @@ export default function PersonProfileClient({
               )}
 
               {/* 7. Committee Memberships */}
-              {committees.length > 0 && (
+              {isVisible("committees") && committees.length > 0 && (
                 <section
                   id="committee-memberships"
                   aria-labelledby="committee-memberships-heading"
@@ -786,7 +813,7 @@ export default function PersonProfileClient({
                         </dd>
                       </div>
                     )}
-                    {socialLinks.map((link) => (
+                    {isVisible("social_media") && socialLinks.map((link) => (
                       <div
                         className="govuk-summary-list__row"
                         key={`${link.platform}-${link.url}`}

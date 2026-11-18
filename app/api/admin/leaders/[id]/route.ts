@@ -24,6 +24,7 @@ const OPTIONAL_LEADER_COLUMNS = new Set([
   "name_titles",
   "national_honours",
   "social_media",
+  "profile_visibility",
   "gender",
   "date_of_birth",
   "sub_category",
@@ -316,6 +317,7 @@ export async function PATCH(request: NextRequest, context: Ctx) {
     "name_titles",
     "national_honours",
     "social_media",
+    "profile_visibility",
   ] as const;
 
   const patch: Record<string, unknown> = {};
@@ -344,6 +346,16 @@ export async function PATCH(request: NextRequest, context: Ctx) {
           url: normalizeSocialUrl(l.url),
         }));
         patch.social_media = socialLinksToRecord(links);
+      } else if (key === "profile_visibility") {
+        if (!body.profile_visibility || typeof body.profile_visibility !== "object" || Array.isArray(body.profile_visibility)) {
+          return NextResponse.json({ error: "profile_visibility must be an object" }, { status: 400 });
+        }
+        const input = body.profile_visibility as Record<string, unknown>;
+        const fields = ["biography", "key_details", "party", "positions", "qualifications", "committees", "contact", "social_media"];
+        if (Object.keys(input).some((field) => !fields.includes(field)) || Object.values(input).some((value) => typeof value !== "boolean")) {
+          return NextResponse.json({ error: "Invalid profile visibility settings" }, { status: 400 });
+        }
+        patch.profile_visibility = input;
       } else if (body[key] === "" || body[key] === undefined) {
         patch[key] = null;
       } else {
