@@ -50,7 +50,8 @@ export async function PATCH(request: NextRequest, context: Ctx) {
   if (
     "record_kind" in body &&
     body.record_kind !== "institution" &&
-    body.record_kind !== "temporary_body"
+    body.record_kind !== "temporary_body" &&
+    body.record_kind !== "fund_levy"
   ) {
     return NextResponse.json({ error: "Invalid record kind" }, { status: 400 });
   }
@@ -103,6 +104,14 @@ export async function PATCH(request: NextRequest, context: Ctx) {
         { status: 400 },
       );
     }
+  }
+
+  if (body.record_kind === "fund_levy") {
+    const parentId = String(body.parent_institution_id || "").trim();
+    if (!parentId || parentId === id) return NextResponse.json({ error: "Select a different administering institution." }, { status: 400 });
+    const parent = await auth.supabase.from("institutions").select("id, record_kind").eq("id", parentId).maybeSingle();
+    if (parent.error) return NextResponse.json({ error: "Could not validate the administering institution.", detail: parent.error.message }, { status: 500 });
+    if (!parent.data || parent.data.record_kind !== "institution") return NextResponse.json({ error: "Select an institution as the fund or levy administrator." }, { status: 400 });
   }
 
   let patch = buildInstitutionRow(body);

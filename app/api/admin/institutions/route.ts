@@ -204,7 +204,7 @@ export async function GET(request: NextRequest) {
     }
     if (
       includeRecordKind &&
-      (recordKind === "institution" || recordKind === "temporary_body")
+      (recordKind === "institution" || recordKind === "temporary_body" || recordKind === "fund_levy")
     ) {
       qy = qy.eq("record_kind", recordKind);
     }
@@ -218,7 +218,7 @@ export async function GET(request: NextRequest) {
        institution_subtype, institution_nature, government_level, arm_of_government,
        constitutional_status, mtef_sector, is_active, status, description, mandate,
        headquarters, website_url, current_head, head_title, verification_status, updated_at,
-       parent_institution_id, record_kind, temporary_body_type`,
+       parent_institution_id, record_kind, temporary_body_type, fund_levy_type`,
       { count: "exact" },
     )
     .order("name", { ascending: true })
@@ -308,7 +308,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "name is required" }, { status: 400 });
   }
   const recordKind = body.record_kind ?? "institution";
-  if (recordKind !== "institution" && recordKind !== "temporary_body") {
+  if (recordKind !== "institution" && recordKind !== "temporary_body" && recordKind !== "fund_levy") {
     return NextResponse.json({ error: "Invalid record kind" }, { status: 400 });
   }
   if (recordKind === "temporary_body") {
@@ -354,6 +354,14 @@ export async function POST(request: NextRequest) {
         { status: 400 },
       );
     }
+  }
+
+  if (recordKind === "fund_levy") {
+    const parentId = String(body.parent_institution_id || "").trim();
+    if (!parentId) return NextResponse.json({ error: "An administering institution is required." }, { status: 400 });
+    const parent = await auth.supabase.from("institutions").select("id, record_kind").eq("id", parentId).maybeSingle();
+    if (parent.error) return NextResponse.json({ error: "Could not validate the administering institution.", detail: parent.error.message }, { status: 500 });
+    if (!parent.data || parent.data.record_kind !== "institution") return NextResponse.json({ error: "Select an institution as the fund or levy administrator." }, { status: 400 });
   }
 
   let row = buildInstitutionRow(body, { defaults: true });
