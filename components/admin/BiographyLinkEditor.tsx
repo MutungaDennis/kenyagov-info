@@ -5,8 +5,8 @@ import useSWR from "swr";
 import { useMemo, useRef, useState } from "react";
 import LinkedBiography from "@/components/site/LinkedBiography";
 
-type EntityType = "institution" | "party" | "county" | "school";
-type SearchType = "all" | EntityType;
+type EntityType = "institution" | "person" | "party" | "county" | "ward" | "article" | "school";
+type SearchType = EntityType;
 
 type LinkableResult = {
   id: string;
@@ -27,14 +27,33 @@ type BiographyLinkSearchResponse = {
 
 const SEARCH_GROUPS: Array<{ value: EntityType; label: string }> = [
   { value: "institution", label: "Institutions" },
+  { value: "person", label: "People (officials and MCAs)" },
   { value: "party", label: "Political parties" },
   { value: "county", label: "Counties" },
+  { value: "ward", label: "Wards" },
+  { value: "article", label: "Constitution articles" },
   { value: "school", label: "Public schools" },
 ];
 
 function isSearchType(value: unknown): value is SearchType {
-  return value === "all" || SEARCH_GROUPS.some((group) => group.value === value);
+  return SEARCH_GROUPS.some((group) => group.value === value);
 }
+
+function getBiographyLinks(value: string) {
+  const links: Array<{ label: string; href: string; start: number; end: number }> = [];
+  const pattern = /\[((?:\\.|[^\]])+)\]\(([^)\s]+)\)/g;
+  let match: RegExpExecArray | null;
+  while ((match = pattern.exec(value)) !== null) {
+    links.push({
+      label: match[1].replace(/\\\\([\\\\[\\]])/g, "$1"),
+      href: match[2],
+      start: match.index,
+      end: match.index + match[0].length,
+    });
+  }
+  return links;
+}
+
 
 type Props = {
   value: string;
@@ -50,8 +69,11 @@ type TextSelection = {
 const SEARCH_PAGE_SIZE = 8;
 const EMPTY_COUNTS: Record<EntityType, number> = {
   institution: 0,
+  person: 0,
   party: 0,
   county: 0,
+  ward: 0,
+  article: 0,
   school: 0,
 };
 
@@ -71,7 +93,7 @@ async function fetchBiographyLinkSearch(url: string): Promise<BiographyLinkSearc
     total: typeof result.total === "number" ? result.total : 0,
     limit: typeof result.limit === "number" ? result.limit : SEARCH_PAGE_SIZE,
     offset: typeof result.offset === "number" ? result.offset : 0,
-    type: isSearchType(result.type) ? result.type : "all",
+    type: isSearchType(result.type) ? result.type : "institution",
   };
 }
 
@@ -80,7 +102,7 @@ export default function BiographyLinkEditor({ value, onChange }: Props) {
   const [linkType, setLinkType] = useState<"internal" | "external">("internal");
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery] = useDebounce(searchQuery.trim(), 250);
-  const [searchType, setSearchType] = useState<SearchType>("all");
+  const [searchType, setSearchType] = useState<SearchType>("institution");
   const [searchOffset, setSearchOffset] = useState(0);
   const [externalUrl, setExternalUrl] = useState("");
   const [selection, setSelection] = useState<TextSelection>({ start: 0, end: 0, text: "" });
@@ -112,16 +134,12 @@ export default function BiographyLinkEditor({ value, onChange }: Props) {
     searchIsCurrent && searchResult?.offset === searchOffset && searchResult.type === searchType
       ? searchResult
       : undefined;
-  const resultGroups = SEARCH_GROUPS.map((group) => ({
+  const resultGroups = SEARCH_GROUPS.filter((group) => group.value === searchType).map((group) => ({
     ...group,
     total: currentPage?.counts[group.value] ?? 0,
     results: (currentPage?.data ?? []).filter((result) => result.type === group.value),
-  })).filter((group) =>
-    searchType === "all" ? group.results.length > 0 : group.value === searchType,
-  );
-  const visibleGroups = SEARCH_GROUPS.filter(
-    (group) => searchType === "all" || group.value === searchType,
-  );
+  }));
+  const visibleGroups = SEARCH_GROUPS.filter((group) => group.value === searchType);
   const pageCount = Math.max(
     1,
     ...visibleGroups.map((group) =>
@@ -169,6 +187,40 @@ export default function BiographyLinkEditor({ value, onChange }: Props) {
     applyLink(result.href);
   };
 
+  const editBiographyLink = (link: ReturnType<typeof getBiographyLinks>[number]) => {
+    setSelection({ start: link.start, end: link.end, text: link.label });
+    if (/^https:\/\//i.test(link.href)) {
+      setLinkType("external");
+      setExternalUrl(link.href);
+    } else {
+      setLinkType("internal");
+      const group = SEARCH_GROUPS.find(({ value }) =>
+        value === "institution" ? link.href.startsWith("/government/institutions/") :
+        value === "person" ? link.href.startsWith("/government/people/") :
+        value === "party" ? link.href.startsWith("/elections/political-parties/") :
+        value === "county" ? link.href.startsWith("/government/counties/") && !link.href.includes("/wards/") :
+        value === "ward" ? link.href.startsWith("/government/counties/wards/") :
+        value === "article" ? link.href.startsWith("/constitution/article/") :
+        link.href.startsWith("/government/institutions/")
+      );
+      if (group) setSearchType(group.value);
+    }
+    setStatus(`Selected “${link.label}” so you can change or remove its destination.`);
+    requestAnimationFrame(() => {
+      textareaRef.current?.focus();
+      textareaRef.current?.setSelectionRange(link.start, link.end);
+    });
+  };
+
+  const removeBiographyLink = (link: ReturnType<typeof getBiographyLinks>[number]) => {
+    const nextValue = value.slice(0, link.start) + link.label + value.slice(link.end);
+    onChange(nextValue);
+    setSelection({ start: link.start, end: link.start + link.label.length, text: link.label });
+    setStatus(`Removed the link from “${link.label}”. The wording remains.`);
+  };
+
+  const biographyLinks = getBiographyLinks(value);
+
   const addExternalLink = () => {
     try {
       const parsed = new URL(externalUrl.trim());
@@ -191,7 +243,7 @@ export default function BiographyLinkEditor({ value, onChange }: Props) {
       <textarea
         ref={textareaRef}
         id="bio"
-        className="govuk-textarea"
+        className="govuk-textarea biography-link-editor__textarea"
         rows={8}
         value={value}
         onSelect={(event) => captureSelection(event.currentTarget)}
@@ -208,6 +260,28 @@ export default function BiographyLinkEditor({ value, onChange }: Props) {
         }}
         aria-describedby="bio-link-help"
       />
+
+      {biographyLinks.length > 0 && (
+        <section className="govuk-inset-text govuk-!-margin-top-4" aria-labelledby="bio-existing-links-heading">
+          <h3 className="govuk-heading-s" id="bio-existing-links-heading">Links in this biography</h3>
+          <ul className="govuk-list govuk-list--spaced">
+            {biographyLinks.map((link) => (
+              <li key={`${link.start}-${link.href}`}>
+                <span className="govuk-!-font-weight-bold">{link.label}</span>
+                <span className="govuk-hint govuk-!-margin-bottom-1"> {link.href}</span>
+                <div className="govuk-button-group">
+                  <button className="govuk-button govuk-button--secondary govuk-!-margin-bottom-0" type="button" onClick={() => editBiographyLink(link)}>
+                    Edit destination
+                  </button>
+                  <button className="govuk-button govuk-button--warning govuk-!-margin-bottom-0" type="button" onClick={() => removeBiographyLink(link)}>
+                    Remove link
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <div className="govuk-inset-text govuk-!-margin-top-4">
         <strong>Selected text</strong>
@@ -273,26 +347,33 @@ export default function BiographyLinkEditor({ value, onChange }: Props) {
             aria-describedby="bio-link-record-search-hint"
           />
           <p id="bio-link-record-search-hint" className="govuk-hint">
-            Search institutions, political parties, counties and public schools. School results are limited to published public profiles.
+            Search officials and MCAs, political parties, counties, wards, Constitution articles, or public schools. School results are limited to published public profiles.
           </p>
-          <label className="govuk-label govuk-!-margin-top-3" htmlFor="bio-link-search-type">
-            Search in
-          </label>
-          <select
-            className="govuk-select"
-            id="bio-link-search-type"
-            value={searchType}
-            onChange={(event) => {
-              setSearchType(event.target.value as SearchType);
-              setSearchOffset(0);
-            }}
-          >
-            <option value="all">All linkable data</option>
-            <option value="institution">Institutions</option>
-            <option value="party">Political parties</option>
-            <option value="county">Counties</option>
-            <option value="school">Public schools</option>
-          </select>
+          <fieldset className="govuk-fieldset govuk-!-margin-top-4" aria-describedby="bio-link-type-hint">
+            <legend className="govuk-fieldset__legend govuk-fieldset__legend--s">Record type</legend>
+            <p id="bio-link-type-hint" className="govuk-hint">Choose the type of internal page to link to.</p>
+            <div className="govuk-radios govuk-radios--inline">
+              {SEARCH_GROUPS.map((group) => (
+                <div className="govuk-radios__item" key={group.value}>
+                  <input
+                    className="govuk-radios__input"
+                    id={`bio-search-type-${group.value}`}
+                    name="bio-search-type"
+                    type="radio"
+                    value={group.value}
+                    checked={searchType === group.value}
+                    onChange={() => {
+                      setSearchType(group.value);
+                      setSearchOffset(0);
+                    }}
+                  />
+                  <label className="govuk-label govuk-radios__label" htmlFor={`bio-search-type-${group.value}`}>
+                    {group.label}
+                  </label>
+                </div>
+              ))}
+            </div>
+          </fieldset>
 
           {hasSearchTerm && searchQuery.trim().length < 2 && (
             <p className="govuk-body-s" role="status">

@@ -31,6 +31,11 @@
   margin-bottom: 0;
 }
 
+.biography-link-editor__textarea::selection {
+  color: #0b0c0c;
+  background: #ffdd00;
+}
+
 .template-field-editor {
   border-left: 0.35rem solid var(--app-brand-green);
   padding-left: 1rem;
