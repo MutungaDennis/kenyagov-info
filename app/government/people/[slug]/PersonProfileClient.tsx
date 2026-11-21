@@ -375,7 +375,7 @@ export default function PersonProfileClient({
     person.academic_qualifications ?? person.education
   );
 
-  const showHansard = isHansardEligible(
+  const showHansard = isVisible("hansard_contributions") && isHansardEligible(
     person.leader_roles,
     primaryRole?.title || person.title
   );
