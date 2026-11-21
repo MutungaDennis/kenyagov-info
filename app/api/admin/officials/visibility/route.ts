@@ -20,6 +20,7 @@ const FIELDS = [
   "committees",
   "contact",
   "social_media",
+  "hansard_contributions",
 ] as const;
 
 export async function GET() {

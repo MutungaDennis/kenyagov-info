@@ -19,6 +19,7 @@ const fields = [
   ["committees", "Committee memberships"],
   ["contact", "Contact details"],
   ["social_media", "Social media links"],
+  ["hansard_contributions", "Parliamentary contributions (Hansard)"],
 ] as const;
 type Scope = (typeof scopes)[number][0];
 type Visibility = Record<string, boolean>;
