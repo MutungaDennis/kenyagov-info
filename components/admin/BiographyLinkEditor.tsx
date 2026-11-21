@@ -6,7 +6,7 @@ import { useMemo, useRef, useState } from "react";
 import LinkedBiography from "@/components/site/LinkedBiography";
 
 type EntityType = "institution" | "person" | "party" | "county" | "ward" | "article" | "school";
-type SearchType = EntityType;
+type SearchType = EntityType | "all";
 
 type LinkableResult = {
   id: string;
@@ -36,7 +36,7 @@ const SEARCH_GROUPS: Array<{ value: EntityType; label: string }> = [
 ];
 
 function isSearchType(value: unknown): value is SearchType {
-  return SEARCH_GROUPS.some((group) => group.value === value);
+  return value === "all" || SEARCH_GROUPS.some((group) => group.value === value);
 }
 
 function getBiographyLinks(value: string) {
@@ -78,6 +78,33 @@ const EMPTY_COUNTS: Record<EntityType, number> = {
 };
 
 async function fetchBiographyLinkSearch(url: string): Promise<BiographyLinkSearchResponse> {
+  const requestUrl = new URL(url, window.location.origin);
+  if (requestUrl.searchParams.get("type") === "all") {
+    const offset = Number(requestUrl.searchParams.get("offset") ?? 0);
+    const query = requestUrl.searchParams.get("q") ?? "";
+    const settledResults = await Promise.allSettled(
+      SEARCH_GROUPS.map((group) => {
+        const params = new URLSearchParams({ q: query, type: group.value, offset: String(offset) });
+        return fetchBiographyLinkSearch(`/api/admin/biography-link-search?${params.toString()}`);
+      }),
+    );
+    const results = settledResults.flatMap((result) => result.status === "fulfilled" ? [result.value] : []);
+    if (results.length === 0) {
+      throw new Error("Search is temporarily unavailable. Please try a single record type or search again.");
+    }
+    return {
+      data: results.flatMap((result) => result.data),
+      counts: results.reduce((counts, result) => ({
+        ...counts,
+        ...Object.fromEntries(Object.entries(result.counts).filter(([, count]) => count > 0)),
+      }), { ...EMPTY_COUNTS }),
+      total: results.reduce((total, result) => total + result.total, 0),
+      limit: SEARCH_PAGE_SIZE,
+      offset,
+      type: "all",
+    };
+  }
+
   const response = await fetch(url, { credentials: "include", cache: "no-store" });
   const result = (await response.json()) as Partial<BiographyLinkSearchResponse> & {
     error?: string;
@@ -102,7 +129,7 @@ export default function BiographyLinkEditor({ value, onChange }: Props) {
   const [linkType, setLinkType] = useState<"internal" | "external">("internal");
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery] = useDebounce(searchQuery.trim(), 250);
-  const [searchType, setSearchType] = useState<SearchType>("institution");
+  const [searchType, setSearchType] = useState<SearchType>("all");
   const [searchOffset, setSearchOffset] = useState(0);
   const [externalUrl, setExternalUrl] = useState("");
   const [selection, setSelection] = useState<TextSelection>({ start: 0, end: 0, text: "" });
@@ -134,12 +161,14 @@ export default function BiographyLinkEditor({ value, onChange }: Props) {
     searchIsCurrent && searchResult?.offset === searchOffset && searchResult.type === searchType
       ? searchResult
       : undefined;
-  const resultGroups = SEARCH_GROUPS.filter((group) => group.value === searchType).map((group) => ({
-    ...group,
-    total: currentPage?.counts[group.value] ?? 0,
-    results: (currentPage?.data ?? []).filter((result) => result.type === group.value),
-  }));
-  const visibleGroups = SEARCH_GROUPS.filter((group) => group.value === searchType);
+  const resultGroups = SEARCH_GROUPS.filter((group) => searchType === "all" || group.value === searchType)
+    .map((group) => ({
+      ...group,
+      total: currentPage?.counts[group.value] ?? 0,
+      results: (currentPage?.data ?? []).filter((result) => result.type === group.value),
+    }))
+    .filter((group) => group.results.length > 0);
+  const visibleGroups = SEARCH_GROUPS.filter((group) => searchType === "all" || group.value === searchType);
   const pageCount = Math.max(
     1,
     ...visibleGroups.map((group) =>
@@ -154,7 +183,12 @@ export default function BiographyLinkEditor({ value, onChange }: Props) {
   const captureSelection = (textarea: HTMLTextAreaElement) => {
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
-    setSelection({ start, end, text: value.slice(start, end) });
+    const text = value.slice(start, end);
+    setSelection({ start, end, text });
+    if (text.trim().length >= 2) {
+      setSearchQuery(text.trim());
+      setSearchOffset(0);
+    }
     setStatus("");
   };
 
@@ -347,13 +381,13 @@ export default function BiographyLinkEditor({ value, onChange }: Props) {
             aria-describedby="bio-link-record-search-hint"
           />
           <p id="bio-link-record-search-hint" className="govuk-hint">
-            Search officials and MCAs, political parties, counties, wards, Constitution articles, or public schools. School results are limited to published public profiles.
+            Search all record types by default. Highlighting text in the biography fills this search automatically; use record type to narrow results. School results are limited to published public profiles.
           </p>
           <fieldset className="govuk-fieldset govuk-!-margin-top-4" aria-describedby="bio-link-type-hint">
             <legend className="govuk-fieldset__legend govuk-fieldset__legend--s">Record type</legend>
             <p id="bio-link-type-hint" className="govuk-hint">Choose the type of internal page to link to.</p>
             <div className="govuk-radios govuk-radios--inline">
-              {SEARCH_GROUPS.map((group) => (
+              {([{ value: "all", label: "All linkable records" }, ...SEARCH_GROUPS] as Array<{ value: SearchType; label: string }>).map((group) => (
                 <div className="govuk-radios__item" key={group.value}>
                   <input
                     className="govuk-radios__input"
