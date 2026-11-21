@@ -1,7 +1,5 @@
 // app/robots.ts
 import type { MetadataRoute } from 'next';
-import { getAdminBasePath } from '@/lib/admin-path';
-
 const SITE_URL = 'https://www.citizenguide.ke';
 
 /**
@@ -11,12 +9,10 @@ const SITE_URL = 'https://www.citizenguide.ke';
  * AI discovery also uses: https://www.citizenguide.ke/llms.txt
  */
 export default function robots(): MetadataRoute.Robots {
-  const adminBase = getAdminBasePath();
+  // Do not disallow admin pages here: crawlers must be able to fetch the
+  // response and see the X-Robots-Tag noindex header. A robots.txt disallow
+  // can leave an already indexed URL visible as a bare URL in search results.
   const privatePaths = [
-    '/admin',
-    '/admin/',
-    adminBase,
-    `${adminBase}/`,
     '/studio',
     '/studio/',
     '/api/admin',
