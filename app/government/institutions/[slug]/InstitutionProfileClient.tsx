@@ -128,6 +128,14 @@ type TemporaryBody = {
   status: string | null;
 };
 
+type LinkedFund = {
+  id: string;
+  slug: string;
+  name: string;
+  fund_levy_type: string | null;
+  fund_classification: string | null;
+};
+
 export default function InstitutionProfileClient({ people }: { people?: ReactNode }) {
   const params = useParams();
   const slug = params.slug as string;
@@ -143,6 +151,8 @@ export default function InstitutionProfileClient({ people }: { people?: ReactNod
   const [officesError, setOfficesError] = useState(false);
   const [temporaryBodies, setTemporaryBodies] = useState<TemporaryBody[]>([]);
   const [temporaryBodiesError, setTemporaryBodiesError] = useState(false);
+  const [funds, setFunds] = useState<LinkedFund[]>([]);
+  const [fundsError, setFundsError] = useState(false);
   const [headLeaderSlug, setHeadLeaderSlug] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -212,6 +222,21 @@ export default function InstitutionProfileClient({ people }: { people?: ReactNod
           }
         } else {
           setTemporaryBodies(bodyResult.data as TemporaryBody[]);
+        }
+
+        const fundsResult = await supabase
+          .from("institutions")
+          .select("id,slug,name,fund_levy_type,fund_classification")
+          .eq("parent_institution_id", instData.id)
+          .eq("record_kind", "fund_levy")
+          .eq("is_active", true)
+          .order("name");
+        if (fundsResult.error) {
+          if (!/record_kind|schema cache/i.test(fundsResult.error.message)) {
+            setFundsError(true);
+          }
+        } else {
+          setFunds(fundsResult.data as LinkedFund[]);
         }
 
         // Build parent chain
@@ -570,6 +595,28 @@ export default function InstitutionProfileClient({ people }: { people?: ReactNod
                     ))}
                   </ul>
                 )}
+              </section>
+            )}
+
+            {(funds.length > 0 || fundsError) && (
+              <section className="govuk-!-margin-top-8" aria-labelledby="parent-funds-heading">
+                <h2 id="parent-funds-heading" className="govuk-heading-l">Funds and schemes administered here</h2>
+                <p className="govuk-body">These funds are linked to this institution for easier discovery. They are not counted as separate institutions.</p>
+                {fundsError ? (
+                  <p className="govuk-body">Fund records could not be loaded. Refresh this page to try again.</p>
+                ) : (
+                  <ul className="govuk-list govuk-list--bullet">
+                    {funds.map((fund) => (
+                      <li key={fund.id} className="govuk-!-margin-bottom-3">
+                        <Link className="govuk-link govuk-!-font-weight-bold" href={`/government/funds-and-levies/${fund.slug}`}>{fund.name}</Link>
+                        {(fund.fund_levy_type || fund.fund_classification) && (
+                          <span className="govuk-body-s govuk-!-margin-left-2">{[fund.fund_levy_type, fund.fund_classification].filter(Boolean).join(" · ")}</span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <p className="govuk-body"><Link className="govuk-link" href="/government/funds-and-levies">Browse all funds, levies and schemes</Link></p>
               </section>
             )}
 
