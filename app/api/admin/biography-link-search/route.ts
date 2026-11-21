@@ -21,7 +21,7 @@ const ENTITY_TYPES: EntityType[] = ["institution", "person", "party", "county", 
 const EMPTY_COUNTS = Object.fromEntries(ENTITY_TYPES.map((type) => [type, 0])) as Record<EntityType, number>;
 
 function searchTokens(query: string) {
-  const words = query.normalize("NFKC").match(/[\\p{L}\\p{N}]+/gu) ?? [];
+  const words = query.normalize("NFKC").match(/[\p{L}\p{N}]+/gu) ?? [];
   return [...new Set(words.filter((word) => word.length > 1))].slice(0, 8);
 }
 
