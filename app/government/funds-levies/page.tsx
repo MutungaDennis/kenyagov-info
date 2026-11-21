@@ -9,7 +9,8 @@ export const metadata: Metadata = {
   title: "Government funds, levies and schemes — citizenguide.Ke",
   description:
     "Explore Kenya's public funds, levies and schemes, who administers them, who they serve, and how to find official information.",
-  alternates: { canonical: "https://www.citizenguide.ke/government/funds-and-levies" },
+  alternates: { canonical: "https://www.citizenguide.ke/government/funds-levies" },
+  robots: { index: true, follow: true },
 };
 
 async function getFunds(): Promise<{ funds: FundRecord[]; parents: Record<string, FundParent>; unavailable: boolean }> {

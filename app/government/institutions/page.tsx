@@ -483,7 +483,7 @@ export default function GovernmentInstitutionsPage() {
       <main className="govuk-main-wrapper institution-directory" id="main-content" role="main">
         <header className="institution-directory-heading">
           <h1 className="govuk-heading-xl govuk-!-margin-bottom-3">Departments, agencies and public institutions</h1>
-          <p className="govuk-body">Funds and levies are listed separately and are not included in the institution count. <Link className="govuk-link" href="/government/funds-and-levies">Explore funds, levies and schemes</Link>.</p>
+          <p className="govuk-body">Funds and levies are listed separately and are not included in the institution count. <Link className="govuk-link" href="/government/funds-levies">Explore funds, levies and schemes</Link>.</p>
 
         </header>
 

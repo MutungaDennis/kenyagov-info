@@ -300,6 +300,10 @@ const nextConfig: NextConfig = {
         permanent: true,
       },
 
+      // Preserve old fund and levy URLs while consolidating search signals.
+      { source: "/government/funds-and-levies", destination: "/government/funds-levies", permanent: true },
+      { source: "/government/funds-and-levies/:path*", destination: "/government/funds-levies/:path*", permanent: true },
+
       // Moved or never-existing paths that were linked from the site
       { source: "/acts/parliament", destination: "/legislation/acts", permanent: true },
       { source: "/acts/parliament/:slug", destination: "/legislation/acts/:slug", permanent: true },

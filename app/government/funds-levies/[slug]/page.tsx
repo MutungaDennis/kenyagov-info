@@ -48,7 +48,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title: `${result.fund.name} — government fund or scheme`,
     description: result.fund.description || result.fund.mandate || `Information about ${result.fund.name}, its administering institution and official access points.`,
-    alternates: { canonical: `https://www.citizenguide.ke/government/funds-and-levies/${encodeURIComponent(slug)}` },
+    alternates: { canonical: `https://www.citizenguide.ke/government/funds-levies/${encodeURIComponent(slug)}` },
+    robots: { index: true, follow: true },
   };
 }
 
@@ -88,7 +89,7 @@ export default async function FundDetailPage({ params }: PageProps) {
       <GovUKBreadcrumbs items={[
         { text: "Home", href: "/" },
         { text: "Government", href: "/government" },
-        { text: "Funds, levies and schemes", href: "/government/funds-and-levies" },
+        { text: "Funds, levies and schemes", href: "/government/funds-levies" },
         { text: fund.name },
       ]} />
       <main className="govuk-main-wrapper" id="main-content" role="main">
@@ -144,7 +145,7 @@ export default async function FundDetailPage({ params }: PageProps) {
             <p className="govuk-body-s govuk-!-margin-top-8">
               Information shown here reflects the details recorded in the directory. Check the linked institution or official portal for current eligibility, deadlines and application requirements.
             </p>
-            <p className="govuk-body"><Link className="govuk-link" href="/government/funds-and-levies">Browse all funds, levies and schemes</Link></p>
+            <p className="govuk-body"><Link className="govuk-link" href="/government/funds-levies">Browse all funds, levies and schemes</Link></p>
           </div>
         </div>
       </main>

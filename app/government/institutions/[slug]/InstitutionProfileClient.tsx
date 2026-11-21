@@ -608,7 +608,7 @@ export default function InstitutionProfileClient({ people }: { people?: ReactNod
                   <ul className="govuk-list govuk-list--bullet">
                     {funds.map((fund) => (
                       <li key={fund.id} className="govuk-!-margin-bottom-3">
-                        <Link className="govuk-link govuk-!-font-weight-bold" href={`/government/funds-and-levies/${fund.slug}`}>{fund.name}</Link>
+                        <Link className="govuk-link govuk-!-font-weight-bold" href={`/government/funds-levies/${fund.slug}`}>{fund.name}</Link>
                         {(fund.fund_levy_type || fund.fund_classification) && (
                           <span className="govuk-body-s govuk-!-margin-left-2">{[fund.fund_levy_type, fund.fund_classification].filter(Boolean).join(" · ")}</span>
                         )}
@@ -616,7 +616,7 @@ export default function InstitutionProfileClient({ people }: { people?: ReactNod
                     ))}
                   </ul>
                 )}
-                <p className="govuk-body"><Link className="govuk-link" href="/government/funds-and-levies">Browse all funds, levies and schemes</Link></p>
+                <p className="govuk-body"><Link className="govuk-link" href="/government/funds-levies">Browse all funds, levies and schemes</Link></p>
               </section>
             )}
 

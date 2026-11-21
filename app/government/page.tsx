@@ -85,7 +85,7 @@ export default function GovernmentHomePage() {
                 </Link>
               </li>
               <li>
-                <Link href="/government/funds-and-levies" className="govuk-link">
+                <Link href="/government/funds-levies" className="govuk-link">
                   Explore government funds, levies and schemes
                 </Link>
               </li>
