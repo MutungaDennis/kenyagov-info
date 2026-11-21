@@ -187,6 +187,10 @@ export default function SitemapPage() {
                 <p className="govuk-body-s govuk-!-margin-top-1 govuk-text-secondary">Complete directory of ministries, state departments, commissions, and parastatals.</p>
               </li>
               <li>
+                <Link href="/government/funds-levies" className="govuk-link govuk-!-font-weight-bold govuk-!-font-size-19">Government Funds, Levies and Schemes</Link>
+                <p className="govuk-body-s govuk-!-margin-top-1 govuk-text-secondary">Directory of public funds, levies and schemes, including their administering institutions and official access points.</p>
+              </li>
+              <li>
                 <Link href="/government/commissions" className="govuk-link govuk-!-font-weight-bold govuk-!-font-size-19">Constitutional Commissions and Independent Bodies</Link>
                 <p className="govuk-body-s govuk-!-margin-top-1 govuk-text-secondary">Chapter 15 commissions, independent offices, and sovereign constitutional bodies.</p>
               </li>

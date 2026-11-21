@@ -132,7 +132,7 @@ export default function FundsDirectory({ funds, parents, unavailable }: Props) {
                   return (
                     <li key={fund.id} className="govuk-!-padding-bottom-5 govuk-!-margin-bottom-5">
                       <h2 className="govuk-heading-m govuk-!-margin-bottom-2">
-                        <Link className="govuk-link govuk-link--no-visited-state" href={`/government/funds-and-levies/${fund.slug}`}>{fund.name}</Link>
+                        <Link className="govuk-link govuk-link--no-visited-state" href={`/government/funds-levies/${fund.slug}`}>{fund.name}</Link>
                       </h2>
                       <p className="govuk-body-s govuk-!-margin-bottom-2">
                         {fund.fund_levy_type && <strong className="govuk-tag govuk-tag--blue govuk-!-margin-right-2">{fund.fund_levy_type}</strong>}

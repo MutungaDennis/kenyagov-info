@@ -443,6 +443,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/government/prime-cabinet-secretary`, changeFrequency: 'weekly', priority: 0.8 },
     { url: `${BASE_URL}/government/people`, changeFrequency: 'weekly', priority: 0.8 },
     { url: `${BASE_URL}/government/institutions`, changeFrequency: 'weekly', priority: 0.8 },
+    { url: `${BASE_URL}/government/funds-levies`, changeFrequency: 'weekly', priority: 0.8 },
     { url: `${BASE_URL}/government/judiciary`, changeFrequency: 'weekly', priority: 0.8 },
     { url: `${BASE_URL}/government/legislature`, changeFrequency: 'weekly', priority: 0.8 },
     { url: `${BASE_URL}/government/counties`, changeFrequency: 'weekly', priority: 0.8 },
