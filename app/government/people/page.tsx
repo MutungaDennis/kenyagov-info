@@ -391,7 +391,11 @@ function PeopleDirectoryContent() {
 
   const truncateBio = (bio: string | null) => {
     if (!bio) return null;
-    return bio.length > 220 ? bio.substring(0, 220).trim() + "…" : bio;
+    const plainText = bio.replace(
+      /\[((?:\\.|[^\]])+)\]\(([^)\s]+)\)/g,
+      (_match, label: string) => label.replace(/\\([\\[\]])/g, "$1"),
+    );
+    return plainText.length > 220 ? plainText.substring(0, 220).trim() + "…" : plainText;
   };
 
   const renderPagination = () => {
