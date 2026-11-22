@@ -1,6 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { schoolEditSchema } from "@/lib/schools/admin-schema";
-import { safeSchoolWebsite, schoolDirectorate, schoolSearchTerm, schoolValue } from "@/lib/schools/types";
+import { hasSchoolValue, safeSchoolWebsite, schoolDirectorate, schoolSearchTerm, schoolValue } from "@/lib/schools/types";
 
 const db = vi.hoisted(() => ({ from: vi.fn() }));
 vi.mock("@/lib/supabase/public", () => ({ createPublicClient: () => db }));
@@ -56,9 +56,18 @@ describe("school administration and display", () => {
     expect(schoolEditSchema.safeParse({ ...valid, website_url: "javascript:alert(1)" }).success).toBe(false);
     expect(schoolEditSchema.safeParse({ ...valid, total_teachers: -1 }).success).toBe(false);
   });
-  it("blocks executable website links and preserves zero resource counts", () => {
+  it("accepts the additional profile fields and validates coordinates and categories", () => {
+    expect(schoolEditSchema.safeParse({ ...valid, gender_type: "mixed", sne_categories: ["physical"] }).success).toBe(true);
+    expect(schoolEditSchema.safeParse({ ...valid, latitude: 91 }).success).toBe(false);
+    expect(schoolEditSchema.safeParse({ ...valid, longitude: -181 }).success).toBe(false);
+  });
+  it("omits missing profile values and preserves zero resource counts", () => {
     expect(safeSchoolWebsite("javascript:alert(1)")).toBeNull();
     expect(safeSchoolWebsite("https://example.org")).toBe("https://example.org/");
+    expect(hasSchoolValue(null)).toBe(false);
+    expect(hasSchoolValue("unknown")).toBe(false);
+    expect(hasSchoolValue([])).toBe(false);
+    expect(hasSchoolValue(0)).toBe(true);
     expect(schoolValue(0)).toBe("0");
     expect(schoolValue(null)).toBe("Not recorded");
     expect(schoolSearchTerm(" %Alliance_ ")).toBe("Alliance");

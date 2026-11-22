@@ -3,7 +3,7 @@ import { schoolEditSchema, schoolDeleteSchema } from "@/lib/schools/admin-schema
 import { z } from "zod";
 
 type Context = { params: Promise<{ id: string }> };
-const fields = "id,slug,official_name,ownership,main_tier,description,county,sub_county,is_published,short_name,operational_status,physical_address,postal_address,public_phone,public_email,website_url,total_enrollment,total_teachers";
+const fields = "id,slug,official_name,ownership,main_tier,description,county,sub_county,constituency,ward,is_published,short_name,operational_status,institution_type,moe_category,gender_type,accommodation_type,registration_status,sponsor_name,special_needs_status,sne_categories,physical_address,postal_address,latitude,longitude,public_phone,public_email,website_url,nemis_code,knec_code,tsc_code,total_enrollment,total_teachers,water_source,power_source,internet_connectivity,verification_status";
 const reply = (body: unknown, status = 200) => Response.json(body, { status, headers: { "Cache-Control": "no-store" } });
 
 export async function GET(_request: Request, context: Context) {
