@@ -5,7 +5,7 @@ import useSWR from "swr";
 import { useMemo, useRef, useState } from "react";
 import LinkedBiography from "@/components/site/LinkedBiography";
 
-type EntityType = "institution" | "person" | "party" | "coalition" | "committee" | "county" | "ward" | "article" | "school";
+type EntityType = "institution" | "person" | "party" | "coalition" | "committee" | "county" | "constituency" | "ward" | "article" | "school";
 type SearchType = EntityType | "all";
 
 type LinkableResult = {
@@ -32,6 +32,7 @@ const SEARCH_GROUPS: Array<{ value: EntityType; label: string }> = [
   { value: "coalition", label: "Political coalitions" },
   { value: "committee", label: "Parliamentary committees" },
   { value: "county", label: "Counties" },
+  { value: "constituency", label: "Constituencies" },
   { value: "ward", label: "Wards" },
   { value: "article", label: "Constitution articles" },
   { value: "school", label: "Public schools" },
@@ -76,6 +77,7 @@ const EMPTY_COUNTS: Record<EntityType, number> = {
   coalition: 0,
   committee: 0,
   county: 0,
+  constituency: 0,
   ward: 0,
   article: 0,
   school: 0,
@@ -239,6 +241,7 @@ export default function BiographyLinkEditor({ value, onChange }: Props) {
         value === "coalition" ? link.href.startsWith("/elections/coalitions") :
         value === "committee" ? link.href.startsWith("/government/legislature/committees/") :
         value === "county" ? link.href.startsWith("/government/counties/") && !link.href.includes("/wards/") :
+        value === "constituency" ? link.href.startsWith("/elections/registered-voters?") && new URLSearchParams(link.href.split("?")[1] ?? "").has("constituency") :
         value === "ward" ? link.href.startsWith("/government/counties/wards/") :
         value === "article" ? link.href.startsWith("/constitution/article/") :
         link.href.startsWith("/government/institutions/")
