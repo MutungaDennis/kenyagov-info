@@ -3,7 +3,7 @@ import { requireAdminApi } from "@/lib/admin-api";
 
 export const dynamic = "force-dynamic";
 
-type EntityType = "institution" | "party" | "county" | "school" | "person" | "ward" | "article";
+type EntityType = "institution" | "party" | "coalition" | "committee" | "county" | "school" | "person" | "ward" | "article";
 type SearchType = EntityType;
 type LinkableResult = {
   id: string;
@@ -17,7 +17,7 @@ type EntitySearchResult = { type: EntityType; data: LinkableResult[]; total: num
 const PAGE_SIZE = 8;
 const MAX_QUERY_LENGTH = 120;
 const MAX_OFFSET = 100_000;
-const ENTITY_TYPES: EntityType[] = ["institution", "person", "party", "county", "ward", "article", "school"];
+const ENTITY_TYPES: EntityType[] = ["institution", "person", "party", "coalition", "committee", "county", "ward", "article", "school"];
 const EMPTY_COUNTS = Object.fromEntries(ENTITY_TYPES.map((type) => [type, 0])) as Record<EntityType, number>;
 
 function searchTokens(query: string) {
@@ -72,6 +72,36 @@ export async function GET(request: NextRequest) {
         id: String(row.id), type, name: row.name,
         detail: [row.abbreviation, row.status && row.status !== "active" ? row.status : ""].filter(Boolean).join(" · "),
         href: `/elections/political-parties/${encodeURIComponent(row.slug)}`,
+      })) };
+    },
+    coalition: async () => {
+      const safeQuery = searchText.replace(/[(),.%_\\]/g, " ").trim();
+      const { data, count, error } = await sb.from("coalitions")
+        .select("id, name, abbreviation, coalition_type", { count: "exact" })
+        .or(`name.ilike.%${safeQuery}%,abbreviation.ilike.%${safeQuery}%`)
+        .order("name").range(offset, offset + PAGE_SIZE - 1);
+      if (error) throw error;
+      return { type, total: count ?? 0, data: (data ?? []).map((row) => ({
+        id: String(row.id), type, name: row.name,
+        detail: [row.abbreviation, row.coalition_type === "post_election" ? "Post-election" : "Pre-election"].filter(Boolean).join(" · "),
+        href: `/elections/coalitions?q=${encodeURIComponent(row.name)}`,
+      })) };
+    },
+    committee: async () => {
+      let query = sb.from("parliamentary_committees")
+        .select("id, chamber, category, name, slug, is_active", { count: "exact" })
+        .eq("is_published", true)
+        .not("slug", "is", null);
+      for (const token of tokens) {
+        const safe = token.replace(/[(),.%_\\]/g, " ").trim();
+        query = query.or(`name.ilike.%${safe}%,category.ilike.%${safe}%,chamber.ilike.%${safe}%`);
+      }
+      const { data, count, error } = await query.order("name").range(offset, offset + PAGE_SIZE - 1);
+      if (error) throw error;
+      return { type, total: count ?? 0, data: (data ?? []).map((row) => ({
+        id: String(row.id), type, name: row.name,
+        detail: [row.chamber === "senate" ? "Senate" : "National Assembly", row.category, row.is_active ? "Active" : "Historical"].filter(Boolean).join(" · "),
+        href: `/government/legislature/committees/${encodeURIComponent(row.slug)}`,
       })) };
     },
     county: async () => {
