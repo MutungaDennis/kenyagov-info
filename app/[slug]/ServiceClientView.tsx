@@ -746,11 +746,6 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
                 service._updatedAt ? formatDate(service._updatedAt) : undefined
               }
             />
-            {service.reviewedAt ? (
-              <p className="govuk-body-s govuk-!-margin-top-1 govuk-!-margin-bottom-0">
-                Last reviewed {formatDate(service.reviewedAt)}
-              </p>
-            ) : null}
             {service.copyrightNotice ? <p className="govuk-body-s govuk-!-margin-top-2">{service.copyrightNotice}{service.licenseUrl ? <> <a className="govuk-link" href={service.licenseUrl} target="_blank" rel="noopener noreferrer">Read the licence</a></> : null}</p> : null}
             {service.sourceLinks && service.sourceLinks.length > 0 ? (
               <div className="govuk-!-margin-top-3"><h3 className="govuk-heading-s">Sources</h3><ul className="govuk-list govuk-list--bullet">{service.sourceLinks.map((source, idx) => <li key={idx}><a className="govuk-link" href={source.href} target="_blank" rel="noopener noreferrer">{source.label}</a></li>)}</ul></div>
