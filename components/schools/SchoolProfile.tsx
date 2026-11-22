@@ -4,11 +4,15 @@ import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import { JsonLd } from "@/components/JsonLd";
 import { SITE_URL } from "@/lib/seo";
 import type { SchoolProfile as Profile } from "@/lib/schools/queries";
-import { safeSchoolWebsite, schoolLevelLabel, schoolValue } from "@/lib/schools/types";
+import { hasSchoolValue, safeSchoolWebsite, schoolLevelLabel, schoolValue } from "@/lib/schools/types";
 
-function Details({ title, rows }: { title: string; rows: [string, ReactNode][] }) {
+type DetailRow = [string, ReactNode, unknown?];
+
+function Details({ title, rows }: { title: string; rows: DetailRow[] }) {
+  const visibleRows = rows.filter(([, value, source]) => hasSchoolValue(source === undefined ? value : source));
+  if (visibleRows.length === 0) return null;
   return <section className="govuk-!-margin-bottom-7"><h2 className="govuk-heading-m">{title}</h2>
-    <dl className="govuk-summary-list">{rows.map(([label,value]) => <div className="govuk-summary-list__row" key={label}>
+    <dl className="govuk-summary-list">{visibleRows.map(([label,value]) => <div className="govuk-summary-list__row" key={label}>
       <dt className="govuk-summary-list__key">{label}</dt><dd className="govuk-summary-list__value">{value}</dd>
     </div>)}</dl></section>;
 }
@@ -24,46 +28,48 @@ export default function SchoolProfile({ school }: { school: Profile }) {
       ...(school.parent ? [{text:school.parent.short_name || school.parent.name,href:`/government/institutions/${school.parent.slug}`}] : []),
       {text:school.official_name}]} />
     <JsonLd data={{"@context":"https://schema.org","@type":"School",name:school.official_name,
-      url:`${SITE_URL}/government/institutions/${school.slug}`,address:{"@type":"PostalAddress",addressCountry:"KE",addressRegion:school.county,streetAddress:school.physical_address || undefined},
+      url:`${SITE_URL}/government/institutions/${school.slug}`,address:{"@type":"PostalAddress",addressCountry:"KE",addressRegion:school.county || undefined,streetAddress:school.physical_address || undefined},
       parentOrganization:school.parent ? {"@type":"GovernmentOrganization",name:school.parent.name,url:`${SITE_URL}/government/institutions/${school.parent.slug}`} : undefined,
       sameAs:website ? [website] : undefined}} />
     <main className="govuk-main-wrapper" id="main-content">
-      <span className="govuk-caption-l">Public school · {school.county || "Kenya"}</span>
+      <span className="govuk-caption-l">Public school{hasSchoolValue(school.county) ? ` · ${school.county}` : ""}</span>
       <h1 className="govuk-heading-xl govuk-!-margin-bottom-3">{school.official_name}</h1>
-      <p className="govuk-body-l">{schoolLevelLabel(school.main_tier)}</p>
+      {hasSchoolValue(school.main_tier) && <p className="govuk-body-l">{schoolLevelLabel(school.main_tier)}</p>}
       <div className="govuk-grid-row"><div className="govuk-grid-column-two-thirds">
-        <p className="govuk-body">{school.description || "This public school is part of Kenya’s publicly funded education system. Its governance and available school information are listed below."}</p>
+        {hasSchoolValue(school.description) && <p className="govuk-body">{school.description}</p>}
         <Details title="Government responsibility" rows={[
-          ["Ownership","Public"],["Parent institution",institutionLink(school.parent)],
-          ["Supervising ministry / parent body",institutionLink(school.ministry)],
+          ["Ownership","Public"],["Parent institution",institutionLink(school.parent),school.parent],
+          ["Supervising ministry / parent body",institutionLink(school.ministry),school.ministry],
         ]} />
         <Details title="About the school" rows={[
-          ["Education level",schoolLevelLabel(school.main_tier)],["School category",schoolValue(school.moe_category)],
-          ["School type",schoolValue(school.institution_type)],["Learners",schoolValue(school.gender_type)],
-          ["Day or boarding",schoolValue(school.accommodation_type)],["Operational status",schoolValue(school.operational_status)],
-          ["Registration status",schoolValue(school.registration_status)],["Sponsor",schoolValue(school.sponsor_name)],
-          ["Special needs provision",schoolValue(school.special_needs_status)],
+          ["Education level",schoolLevelLabel(school.main_tier),school.main_tier],["School category",schoolValue(school.moe_category),school.moe_category],
+          ["School type",schoolValue(school.institution_type),school.institution_type],["Learner gender",schoolValue(school.gender_type),school.gender_type],
+          ["Day or boarding",schoolValue(school.accommodation_type),school.accommodation_type],["Operational status",schoolValue(school.operational_status),school.operational_status],
+          ["Registration status",schoolValue(school.registration_status),school.registration_status],["Sponsor",schoolValue(school.sponsor_name),school.sponsor_name],
+          ["Special needs provision",schoolValue(school.special_needs_status),school.special_needs_status],
+          ["Special-needs categories",schoolValue(school.sne_categories),school.sne_categories],
         ]} />
         <Details title="Location and contact" rows={[
-          ["County",schoolValue(school.county)],["Sub-county",schoolValue(school.sub_county)],
-          ["Constituency",schoolValue(school.constituency)],["Ward",schoolValue(school.ward)],
-          ["Address",schoolValue(school.physical_address)],["Postal address",schoolValue(school.postal_address)],
-          ["Telephone",schoolValue(school.public_phone)],["Email",schoolValue(school.public_email)],
-          ["Website",website ? <a className="govuk-link" href={website} rel="noopener noreferrer">Visit the school website</a> : "Not recorded"],
+          ["County",schoolValue(school.county),school.county],["Sub-county",schoolValue(school.sub_county),school.sub_county],
+          ["Constituency",schoolValue(school.constituency),school.constituency],["Ward",schoolValue(school.ward),school.ward],
+          ["Address",schoolValue(school.physical_address),school.physical_address],["Postal address",schoolValue(school.postal_address),school.postal_address],
+          ["Latitude",schoolValue(school.latitude),school.latitude],["Longitude",schoolValue(school.longitude),school.longitude],
+          ["Telephone",schoolValue(school.public_phone),school.public_phone],["Email",schoolValue(school.public_email),school.public_email],
+          ["Website",website ? <a className="govuk-link" href={website} rel="noopener noreferrer">Visit the school website</a> : "",website],
         ]} />
-        <Details title="School identifiers" rows={[["NEMIS code",schoolValue(school.nemis_code)],["KNEC code",schoolValue(school.knec_code)],["TSC code",schoolValue(school.tsc_code)]]} />
+        <Details title="School identifiers" rows={[["NEMIS code",schoolValue(school.nemis_code),school.nemis_code],["KNEC code",schoolValue(school.knec_code),school.knec_code],["TSC code",schoolValue(school.tsc_code),school.tsc_code]]} />
         <Details title="Recorded resources" rows={[
-          ["Learners enrolled",schoolValue(school.total_enrollment)],["Teachers",schoolValue(school.total_teachers)],
-          ["Water source",schoolValue(school.water_source)],["Power source",schoolValue(school.power_source)],
-          ["Internet connectivity",schoolValue(school.internet_connectivity)],
+          ["Learners enrolled",schoolValue(school.total_enrollment),school.total_enrollment],["Teachers",schoolValue(school.total_teachers),school.total_teachers],
+          ["Water source",schoolValue(school.water_source),school.water_source],["Power source",schoolValue(school.power_source),school.power_source],
+          ["Internet connectivity",schoolValue(school.internet_connectivity),school.internet_connectivity],
         ]} />
       </div><aside className="govuk-grid-column-one-third">
-        <div className="govuk-inset-text"><h2 className="govuk-heading-s">About this information</h2>
-          <p className="govuk-body-s">School records come from imported education datasets. Missing information is marked “Not recorded”; it does not mean a service or facility is unavailable.</p>
-          <p className="govuk-body-s">Verification: {schoolValue(school.verification_status)}.</p>
+        {(hasSchoolValue(school.verification_status) || school.last_verified_at) && <div className="govuk-inset-text"><h2 className="govuk-heading-s">About this information</h2>
+          <p className="govuk-body-s">School records come from imported education datasets. Missing information does not mean a service or facility is unavailable.</p>
+          {hasSchoolValue(school.verification_status) && <p className="govuk-body-s">Verification: {schoolValue(school.verification_status)}.</p>}
           {school.last_verified_at && <p className="govuk-body-s">Last verified: {new Date(school.last_verified_at).toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric",timeZone:"UTC"})}.</p>}
           <p className="govuk-body-s">Confirm admission arrangements and current facilities with the school.</p>
-        </div>
+        </div>}
         <h2 className="govuk-heading-s">Explore public education</h2>
         <ul className="govuk-list"><li><Link className="govuk-link" href="/government/institutions?schools=show#public-schools">Find another public school</Link></li>
           <li><Link className="govuk-link" href="/government/institutions/ministry-education">Ministry of Education</Link></li></ul>

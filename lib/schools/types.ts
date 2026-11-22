@@ -26,8 +26,12 @@ export function schoolLevelLabel(level: string | null): string {
   return SCHOOL_LEVELS[level as SchoolLevel] ?? "School — level not recorded";
 }
 
+export function hasSchoolValue(value: unknown): boolean {
+  return value !== null && value !== undefined && value !== "" && value !== "unknown" && !(Array.isArray(value) && value.length === 0);
+}
+
 export function schoolValue(value: unknown): string {
-  if (value == null || value === "" || value === "unknown") return "Not recorded";
+  if (!hasSchoolValue(value)) return "Not recorded";
   if (Array.isArray(value)) return value.length ? value.join(", ") : "Not recorded";
   if (typeof value === "number") return value.toLocaleString("en-KE");
   return String(value).replaceAll("_", " ");
