@@ -3,7 +3,7 @@ import { requireAdminApi } from "@/lib/admin-api";
 
 export const dynamic = "force-dynamic";
 
-type EntityType = "institution" | "party" | "coalition" | "committee" | "county" | "school" | "person" | "ward" | "article";
+type EntityType = "institution" | "party" | "coalition" | "committee" | "county" | "constituency" | "school" | "person" | "ward" | "article";
 type SearchType = EntityType;
 type LinkableResult = {
   id: string;
@@ -17,7 +17,7 @@ type EntitySearchResult = { type: EntityType; data: LinkableResult[]; total: num
 const PAGE_SIZE = 8;
 const MAX_QUERY_LENGTH = 120;
 const MAX_OFFSET = 100_000;
-const ENTITY_TYPES: EntityType[] = ["institution", "person", "party", "coalition", "committee", "county", "ward", "article", "school"];
+const ENTITY_TYPES: EntityType[] = ["institution", "person", "party", "coalition", "committee", "county", "constituency", "ward", "article", "school"];
 const EMPTY_COUNTS = Object.fromEntries(ENTITY_TYPES.map((type) => [type, 0])) as Record<EntityType, number>;
 
 function searchTokens(query: string) {
@@ -115,6 +115,33 @@ export async function GET(request: NextRequest) {
         detail: [row.region, row.code ? `County code ${row.code}` : ""].filter(Boolean).join(" · "),
         href: `/government/counties/${encodeURIComponent(row.slug)}`,
       })) };
+    },
+    constituency: async () => {
+      let q = sb.from("constituencies")
+        .select("id, slug, name, county_code, constituency_code, is_active", { count: "exact" })
+        .not("slug", "is", null);
+      for (const token of tokens) {
+        const safe = token.replace(/[(),.%_\\]/g, " ").trim();
+        q = q.or(`name.ilike.%${safe}%,slug.ilike.%${safe}%,constituency_code.ilike.%${safe}%`);
+      }
+      const { data, count, error } = await q.order("name").range(offset, offset + PAGE_SIZE - 1);
+      if (error) throw error;
+      const countyCodes = [...new Set((data ?? []).map((row) => row.county_code).filter((code): code is string => Boolean(code)))];
+      const { data: counties, error: countiesError } = countyCodes.length
+        ? await sb.from("counties").select("code, name").in("code", countyCodes)
+        : { data: [], error: null };
+      if (countiesError) throw countiesError;
+      const countyNames = new Map((counties ?? []).map((county) => [county.code, county.name]));
+      return { type, total: count ?? 0, data: (data ?? []).map((row) => {
+        const countyName = row.county_code ? countyNames.get(row.county_code) : undefined;
+        const params = new URLSearchParams({ constituency: row.name });
+        if (countyName) params.set("county", countyName);
+        return {
+          id: String(row.id), type, name: row.name,
+          detail: [countyName, row.is_active === false ? "Historical" : ""].filter(Boolean).join(" · "),
+          href: `/elections/registered-voters?${params.toString()}`,
+        };
+      }) };
     },
     person: async () => {
       let leaders = sb.from("leaders")
