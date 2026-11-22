@@ -12,8 +12,10 @@ const linkPattern = /\[((?:\\.|[^\]])+)\]\(([^)\s]+)\)/g;
 function safeLinkTarget(href: string): "internal" | "external" | null {
   const internalPaths = [
     /^\/government\/(?:institutions|people)\/(?!\/|\\)[^\s]*$/i,
-    /^\/elections\/political-parties\/(?!\/|\\)[^\s]*$/i,
-    /^\/government\/counties\/(?!\/|\\)[^\s]*$/i,
+    /^\/elections\/political-parties\/(?!\/|\\\\)[^\s]*$/i,
+    /^\/elections\/coalitions(?:\?q=[^#]*)?$/i,
+    /^\/government\/legislature\/committees\/(?!\/|\\\\)[^\s]*$/i,
+    /^\/government\/counties\/(?!\/|\\\\)[^\s]*$/i,
     /^\/constitution\/article\/\d+$/i,
   ];
   if (internalPaths.some((pattern) => pattern.test(href))) {
