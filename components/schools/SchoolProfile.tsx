@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
@@ -22,6 +23,10 @@ export default function SchoolProfile({ school }: { school: Profile }) {
   const institutionLink = (institution: Profile["parent"]) => institution
     ? <Link className="govuk-link" href={`/government/institutions/${institution.slug}`}>{institution.name}{institution.short_name ? ` (${institution.short_name})` : ""}</Link>
     : "Not assigned in the directory";
+  const formatDate = (value: string) => new Date(value).toLocaleDateString("en-GB", {
+    day: "numeric", month: "long", year: "numeric", timeZone: "UTC",
+  });
+  const sources = school.sources.filter((record) => record.source?.title);
   return <div className="govuk-width-container">
     <GovUKBreadcrumbs items={[{text:"Home",href:"/"},{text:"Government",href:"/government"},
       {text:"Institutions",href:"/government/institutions"},
@@ -63,9 +68,42 @@ export default function SchoolProfile({ school }: { school: Profile }) {
           ["Water source",schoolValue(school.water_source),school.water_source],["Power source",schoolValue(school.power_source),school.power_source],
           ["Internet connectivity",schoolValue(school.internet_connectivity),school.internet_connectivity],
         ]} />
+        {school.officials.length > 0 && <section className="govuk-!-margin-bottom-7" aria-labelledby="school-officials-heading">
+          <h2 id="school-officials-heading" className="govuk-heading-m">School officials</h2>
+          <ul className="govuk-list">
+            {school.officials.map((official) => <li key={official.id} className="govuk-!-margin-bottom-4">
+              {official.photo_url && <Image src={official.photo_url} alt="" width={64} height={64} unoptimized className="govuk-!-margin-right-3" />}
+              <strong>{official.full_name}</strong><br />
+              <span>{official.role_title}</span>
+              {(official.start_date || official.end_date) && <p className="govuk-body-s govuk-!-margin-bottom-1">
+                Served {official.start_date ? `from ${formatDate(official.start_date)}` : "from an unrecorded date"}{official.end_date ? ` to ${formatDate(official.end_date)}` : " (current)"}
+              </p>}
+              {official.biography && <p className="govuk-body-s">{official.biography}</p>}
+            </li>)}
+          </ul>
+        </section>}
+        {sources.length > 0 && <section className="govuk-!-margin-bottom-7" aria-labelledby="school-sources-heading">
+          <h2 id="school-sources-heading" className="govuk-heading-m">Sources</h2>
+          <p className="govuk-body">These sources were used to compile information about this school.</p>
+          <ul className="govuk-list govuk-list--bullet">
+            {sources.map((record) => <li key={record.id}>
+              {record.source?.source_url && /^https?:\/\//i.test(record.source.source_url)
+                ? <a className="govuk-link" href={record.source.source_url} target="_blank" rel="noopener noreferrer">{record.source.title}</a>
+                : <span>{record.source?.title}</span>}
+              {record.source?.publisher ? ` — ${record.source.publisher}` : ""}
+              {record.source?.reference_year ? ` (${record.source.reference_year})` : record.source?.publication_date ? ` (${formatDate(record.source.publication_date)})` : ""}
+              {record.source?.licence ? `; ${record.source.licence}` : ""}
+            </li>)}
+          </ul>
+        </section>}
       </div><aside className="govuk-grid-column-one-third">
+        <div className="govuk-inset-text">
+          <h2 className="govuk-heading-s">Information updated</h2>
+          <p className="govuk-body-s">Page created: {formatDate(school.created_at)}.</p>
+          <p className="govuk-body-s govuk-!-margin-bottom-0">Last updated: {formatDate(school.updated_at)}.</p>
+        </div>
         {(hasSchoolValue(school.verification_status) || school.last_verified_at) && <div className="govuk-inset-text"><h2 className="govuk-heading-s">About this information</h2>
-          <p className="govuk-body-s">School records come from imported education datasets. Missing information does not mean a service or facility is unavailable.</p>
+          <p className="govuk-body-s">School records come from the cited sources. Missing information does not mean a service or facility is unavailable.</p>
           {hasSchoolValue(school.verification_status) && <p className="govuk-body-s">Verification: {schoolValue(school.verification_status)}.</p>}
           {school.last_verified_at && <p className="govuk-body-s">Last verified: {new Date(school.last_verified_at).toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric",timeZone:"UTC"})}.</p>}
           <p className="govuk-body-s">Confirm admission arrangements and current facilities with the school.</p>

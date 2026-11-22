@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export const schoolEditSchema = z.object({
   official_name: z.string().trim().min(2).max(250),
+  slug: z.string().trim().min(1).max(160).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Use a lowercase, hyphen-separated GOV.UK-style URL").optional(),
   ownership: z.enum(["public", "private", "community", "faith_based", "other", "unknown"]),
   main_tier: z.enum(["primary", "junior", "senior_secondary", "ecde"]).nullable(),
   description: z.string().trim().max(10000).nullable(),
@@ -17,9 +18,13 @@ export const schoolEditSchema = z.object({
   special_needs_status: z.string().trim().max(150).nullable().optional(),
   sne_categories: z.array(z.string().trim().min(1).max(150)).max(100).nullable().optional(),
   county: z.string().trim().max(100).nullable().optional(),
+  county_code: z.number().int().min(1).max(500).nullable().optional(),
   sub_county: z.string().trim().max(150).nullable().optional(),
+  sub_county_id: z.uuid().nullable().optional(),
   constituency: z.string().trim().max(150).nullable().optional(),
+  constituency_id: z.uuid().nullable().optional(),
   ward: z.string().trim().max(150).nullable().optional(),
+  ward_id: z.uuid().nullable().optional(),
   latitude: z.number().min(-90).max(90).nullable().optional(),
   longitude: z.number().min(-180).max(180).nullable().optional(),
   nemis_code: z.string().trim().max(100).nullable().optional(),

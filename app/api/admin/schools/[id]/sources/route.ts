@@ -1,0 +1,92 @@
+import { requireAdminApi } from "@/lib/admin-api";
+import { z } from "zod";
+
+type Context = { params: Promise<{ id: string }> };
+const reply = (body: unknown, status = 200) =>
+  Response.json(body, { status, headers: { "Cache-Control": "no-store" } });
+const sourceSchema = z.object({
+  title: z.string().trim().min(2).max(250),
+  publisher: z.string().trim().min(2).max(250),
+  source_url: z.string().trim().url().refine((value) => /^https?:\/\//i.test(value), "Use an HTTP or HTTPS URL"),
+  publication_date: z.string().date().nullable().optional(),
+  reference_year: z.number().int().min(1800).max(2200).nullable().optional(),
+  licence: z.string().trim().max(250).nullable().optional(),
+  notes: z.string().trim().max(2000).nullable().optional(),
+}).strict();
+
+export async function GET(_request: Request, route: Context) {
+  const auth = await requireAdminApi();
+  if (!auth.ok) return auth.response;
+  const { id } = await route.params;
+  if (!z.uuid().safeParse(id).success) return reply({ error: "Invalid school ID" }, 400);
+  const { data, error } = await auth.supabase
+    .from("education_school_source_records")
+    .select("id,external_record_id,external_name,review_status,created_at,source:education_data_sources!education_school_source_records_source_id_fkey(id,source_key,title,publisher,source_url,publication_date,reference_year,licence,notes)")
+    .eq("school_id", id)
+    .order("created_at", { ascending: true });
+  if (error) return reply({ error: "Could not load school sources" }, 500);
+  return reply(data ?? []);
+}
+
+export async function POST(request: Request, route: Context) {
+  const auth = await requireAdminApi();
+  if (!auth.ok) return auth.response;
+  const origin = request.headers.get("origin");
+  if (origin && origin !== new URL(request.url).origin) return reply({ error: "Invalid request origin" }, 403);
+  const { id: schoolId } = await route.params;
+  if (!z.uuid().safeParse(schoolId).success) return reply({ error: "Invalid school ID" }, 400);
+  const parsed = sourceSchema.safeParse(await request.json().catch(() => null));
+  if (!parsed.success) return reply({ error: parsed.error.issues.map((issue) => issue.message).join("; ") }, 400);
+
+  const { data: school, error: schoolError } = await auth.supabase
+    .from("education_schools").select("id,official_name").eq("id", schoolId).maybeSingle();
+  if (schoolError || !school) return reply({ error: "School not found" }, 404);
+
+  const sourceKey = `${parsed.data.publisher}-${parsed.data.title}-${parsed.data.reference_year ?? parsed.data.publication_date ?? parsed.data.source_url}`.toLowerCase().normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")
+    .slice(0, 120) || `source-${crypto.randomUUID()}`;
+  const { data: source, error: sourceError } = await auth.supabase
+    .from("education_data_sources")
+    .upsert({ source_key: sourceKey, ...parsed.data }, { onConflict: "source_key" })
+    .select("id")
+    .single();
+  if (sourceError || !source) return reply({ error: "Could not save source details" }, 500);
+
+  const record = {
+    school_id: schoolId,
+    source_id: source.id,
+    external_record_id: `admin-school:${schoolId}`,
+    external_name: school.official_name,
+    match_method: "source_only",
+    match_confidence: null,
+    review_status: "approved",
+    raw_record: { citation_only: true, source_url: parsed.data.source_url },
+  };
+  const { data: existing, error: existingError } = await auth.supabase.from("education_school_source_records")
+    .select("id").eq("school_id", schoolId).eq("source_id", source.id)
+    .order("created_at", { ascending: true }).limit(1).maybeSingle();
+  if (existingError) return reply({ error: "Could not check existing source links" }, 500);
+  const saved = existing
+    ? await auth.supabase.from("education_school_source_records").update(record)
+      .eq("id", existing.id)
+      .select("id,external_record_id,external_name,review_status,created_at,source:education_data_sources!education_school_source_records_source_id_fkey(id,source_key,title,publisher,source_url,publication_date,reference_year,licence,notes)").single()
+    : await auth.supabase.from("education_school_source_records").insert(record)
+      .select("id,external_record_id,external_name,review_status,created_at,source:education_data_sources!education_school_source_records_source_id_fkey(id,source_key,title,publisher,source_url,publication_date,reference_year,licence,notes)").single();
+  if (saved.error || !saved.data) return reply({ error: "Could not link the source to this school" }, 500);
+  return reply(saved.data, existing ? 200 : 201);
+}
+
+export async function DELETE(request: Request, route: Context) {
+  const auth = await requireAdminApi();
+  if (!auth.ok) return auth.response;
+  const origin = request.headers.get("origin");
+  if (origin && origin !== new URL(request.url).origin) return reply({ error: "Invalid request origin" }, 403);
+  const { id: schoolId } = await route.params;
+  if (!z.uuid().safeParse(schoolId).success) return reply({ error: "Invalid school ID" }, 400);
+  const parsed = z.object({ id: z.uuid() }).strict().safeParse(await request.json().catch(() => null));
+  if (!parsed.success) return reply({ error: "Invalid source record" }, 400);
+  const { data, error } = await auth.supabase.from("education_school_source_records")
+    .delete().eq("id", parsed.data.id).eq("school_id", schoolId).select("id").maybeSingle();
+  if (error) return reply({ error: "Could not remove source from school" }, 500);
+  return data ? reply({ removed: true }) : reply({ error: "Source record not found" }, 404);
+}
