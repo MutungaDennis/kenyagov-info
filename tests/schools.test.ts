@@ -101,6 +101,9 @@ describe("public school profile provenance", () => {
     expect(markup).toContain("https://example.org/schools");
     expect(markup).toContain("Page created: 1 January 2024");
     expect(markup).toContain("Last updated: 3 February 2025");
+    expect(markup).not.toContain("Verification:");
+    expect(markup.indexOf("Kenya Schools dataset")).toBeLessThan(markup.indexOf("Information updated"));
+    expect(markup.indexOf("Information updated")).toBeGreaterThan(markup.indexOf("Amina Example"));
     expect(markup).toContain("Amina Example");
     expect(markup).toContain("Head teacher");
   });

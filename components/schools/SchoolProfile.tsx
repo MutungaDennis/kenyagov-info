@@ -82,29 +82,9 @@ export default function SchoolProfile({ school }: { school: Profile }) {
             </li>)}
           </ul>
         </section>}
-        {sources.length > 0 && <section className="govuk-!-margin-bottom-7" aria-labelledby="school-sources-heading">
-          <h2 id="school-sources-heading" className="govuk-heading-m">Sources</h2>
-          <p className="govuk-body">These sources were used to compile information about this school.</p>
-          <ul className="govuk-list govuk-list--bullet">
-            {sources.map((record) => <li key={record.id}>
-              {record.source?.source_url && /^https?:\/\//i.test(record.source.source_url)
-                ? <a className="govuk-link" href={record.source.source_url} target="_blank" rel="noopener noreferrer">{record.source.title}</a>
-                : <span>{record.source?.title}</span>}
-              {record.source?.publisher ? ` — ${record.source.publisher}` : ""}
-              {record.source?.reference_year ? ` (${record.source.reference_year})` : record.source?.publication_date ? ` (${formatDate(record.source.publication_date)})` : ""}
-              {record.source?.licence ? `; ${record.source.licence}` : ""}
-            </li>)}
-          </ul>
-        </section>}
       </div><aside className="govuk-grid-column-one-third">
-        <div className="govuk-inset-text">
-          <h2 className="govuk-heading-s">Information updated</h2>
-          <p className="govuk-body-s">Page created: {formatDate(school.created_at)}.</p>
-          <p className="govuk-body-s govuk-!-margin-bottom-0">Last updated: {formatDate(school.updated_at)}.</p>
-        </div>
-        {(hasSchoolValue(school.verification_status) || school.last_verified_at) && <div className="govuk-inset-text"><h2 className="govuk-heading-s">About this information</h2>
+        {school.last_verified_at && <div className="govuk-inset-text"><h2 className="govuk-heading-s">About this information</h2>
           <p className="govuk-body-s">School records come from the cited sources. Missing information does not mean a service or facility is unavailable.</p>
-          {hasSchoolValue(school.verification_status) && <p className="govuk-body-s">Verification: {schoolValue(school.verification_status)}.</p>}
           {school.last_verified_at && <p className="govuk-body-s">Last verified: {new Date(school.last_verified_at).toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric",timeZone:"UTC"})}.</p>}
           <p className="govuk-body-s">Confirm admission arrangements and current facilities with the school.</p>
         </div>}
@@ -112,6 +92,25 @@ export default function SchoolProfile({ school }: { school: Profile }) {
         <ul className="govuk-list"><li><Link className="govuk-link" href="/government/institutions?schools=show#public-schools">Find another public school</Link></li>
           <li><Link className="govuk-link" href="/government/institutions/ministry-education">Ministry of Education</Link></li></ul>
       </aside></div>
+      {sources.length > 0 && <section className="govuk-!-margin-top-6 govuk-!-margin-bottom-6" aria-labelledby="school-sources-heading">
+        <h2 id="school-sources-heading" className="govuk-heading-m">Sources</h2>
+        <p className="govuk-body">These are the sources cited for information on this page.</p>
+        <ul className="govuk-list govuk-list--bullet">
+          {sources.map((record) => <li key={record.id}>
+            {record.source?.source_url && /^https?:\/\//i.test(record.source.source_url)
+              ? <a className="govuk-link" href={record.source.source_url} target="_blank" rel="noopener noreferrer">{record.source.title}</a>
+              : <span>{record.source?.title}</span>}
+            {record.source?.publisher ? ` — ${record.source.publisher}` : ""}
+            {record.source?.reference_year ? ` (${record.source.reference_year})` : record.source?.publication_date ? ` (${formatDate(record.source.publication_date)})` : ""}
+            {record.source?.licence ? `; ${record.source.licence}` : ""}
+          </li>)}
+        </ul>
+      </section>}
+      <div className="govuk-inset-text govuk-!-margin-top-6">
+        <h2 className="govuk-heading-s">Information updated</h2>
+        <p className="govuk-body-s">Page created: {formatDate(school.created_at)}.</p>
+        <p className="govuk-body-s govuk-!-margin-bottom-0">Last updated: {formatDate(school.updated_at)}.</p>
+      </div>
     </main>
   </div>;
 }
