@@ -25,6 +25,11 @@ export async function PATCH(request: Request, context: Context) {
   if (!z.uuid().safeParse(id).success) return reply({ error: "Invalid school ID" }, 400);
   const parsed = schoolEditSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return reply({ error: parsed.error.issues.map(issue => `${issue.path.join(".")}: ${issue.message}`).join("; ") }, 400);
+  const { data: existingSchool, error: existingSchoolError } = await auth.supabase
+    .from("education_schools").select("county_code,sub_county_id").eq("id", id).maybeSingle();
+  if (existingSchoolError) return reply({ error: "Could not load school" }, 500);
+  if (!existingSchool) return reply({ error: "School not found" }, 404);
+
   const updates: Record<string, unknown> = { ...parsed.data };
   if (parsed.data.county_code !== undefined && parsed.data.county_code !== null) {
     const { data: county, error: countyError } = await auth.supabase
@@ -32,14 +37,20 @@ export async function PATCH(request: Request, context: Context) {
     if (countyError || !county) return reply({ error: "Select a valid county" }, 400);
     updates.county = county.name;
   }
-  if (parsed.data.sub_county_id !== undefined && parsed.data.sub_county_id !== null) {
+  const effectiveCountyCode = parsed.data.county_code !== undefined
+    ? parsed.data.county_code
+    : existingSchool.county_code;
+  const effectiveSubCountyId = parsed.data.sub_county_id !== undefined
+    ? parsed.data.sub_county_id
+    : existingSchool.sub_county_id;
+  if (effectiveSubCountyId !== null) {
     const { data: subCounty, error: subCountyError } = await auth.supabase
-      .from("education_sub_counties").select("name,county_code").eq("id", parsed.data.sub_county_id).maybeSingle();
+      .from("education_sub_counties").select("name,county_code").eq("id", effectiveSubCountyId).maybeSingle();
     if (subCountyError || !subCounty) return reply({ error: "Select a valid sub-county" }, 400);
-    if (parsed.data.county_code !== undefined && subCounty.county_code !== parsed.data.county_code) {
+    if (effectiveCountyCode === null || subCounty.county_code !== effectiveCountyCode) {
       return reply({ error: "The sub-county must belong to the selected county" }, 400);
     }
-    updates.sub_county = subCounty.name;
+    if (parsed.data.sub_county_id !== undefined) updates.sub_county = subCounty.name;
   }
   if (parsed.data.constituency_id !== undefined && parsed.data.constituency_id !== null) {
     const { data: constituency, error: constituencyError } = await auth.supabase

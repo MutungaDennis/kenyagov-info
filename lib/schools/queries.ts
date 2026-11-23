@@ -98,10 +98,10 @@ export const getPublicSchool = cache(async (slug: string): Promise<SchoolProfile
       .eq("school_id", school.id).eq("is_published", true)
       .order("start_date", { ascending: false, nullsFirst: false }),
   ]);
-  if (sourceResult.error) throw new Error("The school directory is temporarily unavailable.");
+  if (sourceResult.error || officialResult.error) throw new Error("The school directory is temporarily unavailable.");
   return {
     ...school,
     sources: (sourceResult.data ?? []) as unknown as SchoolProfile["sources"],
-    officials: officialResult.error ? [] : (officialResult.data ?? []) as SchoolProfile["officials"],
+    officials: (officialResult.data ?? []) as SchoolProfile["officials"],
   } as unknown as SchoolProfile;
 });

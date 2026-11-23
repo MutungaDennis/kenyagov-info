@@ -82,13 +82,21 @@ export default function SchoolOfficialsEditor({ schoolId }: Props) {
   }
 
   async function removeOfficial(id: string) {
-    if (!window.confirm("Remove this official’s service record?")) return;
-    const response = await fetch(`/api/admin/schools/${schoolId}/officials/${id}`, { method: "DELETE" });
-    const body = await response.json();
-    if (!response.ok) { setMessage(body.error || "Could not remove official"); return; }
-    if (editingId === id) { setEditingId(null); setDraft(blankDraft); }
-    setOfficials((current) => current.filter((official) => official.id !== id));
-    setMessage("Official service record removed.");
+    if (saving || !window.confirm("Remove this official’s service record?")) return;
+    setSaving(true);
+    setMessage("");
+    try {
+      const response = await fetch(`/api/admin/schools/${schoolId}/officials/${id}`, { method: "DELETE" });
+      const body = await response.json();
+      if (!response.ok) throw new Error(body.error || "Could not remove official");
+      if (editingId === id) { setEditingId(null); setDraft(blankDraft); }
+      setOfficials((current) => current.filter((official) => official.id !== id));
+      setMessage("Official service record removed.");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Could not remove official");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return <section className="govuk-!-margin-top-7 govuk-!-margin-bottom-7" aria-labelledby="school-officials-admin-heading">
@@ -102,7 +110,7 @@ export default function SchoolOfficialsEditor({ schoolId }: Props) {
           <strong>{official.full_name}</strong> — {official.role_title}
           <span className="govuk-body-s">{official.start_date ? ` · From ${official.start_date}` : ""}{official.end_date ? ` to ${official.end_date}` : " · Current"}{official.is_published ? " · Published" : " · Hidden"}</span><br />
           <button type="button" className="govuk-button govuk-button--secondary govuk-!-margin-bottom-1" onClick={() => startEditing(official)}>Edit</button>{" "}
-          <button type="button" className="govuk-button govuk-button--secondary govuk-!-margin-bottom-1" onClick={() => void removeOfficial(official.id)}>Remove</button>
+          <button type="button" className="govuk-button govuk-button--secondary govuk-!-margin-bottom-1" disabled={saving} onClick={() => void removeOfficial(official.id)}>Remove</button>
         </li>)}
       </ul>}
     <form onSubmit={save} className="govuk-!-margin-top-5">

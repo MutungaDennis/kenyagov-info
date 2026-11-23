@@ -73,15 +73,22 @@ export default function SchoolSourcesEditor({ schoolId }: Props) {
   }
 
   async function removeSource(id: string) {
-    if (!window.confirm("Remove this source from the school? The shared source record will remain.")) return;
+    if (saving || !window.confirm("Remove this source from the school? The shared source record will remain.")) return;
+    setSaving(true);
     setMessage("");
-    const response = await fetch(`/api/admin/schools/${schoolId}/sources`, {
-      method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }),
-    });
-    const body = await response.json();
-    if (!response.ok) { setMessage(body.error || "Could not remove source"); return; }
-    setSources((current) => current.filter((source) => source.id !== id));
-    setMessage("Source removed from this school.");
+    try {
+      const response = await fetch(`/api/admin/schools/${schoolId}/sources`, {
+        method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }),
+      });
+      const body = await response.json();
+      if (!response.ok) throw new Error(body.error || "Could not remove source");
+      setSources((current) => current.filter((source) => source.id !== id));
+      setMessage("Source removed from this school.");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Could not remove source");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return <section className="govuk-!-margin-top-7 govuk-!-margin-bottom-7" aria-labelledby="school-sources-admin-heading">
@@ -95,7 +102,7 @@ export default function SchoolSourcesEditor({ schoolId }: Props) {
           <strong>{record.source?.title ?? "Untitled source"}</strong>
           {record.source?.publisher ? ` — ${record.source.publisher}` : ""}
           {record.source?.source_url && <><br /><a className="govuk-link" href={record.source.source_url} target="_blank" rel="noopener noreferrer">{record.source.source_url}</a></>}
-          <br /><button type="button" className="govuk-button govuk-button--secondary govuk-!-margin-top-2 govuk-!-margin-bottom-0" onClick={() => void removeSource(record.id)}>Remove from this school</button>
+          <br /><button type="button" className="govuk-button govuk-button--secondary govuk-!-margin-top-2 govuk-!-margin-bottom-0" disabled={saving} onClick={() => void removeSource(record.id)}>Remove from this school</button>
         </li>)}
       </ul>}
     <form onSubmit={addSource} className="govuk-!-margin-top-5">
