@@ -146,14 +146,14 @@ export default function SchoolEditor() {
       </select>
       <label className="govuk-label" htmlFor="school-description">Description</label>
       <textarea id="school-description" className="govuk-textarea govuk-!-margin-bottom-5" rows={6} maxLength={10000} value={school.description || ""} onChange={e => setSchool({ ...school, description: e.target.value || null })} />
-      <SchoolDropdown label="School type" value={school.institution_type || ""} options={["regular", "special", "integrated", "ecde_centre", "hospital_school", "other"]} onChange={value => setSchool({ ...school, institution_type: value || null })} />
+      <SchoolDropdown label="School type" value={school.institution_type || ""} options={["regular", "special", "rehabilitation", "ecde_centre", "hospital_school", "other"]} onChange={value => setSchool({ ...school, institution_type: value || null })} />
       <SchoolDropdown label="School category" value={school.moe_category || ""} options={["national", "extra_county", "county", "sub_county", "special_needs", "integrated", "private", "other", "unknown"]} onChange={value => setSchool({ ...school, moe_category: value || null })} />
-      <SchoolDropdown label="Learner gender" value={school.gender_type || ""} options={["boys", "girls", "mixed"]} onChange={value => setSchool({ ...school, gender_type: value || null })} />
-      <SchoolDropdown label="Attendance arrangement" value={school.accommodation_type || ""} options={["day", "boarding", "partial_boarding"]} onChange={value => setSchool({ ...school, accommodation_type: value || null })} />
-      <SchoolDropdown label="Registration status" value={school.registration_status || ""} options={["registered", "provisional", "unregistered", "suspended", "unknown"]} onChange={value => setSchool({ ...school, registration_status: value || null })} />
+      <SchoolDropdown label="Learner gender" value={school.gender_type || ""} options={["boys", "girls", "mixed", "unknown"]} onChange={value => setSchool({ ...school, gender_type: value || null })} />
+      <SchoolDropdown label="Attendance arrangement" value={school.accommodation_type || ""} options={["day", "boarding", "day_and_boarding", "unknown"]} onChange={value => setSchool({ ...school, accommodation_type: value || null })} />
+      <SchoolDropdown label="Registration status" value={school.registration_status || ""} options={["registered", "provisional", "unverified", "unknown"]} onChange={value => setSchool({ ...school, registration_status: value || null })} />
       <label className="govuk-label" htmlFor="sponsor-name">Sponsor</label>
       <input id="sponsor-name" className="govuk-input govuk-!-margin-bottom-5" value={school.sponsor_name || ""} onChange={e => setSchool({ ...school, sponsor_name: e.target.value || null })} />
-      <SchoolDropdown label="Special-needs provision" value={school.special_needs_status || ""} options={["not_applicable", "inclusive", "special_school", "resource_unit", "integrated", "unknown"]} onChange={value => setSchool({ ...school, special_needs_status: value || null })} />
+      <SchoolDropdown label="Special-needs provision" value={school.special_needs_status || ""} options={["regular", "integrated_sne", "exclusive_sne", "special_unit", "unknown"]} onChange={value => setSchool({ ...school, special_needs_status: value || null })} />
       <fieldset className="govuk-fieldset govuk-!-margin-bottom-5">
         <legend className="govuk-fieldset__legend govuk-fieldset__legend--s">Special-needs categories</legend>
         <div className="govuk-hint">Select all categories that apply.</div>

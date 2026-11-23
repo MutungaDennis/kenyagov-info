@@ -9,13 +9,13 @@ export const schoolEditSchema = z.object({
   is_published: z.boolean().optional(),
   short_name: z.string().trim().max(100).nullable().optional(),
   operational_status: z.enum(["operational", "temporarily_closed", "closed", "merged", "unknown"]).nullable().optional(),
-  institution_type: z.string().trim().max(100).nullable().optional(),
+  institution_type: z.enum(["regular", "special", "rehabilitation", "ecde_centre", "hospital_school", "other"]).nullable().optional(),
   moe_category: z.string().trim().max(100).nullable().optional(),
-  gender_type: z.string().trim().max(100).nullable().optional(),
-  accommodation_type: z.string().trim().max(100).nullable().optional(),
-  registration_status: z.string().trim().max(100).nullable().optional(),
+  gender_type: z.enum(["boys", "girls", "mixed", "unknown"]).nullable().optional(),
+  accommodation_type: z.enum(["day", "boarding", "day_and_boarding", "unknown"]).nullable().optional(),
+  registration_status: z.enum(["registered", "provisional", "unverified", "unknown"]).nullable().optional(),
   sponsor_name: z.string().trim().max(250).nullable().optional(),
-  special_needs_status: z.string().trim().max(150).nullable().optional(),
+  special_needs_status: z.enum(["regular", "integrated_sne", "exclusive_sne", "special_unit", "unknown"]).nullable().optional(),
   sne_categories: z.array(z.string().trim().min(1).max(150)).max(100).nullable().optional(),
   county: z.string().trim().max(100).nullable().optional(),
   county_code: z.number().int().min(1).max(500).nullable().optional(),
@@ -41,6 +41,11 @@ export const schoolEditSchema = z.object({
   website_url: z.url().refine(value => /^https?:\/\//i.test(value), "Use an HTTP or HTTPS address").nullable().optional(),
   total_enrollment: z.number().int().min(0).max(1000000).nullable().optional(),
   total_teachers: z.number().int().min(0).max(100000).nullable().optional(),
+}).strict();
+
+export const schoolCreateSchema = schoolEditSchema.extend({
+  county_code: z.number().int().min(1).max(500),
+  is_published: z.boolean().default(false),
 }).strict();
 
 export const schoolDeleteSchema = z.object({

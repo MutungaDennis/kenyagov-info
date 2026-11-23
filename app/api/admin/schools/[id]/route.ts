@@ -1,5 +1,6 @@
 import { requireAdminApi } from "@/lib/admin-api";
 import { schoolEditSchema, schoolDeleteSchema } from "@/lib/schools/admin-schema";
+import { schoolWriteFailure } from "@/lib/schools/write-error";
 import { z } from "zod";
 
 type Context = { params: Promise<{ id: string }> };
@@ -79,8 +80,9 @@ export async function PATCH(request: Request, context: Context) {
     updated_at: new Date().toISOString(),
   }).eq("id", id).select(fields).maybeSingle();
   if (error) {
-    if (/slug|url/i.test(error.message)) return reply({ error: "That URL is already in use or is not a valid school URL." }, 409);
-    return reply({ error: "Could not save school" }, 500);
+    const failure = schoolWriteFailure(error);
+    console.error("Could not save school:", { code: error.code });
+    return reply({ error: failure.message }, failure.status);
   }
   return data ? reply(data) : reply({ error: "School not found" }, 404);
 }

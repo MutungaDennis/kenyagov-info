@@ -263,6 +263,7 @@ export default function SchoolsAdminDirectory() {
         <span className="govuk-caption-xl">Education records</span>
         <h1 className="govuk-heading-xl govuk-!-margin-bottom-4">Kenyan schools directory</h1>
         <p className="govuk-body-l">Manage public and private school records. Only published public schools appear in the public institutions directory.</p>
+        <Link className="govuk-button" href={adminPath("schools/new")}>Add a school</Link>
 
         {errorMessage ? (
           <div className="govuk-error-summary" data-module="govuk-error-summary">
