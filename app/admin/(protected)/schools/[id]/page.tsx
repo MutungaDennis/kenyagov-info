@@ -76,6 +76,8 @@ export default function SchoolEditor() {
   const [savedName, setSavedName] = useState("");
   const { id } = useParams<{ id: string }>();
   const [school, setSchool] = useState<Record | null>(null);
+  const [savedSchool, setSavedSchool] = useState<Record | null>(null);
+  const hasUnsavedChanges = Boolean(school && savedSchool && JSON.stringify(school) !== JSON.stringify(savedSchool));
   const [geography, setGeography] = useState<GeographyOptions>({ counties: [], subCounties: [], constituencies: [], wards: [] });
   const [geographyLoading, setGeographyLoading] = useState(true);
   const [message, setMessage] = useState("");
@@ -86,7 +88,7 @@ export default function SchoolEditor() {
       const body = await response.json();
       if (!response.ok) throw new Error(body.error);
       const normalized = normalizeUnknownValues(body);
-      setSchool(normalized); setSavedName(normalized.official_name);
+      setSchool(normalized); setSavedSchool(normalized); setSavedName(normalized.official_name);
     }).catch(error => { if (error.name !== "AbortError") setMessage(error.message); });
     return () => controller.abort();
   }, [id]);
@@ -120,7 +122,7 @@ export default function SchoolEditor() {
       const body = await response.json();
       if (!response.ok) throw new Error(body.error);
       const normalized = normalizeUnknownValues(body);
-      setSchool(normalized); setSavedName(normalized.official_name); setMessage("School saved. Public visibility and government responsibility have been updated.");
+      setSchool(normalized); setSavedSchool(normalized); setSavedName(normalized.official_name); setMessage("School saved. Public visibility and government responsibility have been updated.");
     } catch (error) { setMessage(error instanceof Error ? error.message : "Could not save school"); }
     finally { setSaving(false); }
   }
@@ -163,17 +165,20 @@ export default function SchoolEditor() {
       <select id="school-tier" className="govuk-select govuk-!-margin-bottom-5" value={school.main_tier || ""} onChange={e => setSchool({ ...school, main_tier: e.target.value || null })}>
         <option value="">Not recorded</option>{Object.entries(SCHOOL_LEVELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
       </select>
+      {school.main_tier === "senior_secondary" && <>
+        <SchoolDropdown label="Senior school cluster" value={school.moe_category || ""} options={[
+          { value: "c1", label: "Cluster 1 (C1) — former national schools" },
+          { value: "c2", label: "Cluster 2 (C2) — former extra-county schools" },
+          { value: "c3", label: "Cluster 3 (C3) — former county schools" },
+          { value: "c4", label: "Cluster 4 (C4) — former sub-county schools" },
+        ]} onChange={value => setSchool({ ...school, moe_category: value || null })} />
+        <p className="govuk-hint">Choose the current CBE cluster; the former school categories are included as context, not as a substitute for official placement.</p>
+      </>}
       <h3 className="govuk-heading-s govuk-!-margin-top-5">About the school</h3>
       <label className="govuk-label" htmlFor="school-description">Description</label>
       <textarea id="school-description" className="govuk-textarea govuk-!-margin-bottom-5" rows={6} maxLength={10000} value={school.description || ""} onChange={e => setSchool({ ...school, description: e.target.value || null })} />
       <SchoolDropdown label="School type" value={school.institution_type || ""} options={["regular", "special", "rehabilitation", "ecde_centre", "hospital_school", "other"]} onChange={value => setSchool({ ...school, institution_type: value || null })} />
-      <SchoolDropdown label={school.main_tier === "senior_secondary" ? "Senior school cluster" : "School category"} value={school.moe_category || ""} options={school.main_tier === "senior_secondary" ? [
-        { value: "c1", label: "Cluster 1 (C1) — former national schools" },
-        { value: "c2", label: "Cluster 2 (C2) — former extra-county schools" },
-        { value: "c3", label: "Cluster 3 (C3) — former county schools" },
-        { value: "c4", label: "Cluster 4 (C4) — former sub-county schools" },
-      ] : ["national", "extra_county", "county", "sub_county", "special_needs", "integrated", "private", "other"]} onChange={value => setSchool({ ...school, moe_category: value || null })} />
-      {school.main_tier === "senior_secondary" && <p className="govuk-hint">Choose the current CBE cluster; the former school categories are included as context, not as a substitute for official placement.</p>}
+      {school.main_tier !== "senior_secondary" && <SchoolDropdown label="School category" value={school.moe_category || ""} options={["national", "extra_county", "county", "sub_county", "special_needs", "integrated", "private", "other"]} onChange={value => setSchool({ ...school, moe_category: value || null })} />}
       <SchoolDropdown label="Learner gender" value={school.gender_type || ""} options={["boys", "girls", "mixed"]} onChange={value => setSchool({ ...school, gender_type: value || null })} />
       <SchoolDropdown label="Attendance arrangement" value={school.accommodation_type || ""} options={["day", "boarding", "day_and_boarding"]} onChange={value => setSchool({ ...school, accommodation_type: value || null })} />
       <SchoolDropdown label="Registration status" value={school.registration_status || ""} options={["registered", "provisional", "unverified"]} onChange={value => setSchool({ ...school, registration_status: value || null })} />
@@ -240,7 +245,7 @@ export default function SchoolEditor() {
         <input id={key} className="govuk-input govuk-input--width-10" type="number" step="any" value={school[key] ?? ""} onChange={e => setSchool({ ...school, [key]: e.target.value === "" ? null : Number(e.target.value) })} />
       </div>)}
       <p className="govuk-hint">Changing the canonical URL keeps the previous address as a redirect. Source records and official service histories are retained.</p>
-      <button type="submit" className="govuk-button" disabled={saving}>{saving ? "Saving…" : "Save school"}</button>
+      <button type="submit" className="govuk-button" disabled={saving || !hasUnsavedChanges}>{saving ? "Saving…" : hasUnsavedChanges ? "Save School" : "No changes to save"}</button>
       {school.ownership === "public" && school.is_published && <p className="govuk-body"><Link className="govuk-link" href={`/government/institutions/${school.slug}`}>View public school profile</Link></p>}
     </form>}
     {school && <SchoolSourcesEditor schoolId={id} />}

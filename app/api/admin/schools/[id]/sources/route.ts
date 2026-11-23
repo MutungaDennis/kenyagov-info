@@ -76,6 +76,36 @@ export async function POST(request: Request, route: Context) {
   return reply(saved.data, existing ? 200 : 201);
 }
 
+export async function PATCH(request: Request, route: Context) {
+  const auth = await requireAdminApi();
+  if (!auth.ok) return auth.response;
+  const origin = request.headers.get("origin");
+  if (origin && origin !== new URL(request.url).origin) return reply({ error: "Invalid request origin" }, 403);
+  const { id: schoolId } = await route.params;
+  if (!z.uuid().safeParse(schoolId).success) return reply({ error: "Invalid school ID" }, 400);
+  const parsed = sourceSchema.extend({ id: z.uuid() }).strict().safeParse(await request.json().catch(() => null));
+  if (!parsed.success) return reply({ error: parsed.error.issues.map((issue) => issue.message).join("; ") }, 400);
+
+  const { data: schoolSource, error: linkError } = await auth.supabase.from("education_school_source_records")
+    .select("id,source_id").eq("school_id", schoolId).eq("id", parsed.data.id).maybeSingle();
+  if (linkError) return reply({ error: "Could not find the source linked to this school" }, 500);
+  if (!schoolSource) return reply({ error: "Source record not found" }, 404);
+
+  const { data: updatedSource, error: updateError } = await auth.supabase.from("education_data_sources")
+    .update({
+      title: parsed.data.title,
+      publisher: parsed.data.publisher,
+      source_url: parsed.data.source_url,
+      publication_date: parsed.data.publication_date ?? null,
+      reference_year: parsed.data.reference_year ?? null,
+      licence: parsed.data.licence ?? null,
+      notes: parsed.data.notes ?? null,
+    })
+    .eq("id", schoolSource.source_id).select("id").maybeSingle();
+  if (updateError) return reply({ error: "Could not update source details" }, 500);
+  return updatedSource ? reply({ updated: true }) : reply({ error: "Source details not found" }, 404);
+}
+
 export async function DELETE(request: Request, route: Context) {
   const auth = await requireAdminApi();
   if (!auth.ok) return auth.response;
