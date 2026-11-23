@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import { JsonLd } from "@/components/JsonLd";
+import ExternalLinkIcon from "@/components/govuk/ExternalLinkIcon";
 import { SITE_URL } from "@/lib/seo";
 import type { SchoolProfile as Profile } from "@/lib/schools/queries";
 import { hasSchoolValue, safeSchoolWebsite, schoolLevelLabel, schoolValue } from "@/lib/schools/types";
@@ -62,11 +63,23 @@ export default function SchoolProfile({ school }: { school: Profile }) {
           ["Address",schoolValue(school.physical_address),school.physical_address],["Postal address",schoolValue(school.postal_address),school.postal_address],
           ["Latitude",schoolValue(school.latitude),school.latitude],["Longitude",schoolValue(school.longitude),school.longitude],
           ...(typeof school.latitude === "number" && typeof school.longitude === "number" && Number.isFinite(school.latitude) && Number.isFinite(school.longitude)
-            ? [["Map", <a key="school-map-link" className="govuk-link" href={`https://www.google.com/maps/search/?api=1&query=${school.latitude},${school.longitude}`} target="_blank" rel="noopener noreferrer">Open this location in Google Maps</a>] as DetailRow]
+            ? [["Map", <a key="school-map-link" className="govuk-link" href={`https://www.google.com/maps/search/?api=1&query=${school.latitude},${school.longitude}`} target="_blank" rel="noopener noreferrer">Open this location in Google Maps<ExternalLinkIcon /></a>] as DetailRow]
             : []),
           ["Telephone",schoolValue(school.public_phone),school.public_phone],["Email",schoolValue(school.public_email),school.public_email],
-          ["Website",website ? <a className="govuk-link" href={website} rel="noopener noreferrer">Visit the school website</a> : "",website],
+          ["Website",website ? <a className="govuk-link" href={website} target="_blank" rel="noopener noreferrer">Visit the school website<ExternalLinkIcon /></a> : "",website],
         ]} />
+        {(school.nearbySchools ?? []).length > 0 && <section className="govuk-!-margin-bottom-7" aria-labelledby="nearby-schools-heading">
+          <h2 id="nearby-schools-heading" className="govuk-heading-m">Schools nearby</h2>
+          <p className="govuk-body">Schools in the same ward are listed first. Other nearby matches are based on recorded map coordinates.</p>
+          <ul className="govuk-list govuk-list--bullet">
+            {(school.nearbySchools ?? []).map((nearby) => <li key={nearby.id} className="govuk-!-margin-bottom-3">
+              <Link className="govuk-link" href={`/government/institutions/${nearby.slug}`}>{nearby.official_name}</Link>
+              <span className="govuk-body-s"> — {nearby.sameWard ? `Same ward${nearby.ward ? `: ${nearby.ward}` : ""}` : nearby.distanceKm !== null ? `${nearby.distanceKm < 1 ? "Less than 1" : Math.round(nearby.distanceKm)} km away` : "Nearby"}
+                {nearby.main_tier ? ` · ${schoolLevelLabel(nearby.main_tier)}` : ""}
+              </span>
+            </li>)}
+          </ul>
+        </section>}
         <Details title="School identifiers" rows={[["NEMIS code",schoolValue(school.nemis_code),school.nemis_code],["KNEC code",schoolValue(school.knec_code),school.knec_code],["TSC code",schoolValue(school.tsc_code),school.tsc_code]]} />
         <Details title="Recorded resources" rows={[
           ["Learners enrolled",schoolValue(school.total_enrollment),school.total_enrollment],["Teachers",schoolValue(school.total_teachers),school.total_teachers],
@@ -103,7 +116,7 @@ export default function SchoolProfile({ school }: { school: Profile }) {
         <ul className="govuk-list govuk-list--bullet">
           {sources.map((record) => <li key={record.id}>
             {record.source?.source_url && /^https?:\/\//i.test(record.source.source_url)
-              ? <a className="govuk-link" href={record.source.source_url} target="_blank" rel="noopener noreferrer">{record.source.title}</a>
+              ? <a className="govuk-link" href={record.source.source_url} target="_blank" rel="noopener noreferrer">{record.source.title}<ExternalLinkIcon /></a>
               : <span>{record.source?.title}</span>}
             {record.source?.publisher ? ` — ${record.source.publisher}` : ""}
             {record.source?.reference_year ? ` (${record.source.reference_year})` : record.source?.publication_date ? ` (${formatDate(record.source.publication_date)})` : ""}

@@ -1,7 +1,7 @@
 export const SCHOOL_LEVELS = {
   primary: "Primary schools (Grades 1–6)",
   junior: "Junior schools (Grades 7–9)",
-  senior_secondary: "Senior secondary / high schools",
+  senior_secondary: "Senior Secondary / High school",
   ecde: "Early childhood education",
 } as const;
 
