@@ -165,9 +165,10 @@ export default function SchoolEditor() {
       <select id="school-tier" className="govuk-select govuk-!-margin-bottom-5" value={school.main_tier || ""} onChange={e => setSchool({ ...school, main_tier: e.target.value || null })}>
         <option value="">Not recorded</option>{Object.entries(SCHOOL_LEVELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
       </select>
+      <div className="govuk-hint">Comprehensive schools run from Pre-Primary (PP1–PP2) through Grade 9 under one administration. Standalone primary schools end at Grade 6; standalone junior schools serve Grades 7–9.</div>
       {school.main_tier === "senior_secondary" && <>
         <SchoolDropdown label="Senior school cluster" value={school.moe_category || ""} options={[
-          { value: "c1", label: "Cluster 1 (C1) — former national schools" },
+          { value: "c1", label: "Cluster 1 (C1) — former national schools and schools elevated to C1" },
           { value: "c2", label: "Cluster 2 (C2) — former extra-county schools" },
           { value: "c3", label: "Cluster 3 (C3) — former county schools" },
           { value: "c4", label: "Cluster 4 (C4) — former sub-county schools" },
@@ -185,7 +186,7 @@ export default function SchoolEditor() {
       <label className="govuk-label" htmlFor="sponsor-name">Sponsor</label>
       <input id="sponsor-name" className="govuk-input govuk-!-margin-bottom-5" value={school.sponsor_name || ""} onChange={e => setSchool({ ...school, sponsor_name: e.target.value || null })} />
       <h3 className="govuk-heading-s govuk-!-margin-top-5">Inclusion and support</h3>
-      <SchoolDropdown label="Special-needs provision" value={school.special_needs_status || ""} options={["regular", "integrated_sne", "exclusive_sne", "special_unit"]} onChange={value => setSchool({ ...school, special_needs_status: value || null })} />
+      <SchoolDropdown label="Special-needs provision" value={school.special_needs_status || ""} options={[{ value: "regular", label: "Regular provision" }, { value: "integrated_sne", label: "Integrated SNE (Special Needs Education)" }, { value: "exclusive_sne", label: "Exclusive SNE (Special Needs Education)" }, { value: "special_unit", label: "Special needs unit" }]} onChange={value => setSchool({ ...school, special_needs_status: value || null })} />
       {school.special_needs_status && school.special_needs_status !== "regular" && school.special_needs_status !== "unknown" && <fieldset className="govuk-fieldset govuk-!-margin-bottom-5">
         <legend className="govuk-fieldset__legend govuk-fieldset__legend--s">Special-needs categories</legend>
         <div className="govuk-hint">Select all categories that apply.</div>

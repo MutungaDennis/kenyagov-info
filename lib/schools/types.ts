@@ -1,6 +1,7 @@
 export const SCHOOL_LEVELS = {
-  primary: "Primary schools (Grades 1–6)",
-  junior: "Junior schools (Grades 7–9)",
+  comprehensive: "Comprehensive schools (PP1–PP2 through Grade 9)",
+  primary: "Standalone primary schools (Grades 1–6 only)",
+  junior: "Standalone junior schools (Grades 7–9 only)",
   senior_secondary: "Senior Secondary / High school",
   ecde: "Early childhood education",
 } as const;
@@ -57,7 +58,7 @@ export function schoolSearchTerm(value: string): string {
 }
 
 export function schoolDirectorate(level: string | null): string | null {
-  if (level === "primary" || level === "junior") return "directorate-primary-education";
+  if (level === "comprehensive" || level === "primary" || level === "junior") return "directorate-primary-education";
   if (level === "senior_secondary") return "directorate-secondary-education";
   return null;
 }

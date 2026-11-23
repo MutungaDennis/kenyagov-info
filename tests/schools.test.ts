@@ -124,6 +124,10 @@ describe("school administration and display", () => {
     expect(schoolEditSchema.safeParse({ ...valid, slug: "Not a valid URL" }).success).toBe(false);
     expect(schoolEditSchema.safeParse({ ...valid, ownership: "PUBLIC" }).success).toBe(false);
   });
+  it("accepts comprehensive schools and maps them to primary education", () => {
+    expect(schoolEditSchema.safeParse({ ...valid, main_tier: "comprehensive" }).success).toBe(true);
+    expect(schoolDirectorate("comprehensive")).toBe("directorate-primary-education");
+  });
   it("maps junior education correctly and leaves ECDE unassigned", () => {
     expect(schoolDirectorate("junior")).toBe("directorate-primary-education");
     expect(schoolDirectorate("senior_secondary")).toBe("directorate-secondary-education");
