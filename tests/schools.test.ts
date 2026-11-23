@@ -2,6 +2,7 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import SchoolProfile from "@/components/schools/SchoolProfile";
+import EducationDirectorateLanding, { isEducationDirectorateSlug } from "@/components/schools/EducationDirectorateLanding";
 import { schoolEditSchema } from "@/lib/schools/admin-schema";
 import { hasSchoolValue, safeSchoolWebsite, schoolDirectorate, schoolSearchTerm, schoolValue } from "@/lib/schools/types";
 
@@ -10,11 +11,34 @@ vi.mock("@/lib/supabase/public", () => ({ createPublicClient: () => db }));
 import { getPublicSchool } from "@/lib/schools/queries";
 
 function response(data: unknown, error: unknown = null) {
-  const query = { select: vi.fn(), eq: vi.fn(), order: vi.fn(), maybeSingle: vi.fn().mockResolvedValue({ data, error }) };
+  const result = { data, error };
+  const query = Object.assign(Promise.resolve(result), {
+    select: vi.fn(),
+    eq: vi.fn(),
+    order: vi.fn(),
+    maybeSingle: vi.fn().mockResolvedValue(result),
+  });
   query.select.mockReturnValue(query); query.eq.mockReturnValue(query); query.order.mockReturnValue(query);
   return query;
 }
 beforeEach(() => db.from.mockReset());
+
+describe("education directorate routes", () => {
+  it("renders separate primary and secondary school landing pages for their institution URLs", () => {
+    const primarySlug = "directorate-primary-education";
+    const secondarySlug = "directorate-secondary-education";
+    const primary = renderToStaticMarkup(createElement(EducationDirectorateLanding, { slug: primarySlug }));
+    const secondary = renderToStaticMarkup(createElement(EducationDirectorateLanding, { slug: secondarySlug }));
+
+    expect(isEducationDirectorateSlug(primarySlug)).toBe(true);
+    expect(isEducationDirectorateSlug(secondarySlug)).toBe(true);
+    expect(isEducationDirectorateSlug("not-an-education-directorate")).toBe(false);
+    expect(primary).toContain("Directorate of Primary Education");
+    expect(primary).toContain("Search schools by name or location");
+    expect(secondary).toContain("Directorate of Secondary Education");
+    expect(secondary).toContain("Search schools by name or location");
+  });
+});
 
 describe("public school lookup", () => {
   it("restricts canonical and legacy URL lookups to public ownership", async () => {
@@ -32,6 +56,18 @@ describe("public school lookup", () => {
   it("does not expose a private school through a legacy alias", async () => {
     db.from.mockReturnValueOnce(response(null)).mockReturnValueOnce(response({ school_id: "private-1" })).mockReturnValueOnce(response(null));
     expect(await getPublicSchool("private-old")).toBeNull();
+  });
+  it("keeps a school profile available when optional source and official records fail", async () => {
+    const school = { id: "school-optional", slug: "school-optional" };
+    db.from.mockReturnValueOnce(response(school))
+      .mockReturnValueOnce(response(null, { message: "source records unavailable" }))
+      .mockReturnValueOnce(response(null, { message: "officials unavailable" }));
+
+    await expect(getPublicSchool("school-optional")).resolves.toMatchObject({
+      slug: "school-optional",
+      sources: [],
+      officials: [],
+    });
   });
   it("reports database failure instead of pretending a school does not exist", async () => {
     db.from.mockReturnValueOnce(response(null, { message: "unavailable" }));
