@@ -29,7 +29,7 @@ export default function NewSchoolPage() {
   const [slug, setSlug] = useState("");
   const [slugEdited, setSlugEdited] = useState(false);
   const [ownership, setOwnership] = useState("public");
-  const [mainTier, setMainTier] = useState("primary");
+  const [mainTier, setMainTier] = useState("comprehensive");
   const [seniorCluster, setSeniorCluster] = useState("");
   const [institutionType, setInstitutionType] = useState("regular");
   const [countyCode, setCountyCode] = useState("");
@@ -111,13 +111,14 @@ export default function NewSchoolPage() {
         <select id="new-school-level" className="govuk-select" value={mainTier} onChange={event => { setMainTier(event.target.value); if (event.target.value !== "senior_secondary") setSeniorCluster(""); }}>
           {Object.entries(SCHOOL_LEVELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
         </select>
+        <div className="govuk-hint">Comprehensive schools run from Pre-Primary (PP1–PP2) through Grade 9 under one administration. Standalone primary schools end at Grade 6; standalone junior schools serve Grades 7–9.</div>
       </div>
       {mainTier === "senior_secondary" && <div className="govuk-form-group">
         <label className="govuk-label" htmlFor="new-school-cluster">Senior school cluster</label>
         <div className="govuk-hint" id="new-school-cluster-hint">Choose the school&apos;s CBE cluster.</div>
         <select id="new-school-cluster" className="govuk-select" aria-describedby="new-school-cluster-hint" value={seniorCluster} onChange={event => setSeniorCluster(event.target.value)}>
           <option value="">Not recorded</option>
-          <option value="c1">Cluster 1 (C1) — former national schools</option>
+          <option value="c1">Cluster 1 (C1) — former national schools and schools elevated to C1</option>
           <option value="c2">Cluster 2 (C2) — former extra-county schools</option>
           <option value="c3">Cluster 3 (C3) — former county schools</option>
           <option value="c4">Cluster 4 (C4) — former sub-county schools</option>

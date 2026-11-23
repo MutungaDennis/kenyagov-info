@@ -4,7 +4,7 @@ export const schoolEditSchema = z.object({
   official_name: z.string().trim().min(2).max(250),
   slug: z.string().trim().min(1).max(160).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Use a lowercase, hyphen-separated GOV.UK-style URL").optional(),
   ownership: z.enum(["public", "private", "community", "faith_based", "other", "unknown"]),
-  main_tier: z.enum(["primary", "junior", "senior_secondary", "ecde"]).nullable(),
+  main_tier: z.enum(["comprehensive", "primary", "junior", "senior_secondary", "ecde"]).nullable(),
   description: z.string().trim().max(10000).nullable(),
   is_published: z.boolean().optional(),
   short_name: z.string().trim().max(100).nullable().optional(),
