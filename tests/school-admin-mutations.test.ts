@@ -2,22 +2,57 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const gate = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/admin-api", () => ({ requireAdminApi: gate, slugify: (value: string) => value }));
 import { DELETE, PATCH } from "@/app/api/admin/schools/[id]/route";
+import { POST as createSchool } from "@/app/api/admin/schools/route";
 import { DELETE as deleteInstitution } from "@/app/api/admin/institutions/[id]/route";
 import { NextRequest } from "next/server";
 
 const id = "1a04579d-9fe5-4b91-a92a-bc5d05e01701";
 const context = { params: Promise.resolve({ id }) };
 const request = (method: string, body: unknown, origin = "https://example.org") => new Request(`https://example.org/api/admin/schools/${id}`, { method, headers: { "Content-Type": "application/json", origin }, body: JSON.stringify(body) });
-const query = { delete: vi.fn(), update: vi.fn(), eq: vi.fn(), select: vi.fn(), maybeSingle: vi.fn() };
+const query = { delete: vi.fn(), update: vi.fn(), insert: vi.fn(), eq: vi.fn(), select: vi.fn(), maybeSingle: vi.fn(), single: vi.fn() };
 const from = vi.fn();
 beforeEach(() => {
   vi.clearAllMocks();
-  for (const method of [query.delete, query.update, query.eq, query.select]) method.mockReturnValue(query);
+  for (const method of [query.delete, query.update, query.insert, query.eq, query.select]) method.mockReturnValue(query);
   query.maybeSingle.mockResolvedValue({ data: { id }, error: null });
+  query.single.mockResolvedValue({ data: { id, slug: "example-primary" }, error: null });
   from.mockReturnValue(query);
   gate.mockResolvedValue({ ok: true, supabase: { from } });
 });
 describe("school mutation safeguards", () => {
+  it("creates an unpublished school with a verified county name", async () => {
+    query.maybeSingle.mockResolvedValueOnce({ data: { name: "Nairobi" }, error: null });
+    const response = await createSchool(request("POST", {
+      official_name: "Example Primary",
+      slug: "example-primary",
+      ownership: "public",
+      main_tier: "primary",
+      institution_type: "regular",
+      county_code: 47,
+      description: null,
+    }));
+    expect(response.status).toBe(201);
+    expect(query.insert).toHaveBeenCalledWith(expect.objectContaining({
+      official_name: "Example Primary",
+      normalized_name: "example primary",
+      county: "Nairobi",
+      county_code: 47,
+      is_published: false,
+    }));
+  });
+  it("rejects school categories that the database does not allow", async () => {
+    const response = await createSchool(request("POST", {
+      official_name: "Example Primary",
+      slug: "example-primary",
+      ownership: "public",
+      main_tier: "primary",
+      institution_type: "integrated",
+      county_code: 47,
+      description: null,
+    }));
+    expect(response.status).toBe(400);
+    expect(from).not.toHaveBeenCalled();
+  });
   it("deletes only the school matching both ID and confirmed saved name", async () => {
     expect((await DELETE(request("DELETE", { confirmation: "Example Primary" }), context)).status).toBe(200);
     expect(query.eq).toHaveBeenCalledWith("id", id);
