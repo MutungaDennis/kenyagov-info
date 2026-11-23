@@ -3,6 +3,7 @@ import { createPublicClient } from "@/lib/supabase/public";
 import InstitutionProfileClient from "./InstitutionProfileClient";
 import { getPublicSchool } from "@/lib/schools/queries";
 import SchoolProfile from "@/components/schools/SchoolProfile";
+import EducationDirectorateLanding, { isEducationDirectorateSlug } from "@/components/schools/EducationDirectorateLanding";
 import InstitutionPeople from "@/components/institutions/InstitutionPeople";
 import InstitutionCommittees from "@/components/institutions/InstitutionCommittees";
 import { parliamentaryChamberForInstitution } from "@/lib/legislature/committees";
@@ -21,6 +22,10 @@ export const dynamic = "force-dynamic";
 export default async function InstitutionProfilePage({ params }: Props) {
   const { slug } = await params;
   if (!slug?.trim()) notFound();
+
+  if (isEducationDirectorateSlug(slug)) {
+    return <EducationDirectorateLanding slug={slug} />;
+  }
 
   const supabase = createPublicClient();
   let data: { id: string; status: string | null; record_kind?: string | null; slug?: string | null; name?: string | null } | null = null;
@@ -51,7 +56,14 @@ export default async function InstitutionProfilePage({ params }: Props) {
     error = current.error;
   }
 
-  if (error) throw new Error("The institution directory is temporarily unavailable.");
+  if (error) {
+    const school = await getPublicSchool(slug);
+    if (school) {
+      if (school.slug !== slug) permanentRedirect(`/government/institutions/${school.slug}`);
+      return <SchoolProfile school={school} />;
+    }
+    throw new Error("The institution directory is temporarily unavailable.");
+  }
 
   if (data) {
     if (data.record_kind === "temporary_body") {
