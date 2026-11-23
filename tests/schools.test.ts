@@ -80,10 +80,10 @@ describe("public school profile provenance", () => {
     const markup = renderToStaticMarkup(createElement(SchoolProfile, { school: {
       id: "school-1", slug: "example-school", official_name: "Example School", short_name: null,
       ownership: "public", main_tier: "primary", county: "Nairobi", sub_county: null,
-      county_code: 47, moe_category: null, gender_type: null, accommodation_type: null,
+      county_code: 47, moe_category: "c2", gender_type: null, accommodation_type: null,
       operational_status: "operational", description: null, institution_type: "regular",
       registration_status: null, constituency: null, ward: null, physical_address: null,
-      postal_address: null, latitude: null, longitude: null, public_phone: null, public_email: null,
+      postal_address: null, latitude: -1.2864, longitude: 36.8172, public_phone: null, public_email: null,
       website_url: null, nemis_code: null, knec_code: null, tsc_code: null, sponsor_name: null,
       special_needs_status: null, sne_categories: null, total_enrollment: null, total_teachers: null,
       water_source: null, power_source: null, internet_connectivity: null,
@@ -98,6 +98,10 @@ describe("public school profile provenance", () => {
         start_date: "2023-01-01", end_date: null, biography: null, photo_url: null }],
     } as never }));
     expect(markup).toContain("Kenya Schools dataset");
+    expect(markup).toContain("Cluster 2 (C2)");
+    expect(markup).toContain("https://www.google.com/maps/search/?api=1&amp;query=-1.2864,36.8172");
+    expect(schoolValue("day_and_boarding")).toBe("Day And Boarding");
+    expect(schoolValue("school@example.org")).toBe("school@example.org");
     expect(markup).toContain("https://example.org/schools");
     expect(markup).toContain("Page created: 1 January 2024");
     expect(markup).toContain("Last updated: 3 February 2025");

@@ -32,9 +32,16 @@ export function hasSchoolValue(value: unknown): boolean {
 
 export function schoolValue(value: unknown): string {
   if (!hasSchoolValue(value)) return "Not recorded";
-  if (Array.isArray(value)) return value.length ? value.join(", ") : "Not recorded";
+  if (Array.isArray(value)) return value.length ? value.map(formatSchoolLabel).join(", ") : "Not recorded";
   if (typeof value === "number") return value.toLocaleString("en-KE");
-  return String(value).replaceAll("_", " ");
+  return formatSchoolLabel(String(value));
+}
+
+function formatSchoolLabel(value: string): string {
+  const cluster = value.match(/^c([1-4])$/i);
+  if (cluster) return `Cluster ${cluster[1]} (C${cluster[1]})`;
+  if (!/^[a-z0-9]+(?:_[a-z0-9]+)*$/i.test(value)) return value;
+  return value.replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
 export function safeSchoolWebsite(value: string | null): string | null {
