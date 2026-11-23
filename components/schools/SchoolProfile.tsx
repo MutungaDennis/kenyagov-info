@@ -52,13 +52,18 @@ export default function SchoolProfile({ school }: { school: Profile }) {
           ["Day or boarding",schoolValue(school.accommodation_type),school.accommodation_type],["Operational status",schoolValue(school.operational_status),school.operational_status],
           ["Registration status",schoolValue(school.registration_status),school.registration_status],["Sponsor",schoolValue(school.sponsor_name),school.sponsor_name],
           ["Special needs provision",schoolValue(school.special_needs_status),school.special_needs_status],
-          ["Special-needs categories",schoolValue(school.sne_categories),school.sne_categories],
+          ...(school.special_needs_status && school.special_needs_status !== "regular" && school.special_needs_status !== "unknown" && school.sne_categories?.length
+            ? [["Special-needs categories",schoolValue(school.sne_categories),school.sne_categories] as DetailRow]
+            : []),
         ]} />
         <Details title="Location and contact" rows={[
           ["County",schoolValue(school.county),school.county],["Sub-county",schoolValue(school.sub_county),school.sub_county],
           ["Constituency",schoolValue(school.constituency),school.constituency],["Ward",schoolValue(school.ward),school.ward],
           ["Address",schoolValue(school.physical_address),school.physical_address],["Postal address",schoolValue(school.postal_address),school.postal_address],
           ["Latitude",schoolValue(school.latitude),school.latitude],["Longitude",schoolValue(school.longitude),school.longitude],
+          ...(typeof school.latitude === "number" && typeof school.longitude === "number" && Number.isFinite(school.latitude) && Number.isFinite(school.longitude)
+            ? [["Map", <a key="school-map-link" className="govuk-link" href={`https://www.google.com/maps/search/?api=1&query=${school.latitude},${school.longitude}`} target="_blank" rel="noopener noreferrer">Open this location in Google Maps</a>] as DetailRow]
+            : []),
           ["Telephone",schoolValue(school.public_phone),school.public_phone],["Email",schoolValue(school.public_email),school.public_email],
           ["Website",website ? <a className="govuk-link" href={website} rel="noopener noreferrer">Visit the school website</a> : "",website],
         ]} />

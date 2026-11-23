@@ -57,6 +57,19 @@ type Record = {
   verification_status: string | null;
 };
 
+function normalizeUnknownValues(record: Record): Record {
+  return {
+    ...record,
+    operational_status: record.operational_status === "unknown" ? null : record.operational_status,
+    institution_type: record.institution_type === "unknown" ? null : record.institution_type,
+    moe_category: record.moe_category === "unknown" ? null : record.moe_category,
+    gender_type: record.gender_type === "unknown" ? null : record.gender_type,
+    accommodation_type: record.accommodation_type === "unknown" ? null : record.accommodation_type,
+    registration_status: record.registration_status === "unknown" ? null : record.registration_status,
+    special_needs_status: record.special_needs_status === "unknown" ? null : record.special_needs_status,
+  };
+}
+
 export default function SchoolEditor() {
   const router = useRouter();
   const [confirmation, setConfirmation] = useState("");
@@ -72,7 +85,8 @@ export default function SchoolEditor() {
     fetch(`/api/admin/schools/${id}`, { signal: controller.signal }).then(async response => {
       const body = await response.json();
       if (!response.ok) throw new Error(body.error);
-      setSchool(body); setSavedName(body.official_name);
+      const normalized = normalizeUnknownValues(body);
+      setSchool(normalized); setSavedName(normalized.official_name);
     }).catch(error => { if (error.name !== "AbortError") setMessage(error.message); });
     return () => controller.abort();
   }, [id]);
@@ -105,7 +119,8 @@ export default function SchoolEditor() {
       const response = await fetch(`/api/admin/schools/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ official_name, slug, ownership, main_tier, description, is_published, short_name, operational_status, institution_type, moe_category, gender_type, accommodation_type, registration_status, sponsor_name, special_needs_status, sne_categories, county, county_code: selectedCountyCode, sub_county, sub_county_id: selectedSubCountyId, constituency, constituency_id: selectedConstituencyId, ward, ward_id: selectedWardId, physical_address, postal_address, latitude, longitude, public_phone, public_email, website_url, nemis_code, knec_code, tsc_code, total_enrollment, total_teachers, water_source, power_source, internet_connectivity, verification_status }) });
       const body = await response.json();
       if (!response.ok) throw new Error(body.error);
-      setSchool(body); setSavedName(body.official_name); setMessage("School saved. Public visibility and government responsibility have been updated.");
+      const normalized = normalizeUnknownValues(body);
+      setSchool(normalized); setSavedName(normalized.official_name); setMessage("School saved. Public visibility and government responsibility have been updated.");
     } catch (error) { setMessage(error instanceof Error ? error.message : "Could not save school"); }
     finally { setSaving(false); }
   }
@@ -132,29 +147,41 @@ export default function SchoolEditor() {
       </div></div>
       <h2 className="govuk-heading-m">School details</h2>
       <label className="govuk-label" htmlFor="school-name">Official name</label>
-      <input id="school-name" className="govuk-input govuk-!-margin-bottom-5" required minLength={2} maxLength={250} value={school.official_name} onChange={e => setSchool({ ...school, official_name: e.target.value })} />
+      <input id="school-name" className="govuk-input" required minLength={2} maxLength={250} value={school.official_name} onChange={e => setSchool({ ...school, official_name: e.target.value })} />
+      <label className="govuk-label" htmlFor="short_name">Short name</label>
+      <input id="short_name" className="govuk-input govuk-!-margin-bottom-5" value={school.short_name || ""} onChange={e => setSchool({ ...school, short_name: e.target.value || null })} />
       <label className="govuk-label" htmlFor="school-slug">Public school URL</label>
       <div className="govuk-hint" id="school-slug-hint">Use lowercase words separated by hyphens. Changing this URL keeps the old address redirecting to the new one.</div>
       <div className="govuk-input__wrapper govuk-!-margin-bottom-5"><span className="govuk-input__prefix" aria-hidden="true">/government/institutions/</span><input id="school-slug" aria-describedby="school-slug-hint" className="govuk-input" required pattern="[a-z0-9]+(-[a-z0-9]+)*" maxLength={160} value={school.slug} onChange={e => setSchool({ ...school, slug: e.target.value })} /></div>
       <label className="govuk-label" htmlFor="school-ownership">Ownership</label>
       <select id="school-ownership" className="govuk-select govuk-!-margin-bottom-5" value={school.ownership} onChange={e => setSchool({ ...school, ownership: e.target.value })}>
-        {["public", "private", "community", "faith_based", "other", "unknown"].map(value => <option key={value} value={value}>{value.replaceAll("_", " ")}</option>)}
+        {school.ownership === "unknown" && <option value="unknown">Not recorded</option>}
+        {["public", "private", "community", "faith_based", "other"].map(value => <option key={value} value={value}>{value.replaceAll("_", " ").replace(/\b\w/g, part => part.toUpperCase())}</option>)}
       </select>
+      <h3 className="govuk-heading-s govuk-!-margin-top-5">School classification</h3>
       <label className="govuk-label" htmlFor="school-tier">Main school level</label>
       <select id="school-tier" className="govuk-select govuk-!-margin-bottom-5" value={school.main_tier || ""} onChange={e => setSchool({ ...school, main_tier: e.target.value || null })}>
         <option value="">Not recorded</option>{Object.entries(SCHOOL_LEVELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
       </select>
+      <h3 className="govuk-heading-s govuk-!-margin-top-5">About the school</h3>
       <label className="govuk-label" htmlFor="school-description">Description</label>
       <textarea id="school-description" className="govuk-textarea govuk-!-margin-bottom-5" rows={6} maxLength={10000} value={school.description || ""} onChange={e => setSchool({ ...school, description: e.target.value || null })} />
       <SchoolDropdown label="School type" value={school.institution_type || ""} options={["regular", "special", "rehabilitation", "ecde_centre", "hospital_school", "other"]} onChange={value => setSchool({ ...school, institution_type: value || null })} />
-      <SchoolDropdown label="School category" value={school.moe_category || ""} options={["national", "extra_county", "county", "sub_county", "special_needs", "integrated", "private", "other", "unknown"]} onChange={value => setSchool({ ...school, moe_category: value || null })} />
-      <SchoolDropdown label="Learner gender" value={school.gender_type || ""} options={["boys", "girls", "mixed", "unknown"]} onChange={value => setSchool({ ...school, gender_type: value || null })} />
-      <SchoolDropdown label="Attendance arrangement" value={school.accommodation_type || ""} options={["day", "boarding", "day_and_boarding", "unknown"]} onChange={value => setSchool({ ...school, accommodation_type: value || null })} />
-      <SchoolDropdown label="Registration status" value={school.registration_status || ""} options={["registered", "provisional", "unverified", "unknown"]} onChange={value => setSchool({ ...school, registration_status: value || null })} />
+      <SchoolDropdown label={school.main_tier === "senior_secondary" ? "Senior school cluster" : "School category"} value={school.moe_category || ""} options={school.main_tier === "senior_secondary" ? [
+        { value: "c1", label: "Cluster 1 (C1) — former national schools" },
+        { value: "c2", label: "Cluster 2 (C2) — former extra-county schools" },
+        { value: "c3", label: "Cluster 3 (C3) — former county schools" },
+        { value: "c4", label: "Cluster 4 (C4) — former sub-county schools" },
+      ] : ["national", "extra_county", "county", "sub_county", "special_needs", "integrated", "private", "other"]} onChange={value => setSchool({ ...school, moe_category: value || null })} />
+      {school.main_tier === "senior_secondary" && <p className="govuk-hint">Choose the current CBE cluster; the former school categories are included as context, not as a substitute for official placement.</p>}
+      <SchoolDropdown label="Learner gender" value={school.gender_type || ""} options={["boys", "girls", "mixed"]} onChange={value => setSchool({ ...school, gender_type: value || null })} />
+      <SchoolDropdown label="Attendance arrangement" value={school.accommodation_type || ""} options={["day", "boarding", "day_and_boarding"]} onChange={value => setSchool({ ...school, accommodation_type: value || null })} />
+      <SchoolDropdown label="Registration status" value={school.registration_status || ""} options={["registered", "provisional", "unverified"]} onChange={value => setSchool({ ...school, registration_status: value || null })} />
       <label className="govuk-label" htmlFor="sponsor-name">Sponsor</label>
       <input id="sponsor-name" className="govuk-input govuk-!-margin-bottom-5" value={school.sponsor_name || ""} onChange={e => setSchool({ ...school, sponsor_name: e.target.value || null })} />
-      <SchoolDropdown label="Special-needs provision" value={school.special_needs_status || ""} options={["regular", "integrated_sne", "exclusive_sne", "special_unit", "unknown"]} onChange={value => setSchool({ ...school, special_needs_status: value || null })} />
-      <fieldset className="govuk-fieldset govuk-!-margin-bottom-5">
+      <h3 className="govuk-heading-s govuk-!-margin-top-5">Inclusion and support</h3>
+      <SchoolDropdown label="Special-needs provision" value={school.special_needs_status || ""} options={["regular", "integrated_sne", "exclusive_sne", "special_unit"]} onChange={value => setSchool({ ...school, special_needs_status: value || null })} />
+      {school.special_needs_status && school.special_needs_status !== "regular" && school.special_needs_status !== "unknown" && <fieldset className="govuk-fieldset govuk-!-margin-bottom-5">
         <legend className="govuk-fieldset__legend govuk-fieldset__legend--s">Special-needs categories</legend>
         <div className="govuk-hint">Select all categories that apply.</div>
         <div className="govuk-checkboxes govuk-checkboxes--small">
@@ -163,8 +190,8 @@ export default function SchoolEditor() {
             <label className="govuk-label govuk-checkboxes__label" htmlFor={`sne-${category}`}>{category.replaceAll("_", " ").replace(/\b\w/g, value => value.toUpperCase())}</label>
           </div>)}
         </div>
-      </fieldset>
-      <h3 className="govuk-heading-s">Location</h3>
+      </fieldset>}
+      <h3 className="govuk-heading-s govuk-!-margin-top-5">Location</h3>
       <SchoolDropdown label="County" value={selectedCountyCode == null ? "" : String(selectedCountyCode)} options={geography.counties.map(county => ({ value: String(county.code), label: county.name }))} disabled={geographyLoading} onChange={value => {
         const county = geography.counties.find(option => String(option.code) === value);
         setSchool({ ...school, county_code: county?.code ?? null, county: county?.name ?? null, sub_county: null, sub_county_id: null, constituency: null, constituency_id: null, ward: null, ward_id: null });
@@ -181,18 +208,21 @@ export default function SchoolEditor() {
         const ward = geography.wards.find(option => option.id === value);
         setSchool({ ...school, ward_id: ward?.id ?? null, ward: ward?.name ?? null });
       }} />
+      <h3 className="govuk-heading-s govuk-!-margin-top-5">Status and verification</h3>
       <label className="govuk-label" htmlFor="school-operating">Operating status</label>
       <select id="school-operating" className="govuk-select govuk-!-margin-bottom-5" value={school.operational_status || ""} onChange={e => setSchool({ ...school, operational_status: e.target.value || null })}>
-        <option value="">Not recorded</option>{["operational", "temporarily_closed", "closed", "merged", "unknown"].map(value => <option key={value} value={value}>{value.replaceAll("_", " ")}</option>)}
+        <option value="">Not recorded</option>{["operational", "temporarily_closed", "closed", "merged"].map(value => <option key={value} value={value}>{value.replaceAll("_", " ")}</option>)}
       </select>
       <label className="govuk-label" htmlFor="school-verification">Verification status</label>
       <select id="school-verification" className="govuk-select govuk-!-margin-bottom-5" value={school.verification_status || ""} onChange={e => setSchool({ ...school, verification_status: e.target.value || null })}>
         <option value="">Not recorded</option>{["unverified", "source_confirmed", "cross_source_match", "institution_verified", "disputed"].map(value => <option key={value} value={value}>{value.replaceAll("_", " ")}</option>)}
       </select>
-      {([ ["short_name", "Short name"], ["physical_address", "Physical address"], ["postal_address", "Postal address"], ["public_phone", "Public phone"], ["public_email", "Public email"], ["website_url", "Website"] ] as const).map(([key, label]) => <div className="govuk-form-group" key={key}>
+      <h3 className="govuk-heading-s govuk-!-margin-top-5">Contact details</h3>
+      {([ ["physical_address", "Physical address"], ["postal_address", "Postal address"], ["public_phone", "Public phone"], ["public_email", "Public email"], ["website_url", "Website"] ] as const).map(([key, label]) => <div className="govuk-form-group" key={key}>
         <label className="govuk-label" htmlFor={key}>{label}</label>
         <input id={key} className="govuk-input" type={key === "public_email" ? "email" : key === "website_url" ? "url" : key === "public_phone" ? "tel" : "text"} value={school[key] || ""} onChange={e => setSchool({ ...school, [key]: e.target.value || null })} />
       </div>)}
+      <h3 className="govuk-heading-s govuk-!-margin-top-5">Learners, staff and facilities</h3>
       {([ ["total_enrollment", "Total enrolment"], ["total_teachers", "Total teachers"] ] as const).map(([key, label]) => <div className="govuk-form-group" key={key}>
         <label className="govuk-label" htmlFor={key}>{label}</label>
         <input id={key} className="govuk-input govuk-input--width-10" type="number" min={0} step={1} value={school[key] ?? ""} onChange={e => setSchool({ ...school, [key]: e.target.value === "" ? null : Number(e.target.value) })} />

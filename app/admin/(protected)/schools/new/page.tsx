@@ -25,10 +25,12 @@ export default function NewSchoolPage() {
   const router = useRouter();
   const { data: lookups, error: lookupError, isLoading: loadingLookups } = useSWR<SchoolLookups>("/api/admin/schools/lookups", loadLookups);
   const [officialName, setOfficialName] = useState("");
+  const [shortName, setShortName] = useState("");
   const [slug, setSlug] = useState("");
   const [slugEdited, setSlugEdited] = useState(false);
   const [ownership, setOwnership] = useState("public");
   const [mainTier, setMainTier] = useState("primary");
+  const [seniorCluster, setSeniorCluster] = useState("");
   const [institutionType, setInstitutionType] = useState("regular");
   const [countyCode, setCountyCode] = useState("");
   const [description, setDescription] = useState("");
@@ -46,9 +48,11 @@ export default function NewSchoolPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           official_name: officialName,
+          short_name: shortName.trim() || null,
           slug,
           ownership,
           main_tier: mainTier || null,
+          moe_category: mainTier === "senior_secondary" ? seniorCluster || null : null,
           institution_type: institutionType || null,
           county_code: Number(countyCode),
           description: description.trim() || null,
@@ -80,6 +84,10 @@ export default function NewSchoolPage() {
         }} />
       </div>
       <div className="govuk-form-group">
+        <label className="govuk-label" htmlFor="new-school-short-name">Short name</label>
+        <input id="new-school-short-name" className="govuk-input govuk-!-width-two-thirds" maxLength={100} value={shortName} onChange={event => setShortName(event.target.value)} />
+      </div>
+      <div className="govuk-form-group">
         <label className="govuk-label" htmlFor="new-school-slug">School URL</label>
         <div className="govuk-hint" id="new-school-slug-hint">Use lowercase words separated by hyphens.</div>
         <div className="govuk-input__wrapper"><span className="govuk-input__prefix" aria-hidden="true">/government/institutions/</span><input id="new-school-slug" aria-describedby="new-school-slug-hint" className="govuk-input" required pattern="[a-z0-9]+(-[a-z0-9]+)*" maxLength={160} value={slug} onChange={event => { setSlug(event.target.value); setSlugEdited(true); }} /></div>
@@ -95,15 +103,26 @@ export default function NewSchoolPage() {
       <div className="govuk-form-group">
         <label className="govuk-label" htmlFor="new-school-ownership">Ownership</label>
         <select id="new-school-ownership" className="govuk-select" value={ownership} onChange={event => setOwnership(event.target.value)}>
-          {["public", "private", "community", "faith_based", "other", "unknown"].map(value => <option key={value} value={value}>{value.replaceAll("_", " ")}</option>)}
+          {["public", "private", "community", "faith_based", "other"].map(value => <option key={value} value={value}>{value.replaceAll("_", " ")}</option>)}
         </select>
       </div>
       <div className="govuk-form-group">
         <label className="govuk-label" htmlFor="new-school-level">Main school level</label>
-        <select id="new-school-level" className="govuk-select" value={mainTier} onChange={event => setMainTier(event.target.value)}>
+        <select id="new-school-level" className="govuk-select" value={mainTier} onChange={event => { setMainTier(event.target.value); if (event.target.value !== "senior_secondary") setSeniorCluster(""); }}>
           {Object.entries(SCHOOL_LEVELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
         </select>
       </div>
+      {mainTier === "senior_secondary" && <div className="govuk-form-group">
+        <label className="govuk-label" htmlFor="new-school-cluster">Senior school cluster</label>
+        <div className="govuk-hint" id="new-school-cluster-hint">Choose the school&apos;s CBE cluster.</div>
+        <select id="new-school-cluster" className="govuk-select" aria-describedby="new-school-cluster-hint" value={seniorCluster} onChange={event => setSeniorCluster(event.target.value)}>
+          <option value="">Not recorded</option>
+          <option value="c1">Cluster 1 (C1) — former national schools</option>
+          <option value="c2">Cluster 2 (C2) — former extra-county schools</option>
+          <option value="c3">Cluster 3 (C3) — former county schools</option>
+          <option value="c4">Cluster 4 (C4) — former sub-county schools</option>
+        </select>
+      </div>}
       <div className="govuk-form-group">
         <label className="govuk-label" htmlFor="new-school-type">School type</label>
         <select id="new-school-type" className="govuk-select" value={institutionType} onChange={event => setInstitutionType(event.target.value)}>
