@@ -28,6 +28,10 @@ export default function SchoolProfile({ school }: { school: Profile }) {
     day: "numeric", month: "long", year: "numeric", timeZone: "UTC",
   });
   const sources = school.sources.filter((record) => record.source?.title);
+  const formerSchoolName = sources.map((record) => {
+    const metadata = record.raw_record?.school_metadata as Record<string, unknown> | undefined;
+    return typeof metadata?.former_school_name === "string" ? metadata.former_school_name.trim() : "";
+  }).find(Boolean) ?? "";
   return <div className="govuk-width-container">
     <GovUKBreadcrumbs items={[{text:"Home",href:"/"},{text:"Government",href:"/government"},
       {text:"Institutions",href:"/government/institutions"},
@@ -48,7 +52,9 @@ export default function SchoolProfile({ school }: { school: Profile }) {
           ["Supervising ministry / parent body",institutionLink(school.ministry),school.ministry],
         ]} />
         <Details title="About the school" rows={[
-          ["Education level",schoolLevelLabel(school.main_tier),school.main_tier],["School category",schoolValue(school.moe_category),school.moe_category],
+          ["Education level",schoolLevelLabel(school.main_tier),school.main_tier],
+          ["Former school name",formerSchoolName,formerSchoolName],
+          ["School category",schoolValue(school.moe_category),school.moe_category],
           ["School type",schoolValue(school.institution_type),school.institution_type],["Learner gender",schoolValue(school.gender_type),school.gender_type],
           ["Day or boarding",schoolValue(school.accommodation_type),school.accommodation_type],["Operational status",schoolValue(school.operational_status),school.operational_status],
           ["Registration status",schoolValue(school.registration_status),school.registration_status],["Sponsor",schoolValue(school.sponsor_name),school.sponsor_name],
@@ -121,6 +127,15 @@ export default function SchoolProfile({ school }: { school: Profile }) {
             {record.source?.publisher ? ` — ${record.source.publisher}` : ""}
             {record.source?.reference_year ? ` (${record.source.reference_year})` : record.source?.publication_date ? ` (${formatDate(record.source.publication_date)})` : ""}
             {record.source?.licence ? `; ${record.source.licence}` : ""}
+            {(() => {
+              const metadata = record.raw_record?.school_metadata as Record<string, unknown> | undefined;
+              const dates = [
+                ["First published", metadata?.first_published_date],
+                ["Dataset last updated", metadata?.dataset_last_updated],
+                ["Metadata last updated", metadata?.metadata_last_updated],
+              ].filter(([, value]) => typeof value === "string") as [string, string][];
+              return dates.length ? <><br />{dates.map(([label, date], index) => <span key={label}>{index ? "; " : ""}{label}: {formatDate(date)}</span>)}</> : null;
+            })()}
           </li>)}
         </ul>
       </section>}

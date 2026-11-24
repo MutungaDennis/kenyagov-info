@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 type SourceRecord = {
   id: string;
   external_name: string;
+  raw_record?: Record<string, unknown> | null;
   source?: {
     title: string;
     publisher: string;
@@ -31,6 +32,10 @@ export default function SchoolSourcesEditor({ schoolId }: Props) {
   const [referenceYear, setReferenceYear] = useState("");
   const [licence, setLicence] = useState("");
   const [notes, setNotes] = useState("");
+  const [formerSchoolName, setFormerSchoolName] = useState("");
+  const [firstPublishedDate, setFirstPublishedDate] = useState("");
+  const [datasetLastUpdated, setDatasetLastUpdated] = useState("");
+  const [metadataLastUpdated, setMetadataLastUpdated] = useState("");
 
   const loadSources = useCallback(async (): Promise<SourceRecord[]> => {
     const response = await fetch(`/api/admin/schools/${schoolId}/sources`, { cache: "no-store" });
@@ -51,6 +56,7 @@ export default function SchoolSourcesEditor({ schoolId }: Props) {
   function resetSourceForm() {
     setEditingSourceId(null);
     setTitle(""); setPublisher(""); setSourceUrl(""); setPublicationDate(""); setReferenceYear(""); setLicence(""); setNotes("");
+    setFormerSchoolName(""); setFirstPublishedDate(""); setDatasetLastUpdated(""); setMetadataLastUpdated("");
   }
 
   function editSource(record: SourceRecord) {
@@ -62,6 +68,11 @@ export default function SchoolSourcesEditor({ schoolId }: Props) {
     setReferenceYear(record.source?.reference_year ? String(record.source.reference_year) : "");
     setLicence(record.source?.licence ?? "");
     setNotes(record.source?.notes ?? "");
+    const schoolMetadata = record.raw_record?.school_metadata as Record<string, unknown> | undefined;
+    setFormerSchoolName(typeof schoolMetadata?.former_school_name === "string" ? schoolMetadata.former_school_name : "");
+    setFirstPublishedDate(typeof schoolMetadata?.first_published_date === "string" ? schoolMetadata.first_published_date : "");
+    setDatasetLastUpdated(typeof schoolMetadata?.dataset_last_updated === "string" ? schoolMetadata.dataset_last_updated : "");
+    setMetadataLastUpdated(typeof schoolMetadata?.metadata_last_updated === "string" ? schoolMetadata.metadata_last_updated : "");
     setMessage("");
     document.getElementById("school-source-form")?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
@@ -81,6 +92,10 @@ export default function SchoolSourcesEditor({ schoolId }: Props) {
           reference_year: referenceYear ? Number(referenceYear) : null,
           licence: licence || null,
           notes: notes || null,
+          former_school_name: formerSchoolName.trim() || null,
+          first_published_date: firstPublishedDate || null,
+          dataset_last_updated: datasetLastUpdated || null,
+          metadata_last_updated: metadataLastUpdated || null,
         }),
       });
       const body = await response.json();
@@ -140,6 +155,12 @@ export default function SchoolSourcesEditor({ schoolId }: Props) {
       <div className="govuk-form-group"><label className="govuk-label" htmlFor="source-reference-year">Reference year</label><input className="govuk-input govuk-input--width-10" id="source-reference-year" type="number" min="1800" max="2200" value={referenceYear} onChange={(event) => setReferenceYear(event.target.value)} /></div>
       <div className="govuk-form-group"><label className="govuk-label" htmlFor="source-licence">Licence</label><input className="govuk-input" id="source-licence" maxLength={250} value={licence} onChange={(event) => setLicence(event.target.value)} /></div>
       <div className="govuk-form-group"><label className="govuk-label" htmlFor="source-notes">Notes</label><textarea className="govuk-textarea" id="source-notes" rows={3} maxLength={2000} value={notes} onChange={(event) => setNotes(event.target.value)} /></div>
+      <h4 className="govuk-heading-s">School name and dataset dates</h4>
+      <p className="govuk-hint">Enter these details when they are available in the cited source. They are recorded for this school and source link.</p>
+      <div className="govuk-form-group"><label className="govuk-label" htmlFor="former-school-name">Former school name</label><input className="govuk-input" id="former-school-name" maxLength={250} value={formerSchoolName} onChange={(event) => setFormerSchoolName(event.target.value)} /></div>
+      <div className="govuk-form-group"><label className="govuk-label" htmlFor="first-published-date">Dataset first published</label><input className="govuk-input govuk-input--width-20" id="first-published-date" type="date" value={firstPublishedDate} onChange={(event) => setFirstPublishedDate(event.target.value)} /></div>
+      <div className="govuk-form-group"><label className="govuk-label" htmlFor="dataset-last-updated">Dataset last updated</label><input className="govuk-input govuk-input--width-20" id="dataset-last-updated" type="date" value={datasetLastUpdated} onChange={(event) => setDatasetLastUpdated(event.target.value)} /></div>
+      <div className="govuk-form-group"><label className="govuk-label" htmlFor="metadata-last-updated">Metadata last updated</label><input className="govuk-input govuk-input--width-20" id="metadata-last-updated" type="date" value={metadataLastUpdated} onChange={(event) => setMetadataLastUpdated(event.target.value)} /></div>
       <button type="submit" className="govuk-button govuk-button--secondary" disabled={saving}>{saving ? "Saving…" : editingSourceId ? "Save source changes" : "Add source"}</button>
       {editingSourceId && <button type="button" className="govuk-button govuk-button--secondary govuk-!-margin-left-2" disabled={saving} onClick={resetSourceForm}>Cancel editing</button>}
     </form>

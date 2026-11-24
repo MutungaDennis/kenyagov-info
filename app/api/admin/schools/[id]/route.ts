@@ -1,5 +1,5 @@
 import { requireAdminApi } from "@/lib/admin-api";
-import { schoolEditSchema, schoolDeleteSchema } from "@/lib/schools/admin-schema";
+import { schoolPatchSchema, schoolDeleteSchema } from "@/lib/schools/admin-schema";
 import { schoolWriteFailure } from "@/lib/schools/write-error";
 import { z } from "zod";
 
@@ -24,10 +24,11 @@ export async function PATCH(request: Request, context: Context) {
   if (origin && origin !== new URL(request.url).origin) return reply({ error: "Invalid request origin" }, 403);
   const { id } = await context.params;
   if (!z.uuid().safeParse(id).success) return reply({ error: "Invalid school ID" }, 400);
-  const parsed = schoolEditSchema.safeParse(await request.json().catch(() => null));
+  const parsed = schoolPatchSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return reply({ error: parsed.error.issues.map(issue => `${issue.path.join(".")}: ${issue.message}`).join("; ") }, 400);
+  if (Object.keys(parsed.data).length === 0) return reply({ error: "Change at least one school detail before saving." }, 400);
   const { data: existingSchool, error: existingSchoolError } = await auth.supabase
-    .from("education_schools").select("county_code,sub_county_id").eq("id", id).maybeSingle();
+    .from("education_schools").select("county_code,sub_county_id,constituency_id").eq("id", id).maybeSingle();
   if (existingSchoolError) return reply({ error: "Could not load school" }, 500);
   if (!existingSchool) return reply({ error: "School not found" }, 404);
 
@@ -44,39 +45,50 @@ export async function PATCH(request: Request, context: Context) {
   const effectiveSubCountyId = parsed.data.sub_county_id !== undefined
     ? parsed.data.sub_county_id
     : existingSchool.sub_county_id;
-  if (effectiveSubCountyId !== null) {
+  if ((parsed.data.sub_county_id !== undefined || parsed.data.county_code !== undefined) && effectiveSubCountyId !== null) {
     const { data: subCounty, error: subCountyError } = await auth.supabase
       .from("education_sub_counties").select("name,county_code").eq("id", effectiveSubCountyId).maybeSingle();
     if (subCountyError || !subCounty) return reply({ error: "Select a valid sub-county" }, 400);
     if (effectiveCountyCode === null || subCounty.county_code !== effectiveCountyCode) {
       return reply({ error: "The sub-county must belong to the selected county" }, 400);
     }
-    if (parsed.data.sub_county_id !== undefined) updates.sub_county = subCounty.name;
+    if (parsed.data.sub_county_id !== undefined) {
+      updates.sub_county = parsed.data.sub_county_id === null ? parsed.data.sub_county ?? null : subCounty.name;
+    }
   }
+  const effectiveConstituencyId = parsed.data.constituency_id !== undefined
+    ? parsed.data.constituency_id
+    : existingSchool.constituency_id;
   if (parsed.data.constituency_id !== undefined && parsed.data.constituency_id !== null) {
     const { data: constituency, error: constituencyError } = await auth.supabase
       .from("constituencies").select("name,county_id").eq("id", parsed.data.constituency_id).maybeSingle();
     if (constituencyError || !constituency) return reply({ error: "Select a valid constituency" }, 400);
-    if (parsed.data.county_code == null) return reply({ error: "Select a county before selecting a constituency" }, 400);
+    if (effectiveCountyCode == null) return reply({ error: "Select a county before selecting a constituency" }, 400);
     const { data: linkedCounty, error: linkedCountyError } = await auth.supabase
-      .from("counties").select("id").eq("code", parsed.data.county_code).maybeSingle();
+      .from("counties").select("id").eq("code", effectiveCountyCode).maybeSingle();
     if (linkedCountyError || !linkedCounty || constituency.county_id !== linkedCounty.id) {
       return reply({ error: "The constituency must belong to the selected county" }, 400);
     }
     updates.constituency = constituency.name;
+  } else if (parsed.data.constituency_id === null) {
+    updates.constituency = parsed.data.constituency ?? null;
   }
   if (parsed.data.ward_id !== undefined && parsed.data.ward_id !== null) {
     const { data: ward, error: wardError } = await auth.supabase
       .from("wards").select("name,constituency_id").eq("id", parsed.data.ward_id).maybeSingle();
     if (wardError || !ward) return reply({ error: "Select a valid ward" }, 400);
-    if (!parsed.data.constituency_id || ward.constituency_id !== parsed.data.constituency_id) {
+    if (!effectiveConstituencyId || ward.constituency_id !== effectiveConstituencyId) {
       return reply({ error: "The ward must belong to the selected constituency" }, 400);
     }
     updates.ward = ward.name;
+  } else if (parsed.data.ward_id === null) {
+    updates.ward = parsed.data.ward ?? null;
+  }
+  if (parsed.data.official_name !== undefined) {
+    updates.normalized_name = parsed.data.official_name.toLowerCase().replace(/\s+/g, " ");
   }
   const { data, error } = await auth.supabase.from("education_schools").update({
     ...updates,
-    normalized_name: parsed.data.official_name.toLowerCase().replace(/\s+/g, " "),
     updated_at: new Date().toISOString(),
   }).eq("id", id).select(fields).maybeSingle();
   if (error) {

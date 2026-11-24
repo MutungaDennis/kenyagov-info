@@ -43,6 +43,8 @@ export const schoolEditSchema = z.object({
   total_teachers: z.number().int().min(0).max(100000).nullable().optional(),
 }).strict();
 
+export const schoolPatchSchema = schoolEditSchema.partial().strict();
+
 export const schoolCreateSchema = schoolEditSchema.extend({
   county_code: z.number().int().min(1).max(500),
   is_published: z.boolean().default(false),

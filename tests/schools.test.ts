@@ -3,7 +3,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import SchoolProfile from "@/components/schools/SchoolProfile";
 import EducationDirectorateLanding, { isEducationDirectorateSlug } from "@/components/schools/EducationDirectorateLanding";
-import { schoolEditSchema } from "@/lib/schools/admin-schema";
+import { schoolEditSchema, schoolPatchSchema } from "@/lib/schools/admin-schema";
 import { hasSchoolValue, safeSchoolWebsite, schoolDirectorate, schoolSearchTerm, schoolValue } from "@/lib/schools/types";
 
 const db = vi.hoisted(() => ({ from: vi.fn() }));
@@ -90,7 +90,10 @@ describe("public school profile provenance", () => {
       verification_status: "source_confirmed", last_verified_at: null,
       created_at: "2024-01-01T00:00:00Z", updated_at: "2025-02-03T00:00:00Z",
       parent: null, ministry: null,
-      sources: [{ id: "source-1", external_record_id: "record-1", external_name: "Example School", review_status: "approved", source: {
+      sources: [{ id: "source-1", external_record_id: "record-1", external_name: "Example School", review_status: "approved", raw_record: { school_metadata: {
+        former_school_name: "Mutembuku Secondary School", first_published_date: "2017-01-01",
+        dataset_last_updated: "2020-08-24", metadata_last_updated: "2023-01-20",
+      } }, source: {
         title: "Kenya Schools dataset", publisher: "Education Data Publisher", source_url: "https://example.org/schools",
         licence: "Open data licence", publication_date: null, reference_year: 2025,
       } }],
@@ -98,6 +101,11 @@ describe("public school profile provenance", () => {
         start_date: "2023-01-01", end_date: null, biography: null, photo_url: null }],
     } as never }));
     expect(markup).toContain("Kenya Schools dataset");
+    expect(markup).toContain("Former school name");
+    expect(markup).toContain("Mutembuku Secondary School");
+    expect(markup).toContain("First published: 1 January 2017");
+    expect(markup).toContain("Dataset last updated: 24 August 2020");
+    expect(markup).toContain("Metadata last updated: 20 January 2023");
     expect(markup).toContain("Cluster 2 (C2)");
     expect(markup).toContain("https://www.google.com/maps/search/?api=1&amp;query=-1.2864,36.8172");
     expect(schoolValue("day_and_boarding")).toBe("Day And Boarding");
@@ -123,6 +131,8 @@ describe("school administration and display", () => {
     expect(schoolEditSchema.safeParse({ ...valid, slug: "example-primary-school" }).success).toBe(true);
     expect(schoolEditSchema.safeParse({ ...valid, slug: "Not a valid URL" }).success).toBe(false);
     expect(schoolEditSchema.safeParse({ ...valid, ownership: "PUBLIC" }).success).toBe(false);
+    expect(schoolPatchSchema.safeParse({ short_name: "New short name" }).success).toBe(true);
+    expect(schoolPatchSchema.safeParse({ website_url: "javascript:alert(1)" }).success).toBe(false);
   });
   it("accepts comprehensive schools and maps them to primary education", () => {
     expect(schoolEditSchema.safeParse({ ...valid, main_tier: "comprehensive" }).success).toBe(true);

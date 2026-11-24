@@ -37,6 +37,7 @@ export type SchoolProfile = SchoolSummary & {
     id: string;
     external_record_id: string;
     external_name: string;
+    raw_record: Record<string, unknown> | null;
     review_status: string;
     source: {
       title: string;
@@ -163,7 +164,7 @@ export const getPublicSchool = cache(async (slug: string): Promise<SchoolProfile
 
   const [sourceResult, officialResult, nearbySchools] = await Promise.all([
     db.from("education_school_source_records").select(`
-      id, external_record_id, external_name, review_status,
+      id, external_record_id, external_name, raw_record, review_status,
       source:education_data_sources!education_school_source_records_source_id_fkey(
         title, publisher, source_url, licence, publication_date, reference_year
       )

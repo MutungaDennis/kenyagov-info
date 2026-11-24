@@ -114,11 +114,17 @@ export default function SchoolEditor() {
   const selectedWardId = school?.ward_id ?? geography.wards.find((option) => option.constituency_id === selectedConstituencyId && option.name.trim().toLowerCase() === school?.ward?.trim().toLowerCase())?.id ?? null;
   async function save(event: React.FormEvent) {
     event.preventDefault();
-    if (!school) return;
+    if (!school || !savedSchool) return;
     setSaving(true); setMessage("");
     try {
-      const { official_name, slug, ownership, main_tier, description, is_published, short_name, operational_status, institution_type, moe_category, gender_type, accommodation_type, registration_status, sponsor_name, special_needs_status, sne_categories, county, sub_county, constituency, ward, physical_address, postal_address, latitude, longitude, public_phone, public_email, website_url, nemis_code, knec_code, tsc_code, total_enrollment, total_teachers, water_source, power_source, internet_connectivity, verification_status } = school;
-      const response = await fetch(`/api/admin/schools/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ official_name, slug, ownership, main_tier, description, is_published, short_name, operational_status, institution_type, moe_category, gender_type, accommodation_type, registration_status, sponsor_name, special_needs_status, sne_categories, county, county_code: selectedCountyCode, sub_county, sub_county_id: selectedSubCountyId, constituency, constituency_id: selectedConstituencyId, ward, ward_id: selectedWardId, physical_address, postal_address, latitude, longitude, public_phone, public_email, website_url, nemis_code, knec_code, tsc_code, total_enrollment, total_teachers, water_source, power_source, internet_connectivity, verification_status }) });
+      const patch = Object.fromEntries(Object.keys(school)
+        .filter((key) => JSON.stringify(school[key as keyof Record]) !== JSON.stringify(savedSchool[key as keyof Record]))
+        .map((key) => [key, school[key as keyof Record]])) as Partial<Record>;
+      if (selectedCountyCode !== savedSchool.county_code) patch.county_code = selectedCountyCode;
+      if (selectedSubCountyId !== savedSchool.sub_county_id) patch.sub_county_id = selectedSubCountyId;
+      if (selectedConstituencyId !== savedSchool.constituency_id) patch.constituency_id = selectedConstituencyId;
+      if (selectedWardId !== savedSchool.ward_id) patch.ward_id = selectedWardId;
+      const response = await fetch(`/api/admin/schools/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(patch) });
       const body = await response.json();
       if (!response.ok) throw new Error(body.error);
       const normalized = normalizeUnknownValues(body);
