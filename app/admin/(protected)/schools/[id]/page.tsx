@@ -43,6 +43,8 @@ type Record = {
   postal_address: string | null;
   latitude: number | null;
   longitude: number | null;
+  entrance_lat: number | null;
+  entrance_lng: number | null;
   public_phone: string | null;
   public_email: string | null;
   website_url: string | null;
@@ -114,11 +116,17 @@ export default function SchoolEditor() {
   const selectedWardId = school?.ward_id ?? geography.wards.find((option) => option.constituency_id === selectedConstituencyId && option.name.trim().toLowerCase() === school?.ward?.trim().toLowerCase())?.id ?? null;
   async function save(event: React.FormEvent) {
     event.preventDefault();
-    if (!school) return;
+    if (!school || !savedSchool) return;
     setSaving(true); setMessage("");
     try {
-      const { official_name, slug, ownership, main_tier, description, is_published, short_name, operational_status, institution_type, moe_category, gender_type, accommodation_type, registration_status, sponsor_name, special_needs_status, sne_categories, county, sub_county, constituency, ward, physical_address, postal_address, latitude, longitude, public_phone, public_email, website_url, nemis_code, knec_code, tsc_code, total_enrollment, total_teachers, water_source, power_source, internet_connectivity, verification_status } = school;
-      const response = await fetch(`/api/admin/schools/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ official_name, slug, ownership, main_tier, description, is_published, short_name, operational_status, institution_type, moe_category, gender_type, accommodation_type, registration_status, sponsor_name, special_needs_status, sne_categories, county, county_code: selectedCountyCode, sub_county, sub_county_id: selectedSubCountyId, constituency, constituency_id: selectedConstituencyId, ward, ward_id: selectedWardId, physical_address, postal_address, latitude, longitude, public_phone, public_email, website_url, nemis_code, knec_code, tsc_code, total_enrollment, total_teachers, water_source, power_source, internet_connectivity, verification_status }) });
+      const patch = Object.fromEntries(Object.keys(school)
+        .filter((key) => JSON.stringify(school[key as keyof Record]) !== JSON.stringify(savedSchool[key as keyof Record]))
+        .map((key) => [key, school[key as keyof Record]])) as Partial<Record>;
+      if (selectedCountyCode !== savedSchool.county_code) patch.county_code = selectedCountyCode;
+      if (selectedSubCountyId !== savedSchool.sub_county_id) patch.sub_county_id = selectedSubCountyId;
+      if (selectedConstituencyId !== savedSchool.constituency_id) patch.constituency_id = selectedConstituencyId;
+      if (selectedWardId !== savedSchool.ward_id) patch.ward_id = selectedWardId;
+      const response = await fetch(`/api/admin/schools/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(patch) });
       const body = await response.json();
       if (!response.ok) throw new Error(body.error);
       const normalized = normalizeUnknownValues(body);
@@ -241,9 +249,17 @@ export default function SchoolEditor() {
         <label className="govuk-label" htmlFor={key}>{label}</label>
         <input id={key} className="govuk-input" value={school[key] || ""} onChange={e => setSchool({ ...school, [key]: e.target.value || null })} />
       </div>)}
+      <h3 className="govuk-heading-s govuk-!-margin-top-5">Recorded location (source coordinates)</h3>
+      <p className="govuk-hint">Keep these existing coordinates as supplied by the source. They are not replaced by the main gate position.</p>
       {([ ["latitude", "Latitude"], ["longitude", "Longitude"] ] as const).map(([key, label]) => <div className="govuk-form-group" key={key}>
         <label className="govuk-label" htmlFor={key}>{label}</label>
         <input id={key} className="govuk-input govuk-input--width-10" type="number" step="any" value={school[key] ?? ""} onChange={e => setSchool({ ...school, [key]: e.target.value === "" ? null : Number(e.target.value) })} />
+      </div>)}
+      <h3 className="govuk-heading-s govuk-!-margin-top-5">Main gate coordinates</h3>
+      <p className="govuk-hint">Use the school&apos;s public entrance. When provided, these coordinates power the public Main gate directions link and map pin. Enter both coordinates or leave both blank.</p>
+      {([ ["entrance_lat", "Main gate latitude"], ["entrance_lng", "Main gate longitude"] ] as const).map(([key, label]) => <div className="govuk-form-group" key={key}>
+        <label className="govuk-label" htmlFor={key}>{label}</label>
+        <input id={key} className="govuk-input govuk-input--width-10" type="number" step="any" min={key === "entrance_lat" ? -90 : -180} max={key === "entrance_lat" ? 90 : 180} value={school[key] ?? ""} onChange={e => setSchool({ ...school, [key]: e.target.value === "" ? null : Number(e.target.value) })} />
       </div>)}
       <p className="govuk-hint">Changing the canonical URL keeps the previous address as a redirect. Source records and official service histories are retained.</p>
       <button type="submit" className="govuk-button" disabled={saving || !hasUnsavedChanges}>{saving ? "Saving…" : hasUnsavedChanges ? "Save School" : "No changes to save"}</button>

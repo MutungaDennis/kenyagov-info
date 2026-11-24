@@ -71,6 +71,15 @@ describe("school mutation safeguards", () => {
     expect((await PATCH(request("PATCH", { official_name: "Example Primary", ownership: "public", main_tier: "primary", description: null, is_published: false }), context)).status).toBe(200);
     expect(query.update).toHaveBeenCalledWith(expect.objectContaining({ ownership: "public", is_published: false }));
   });
+  it("accepts a partial edit without revalidating unrelated legacy fields", async () => {
+    query.maybeSingle
+      .mockResolvedValueOnce({ data: { county_code: 47, sub_county_id: null, constituency_id: null }, error: null })
+      .mockResolvedValueOnce({ data: { id }, error: null });
+    const response = await PATCH(request("PATCH", { short_name: "Example" }), context);
+    expect(response.status).toBe(200);
+    expect(query.update).toHaveBeenCalledWith(expect.objectContaining({ short_name: "Example" }));
+    expect(query.update).not.toHaveBeenCalledWith(expect.objectContaining({ website_url: expect.anything() }));
+  });
   it("retains institution identities even for an authorised administrator", async () => {
     expect((await deleteInstitution(new NextRequest("https://example.org/api/admin/institutions/example", { method: "DELETE" }), context)).status).toBe(409);
     expect(from).not.toHaveBeenCalled();

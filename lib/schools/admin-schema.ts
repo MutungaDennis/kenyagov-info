@@ -27,6 +27,8 @@ export const schoolEditSchema = z.object({
   ward_id: z.uuid().nullable().optional(),
   latitude: z.number().min(-90).max(90).nullable().optional(),
   longitude: z.number().min(-180).max(180).nullable().optional(),
+  entrance_lat: z.number().min(-90).max(90).nullable().optional(),
+  entrance_lng: z.number().min(-180).max(180).nullable().optional(),
   nemis_code: z.string().trim().max(100).nullable().optional(),
   knec_code: z.string().trim().max(100).nullable().optional(),
   tsc_code: z.string().trim().max(100).nullable().optional(),
@@ -43,10 +45,16 @@ export const schoolEditSchema = z.object({
   total_teachers: z.number().int().min(0).max(100000).nullable().optional(),
 }).strict();
 
+export const schoolPatchSchema = schoolEditSchema.partial().strict();
+
 export const schoolCreateSchema = schoolEditSchema.extend({
   county_code: z.number().int().min(1).max(500),
   is_published: z.boolean().default(false),
-}).strict();
+}).strict().superRefine((school, context) => {
+  if ((school.entrance_lat == null) !== (school.entrance_lng == null)) {
+    context.addIssue({ code: "custom", message: "Enter both main gate coordinates, or leave both blank.", path: ["entrance_lat"] });
+  }
+});
 
 export const schoolDeleteSchema = z.object({
   confirmation: z.string().min(2).max(250),

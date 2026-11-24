@@ -26,8 +26,9 @@ beforeEach(() => {
   query.select.mockReturnValue(query);
   query.eq.mockReturnValue(query);
   query.maybeSingle
-    .mockResolvedValueOnce({ data: { id: sourceRecordId, source_id: sourceId }, error: null })
-    .mockResolvedValueOnce({ data: { id: sourceId }, error: null });
+    .mockResolvedValueOnce({ data: { id: sourceRecordId, source_id: sourceId, raw_record: {} }, error: null })
+    .mockResolvedValueOnce({ data: { id: sourceId }, error: null })
+    .mockResolvedValueOnce({ data: { id: sourceRecordId }, error: null });
   from.mockReturnValue(query);
   gate.mockResolvedValue({ ok: true, supabase: { from } });
 });
@@ -43,6 +44,10 @@ describe("school source updates", () => {
       reference_year: 2026,
       licence: "Open data",
       notes: "Verified against the latest report",
+      former_school_name: "Mutembuku Secondary School",
+      first_published_date: "2017-01-01",
+      dataset_last_updated: "2020-08-24",
+      metadata_last_updated: "2023-01-20",
     }), context);
 
     expect(response.status).toBe(200);
@@ -57,6 +62,14 @@ describe("school source updates", () => {
       licence: "Open data",
       notes: "Verified against the latest report",
     });
+    expect(query.update).toHaveBeenCalledWith({ raw_record: expect.objectContaining({
+      school_metadata: expect.objectContaining({
+        former_school_name: "Mutembuku Secondary School",
+        first_published_date: "2017-01-01",
+        dataset_last_updated: "2020-08-24",
+        metadata_last_updated: "2023-01-20",
+      }),
+    }) });
     expect(query.eq).toHaveBeenCalledWith("school_id", schoolId);
     expect(query.eq).toHaveBeenCalledWith("id", sourceId);
   });

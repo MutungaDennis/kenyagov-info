@@ -3,7 +3,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import SchoolProfile from "@/components/schools/SchoolProfile";
 import EducationDirectorateLanding, { isEducationDirectorateSlug } from "@/components/schools/EducationDirectorateLanding";
-import { schoolEditSchema } from "@/lib/schools/admin-schema";
+import { schoolEditSchema, schoolPatchSchema } from "@/lib/schools/admin-schema";
 import { hasSchoolValue, safeSchoolWebsite, schoolDirectorate, schoolSearchTerm, schoolValue } from "@/lib/schools/types";
 
 const db = vi.hoisted(() => ({ from: vi.fn() }));
@@ -53,6 +53,17 @@ describe("public school lookup", () => {
     expect(target.eq).toHaveBeenCalledWith("is_published", true);
     expect(target.eq).toHaveBeenCalledWith("id", "school-1");
   });
+  it("falls back to the existing school fields until the optional gate columns exist", async () => {
+    const school = { id: "legacy-school", slug: "legacy-school" };
+    db.from.mockReturnValueOnce(response(null, { message: "column education_schools.entrance_lat does not exist" }))
+      .mockReturnValueOnce(response(school))
+      .mockReturnValueOnce(response(null, { message: "sources unavailable" }))
+      .mockReturnValueOnce(response(null, { message: "officials unavailable" }));
+
+    await expect(getPublicSchool("legacy-school")).resolves.toMatchObject({
+      slug: "legacy-school", entrance_lat: null, entrance_lng: null,
+    });
+  });
   it("does not expose a private school through a legacy alias", async () => {
     db.from.mockReturnValueOnce(response(null)).mockReturnValueOnce(response({ school_id: "private-1" })).mockReturnValueOnce(response(null));
     expect(await getPublicSchool("private-old")).toBeNull();
@@ -83,14 +94,17 @@ describe("public school profile provenance", () => {
       county_code: 47, moe_category: "c2", gender_type: null, accommodation_type: null,
       operational_status: "operational", description: null, institution_type: "regular",
       registration_status: null, constituency: null, ward: null, physical_address: null,
-      postal_address: null, latitude: -1.2864, longitude: 36.8172, public_phone: null, public_email: null,
+      postal_address: null, latitude: -1.2864, longitude: 36.8172, entrance_lat: -1.2865, entrance_lng: 36.8173, public_phone: null, public_email: null,
       website_url: null, nemis_code: null, knec_code: null, tsc_code: null, sponsor_name: null,
       special_needs_status: null, sne_categories: null, total_enrollment: null, total_teachers: null,
       water_source: null, power_source: null, internet_connectivity: null,
       verification_status: "source_confirmed", last_verified_at: null,
       created_at: "2024-01-01T00:00:00Z", updated_at: "2025-02-03T00:00:00Z",
       parent: null, ministry: null,
-      sources: [{ id: "source-1", external_record_id: "record-1", external_name: "Example School", review_status: "approved", source: {
+      sources: [{ id: "source-1", external_record_id: "record-1", external_name: "Example School", review_status: "approved", raw_record: { school_metadata: {
+        former_school_name: "Mutembuku Secondary School", first_published_date: "2017-01-01",
+        dataset_last_updated: "2020-08-24", metadata_last_updated: "2023-01-20",
+      } }, source: {
         title: "Kenya Schools dataset", publisher: "Education Data Publisher", source_url: "https://example.org/schools",
         licence: "Open data licence", publication_date: null, reference_year: 2025,
       } }],
@@ -98,8 +112,15 @@ describe("public school profile provenance", () => {
         start_date: "2023-01-01", end_date: null, biography: null, photo_url: null }],
     } as never }));
     expect(markup).toContain("Kenya Schools dataset");
+    expect(markup).toContain("Former school name");
+    expect(markup).toContain("Mutembuku Secondary School");
+    expect(markup).toContain("First published: 1 January 2017");
+    expect(markup).toContain("Dataset last updated: 24 August 2020");
+    expect(markup).toContain("Metadata last updated: 20 January 2023");
     expect(markup).toContain("Cluster 2 (C2)");
-    expect(markup).toContain("https://www.google.com/maps/search/?api=1&amp;query=-1.2864,36.8172");
+    expect(markup).toContain("https://www.google.com/maps/dir/?api=1&amp;destination=-1.2865,36.8173");
+    expect(markup).toContain("Get directions to the main gate");
+    expect(markup).toContain('"latitude":-1.2865,"longitude":36.8173');
     expect(schoolValue("day_and_boarding")).toBe("Day And Boarding");
     expect(schoolValue("school@example.org")).toBe("school@example.org");
     expect(markup).toContain("https://example.org/schools");
@@ -123,6 +144,8 @@ describe("school administration and display", () => {
     expect(schoolEditSchema.safeParse({ ...valid, slug: "example-primary-school" }).success).toBe(true);
     expect(schoolEditSchema.safeParse({ ...valid, slug: "Not a valid URL" }).success).toBe(false);
     expect(schoolEditSchema.safeParse({ ...valid, ownership: "PUBLIC" }).success).toBe(false);
+    expect(schoolPatchSchema.safeParse({ short_name: "New short name" }).success).toBe(true);
+    expect(schoolPatchSchema.safeParse({ website_url: "javascript:alert(1)" }).success).toBe(false);
   });
   it("accepts comprehensive schools and maps them to primary education", () => {
     expect(schoolEditSchema.safeParse({ ...valid, main_tier: "comprehensive" }).success).toBe(true);
@@ -143,6 +166,9 @@ describe("school administration and display", () => {
     expect(schoolEditSchema.safeParse({ ...valid, gender_type: "mixed", sne_categories: ["physical"] }).success).toBe(true);
     expect(schoolEditSchema.safeParse({ ...valid, latitude: 91 }).success).toBe(false);
     expect(schoolEditSchema.safeParse({ ...valid, longitude: -181 }).success).toBe(false);
+    expect(schoolEditSchema.safeParse({ ...valid, entrance_lat: -1.2865, entrance_lng: 36.8173 }).success).toBe(true);
+    expect(schoolEditSchema.safeParse({ ...valid, entrance_lat: 91, entrance_lng: 36.8173 }).success).toBe(false);
+    expect(schoolEditSchema.safeParse({ ...valid, entrance_lng: 181 }).success).toBe(false);
   });
   it("omits missing profile values and preserves zero resource counts", () => {
     expect(safeSchoolWebsite("javascript:alert(1)")).toBeNull();
