@@ -16,6 +16,8 @@ type GeographyOptions = { counties: CountyOption[]; subCounties: SubCountyOption
 
 type Record = {
   official_name: string;
+  former_name: string | null;
+  established_year: number | null;
   ownership: string;
   main_tier: string | null;
   description: string | null;
@@ -83,6 +85,7 @@ export default function SchoolEditor() {
   const [geography, setGeography] = useState<GeographyOptions>({ counties: [], subCounties: [], constituencies: [], wards: [] });
   const [geographyLoading, setGeographyLoading] = useState(true);
   const [message, setMessage] = useState("");
+  const [saveFeedback, setSaveFeedback] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [saving, setSaving] = useState(false);
   useEffect(() => {
     const controller = new AbortController();
@@ -117,7 +120,9 @@ export default function SchoolEditor() {
   async function save(event: React.FormEvent) {
     event.preventDefault();
     if (!school || !savedSchool) return;
-    setSaving(true); setMessage("");
+    setSaving(true);
+    setMessage("");
+    setSaveFeedback(null);
     try {
       const patch = Object.fromEntries(Object.keys(school)
         .filter((key) => JSON.stringify(school[key as keyof Record]) !== JSON.stringify(savedSchool[key as keyof Record]))
@@ -126,13 +131,31 @@ export default function SchoolEditor() {
       if (selectedSubCountyId !== savedSchool.sub_county_id) patch.sub_county_id = selectedSubCountyId;
       if (selectedConstituencyId !== savedSchool.constituency_id) patch.constituency_id = selectedConstituencyId;
       if (selectedWardId !== savedSchool.ward_id) patch.ward_id = selectedWardId;
+      if (Object.keys(patch).length === 0) {
+        setSaveFeedback({ type: "error", text: "No school details changed. Make an edit before saving." });
+        return;
+      }
       const response = await fetch(`/api/admin/schools/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(patch) });
-      const body = await response.json();
-      if (!response.ok) throw new Error(body.error);
-      const normalized = normalizeUnknownValues(body);
-      setSchool(normalized); setSavedSchool(normalized); setSavedName(normalized.official_name); setMessage("School saved. Public visibility and government responsibility have been updated.");
-    } catch (error) { setMessage(error instanceof Error ? error.message : "Could not save school"); }
-    finally { setSaving(false); }
+      const body: unknown = await response.json().catch(() => null);
+      if (!response.ok) {
+        const errorText = body && typeof body === "object" && "error" in body && typeof body.error === "string"
+          ? body.error
+          : `The school could not be saved (request failed with status ${response.status}). Try again.`;
+        throw new Error(errorText);
+      }
+      if (!body || typeof body !== "object" || !("id" in body)) {
+        throw new Error("The server did not confirm that the school was saved. Reload the page before trying again.");
+      }
+      const normalized = normalizeUnknownValues(body as unknown as Record);
+      setSchool(normalized);
+      setSavedSchool(normalized);
+      setSavedName(normalized.official_name);
+      setSaveFeedback({ type: "success", text: "School details saved successfully." });
+    } catch (error) {
+      setSaveFeedback({ type: "error", text: error instanceof Error && error.message ? error.message : "The school could not be saved. Check your connection and try again." });
+    } finally {
+      setSaving(false);
+    }
   }
   async function deleteSchool() {
     if (confirmation !== savedName || saving) return;
@@ -159,8 +182,14 @@ export default function SchoolEditor() {
       <label className="govuk-label" htmlFor="school-name">Official name</label>
       <input id="school-name" className="govuk-input" required minLength={2} maxLength={250} value={school.official_name} onChange={e => setSchool({ ...school, official_name: e.target.value })} />
       <label className="govuk-label" htmlFor="short_name">Short name</label>
-      <input id="short_name" className="govuk-input govuk-!-margin-bottom-5" value={school.short_name || ""} onChange={e => setSchool({ ...school, short_name: e.target.value || null })} />
-      <label className="govuk-label" htmlFor="school-slug">Public school URL</label>
+      <input id="short_name" className="govuk-input" value={school.short_name || ""} onChange={e => setSchool({ ...school, short_name: e.target.value || null })} />
+      <label className="govuk-label govuk-!-margin-top-4" htmlFor="former-name">Former school name</label>
+      <div className="govuk-hint" id="former-name-hint">Leave blank when no former name is known. Add only names supported by a cited source.</div>
+      <input id="former-name" aria-describedby="former-name-hint" className="govuk-input" maxLength={250} value={school.former_name || ""} onChange={e => setSchool({ ...school, former_name: e.target.value || null })} />
+      <label className="govuk-label govuk-!-margin-top-4" htmlFor="established-year">Established year</label>
+      <div className="govuk-hint" id="established-year-hint">Enter a year only when the source provides a reliable establishment date.</div>
+      <input id="established-year" aria-describedby="established-year-hint" className="govuk-input govuk-input--width-10 govuk-!-margin-bottom-5" type="number" min={1500} max={new Date().getFullYear()} step={1} value={school.established_year ?? ""} onChange={e => setSchool({ ...school, established_year: e.target.value === "" ? null : Number(e.target.value) })} />
+      <label className="govuk-label govuk-!-margin-top-4" htmlFor="school-slug">Public school URL</label>
       <div className="govuk-hint" id="school-slug-hint">Use lowercase words separated by hyphens. Changing this URL keeps the old address redirecting to the new one.</div>
       <div className="govuk-input__wrapper govuk-!-margin-bottom-5"><span className="govuk-input__prefix" aria-hidden="true">/government/institutions/</span><input id="school-slug" aria-describedby="school-slug-hint" className="govuk-input" required pattern="[a-z0-9]+(-[a-z0-9]+)*" maxLength={160} value={school.slug} onChange={e => setSchool({ ...school, slug: e.target.value })} /></div>
       <label className="govuk-label" htmlFor="school-ownership">Ownership</label>
@@ -263,6 +292,7 @@ export default function SchoolEditor() {
       </div>)}
       <p className="govuk-hint">Changing the canonical URL keeps the previous address as a redirect. Source records and official service histories are retained.</p>
       <button type="submit" className="govuk-button" disabled={saving || !hasUnsavedChanges}>{saving ? "Saving…" : hasUnsavedChanges ? "Save School" : "No changes to save"}</button>
+      {saveFeedback && <p className={saveFeedback.type === "error" ? "govuk-error-message" : "govuk-body govuk-!-font-weight-bold"} role={saveFeedback.type === "error" ? "alert" : "status"} aria-live={saveFeedback.type === "error" ? "assertive" : "polite"}>{saveFeedback.text}</p>}
       {school.ownership === "public" && school.is_published && <p className="govuk-body"><Link className="govuk-link" href={`/government/institutions/${school.slug}`}>View public school profile</Link></p>}
     </form>}
     {school && <SchoolSourcesEditor schoolId={id} />}
