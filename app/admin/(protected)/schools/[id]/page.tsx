@@ -85,6 +85,7 @@ export default function SchoolEditor() {
   const [geography, setGeography] = useState<GeographyOptions>({ counties: [], subCounties: [], constituencies: [], wards: [] });
   const [geographyLoading, setGeographyLoading] = useState(true);
   const [message, setMessage] = useState("");
+  const [saveFeedback, setSaveFeedback] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [saving, setSaving] = useState(false);
   useEffect(() => {
     const controller = new AbortController();
@@ -119,7 +120,9 @@ export default function SchoolEditor() {
   async function save(event: React.FormEvent) {
     event.preventDefault();
     if (!school || !savedSchool) return;
-    setSaving(true); setMessage("");
+    setSaving(true);
+    setMessage("");
+    setSaveFeedback(null);
     try {
       const patch = Object.fromEntries(Object.keys(school)
         .filter((key) => JSON.stringify(school[key as keyof Record]) !== JSON.stringify(savedSchool[key as keyof Record]))
@@ -128,13 +131,31 @@ export default function SchoolEditor() {
       if (selectedSubCountyId !== savedSchool.sub_county_id) patch.sub_county_id = selectedSubCountyId;
       if (selectedConstituencyId !== savedSchool.constituency_id) patch.constituency_id = selectedConstituencyId;
       if (selectedWardId !== savedSchool.ward_id) patch.ward_id = selectedWardId;
+      if (Object.keys(patch).length === 0) {
+        setSaveFeedback({ type: "error", text: "No school details changed. Make an edit before saving." });
+        return;
+      }
       const response = await fetch(`/api/admin/schools/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(patch) });
-      const body = await response.json();
-      if (!response.ok) throw new Error(body.error);
-      const normalized = normalizeUnknownValues(body);
-      setSchool(normalized); setSavedSchool(normalized); setSavedName(normalized.official_name); setMessage("School saved. Public visibility and government responsibility have been updated.");
-    } catch (error) { setMessage(error instanceof Error ? error.message : "Could not save school"); }
-    finally { setSaving(false); }
+      const body: unknown = await response.json().catch(() => null);
+      if (!response.ok) {
+        const errorText = body && typeof body === "object" && "error" in body && typeof body.error === "string"
+          ? body.error
+          : `The school could not be saved (request failed with status ${response.status}). Try again.`;
+        throw new Error(errorText);
+      }
+      if (!body || typeof body !== "object" || !("id" in body)) {
+        throw new Error("The server did not confirm that the school was saved. Reload the page before trying again.");
+      }
+      const normalized = normalizeUnknownValues(body as unknown as Record);
+      setSchool(normalized);
+      setSavedSchool(normalized);
+      setSavedName(normalized.official_name);
+      setSaveFeedback({ type: "success", text: "School details saved successfully." });
+    } catch (error) {
+      setSaveFeedback({ type: "error", text: error instanceof Error && error.message ? error.message : "The school could not be saved. Check your connection and try again." });
+    } finally {
+      setSaving(false);
+    }
   }
   async function deleteSchool() {
     if (confirmation !== savedName || saving) return;
@@ -271,6 +292,7 @@ export default function SchoolEditor() {
       </div>)}
       <p className="govuk-hint">Changing the canonical URL keeps the previous address as a redirect. Source records and official service histories are retained.</p>
       <button type="submit" className="govuk-button" disabled={saving || !hasUnsavedChanges}>{saving ? "Saving…" : hasUnsavedChanges ? "Save School" : "No changes to save"}</button>
+      {saveFeedback && <p className={saveFeedback.type === "error" ? "govuk-error-message" : "govuk-body govuk-!-font-weight-bold"} role={saveFeedback.type === "error" ? "alert" : "status"} aria-live={saveFeedback.type === "error" ? "assertive" : "polite"}>{saveFeedback.text}</p>}
       {school.ownership === "public" && school.is_published && <p className="govuk-body"><Link className="govuk-link" href={`/government/institutions/${school.slug}`}>View public school profile</Link></p>}
     </form>}
     {school && <SchoolSourcesEditor schoolId={id} />}
