@@ -6,6 +6,8 @@ import type { SchoolSummary } from "./types";
 type InstitutionLink = { name: string; short_name: string | null; slug: string };
 export type SchoolProfile = SchoolSummary & {
   description: string | null;
+  former_name: string | null;
+  established_year: number | null;
   institution_type: string;
   registration_status: string | null;
   constituency: string | null;
@@ -82,8 +84,12 @@ const LEGACY_PROFILE_SELECT = `id,slug,official_name,short_name,ownership,main_t
   verification_status,last_verified_at,created_at,updated_at,
   parent:institutions!education_schools_parent_institution_id_fkey(name,short_name,slug),
   ministry:institutions!education_schools_supervising_ministry_id_fkey(name,short_name,slug)`;
-const PROFILE_SELECT = LEGACY_PROFILE_SELECT.replace("latitude,longitude,", "latitude,longitude,entrance_lat,entrance_lng,");
-const missingEntranceColumns = (error: { message?: string } | null) => Boolean(error && /entrance_(lat|lng)/i.test(error.message ?? ""));
+const PROFILE_SELECT = LEGACY_PROFILE_SELECT.replace("latitude,longitude,", "latitude,longitude,entrance_lat,entrance_lng,former_name,established_year,");
+const OPTIONAL_SCHOOL_COLUMNS = ["entrance_lat", "entrance_lng", "former_name", "established_year"] as const;
+const missingOptionalSchoolColumn = (error: { message?: string } | null) =>
+  OPTIONAL_SCHOOL_COLUMNS.find((column) => error && new RegExp(column, "i").test(error.message ?? ""));
+const withoutSchoolColumn = (selection: string, column: string) =>
+  selection.replace(new RegExp(`,?${column}(?=,|$)`), "");
 
 type NearbySchoolRow = {
   id: string;
@@ -151,11 +157,15 @@ async function getNearbySchools(school: Pick<SchoolProfile, "id" | "ward_id" | "
 // Shared by the page and metadata; always public, even for logged-in admins.
 export const getPublicSchool = cache(async (slug: string): Promise<SchoolProfile | null> => {
   const db = createPublicClient();
-  let result = await db.from("education_schools").select(PROFILE_SELECT)
+  let selection = PROFILE_SELECT;
+  let result = await db.from("education_schools").select(selection)
     .eq("ownership", "public").eq("is_published", true).eq("slug", slug).maybeSingle();
-  if (missingEntranceColumns(result.error)) {
-    result = await db.from("education_schools").select(LEGACY_PROFILE_SELECT)
+  let missingColumn = missingOptionalSchoolColumn(result.error);
+  while (missingColumn) {
+    selection = withoutSchoolColumn(selection, missingColumn);
+    result = await db.from("education_schools").select(selection)
       .eq("ownership", "public").eq("is_published", true).eq("slug", slug).maybeSingle();
+    missingColumn = missingOptionalSchoolColumn(result.error);
   }
   if (result.error) throw new Error("The school directory is temporarily unavailable.");
   let school = result.data as unknown as SchoolProfile | null;
@@ -163,11 +173,15 @@ export const getPublicSchool = cache(async (slug: string): Promise<SchoolProfile
     const alias = await db.from("education_school_slug_aliases").select("school_id").eq("slug",slug).maybeSingle();
     if (alias.error) throw new Error("The school directory is temporarily unavailable.");
     if (!alias.data) return null;
-    let canonical = await db.from("education_schools").select(PROFILE_SELECT)
+    let canonicalSelection = PROFILE_SELECT;
+    let canonical = await db.from("education_schools").select(canonicalSelection)
       .eq("ownership", "public").eq("is_published", true).eq("id",alias.data.school_id).maybeSingle();
-    if (missingEntranceColumns(canonical.error)) {
-      canonical = await db.from("education_schools").select(LEGACY_PROFILE_SELECT)
+    let missingCanonicalColumn = missingOptionalSchoolColumn(canonical.error);
+    while (missingCanonicalColumn) {
+      canonicalSelection = withoutSchoolColumn(canonicalSelection, missingCanonicalColumn);
+      canonical = await db.from("education_schools").select(canonicalSelection)
         .eq("ownership", "public").eq("is_published", true).eq("id",alias.data.school_id).maybeSingle();
+      missingCanonicalColumn = missingOptionalSchoolColumn(canonical.error);
     }
     if (canonical.error) throw new Error("The school directory is temporarily unavailable.");
     school = canonical.data as unknown as SchoolProfile | null;
@@ -191,6 +205,8 @@ export const getPublicSchool = cache(async (slug: string): Promise<SchoolProfile
     ...school,
     entrance_lat: school.entrance_lat ?? null,
     entrance_lng: school.entrance_lng ?? null,
+    former_name: school.former_name ?? null,
+    established_year: school.established_year ?? null,
     sources: (sourceResult.error ? [] : sourceResult.data ?? []) as unknown as SchoolProfile["sources"],
     officials: (officialResult.error ? [] : officialResult.data ?? []) as SchoolProfile["officials"],
     nearbySchools,

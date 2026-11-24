@@ -5,21 +5,36 @@ import { z } from "zod";
 
 type Context = { params: Promise<{ id: string }> };
 const legacyFields = "id,slug,official_name,ownership,main_tier,description,county,county_code,sub_county,sub_county_id,constituency,constituency_id,ward,ward_id,is_published,short_name,operational_status,institution_type,moe_category,gender_type,accommodation_type,registration_status,sponsor_name,special_needs_status,sne_categories,physical_address,postal_address,latitude,longitude,public_phone,public_email,website_url,nemis_code,knec_code,tsc_code,total_enrollment,total_teachers,water_source,power_source,internet_connectivity,verification_status,created_at,updated_at";
-const fields = `${legacyFields},entrance_lat,entrance_lng`;
-const missingEntranceColumns = (error: { code?: string; message?: string } | null) => Boolean(error && /entrance_(lat|lng)/i.test(error.message ?? ""));
+const fields = `${legacyFields},entrance_lat,entrance_lng,former_name,established_year`;
+const optionalSchoolColumns = ["entrance_lat", "entrance_lng", "former_name", "established_year"] as const;
+const missingOptionalSchoolColumn = (error: { code?: string; message?: string } | null) =>
+  optionalSchoolColumns.find((column) => error && new RegExp(column, "i").test(error.message ?? ""));
+const missingEntranceColumns = (error: { code?: string; message?: string } | null) =>
+  Boolean(error && /entrance_(lat|lng)/i.test(error.message ?? ""));
 const reply = (body: unknown, status = 200) => Response.json(body, { status, headers: { "Cache-Control": "no-store" } });
+const normalizeSchoolResponse = (school: Record<string, unknown>) => ({
+  ...school,
+  entrance_lat: school.entrance_lat ?? null,
+  entrance_lng: school.entrance_lng ?? null,
+  former_name: school.former_name ?? null,
+  established_year: school.established_year ?? null,
+});
 
 export async function GET(_request: Request, context: Context) {
   const auth = await requireAdminApi();
   if (!auth.ok) return auth.response;
   const { id } = await context.params;
   if (!z.uuid().safeParse(id).success) return reply({ error: "Invalid school ID" }, 400);
-  let { data, error } = await auth.supabase.from("education_schools").select(fields).eq("id", id).maybeSingle();
-  if (missingEntranceColumns(error)) {
-    ({ data, error } = await auth.supabase.from("education_schools").select(legacyFields).eq("id", id).maybeSingle());
+  let selectedFields = fields;
+  let { data, error } = await auth.supabase.from("education_schools").select(selectedFields).eq("id", id).maybeSingle();
+  let missingColumn = missingOptionalSchoolColumn(error);
+  while (missingColumn) {
+    selectedFields = selectedFields.replace(new RegExp(`,?${missingColumn}(?=,|$)`), "");
+    ({ data, error } = await auth.supabase.from("education_schools").select(selectedFields).eq("id", id).maybeSingle());
+    missingColumn = missingOptionalSchoolColumn(error);
   }
   if (error) return reply({ error: "Could not load school" }, 500);
-  return data ? reply({ ...data, entrance_lat: data.entrance_lat ?? null, entrance_lng: data.entrance_lng ?? null }) : reply({ error: "School not found" }, 404);
+  return data ? reply(normalizeSchoolResponse(data as unknown as Record<string, unknown>)) : reply({ error: "School not found" }, 404);
 }
 
 export async function PATCH(request: Request, context: Context) {
@@ -105,22 +120,27 @@ export async function PATCH(request: Request, context: Context) {
   if (parsed.data.official_name !== undefined) {
     updates.normalized_name = parsed.data.official_name.toLowerCase().replace(/\s+/g, " ");
   }
-  let { data, error } = await auth.supabase.from("education_schools").update({
+  const updateSchool = (selection: string) => auth.supabase.from("education_schools").update({
     ...updates,
     updated_at: new Date().toISOString(),
-  }).eq("id", id).select(fields).maybeSingle();
-  if (missingEntranceColumns(error) && !("entrance_lat" in updates || "entrance_lng" in updates)) {
-    ({ data, error } = await auth.supabase.from("education_schools").update({
-      ...updates,
-      updated_at: new Date().toISOString(),
-    }).eq("id", id).select(legacyFields).maybeSingle());
+  }).eq("id", id).select(selection).maybeSingle();
+  let selectedFields = fields;
+  let { data, error } = await updateSchool(selectedFields);
+  let missingUpdatedColumn = missingOptionalSchoolColumn(error);
+  while (missingUpdatedColumn) {
+    if (Object.hasOwn(updates, missingUpdatedColumn)) {
+      return reply({ error: `The database is missing the ${missingUpdatedColumn} school column. Apply lib/supabase/migrations/20261124_school_name_history_and_established_year.sql for former names and establishment years, or the school entrance-coordinates migration for gate positions.` }, 409);
+    }
+    selectedFields = selectedFields.replace(new RegExp(`,?${missingUpdatedColumn}(?=,|$)`), "");
+    ({ data, error } = await updateSchool(selectedFields));
+    missingUpdatedColumn = missingOptionalSchoolColumn(error);
   }
   if (error) {
     const failure = schoolWriteFailure(error);
     console.error("Could not save school:", { code: error.code });
     return reply({ error: failure.message }, failure.status);
   }
-  return data ? reply(data) : reply({ error: "School not found" }, 404);
+  return data ? reply(normalizeSchoolResponse(data as unknown as Record<string, unknown>)) : reply({ error: "School not found" }, 404);
 }
 
 export async function DELETE(request: Request, context: Context) {

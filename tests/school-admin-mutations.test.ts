@@ -80,6 +80,22 @@ describe("school mutation safeguards", () => {
     expect(query.update).toHaveBeenCalledWith(expect.objectContaining({ short_name: "Example" }));
     expect(query.update).not.toHaveBeenCalledWith(expect.objectContaining({ website_url: expect.anything() }));
   });
+  it("saves school name history and establishment year directly on the school", async () => {
+    const response = await PATCH(request("PATCH", { former_name: "Old School Name", established_year: 1984 }), context);
+    expect(response.status).toBe(200);
+    expect(query.update).toHaveBeenCalledWith(expect.objectContaining({
+      former_name: "Old School Name",
+      established_year: 1984,
+    }));
+  });
+  it("explains when the school metadata migration is missing", async () => {
+    query.maybeSingle
+      .mockResolvedValueOnce({ data: { county_code: 47, sub_county_id: null, constituency_id: null }, error: null })
+      .mockResolvedValueOnce({ data: null, error: { code: "42703", message: "column education_schools.established_year does not exist" } });
+    const response = await PATCH(request("PATCH", { established_year: 1984 }), context);
+    expect(response.status).toBe(409);
+    expect((await response.json()).error).toContain("20261124_school_name_history_and_established_year.sql");
+  });
   it("retains institution identities even for an authorised administrator", async () => {
     expect((await deleteInstitution(new NextRequest("https://example.org/api/admin/institutions/example", { method: "DELETE" }), context)).status).toBe(409);
     expect(from).not.toHaveBeenCalled();

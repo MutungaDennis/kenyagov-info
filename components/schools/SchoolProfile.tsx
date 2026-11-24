@@ -32,10 +32,11 @@ export default function SchoolProfile({ school }: { school: Profile }) {
     day: "numeric", month: "long", year: "numeric", timeZone: "UTC",
   });
   const sources = school.sources.filter((record) => record.source?.title);
-  const formerSchoolName = sources.map((record) => {
+  const sourcedFormerSchoolName = sources.map((record) => {
     const metadata = record.raw_record?.school_metadata as Record<string, unknown> | undefined;
     return typeof metadata?.former_school_name === "string" ? metadata.former_school_name.trim() : "";
   }).find(Boolean) ?? "";
+  const formerSchoolName = school.former_name?.trim() || sourcedFormerSchoolName;
   return <div className="govuk-width-container">
     <GovUKBreadcrumbs items={[{text:"Home",href:"/"},{text:"Government",href:"/government"},
       {text:"Institutions",href:"/government/institutions"},
@@ -59,6 +60,7 @@ export default function SchoolProfile({ school }: { school: Profile }) {
         <Details title="About the school" rows={[
           ["Education level",schoolLevelLabel(school.main_tier),school.main_tier],
           ["Former school name",formerSchoolName,formerSchoolName],
+          ["Established",school.established_year ? String(school.established_year) : "",school.established_year],
           ["School category",schoolValue(school.moe_category),school.moe_category],
           ["School type",schoolValue(school.institution_type),school.institution_type],["Learner gender",schoolValue(school.gender_type),school.gender_type],
           ["Day or boarding",schoolValue(school.accommodation_type),school.accommodation_type],["Operational status",schoolValue(school.operational_status),school.operational_status],
