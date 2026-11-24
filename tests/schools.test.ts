@@ -53,6 +53,17 @@ describe("public school lookup", () => {
     expect(target.eq).toHaveBeenCalledWith("is_published", true);
     expect(target.eq).toHaveBeenCalledWith("id", "school-1");
   });
+  it("falls back to the existing school fields until the optional gate columns exist", async () => {
+    const school = { id: "legacy-school", slug: "legacy-school" };
+    db.from.mockReturnValueOnce(response(null, { message: "column education_schools.entrance_lat does not exist" }))
+      .mockReturnValueOnce(response(school))
+      .mockReturnValueOnce(response(null, { message: "sources unavailable" }))
+      .mockReturnValueOnce(response(null, { message: "officials unavailable" }));
+
+    await expect(getPublicSchool("legacy-school")).resolves.toMatchObject({
+      slug: "legacy-school", entrance_lat: null, entrance_lng: null,
+    });
+  });
   it("does not expose a private school through a legacy alias", async () => {
     db.from.mockReturnValueOnce(response(null)).mockReturnValueOnce(response({ school_id: "private-1" })).mockReturnValueOnce(response(null));
     expect(await getPublicSchool("private-old")).toBeNull();
@@ -83,7 +94,7 @@ describe("public school profile provenance", () => {
       county_code: 47, moe_category: "c2", gender_type: null, accommodation_type: null,
       operational_status: "operational", description: null, institution_type: "regular",
       registration_status: null, constituency: null, ward: null, physical_address: null,
-      postal_address: null, latitude: -1.2864, longitude: 36.8172, public_phone: null, public_email: null,
+      postal_address: null, latitude: -1.2864, longitude: 36.8172, entrance_lat: -1.2865, entrance_lng: 36.8173, public_phone: null, public_email: null,
       website_url: null, nemis_code: null, knec_code: null, tsc_code: null, sponsor_name: null,
       special_needs_status: null, sne_categories: null, total_enrollment: null, total_teachers: null,
       water_source: null, power_source: null, internet_connectivity: null,
@@ -107,7 +118,9 @@ describe("public school profile provenance", () => {
     expect(markup).toContain("Dataset last updated: 24 August 2020");
     expect(markup).toContain("Metadata last updated: 20 January 2023");
     expect(markup).toContain("Cluster 2 (C2)");
-    expect(markup).toContain("https://www.google.com/maps/search/?api=1&amp;query=-1.2864,36.8172");
+    expect(markup).toContain("https://www.google.com/maps/dir/?api=1&amp;destination=-1.2865,36.8173");
+    expect(markup).toContain("Get directions to the main gate");
+    expect(markup).toContain('"latitude":-1.2865,"longitude":36.8173');
     expect(schoolValue("day_and_boarding")).toBe("Day And Boarding");
     expect(schoolValue("school@example.org")).toBe("school@example.org");
     expect(markup).toContain("https://example.org/schools");
@@ -153,6 +166,9 @@ describe("school administration and display", () => {
     expect(schoolEditSchema.safeParse({ ...valid, gender_type: "mixed", sne_categories: ["physical"] }).success).toBe(true);
     expect(schoolEditSchema.safeParse({ ...valid, latitude: 91 }).success).toBe(false);
     expect(schoolEditSchema.safeParse({ ...valid, longitude: -181 }).success).toBe(false);
+    expect(schoolEditSchema.safeParse({ ...valid, entrance_lat: -1.2865, entrance_lng: 36.8173 }).success).toBe(true);
+    expect(schoolEditSchema.safeParse({ ...valid, entrance_lat: 91, entrance_lng: 36.8173 }).success).toBe(false);
+    expect(schoolEditSchema.safeParse({ ...valid, entrance_lng: 181 }).success).toBe(false);
   });
   it("omits missing profile values and preserves zero resource counts", () => {
     expect(safeSchoolWebsite("javascript:alert(1)")).toBeNull();

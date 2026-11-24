@@ -21,6 +21,10 @@ function Details({ title, rows }: { title: string; rows: DetailRow[] }) {
 
 export default function SchoolProfile({ school }: { school: Profile }) {
   const website = safeSchoolWebsite(school.website_url);
+  const hasEntranceCoordinates = typeof school.entrance_lat === "number" && Number.isFinite(school.entrance_lat)
+    && typeof school.entrance_lng === "number" && Number.isFinite(school.entrance_lng);
+  const mapLatitude = hasEntranceCoordinates ? school.entrance_lat : school.latitude;
+  const mapLongitude = hasEntranceCoordinates ? school.entrance_lng : school.longitude;
   const institutionLink = (institution: Profile["parent"]) => institution
     ? <Link className="govuk-link" href={`/government/institutions/${institution.slug}`}>{institution.name}{institution.short_name ? ` (${institution.short_name})` : ""}</Link>
     : "Not assigned in the directory";
@@ -39,6 +43,7 @@ export default function SchoolProfile({ school }: { school: Profile }) {
       {text:school.official_name}]} />
     <JsonLd data={{"@context":"https://schema.org","@type":"School",name:school.official_name,
       url:`${SITE_URL}/government/institutions/${school.slug}`,address:{"@type":"PostalAddress",addressCountry:"KE",addressRegion:school.county || undefined,streetAddress:school.physical_address || undefined},
+      geo:typeof mapLatitude === "number" && typeof mapLongitude === "number" ? {"@type":"GeoCoordinates",latitude:mapLatitude,longitude:mapLongitude} : undefined,
       parentOrganization:school.parent ? {"@type":"GovernmentOrganization",name:school.parent.name,url:`${SITE_URL}/government/institutions/${school.parent.slug}`} : undefined,
       sameAs:website ? [website] : undefined}} />
     <main className="govuk-main-wrapper" id="main-content">
@@ -68,9 +73,10 @@ export default function SchoolProfile({ school }: { school: Profile }) {
           ["Constituency",schoolValue(school.constituency),school.constituency],["Ward",schoolValue(school.ward),school.ward],
           ["Address",schoolValue(school.physical_address),school.physical_address],["Postal address",schoolValue(school.postal_address),school.postal_address],
           ["Latitude",schoolValue(school.latitude),school.latitude],["Longitude",schoolValue(school.longitude),school.longitude],
-          ...(typeof school.latitude === "number" && typeof school.longitude === "number" && Number.isFinite(school.latitude) && Number.isFinite(school.longitude)
-            ? [["Map", <a key="school-map-link" className="govuk-link" href={`https://www.google.com/maps/search/?api=1&query=${school.latitude},${school.longitude}`} target="_blank" rel="noopener noreferrer">Open this location in Google Maps<ExternalLinkIcon /></a>] as DetailRow]
-            : []),
+          ...(hasEntranceCoordinates ? [["Main gate", <a key="school-main-gate-link" className="govuk-link" href={`https://www.google.com/maps/dir/?api=1&destination=${school.entrance_lat},${school.entrance_lng}`} target="_blank" rel="noopener noreferrer">Get directions to the main gate<ExternalLinkIcon /></a>] as DetailRow]
+            : typeof school.latitude === "number" && typeof school.longitude === "number" && Number.isFinite(school.latitude) && Number.isFinite(school.longitude)
+              ? [["Map", <a key="school-map-link" className="govuk-link" href={`https://www.google.com/maps/search/?api=1&query=${school.latitude},${school.longitude}`} target="_blank" rel="noopener noreferrer">Open this location in Google Maps<ExternalLinkIcon /></a>] as DetailRow]
+              : []),
           ["Telephone",schoolValue(school.public_phone),school.public_phone],["Email",schoolValue(school.public_email),school.public_email],
           ["Website",website ? <a className="govuk-link" href={website} target="_blank" rel="noopener noreferrer">Visit the school website<ExternalLinkIcon /></a> : "",website],
         ]} />

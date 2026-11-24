@@ -4,7 +4,9 @@ import { schoolWriteFailure } from "@/lib/schools/write-error";
 import { z } from "zod";
 
 type Context = { params: Promise<{ id: string }> };
-const fields = "id,slug,official_name,ownership,main_tier,description,county,county_code,sub_county,sub_county_id,constituency,constituency_id,ward,ward_id,is_published,short_name,operational_status,institution_type,moe_category,gender_type,accommodation_type,registration_status,sponsor_name,special_needs_status,sne_categories,physical_address,postal_address,latitude,longitude,public_phone,public_email,website_url,nemis_code,knec_code,tsc_code,total_enrollment,total_teachers,water_source,power_source,internet_connectivity,verification_status,created_at,updated_at";
+const legacyFields = "id,slug,official_name,ownership,main_tier,description,county,county_code,sub_county,sub_county_id,constituency,constituency_id,ward,ward_id,is_published,short_name,operational_status,institution_type,moe_category,gender_type,accommodation_type,registration_status,sponsor_name,special_needs_status,sne_categories,physical_address,postal_address,latitude,longitude,public_phone,public_email,website_url,nemis_code,knec_code,tsc_code,total_enrollment,total_teachers,water_source,power_source,internet_connectivity,verification_status,created_at,updated_at";
+const fields = `${legacyFields},entrance_lat,entrance_lng`;
+const missingEntranceColumns = (error: { code?: string; message?: string } | null) => Boolean(error && /entrance_(lat|lng)/i.test(error.message ?? ""));
 const reply = (body: unknown, status = 200) => Response.json(body, { status, headers: { "Cache-Control": "no-store" } });
 
 export async function GET(_request: Request, context: Context) {
@@ -12,9 +14,12 @@ export async function GET(_request: Request, context: Context) {
   if (!auth.ok) return auth.response;
   const { id } = await context.params;
   if (!z.uuid().safeParse(id).success) return reply({ error: "Invalid school ID" }, 400);
-  const { data, error } = await auth.supabase.from("education_schools").select(fields).eq("id", id).maybeSingle();
+  let { data, error } = await auth.supabase.from("education_schools").select(fields).eq("id", id).maybeSingle();
+  if (missingEntranceColumns(error)) {
+    ({ data, error } = await auth.supabase.from("education_schools").select(legacyFields).eq("id", id).maybeSingle());
+  }
   if (error) return reply({ error: "Could not load school" }, 500);
-  return data ? reply(data) : reply({ error: "School not found" }, 404);
+  return data ? reply({ ...data, entrance_lat: data.entrance_lat ?? null, entrance_lng: data.entrance_lng ?? null }) : reply({ error: "School not found" }, 404);
 }
 
 export async function PATCH(request: Request, context: Context) {
@@ -27,10 +32,23 @@ export async function PATCH(request: Request, context: Context) {
   const parsed = schoolPatchSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return reply({ error: parsed.error.issues.map(issue => `${issue.path.join(".")}: ${issue.message}`).join("; ") }, 400);
   if (Object.keys(parsed.data).length === 0) return reply({ error: "Change at least one school detail before saving." }, 400);
-  const { data: existingSchool, error: existingSchoolError } = await auth.supabase
-    .from("education_schools").select("county_code,sub_county_id,constituency_id").eq("id", id).maybeSingle();
+  let { data: existingSchool, error: existingSchoolError } = await auth.supabase
+    .from("education_schools").select("county_code,sub_county_id,constituency_id,entrance_lat,entrance_lng").eq("id", id).maybeSingle();
+  const entranceColumnsUnavailable = missingEntranceColumns(existingSchoolError);
+  if (entranceColumnsUnavailable) {
+    ({ data: existingSchool, error: existingSchoolError } = await auth.supabase
+      .from("education_schools").select("county_code,sub_county_id,constituency_id").eq("id", id).maybeSingle());
+  }
   if (existingSchoolError) return reply({ error: "Could not load school" }, 500);
   if (!existingSchool) return reply({ error: "School not found" }, 404);
+  if (entranceColumnsUnavailable && ("entrance_lat" in parsed.data || "entrance_lng" in parsed.data)) {
+    return reply({ error: "Main gate coordinates are not available until the school database columns are added." }, 409);
+  }
+  const entranceLat = parsed.data.entrance_lat !== undefined ? parsed.data.entrance_lat : existingSchool.entrance_lat ?? null;
+  const entranceLng = parsed.data.entrance_lng !== undefined ? parsed.data.entrance_lng : existingSchool.entrance_lng ?? null;
+  if ((entranceLat == null) !== (entranceLng == null)) {
+    return reply({ error: "Enter both main gate coordinates, or leave both blank." }, 400);
+  }
 
   const updates: Record<string, unknown> = { ...parsed.data };
   if (parsed.data.county_code !== undefined && parsed.data.county_code !== null) {
@@ -87,10 +105,16 @@ export async function PATCH(request: Request, context: Context) {
   if (parsed.data.official_name !== undefined) {
     updates.normalized_name = parsed.data.official_name.toLowerCase().replace(/\s+/g, " ");
   }
-  const { data, error } = await auth.supabase.from("education_schools").update({
+  let { data, error } = await auth.supabase.from("education_schools").update({
     ...updates,
     updated_at: new Date().toISOString(),
   }).eq("id", id).select(fields).maybeSingle();
+  if (missingEntranceColumns(error) && !("entrance_lat" in updates || "entrance_lng" in updates)) {
+    ({ data, error } = await auth.supabase.from("education_schools").update({
+      ...updates,
+      updated_at: new Date().toISOString(),
+    }).eq("id", id).select(legacyFields).maybeSingle());
+  }
   if (error) {
     const failure = schoolWriteFailure(error);
     console.error("Could not save school:", { code: error.code });

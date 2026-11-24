@@ -43,6 +43,8 @@ type Record = {
   postal_address: string | null;
   latitude: number | null;
   longitude: number | null;
+  entrance_lat: number | null;
+  entrance_lng: number | null;
   public_phone: string | null;
   public_email: string | null;
   website_url: string | null;
@@ -247,9 +249,17 @@ export default function SchoolEditor() {
         <label className="govuk-label" htmlFor={key}>{label}</label>
         <input id={key} className="govuk-input" value={school[key] || ""} onChange={e => setSchool({ ...school, [key]: e.target.value || null })} />
       </div>)}
+      <h3 className="govuk-heading-s govuk-!-margin-top-5">Recorded location (source coordinates)</h3>
+      <p className="govuk-hint">Keep these existing coordinates as supplied by the source. They are not replaced by the main gate position.</p>
       {([ ["latitude", "Latitude"], ["longitude", "Longitude"] ] as const).map(([key, label]) => <div className="govuk-form-group" key={key}>
         <label className="govuk-label" htmlFor={key}>{label}</label>
         <input id={key} className="govuk-input govuk-input--width-10" type="number" step="any" value={school[key] ?? ""} onChange={e => setSchool({ ...school, [key]: e.target.value === "" ? null : Number(e.target.value) })} />
+      </div>)}
+      <h3 className="govuk-heading-s govuk-!-margin-top-5">Main gate coordinates</h3>
+      <p className="govuk-hint">Use the school&apos;s public entrance. When provided, these coordinates power the public Main gate directions link and map pin. Enter both coordinates or leave both blank.</p>
+      {([ ["entrance_lat", "Main gate latitude"], ["entrance_lng", "Main gate longitude"] ] as const).map(([key, label]) => <div className="govuk-form-group" key={key}>
+        <label className="govuk-label" htmlFor={key}>{label}</label>
+        <input id={key} className="govuk-input govuk-input--width-10" type="number" step="any" min={key === "entrance_lat" ? -90 : -180} max={key === "entrance_lat" ? 90 : 180} value={school[key] ?? ""} onChange={e => setSchool({ ...school, [key]: e.target.value === "" ? null : Number(e.target.value) })} />
       </div>)}
       <p className="govuk-hint">Changing the canonical URL keeps the previous address as a redirect. Source records and official service histories are retained.</p>
       <button type="submit" className="govuk-button" disabled={saving || !hasUnsavedChanges}>{saving ? "Saving…" : hasUnsavedChanges ? "Save School" : "No changes to save"}</button>
