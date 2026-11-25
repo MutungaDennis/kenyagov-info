@@ -1,3 +1,4 @@
+// app/services/ServicesClientView.tsx
 import Link from "next/link";
 import GovUKBreadcrumbs from "@/components/govuk/Breadcrumbs";
 import ChevronLinkList from "@/components/site/ChevronLinkList";
@@ -74,6 +75,7 @@ export default function ServicesClientView({
   const services = initialServices
     .filter((service) => categoryHasService(service, pathCategorySlug))
     .sort((a, b) => (a.servicePriority || Number.MAX_SAFE_INTEGER) - (b.servicePriority || Number.MAX_SAFE_INTEGER) || a.title.localeCompare(b.title));
+    
   const grouped = new Map<string, GovernmentServiceSummary[]>();
   for (const service of services) {
     const heading = service.subcategorySlug || "Services in this topic";

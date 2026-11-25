@@ -3,27 +3,9 @@ import React, { Suspense } from "react";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getServiceDirectory } from "@/lib/services/queries";
+
+// ✅ Ensure this points to the exact file name: ServicesClientView.tsx
 import ServicesClientView from "./ServicesClientView";
-
-export interface GovernmentServiceSummary {
-  _id: string;
-  title: string;
-  summary: string;
-  slug: string;
-  popularityWeight: number;
-  executionMode: string;
-  categorySlug: string | string[];
-  subcategorySlug?: string;
-  providingBody: string;
-}
-
-export interface GovernmentCategoryFilter {
-  title: string;
-  slug: string;
-  subcategories?: Array<{ title: string; slug: string }>;
-}
-
-
 
 const SITE_URL = "https://www.citizenguide.ke";
 
@@ -38,9 +20,10 @@ export async function generateMetadata({
   const category = params.category?.trim();
 
   if (category && category !== "all") {
+    const formattedCategory = category.replace(/-/g, " ");
     return {
-      title: `Services: ${category.replace(/-/g, " ")}`,
-      description: "Find government services filtered by topic.",
+      title: `${formattedCategory} - Services and information`,
+      description: `Find Kenyan government services, guides, and information related to ${formattedCategory}.`,
       alternates: {
         canonical: `${SITE_URL}/services/${encodeURIComponent(category)}`,
       },
@@ -49,7 +32,7 @@ export async function generateMetadata({
 
   return {
     title: "Services and information",
-    description: "Browse Kenyan government services by topic.",
+    description: "Browse Kenyan government services, step-by-step guides, and official information by topic.",
     alternates: {
       canonical: `${SITE_URL}/services`,
     },
@@ -57,9 +40,9 @@ export async function generateMetadata({
 }
 
 export default async function ServicesHubPage({ searchParams }: PageProps) {
-  // Preserve legacy category URLs without running public authentication middleware.
   const params = await searchParams;
   const category = params.category?.trim();
+  
   if (category && category !== "all") {
     redirect(`/services/${encodeURIComponent(category)}`);
   }
@@ -69,10 +52,15 @@ export default async function ServicesHubPage({ searchParams }: PageProps) {
   return (
     <Suspense
       fallback={
-        <div className="govuk-grid-row">
-          <div className="govuk-grid-column-two-thirds">
-            <p className="govuk-body">Loading service directory...</p>
-          </div>
+        <div className="govuk-width-container">
+          <main className="govuk-main-wrapper" id="main-content">
+            <div className="govuk-grid-row">
+              <div className="govuk-grid-column-two-thirds">
+                <h1 className="govuk-heading-xl">Services and information</h1>
+                <p className="govuk-body">Loading service directory...</p>
+              </div>
+            </div>
+          </main>
         </div>
       }
     >
@@ -81,5 +69,4 @@ export default async function ServicesHubPage({ searchParams }: PageProps) {
   );
 }
 
-// Directory content is read-heavy and can safely be refreshed hourly.
 export const revalidate = 3600;

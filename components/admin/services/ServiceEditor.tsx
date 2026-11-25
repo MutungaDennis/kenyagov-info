@@ -114,18 +114,18 @@ export default function ServiceEditor({
       <h2 className="govuk-heading-l">
         {form._id ? "Edit service guide" : "New service guide"}
       </h2>
-          <p className="govuk-body">
-            Write for citizens. Keep the main journey short and linear; put genuine alternatives in pathways or county requirements. The Start now button must open an official portal (eCitizen or agency site) — this site does not take applications.
-          </p>
-          <div className="govuk-inset-text">
-            <p className="govuk-body govuk-!-margin-bottom-2"><strong>Editor checklist</strong></p>
-            <ul className="govuk-list govuk-list--bullet govuk-!-margin-bottom-0">
-              <li>Use a verb-led title, such as “Register a company”.</li>
-              <li>Explain one clear task per page and keep steps to 5–7 where possible.</li>
-              <li>Use pathways for alternatives and county requirements only where they differ.</li>
-              <li>Add at least one official source and the correct attribution or licence.</li>
-            </ul>
-          </div>
+      <p className="govuk-body">
+        Write for citizens. Keep the main journey short and linear; put genuine alternatives in pathways or county requirements. The Start now button must open an official portal (eCitizen or agency site) — this site does not take applications.
+      </p>
+      <div className="govuk-inset-text">
+        <p className="govuk-body govuk-!-margin-bottom-2"><strong>Editor checklist</strong></p>
+        <ul className="govuk-list govuk-list--bullet govuk-!-margin-bottom-0">
+          <li>Use a verb-led title, such as “Register a company”.</li>
+          <li>Explain one clear task per page and keep steps to 5–7 where possible.</li>
+          <li>Use pathways for alternatives and county requirements only where they differ.</li>
+          <li>Add at least one official source and the correct attribution or licence.</li>
+        </ul>
+      </div>
 
       {error && (
         <div className="govuk-error-summary" role="alert">
@@ -476,6 +476,46 @@ export default function ServiceEditor({
         </div>
       </fieldset>
 
+      {/* --- NEW: CRITICAL BLOCKERS --- */}
+      <fieldset className="govuk-fieldset govuk-!-margin-bottom-6">
+        <legend className="govuk-fieldset__legend govuk-fieldset__legend--m">
+          Critical blockers
+        </legend>
+        <div className="govuk-hint govuk-!-margin-bottom-4">
+          High-visibility warnings that stop users from proceeding if they don't meet criteria (e.g., Rule of 6 Months, Online vs In-Person restrictions).
+        </div>
+        <ArrayObjectEditor
+          title=""
+          items={form.criticalBlockers}
+          empty={{ title: "", message: "" }}
+          fields={[
+            { key: "title", label: "Blocker title (e.g., Rule of 6 Months)" },
+            { key: "message", label: "Clear explanation", textarea: true },
+          ]}
+          onChange={(items) => set("criticalBlockers", items)}
+        />
+      </fieldset>
+
+      {/* --- NEW: WARNINGS --- */}
+      <fieldset className="govuk-fieldset govuk-!-margin-bottom-6">
+        <legend className="govuk-fieldset__legend govuk-fieldset__legend--m">
+          Common traps & warnings
+        </legend>
+        <div className="govuk-hint govuk-!-margin-bottom-4">
+          Inline alerts for high-risk mistakes (e.g., "Leaving the father's section blank will cost Ksh 1,200 to fix later").
+        </div>
+        <ArrayObjectEditor
+          title=""
+          items={form.warnings}
+          empty={{ title: "", message: "" }}
+          fields={[
+            { key: "title", label: "Warning title (e.g., The Unmarried Father Trap)" },
+            { key: "message", label: "Warning message", textarea: true },
+          ]}
+          onChange={(items) => set("warnings", items)}
+        />
+      </fieldset>
+
       <fieldset className="govuk-fieldset govuk-!-margin-bottom-6">
         <legend className="govuk-fieldset__legend govuk-fieldset__legend--m">
           Steps
@@ -546,13 +586,16 @@ export default function ServiceEditor({
         </button>
       </fieldset>
 
+      {/* --- UPDATED: FEES TABLE WITH CONDITION --- */}
       <ArrayObjectEditor
-        title="Fees table"
+        title="Fees and charges"
+        hint="Break down costs clearly. Use the 'Condition' column to explain exactly when a fee applies (e.g., eCitizen access fee, late penalty)."
         items={form.feesTable}
-        empty={{ itemName: "", amount: "" }}
+        empty={{ itemName: "", amount: "", condition: "" }}
         fields={[
-          { key: "itemName", label: "Fee item" },
-          { key: "amount", label: "Amount" },
+          { key: "itemName", label: "Service / Item" },
+          { key: "amount", label: "Amount (Ksh)" },
+          { key: "condition", label: "When this applies (Condition)", textarea: true },
         ]}
         onChange={(items) => set("feesTable", items)}
       />
@@ -593,6 +636,7 @@ export default function ServiceEditor({
         ]}
         onChange={(items) => set("commonMistakes", items)}
       />
+      
       <ArrayObjectEditor
         title="FAQs"
         items={form.faqs}
@@ -603,6 +647,27 @@ export default function ServiceEditor({
         ]}
         onChange={(items) => set("faqs", items)}
       />
+
+      {/* --- NEW: EDGE CASES --- */}
+      <fieldset className="govuk-fieldset govuk-!-margin-bottom-6">
+        <legend className="govuk-fieldset__legend govuk-fieldset__legend--m">
+          Special & edge-case scenarios
+        </legend>
+        <div className="govuk-hint govuk-!-margin-bottom-4">
+          Address vulnerable or non-standard situations (e.g., Deceased parents, home births, adopted children).
+        </div>
+        <ArrayObjectEditor
+          title=""
+          items={form.edgeCases}
+          empty={{ scenario: "", guidance: "" }}
+          fields={[
+            { key: "scenario", label: "Scenario (e.g., Deceased Parent)" },
+            { key: "guidance", label: "Required action / guidance", textarea: true },
+          ]}
+          onChange={(items) => set("edgeCases", items)}
+        />
+      </fieldset>
+
       <ArrayObjectEditor
         title="Downloadable resources"
         hint="The label becomes the clickable link on the public page. Put the file or page URL in Source URL."
@@ -645,8 +710,33 @@ export default function ServiceEditor({
       </fieldset>
 
       <ArrayObjectEditor title="Information sources" hint="List every website or document used to prepare this guide." items={form.sourceLinks} empty={{ label: "", href: "" }} fields={[{ key: "label", label: "Source label" }, { key: "href", label: "Source URL" }]} onChange={(items) => set("sourceLinks", items)} />
+      
       <ArrayObjectEditor title="Service pathways / subprocedures" hint="Use for branching journeys such as company type, citizenship or applicant category." items={form.pathways} empty={{ title: "", summary: "", details: "", portalUrl: "" }} fields={[{ key: "title", label: "Pathway title" }, { key: "summary", label: "Short summary" }, { key: "details", label: "Details", textarea: true }, { key: "portalUrl", label: "Application URL" }]} onChange={(items) => set("pathways", items)} />
+      
       <ArrayObjectEditor title="County-specific requirements" hint="Only add counties where the requirements or process differ." items={form.countyRequirements} empty={{ county: "", requirements: "", sourceUrl: "" }} fields={[{ key: "county", label: "County" }, { key: "requirements", label: "Requirements and local guidance", textarea: true }, { key: "sourceUrl", label: "County source URL" }]} onChange={(items) => set("countyRequirements", items)} />
+
+      {/* --- NEW: TRUST MARKERS --- */}
+      <fieldset className="govuk-fieldset govuk-!-margin-bottom-6">
+        <legend className="govuk-fieldset__legend govuk-fieldset__legend--m">
+          Trust markers & international use
+        </legend>
+        <div className="govuk-form-group">
+          <label className="govuk-label" htmlFor="svc-gazette">Official Gazette Reference</label>
+          <div className="govuk-hint">e.g., "Fees verified against Gazette Notice No. 17422"</div>
+          <input className="govuk-input" id="svc-gazette" value={form.gazetteReference} onChange={(e) => set("gazetteReference", e.target.value)} />
+        </div>
+        <div className="govuk-form-group">
+          <label className="govuk-label" htmlFor="svc-international">Authentication & International Use Guidance</label>
+          <div className="govuk-hint">Explain if this document needs an apostille or CRS authentication for visas/scholarships abroad.</div>
+          <ExpandableTextarea
+            id="svc-international"
+            minRows={3}
+            maxRows={10}
+            value={form.internationalUseGuidance}
+            onChange={(e) => set("internationalUseGuidance", e.target.value)}
+          />
+        </div>
+      </fieldset>
 
       <ArrayObjectEditor
         title="Related links"

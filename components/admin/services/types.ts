@@ -1,3 +1,9 @@
+// --- NEW TYPES FOR GOV.UK ENHANCEMENTS ---
+export type CriticalBlocker = { title: string; message: string };
+export type WarningCallout = { title: string; message: string };
+export type EdgeCaseScenario = { scenario: string; guidance: string };
+export type FeeItem = { itemName: string; amount: string; condition?: string };
+
 export type ServiceFormState = {
   _id?: string;
   title: string;
@@ -27,7 +33,10 @@ export type ServiceFormState = {
     stepTitle: string;
     stepDescription: string;
   }>;
-  feesTable: Array<{ itemName: string; amount: string }>;
+  
+  // UPDATED: Fees table now includes an optional 'condition' field
+  feesTable: FeeItem[]; 
+  
   physicalVisits: Array<{ purpose: string; locations: string }>;
   downloadableResources: Array<{ label: string; sourceUrl: string; fileUrl?: string; fileSize?: number }>;
   commonMistakes: Array<{ errorTitle: string; errorFix: string }>;
@@ -47,6 +56,13 @@ export type ServiceFormState = {
   categoryId: string;
   subTopicHeading: string;
   subSubTopicHeading: string;
+
+  // --- NEW GOV.UK FIELDS ---
+  criticalBlockers: CriticalBlocker[];
+  warnings: WarningCallout[];
+  edgeCases: EdgeCaseScenario[];
+  internationalUseGuidance: string;
+  gazetteReference: string;
 };
 
 export type MinistryOption = { _id: string; name: string; slug?: string };
@@ -107,6 +123,12 @@ export function emptyServiceForm(): ServiceFormState {
     categoryId: "",
     subTopicHeading: "General",
     subSubTopicHeading: "",
+    // New fields defaults
+    criticalBlockers: [],
+    warnings: [],
+    edgeCases: [],
+    internationalUseGuidance: "",
+    gazetteReference: "",
   };
 }
 
@@ -138,64 +160,66 @@ export function blocksToPlainText(blocks: unknown): string {
 
 export function detailToForm(data: Record<string, unknown>): ServiceFormState {
   const base = emptyServiceForm();
+  
+  // Use 'any' casting here to safely check for both snake_case (from DB) and camelCase (if normalized by API)
+  const d = data as any;
+
   return {
     ...base,
-    _id: data._id ? String(data._id) : undefined,
-    title: String(data.title || ""),
-    slug: String(data.slug || ""),
-    summary: String(data.summary || ""),
-    bodyText: blocksToPlainText(data.body),
-    originalBodyText: blocksToPlainText(data.body),
-    bodyBlocks: Array.isArray(data.body) ? data.body : undefined,
-    status: data.status === "draft" ? "draft" : "published",
-    reviewedAt: data.reviewedAt ? String(data.reviewedAt).slice(0, 10) : "",
-    moreInformationUrl: String(data.moreInformationUrl || ""),
-    copyrightNotice: String(data.copyrightNotice || ""),
-    licenseUrl: String(data.licenseUrl || ""),
-    sourceLinks: Array.isArray(data.sourceLinks) ? (data.sourceLinks as ServiceFormState["sourceLinks"]) : [],
-    pathways: Array.isArray(data.pathways) ? (data.pathways as ServiceFormState["pathways"]) : [],
-    countyRequirements: Array.isArray(data.countyRequirements) ? (data.countyRequirements as ServiceFormState["countyRequirements"]) : [],
-    popularityWeight: Number(data.popularityWeight) || 0,
-    servicePriority: Number(data.servicePriority) || 0,
-    processingTime: String(data.processingTime || ""),
-    baseCostLabel: String(data.baseCostLabel || ""),
+    _id: d._id ? String(d._id) : undefined,
+    title: String(d.title || ""),
+    slug: String(d.slug?.current || d.slug || ""),
+    summary: String(d.summary || ""),
+    bodyText: blocksToPlainText(d.body),
+    originalBodyText: blocksToPlainText(d.body),
+    bodyBlocks: Array.isArray(d.body) ? d.body : undefined,
+    status: d.status === "draft" ? "draft" : "published",
+    reviewedAt: d.reviewedAt ? String(d.reviewedAt).slice(0, 10) : "",
+    moreInformationUrl: String(d.moreInformationUrl || ""),
+    copyrightNotice: String(d.copyrightNotice || ""),
+    licenseUrl: String(d.licenseUrl || ""),
+    sourceLinks: Array.isArray(d.sourceLinks) ? (d.sourceLinks as ServiceFormState["sourceLinks"]) : [],
+    pathways: Array.isArray(d.pathways) ? (d.pathways as ServiceFormState["pathways"]) : [],
+    countyRequirements: Array.isArray(d.countyRequirements) ? (d.countyRequirements as ServiceFormState["countyRequirements"]) : [],
+    popularityWeight: Number(d.popularityWeight) || 0,
+    servicePriority: Number(d.servicePriority) || 0,
+    processingTime: String(d.processingTime || ""),
+    baseCostLabel: String(d.baseCostLabel || ""),
     executionMode:
-      data.executionMode === "hybrid" || data.executionMode === "manual"
-        ? data.executionMode
+      d.executionMode === "hybrid" || d.executionMode === "manual"
+        ? d.executionMode
         : "online",
-    timelineGuidancePoints: linesToText(
-      data.timelineGuidancePoints as string[],
-    ),
-    beforeYouStart: linesToText(data.beforeYouStart as string[]),
-    requiredDocuments: linesToText(data.requiredDocuments as string[]),
-    steps: Array.isArray(data.steps) && data.steps.length
-      ? (data.steps as ServiceFormState["steps"])
+    timelineGuidancePoints: linesToText(d.timelineGuidancePoints as string[]),
+    beforeYouStart: linesToText(d.beforeYouStart as string[]),
+    requiredDocuments: linesToText(d.requiredDocuments as string[]),
+    steps: Array.isArray(d.steps) && d.steps.length
+      ? (d.steps as ServiceFormState["steps"])
       : base.steps,
-    feesTable: Array.isArray(data.feesTable)
-      ? (data.feesTable as ServiceFormState["feesTable"])
+    feesTable: Array.isArray(d.fees_table || d.feesTable)
+      ? (d.fees_table || d.feesTable) as ServiceFormState["feesTable"]
       : [],
-    physicalVisits: Array.isArray(data.physicalVisits)
-      ? (data.physicalVisits as ServiceFormState["physicalVisits"])
+    physicalVisits: Array.isArray(d.physicalVisits)
+      ? (d.physicalVisits as ServiceFormState["physicalVisits"])
       : [],
-    downloadableResources: Array.isArray(data.downloadableResources)
-      ? (data.downloadableResources as ServiceFormState["downloadableResources"])
+    downloadableResources: Array.isArray(d.downloadableResources)
+      ? (d.downloadableResources as ServiceFormState["downloadableResources"])
       : [],
-    commonMistakes: Array.isArray(data.commonMistakes)
-      ? (data.commonMistakes as ServiceFormState["commonMistakes"])
+    commonMistakes: Array.isArray(d.commonMistakes)
+      ? (d.commonMistakes as ServiceFormState["commonMistakes"])
       : [],
-    faqs: Array.isArray(data.faqs)
-      ? (data.faqs as ServiceFormState["faqs"])
+    faqs: Array.isArray(d.faqs)
+      ? (d.faqs as ServiceFormState["faqs"])
       : [],
-    relatedLinks: Array.isArray(data.relatedLinks)
-      ? (data.relatedLinks as ServiceFormState["relatedLinks"])
+    relatedLinks: Array.isArray(d.relatedLinks)
+      ? (d.relatedLinks as ServiceFormState["relatedLinks"])
       : [],
     transactionPortals:
-      Array.isArray(data.transactionPortals) && data.transactionPortals.length
-        ? (data.transactionPortals as ServiceFormState["transactionPortals"])
+      Array.isArray(d.transactionPortals) && d.transactionPortals.length
+        ? (d.transactionPortals as ServiceFormState["transactionPortals"])
         : base.transactionPortals,
-    providingInstitutions: Array.isArray(data.providingInstitutions)
-      ? (data.providingInstitutions as ServiceFormState["providingInstitutions"]).map(
-          (p) => ({
+    providingInstitutions: Array.isArray(d.providingInstitutions)
+      ? (d.providingInstitutions as ServiceFormState["providingInstitutions"]).map(
+          (p: any) => ({
             institutionId: String(p.institutionId || ""),
             name: String(p.name || ""),
             slug: p.slug ? String(p.slug) : undefined,
@@ -204,17 +228,30 @@ export function detailToForm(data: Record<string, unknown>): ServiceFormState {
           }),
         )
       : [],
-    providingBodyIds: Array.isArray(data.providingBodyIds)
-      ? data.providingBodyIds.map(String)
+    providingBodyIds: Array.isArray(d.providingBodyIds)
+      ? d.providingBodyIds.map(String)
       : [],
-    relatedServiceIds: Array.isArray(data.relatedServiceIds)
-      ? data.relatedServiceIds.map(String)
+    relatedServiceIds: Array.isArray(d.relatedServiceIds)
+      ? d.relatedServiceIds.map(String)
       : [],
-    categoryId: Array.isArray(data.categoryIds) && data.categoryIds[0]
-      ? String(data.categoryIds[0])
+    categoryId: Array.isArray(d.categoryIds) && d.categoryIds[0]
+      ? String(d.categoryIds[0])
       : "",
     subTopicHeading: "General",
     subSubTopicHeading: "",
+    
+    // ✅ FOOLPROOF MAPPING: Checks for BOTH snake_case (DB) and camelCase (API)
+    criticalBlockers: Array.isArray(d.criticalBlockers || d.critical_blockers) 
+      ? (d.criticalBlockers || d.critical_blockers) 
+      : [],
+    warnings: Array.isArray(d.warnings) 
+      ? d.warnings 
+      : [],
+    edgeCases: Array.isArray(d.edgeCases || d.edge_cases) 
+      ? (d.edgeCases || d.edge_cases) 
+      : [],
+    internationalUseGuidance: String(d.internationalUseGuidance || d.international_use_guidance || ""),
+    gazetteReference: String(d.gazetteReference || d.gazette_reference || ""),
   };
 }
 
@@ -246,7 +283,7 @@ export function formToPayload(form: ServiceFormState) {
     beforeYouStart: textToLines(form.beforeYouStart),
     requiredDocuments: textToLines(form.requiredDocuments),
     steps: form.steps,
-    feesTable: form.feesTable,
+    fees_table: form.feesTable, // Updated to snake_case for Supabase
     physicalVisits: form.physicalVisits,
     downloadableResources: form.downloadableResources,
     commonMistakes: form.commonMistakes,
@@ -258,6 +295,13 @@ export function formToPayload(form: ServiceFormState) {
     relatedServiceIds: form.relatedServiceIds,
     categoryId: form.categoryId || undefined,
     subTopicHeading: form.subSubTopicHeading || form.subTopicHeading || "General",
+    
+    // Send new GOV.UK fields to Supabase in snake_case
+    critical_blockers: form.criticalBlockers,
+    warnings: form.warnings,
+    edge_cases: form.edgeCases,
+    international_use_guidance: form.internationalUseGuidance || undefined,
+    gazette_reference: form.gazetteReference || undefined,
   };
 }
 
