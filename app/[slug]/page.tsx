@@ -48,5 +48,5 @@ export default async function ServicePage({ params }: PageProps) {
   return <ServiceClientView service={service} />;
 }
 
-// Service content is read-heavy and can safely be refreshed hourly.
-export const revalidate = 3600;
+// Keep SQL-driven service edits visible promptly, including edits made outside the admin form.
+export const revalidate = 60;

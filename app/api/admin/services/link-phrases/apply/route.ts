@@ -33,20 +33,21 @@ export async function POST(request: NextRequest) {
     }> = [];
 
     for (const svc of services || []) {
+      const serviceSlug = typeof svc.slug === "string" ? svc.slug : svc.slug.current;
       const { blocks, matchCount, changed } = applyServicePhrasesToBlocks(
         svc.body,
         phrases || [],
-        svc.slug.current,
+        serviceSlug,
       );
       results.push({
         id: svc._id,
-        slug: svc.slug.current,
+        slug: serviceSlug,
         matchCount,
         changed,
       });
       if (!dryRun && changed) {
         await saveContent("government_services", { ...svc, body: blocks }, auth.supabase);
-        refreshServices(svc.slug.current);
+        refreshServices(serviceSlug);
       }
     }
 

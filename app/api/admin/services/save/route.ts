@@ -206,6 +206,15 @@ export async function POST(request: NextRequest) {
       servicePriority: Number.isFinite(Number(payload.servicePriority)) && Number(payload.servicePriority) > 0
         ? Math.floor(Number(payload.servicePriority))
         : 0,
+      critical_blockers: Array.isArray(payload.critical_blockers) ? payload.critical_blockers : [],
+      warnings: Array.isArray(payload.warnings) ? payload.warnings : [],
+      edge_cases: Array.isArray(payload.edge_cases) ? payload.edge_cases : [],
+      international_use_guidance: payload.international_use_guidance
+        ? String(payload.international_use_guidance).trim()
+        : "",
+      gazette_reference: payload.gazette_reference
+        ? String(payload.gazette_reference).trim()
+        : "",
       processingTime,
       baseCostLabel,
       executionMode,
@@ -223,10 +232,15 @@ export async function POST(request: NextRequest) {
         "stepItem",
       ),
       feesTable: withKeys(
-        (Array.isArray(payload.feesTable) ? payload.feesTable : []).map(
+        (Array.isArray(payload.feesTable)
+          ? payload.feesTable
+          : Array.isArray(payload.fees_table)
+            ? payload.fees_table
+            : []).map(
           (f: Record<string, unknown>) => ({
             itemName: String(f.itemName || "").trim(),
             amount: String(f.amount || "").trim(),
+            condition: f.condition ? String(f.condition).trim() : undefined,
           }),
         ),
         "feeItem",

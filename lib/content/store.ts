@@ -4,19 +4,49 @@ import { createPublicClient } from "@/lib/supabase/public";
 
 export type ContentTable = "government_services" | "service_categories" | "service_providers" | "service_link_phrases";
 export type ContentDocument = { _id: string; _createdAt?: string; _updatedAt?: string; [key: string]: unknown };
+
+const SERVICE_EXTENSION_FIELDS = [
+  "critical_blockers",
+  "warnings",
+  "edge_cases",
+  "international_use_guidance",
+  "gazette_reference",
+] as const;
+
+function rowToDocument(row: Record<string, unknown>): ContentDocument {
+  const extensionFields: Record<string, unknown> = {};
+  for (const field of SERVICE_EXTENSION_FIELDS) {
+    const value = row[field];
+    if (value !== null && value !== undefined) extensionFields[field] = value;
+  }
+
+  const content =
+    row.content && typeof row.content === "object" && !Array.isArray(row.content)
+      ? (row.content as Record<string, unknown>)
+      : {};
+
+  return {
+    ...content,
+    ...extensionFields,
+    _id: String(row.id ?? ""),
+    _createdAt: typeof row.created_at === "string" ? row.created_at : undefined,
+    _updatedAt: typeof row.updated_at === "string" ? row.updated_at : undefined,
+  };
+}
+
 export async function listContent<T = ContentDocument>(table: ContentTable, db: SupabaseClient = createPublicClient()): Promise<T[]> {
   const rows: T[] = [];
   for (let offset = 0; ; offset += 500) {
-    const { data, error } = await db.from(table).select("id,content,created_at,updated_at").order("id").range(offset, offset + 499);
+    const { data, error } = await db.from(table).select("*").order("id").range(offset, offset + 499);
     if (error) throw error;
-    for (const row of data || []) rows.push({ ...row.content, _id: row.id, _createdAt: row.created_at, _updatedAt: row.updated_at } as T);
+    for (const row of data || []) rows.push(rowToDocument(row) as T);
     if (!data || data.length < 500) return rows;
   }
 }
 export async function getContent<T = ContentDocument>(table: ContentTable, column: "id" | "slug", value: string, db: SupabaseClient = createPublicClient()): Promise<T | null> {
-  const { data, error } = await db.from(table).select("id,content,created_at,updated_at").eq(column, value).maybeSingle();
+  const { data, error } = await db.from(table).select("*").eq(column, value).maybeSingle();
   if (error) throw error;
-  return data ? { ...data.content, _id: data.id, _createdAt: data.created_at, _updatedAt: data.updated_at } as T : null;
+  return data ? rowToDocument(data) as T : null;
 }
 export async function saveContent(table: ContentTable, document: Record<string, unknown>, db: SupabaseClient) {
   const id = String(document._id || crypto.randomUUID());

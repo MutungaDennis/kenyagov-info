@@ -17,6 +17,14 @@ export type ServiceView = {
   _createdAt?: string; // ✅ ADDED to fix TypeScript build error
   _updatedAt?: string; // ✅ ADDED to fix TypeScript build error
   bodyText?: string;
+  body?: unknown;
+  providingInstitutions?: Array<{
+    institutionId?: string;
+    name: string;
+    slug?: string;
+    shortName?: string;
+    parentName?: string;
+  }>;
   executionMode: "online" | "hybrid" | "manual";
   processingTime?: string;
   baseCostLabel?: string;

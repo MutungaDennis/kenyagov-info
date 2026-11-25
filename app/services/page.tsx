@@ -69,4 +69,4 @@ export default async function ServicesHubPage({ searchParams }: PageProps) {
   );
 }
 
-export const revalidate = 3600;
+export const revalidate = 60;

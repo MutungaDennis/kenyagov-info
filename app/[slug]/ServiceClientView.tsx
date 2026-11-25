@@ -31,8 +31,8 @@ export interface ServiceClientViewProps {
     pathways?: Array<{ title: string; summary?: string; details?: string; portalUrl?: string }>;
     countyRequirements?: Array<{ county: string; requirements: string; sourceUrl?: string }>;
     relatedLinks?: Array<{ label: string; href: string }>;
-    _createdAt: string;
-    _updatedAt: string;
+    _createdAt?: string;
+    _updatedAt?: string;
     providingInstitutions?: Array<{
       institutionId?: string;
       name: string;
@@ -41,18 +41,23 @@ export interface ServiceClientViewProps {
       parentName?: string;
     }>;
     providingBodies?: MinistryReference[];
-    processingTime: string;
-    baseCostLabel: string;
+    processingTime?: string;
+    baseCostLabel?: string;
     executionMode: string;
     timelineGuidancePoints?: string[];
-    beforeYouStart: string[];
-    requiredDocuments: string[];
+    beforeYouStart?: string[];
+    requiredDocuments?: string[];
     steps?: Array<{
       stepNumber: number;
       stepTitle: string;
       stepDescription: string;
     }>;
-    feesTable?: Array<{ itemName: string; amount: string }>;
+    feesTable?: Array<{ itemName: string; amount: string; condition?: string }>;
+    criticalBlockers?: Array<{ title: string; message: string }>;
+    warnings?: Array<{ title: string; message: string }>;
+    edgeCases?: Array<{ scenario: string; guidance: string }>;
+    internationalUseGuidance?: string;
+    gazetteReference?: string;
     physicalVisits?: Array<{ purpose: string; locations: string }>;
     downloadableResources?: Array<{
       label: string;
@@ -63,7 +68,7 @@ export interface ServiceClientViewProps {
     commonMistakes?: Array<{ errorTitle: string; errorFix: string }>;
     faqs?: Array<{ question: string; answer: string }>;
     relatedServices?: Array<{ title: string; slug: string }>;
-    transactionPortals: Array<{ portalLabel: string; portalUrl: string }>;
+    transactionPortals?: Array<{ portalLabel: string; portalUrl: string }>;
     parentCategory?: { title: string; slug: string };
   };
 }
@@ -163,7 +168,16 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
     ...(service.countyRequirements?.length
       ? [{ href: "#county-requirements", text: "Requirements by county" }]
       : []),
+    ...(service.criticalBlockers?.length || service.warnings?.length
+      ? [{ href: "#important-information", text: "Important information" }]
+      : []),
     { href: "#before-you-start", text: "Before you start" },
+    ...(service.edgeCases?.length
+      ? [{ href: "#edge-cases", text: "Special situations" }]
+      : []),
+    ...(service.internationalUseGuidance || service.gazetteReference
+      ? [{ href: "#international-use", text: "Trust and international use" }]
+      : []),
     ...(service.timelineGuidancePoints?.length
       ? [{ href: "#timeline", text: "Timeline" }]
       : []),
@@ -395,7 +409,25 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
     </section>
   ) : null}
 
-          {service.beforeYouStart?.length > 0 && (
+          {(service.criticalBlockers?.length || service.warnings?.length) ? (
+            <section id="important-information" aria-labelledby="important-information-heading" className="govuk-!-margin-bottom-6">
+              <h2 id="important-information-heading" className="govuk-heading-m">Important information</h2>
+              {service.criticalBlockers?.map((item, idx) => (
+                <div key={`blocker-${idx}`} className="govuk-error-summary" role="note">
+                  <h3 className="govuk-error-summary__title">{item.title}</h3>
+                  <div className="govuk-error-summary__body"><p className="govuk-body">{item.message}</p></div>
+                </div>
+              ))}
+              {service.warnings?.map((item, idx) => (
+                <div key={`warning-${idx}`} className="govuk-inset-text">
+                  <strong>{item.title}</strong>
+                  <p className="govuk-body govuk-!-margin-bottom-0">{item.message}</p>
+                </div>
+              ))}
+            </section>
+          ) : null}
+
+          {service.beforeYouStart && service.beforeYouStart.length > 0 && (
             <section id="before-you-start" className="govuk-!-margin-bottom-6">
               <details className="govuk-details">
                 <summary className="govuk-details__summary">
@@ -427,7 +459,7 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
               </section>
             )}
 
-          {service.requiredDocuments?.length > 0 && (
+          {service.requiredDocuments && service.requiredDocuments.length > 0 && (
             <section id="required-documents" className="govuk-!-margin-bottom-6">
               <details className="govuk-details">
                 <summary className="govuk-details__summary">
@@ -489,6 +521,9 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
                     >
                       Cost
                     </th>
+                    {service.feesTable.some((fee) => fee.condition) ? (
+                      <th scope="col" className="govuk-table__header">When it applies</th>
+                    ) : null}
                   </tr>
                 </thead>
                 <tbody className="govuk-table__body">
@@ -498,12 +533,27 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
                       <td className="govuk-table__cell govuk-table__cell--numeric">
                         {fee.amount}
                       </td>
+                      {service.feesTable?.some((item) => item.condition) ? (
+                        <td className="govuk-table__cell">{fee.condition || "—"}</td>
+                      ) : null}
                     </tr>
                   ))}
                 </tbody>
               </table>
             </section>
           )}
+
+          {service.edgeCases && service.edgeCases.length > 0 ? (
+            <section id="edge-cases" aria-labelledby="edge-cases-heading" className="govuk-!-margin-bottom-6">
+              <h2 id="edge-cases-heading" className="govuk-heading-m">Special situations</h2>
+              {service.edgeCases.map((item, idx) => (
+                <details key={`edge-${idx}`} className="govuk-details">
+                  <summary className="govuk-details__summary"><span className="govuk-details__summary-text">{item.scenario}</span></summary>
+                  <div className="govuk-details__text">{item.guidance}</div>
+                </details>
+              ))}
+            </section>
+          ) : null}
 
           {service.physicalVisits && service.physicalVisits.length > 0 && (
             <section
@@ -599,6 +649,14 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
                 </ul>
               </section>
             )}
+
+          {(service.internationalUseGuidance || service.gazetteReference) ? (
+            <section id="international-use" aria-labelledby="international-use-heading" className="govuk-!-margin-bottom-6">
+              <h2 id="international-use-heading" className="govuk-heading-m">Trust and international use</h2>
+              {service.internationalUseGuidance ? <p className="govuk-body">{service.internationalUseGuidance}</p> : null}
+              {service.gazetteReference ? <p className="govuk-body-s"><strong>Official reference:</strong> {service.gazetteReference}</p> : null}
+            </section>
+          ) : null}
 
           {service.faqs && service.faqs.length > 0 && (
             <section
