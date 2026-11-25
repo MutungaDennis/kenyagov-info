@@ -129,15 +129,6 @@ export async function POST(request: NextRequest) {
           Boolean(p.portalLabel && p.portalUrl),
       );
 
-    if (transactionPortals.length === 0) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Add at least one transaction portal (Start now link)",
-        },
-        { status: 400 },
-      );
-    }
 
     const providingInstitutions = (
       Array.isArray(payload.providingInstitutions)

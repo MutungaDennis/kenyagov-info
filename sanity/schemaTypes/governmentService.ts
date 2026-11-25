@@ -382,7 +382,7 @@ export default defineType({
       name: 'transactionPortals',
       title: 'Target Transaction Portal Links',
       type: 'array',
-      description: 'The official digital destinations triggered for execution. Provide at least one transaction link.',
+      description: 'Optional official digital destinations for starting the transaction.',
       of: [
         {
           type: 'object',
@@ -406,7 +406,7 @@ export default defineType({
           ]
         }
       ],
-      validation: Rule => Rule.required().min(1)
+      validation: Rule => Rule
     })
   ],
 
