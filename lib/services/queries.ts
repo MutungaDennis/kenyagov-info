@@ -14,6 +14,8 @@ export type ServiceView = {
   title: string;
   summary: string;
   slug: string;
+  _createdAt?: string; // ✅ ADDED to fix TypeScript build error
+  _updatedAt?: string; // ✅ ADDED to fix TypeScript build error
   bodyText?: string;
   executionMode: "online" | "hybrid" | "manual";
   processingTime?: string;
@@ -40,7 +42,7 @@ export type ServiceView = {
 
 type Ref = { _ref: string };
 
-// UPDATED: Added snake_case fields and allowed slug to be a string (for generated columns)
+// UPDATED: Added snake_case fields, allowed slug to be a string, and added timestamps
 export type ServiceDocument = Omit<ServiceView, "providingBodies" | "relatedServices" | "slug"> & {
   _id: string;
   slug: { current: string } | string; 
@@ -49,6 +51,8 @@ export type ServiceDocument = Omit<ServiceView, "providingBodies" | "relatedServ
   servicePriority?: number;
   providingBodies?: Ref[];
   relatedServices?: Ref[];
+  _createdAt?: string; // ✅ ADDED
+  _updatedAt?: string; // ✅ ADDED
   
   // Supabase snake_case columns
   critical_blockers?: CriticalBlocker[];
@@ -109,8 +113,13 @@ export async function getServiceDirectory() {
 
   return {
     services: services.map(s => ({
-      _id: s._id, title: s.title, summary: s.summary || "", slug: getSlug(s),
-      popularityWeight: s.popularityWeight || 0, servicePriority: s.servicePriority || 0, executionMode: s.executionMode,
+      _id: s._id, 
+      title: s.title, 
+      summary: s.summary || "", 
+      slug: getSlug(s),
+      popularityWeight: s.popularityWeight || 0, 
+      servicePriority: s.servicePriority || 0, 
+      executionMode: s.executionMode,
       providingBody: providers.find(p => p._id === s.providingBodies?.[0]?._ref)?.name || "Government Agency",
       categorySlug: visibleCategories.filter(c => activeLinks.some(l => l.category_id === c._id && l.service_id === s._id)).map(c => getSlug(c)),
       subcategorySlug: activeLinks.find(l => l.service_id === s._id)?.heading || undefined,
@@ -169,19 +178,19 @@ export async function getAdminServices(db: SupabaseClient, id?: string) {
   const rows = services.map(s => ({
     ...s, 
     slug: getSlug(s), 
-    portalCount: s.transactionPortals?.length || 0,
-    providingBodyIds: (s.providingBodies || []).map(r => r._ref),
-    relatedServiceIds: (s.relatedServices || []).map(r => r._ref),
-    relatedServiceSlugs: services.filter(r => s.relatedServices?.some(ref => ref._ref === r._id)).map(r => getSlug(r)),
+    portalCount: (s as any).transactionPortals?.length || 0,
+    providingBodyIds: ((s as any).providingBodies || []).map((r: any) => r._ref),
+    relatedServiceIds: ((s as any).relatedServices || []).map((r: any) => r._ref),
+    relatedServiceSlugs: services.filter(r => (s as any).relatedServices?.some((ref: any) => ref._ref === r._id)).map(r => getSlug(r)),
     categoryIds: [...new Set(links.filter(l => l.service_id === s._id).map(l => l.category_id))],
     categoryTitles: categories.filter(c => links.some(l => l.service_id === s._id && l.category_id === c._id)).map(c => c.title),
     
-    // EXPLICITLY PASS THE SNAKE_CASE FIELDS TO THE ADMIN FRONTEND
-    critical_blockers: s.critical_blockers || [],
-    warnings: s.warnings || [],
-    edge_cases: s.edge_cases || [],
-    international_use_guidance: s.international_use_guidance || "",
-    gazette_reference: s.gazette_reference || "",
+    // EXPLICITLY PASS THE SNAKE_CASE FIELDS TO THE ADMIN FRONTEND (and camelCase fallback)
+    criticalBlockers: (s as any).criticalBlockers || (s as any).critical_blockers || [],
+    warnings: (s as any).warnings || [],
+    edgeCases: (s as any).edgeCases || (s as any).edge_cases || [],
+    internationalUseGuidance: (s as any).internationalUseGuidance || (s as any).international_use_guidance || "",
+    gazetteReference: (s as any).gazetteReference || (s as any).gazette_reference || "",
   }));
 
   return { 
@@ -189,11 +198,11 @@ export async function getAdminServices(db: SupabaseClient, id?: string) {
     ministries: providers.map(p => ({ ...p, slug: getSlug(p) })),
     categories: categories.map(c => ({ 
       ...c, slug: getSlug(c),
-      subTopics: [...new Set([...(c.subTopics || []).map(t => t.heading || "General"), ...links.filter(l => l.category_id === c._id).map(l => l.heading)])].map(heading => ({ 
+      subTopics: [...new Set([...((c as any).subTopics || []).map((t: any) => t.heading || "General"), ...links.filter(l => l.category_id === c._id).map(l => l.heading)])].map((heading: string) => ({ 
         heading, 
-        slug: c.subTopics?.find(t => t.heading === heading)?.slug || heading.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""), 
-        description: c.subTopics?.find(t => t.heading === heading)?.description, 
-        parentHeading: c.subTopics?.find(t => t.heading === heading)?.parentHeading, 
+        slug: (c as any).subTopics?.find((t: any) => t.heading === heading)?.slug || heading.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""), 
+        description: (c as any).subTopics?.find((t: any) => t.heading === heading)?.description, 
+        parentHeading: (c as any).subTopics?.find((t: any) => t.heading === heading)?.parentHeading, 
         serviceIds: links.filter(l => l.category_id === c._id && l.heading === heading).map(l => l.service_id) 
       })),
     })),
