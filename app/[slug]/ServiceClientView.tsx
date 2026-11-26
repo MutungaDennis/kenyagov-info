@@ -28,6 +28,7 @@ export interface ServiceClientViewProps {
     copyrightNotice?: string;
     licenseUrl?: string;
     sourceLinks?: Array<{ label: string; href: string }>;
+    pathwayQuestion?: string;
     pathways?: Array<{ title: string; summary?: string; details?: string; portalUrl?: string }>;
     countyRequirements?: Array<{ county: string; requirements: string; sourceUrl?: string }>;
     relatedLinks?: Array<{ label: string; href: string }>;
@@ -82,6 +83,7 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
 
   const [openFaqs, setOpenFaqs] = useState<Record<number, boolean>>({});
   const [selectedCounty, setSelectedCounty] = useState("");
+  const [selectedPathwayIndex, setSelectedPathwayIndex] = useState<number | null>(null);
 
   const formatBytes = (bytes?: number): string => {
     if (!bytes) return "";
@@ -150,6 +152,10 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
 
   const primaryPortal = service.transactionPortals?.[0];
   const secondaryPortals = service.transactionPortals?.slice(1) ?? [];
+  const pathways = service.pathways ?? [];
+  const hasPathwayChooser = pathways.length > 1;
+  const selectedPathway =
+    selectedPathwayIndex === null ? undefined : pathways[selectedPathwayIndex];
 
   const hasRelated =
     Boolean(service.relatedServices?.length) ||
@@ -299,9 +305,101 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
             </p>
           </section>
 
+          {hasPathwayChooser ? (
+            <section
+              id="pathways"
+              aria-labelledby="pathways-heading"
+              className="govuk-!-margin-bottom-6"
+            >
+              <h2 id="pathways-heading" className="govuk-heading-m">
+                Choose a pathway
+              </h2>
+              <p className="govuk-body">
+                Select the option that best matches your situation to see what to do next.
+              </p>
+              <fieldset className="govuk-fieldset">
+                <legend className="govuk-fieldset__legend govuk-fieldset__legend--s">
+                  {service.pathwayQuestion?.trim() ||
+                    "Which option best describes your situation?"}
+                </legend>
+                <div className="govuk-radios">
+                  {pathways.map((pathway, index) => {
+                    const optionId = `service-pathway-${index}`;
+                    const hintId = `${optionId}-hint`;
+
+                    return (
+                      <div className="govuk-radios__item" key={optionId}>
+                        <input
+                          className="govuk-radios__input"
+                          id={optionId}
+                          name="service-pathway"
+                          type="radio"
+                          value={index}
+                          checked={selectedPathwayIndex === index}
+                          aria-describedby={pathway.summary ? hintId : undefined}
+                          onChange={() => setSelectedPathwayIndex(index)}
+                        />
+                        <label
+                          className="govuk-label govuk-radios__label"
+                          htmlFor={optionId}
+                        >
+                          {pathway.title}
+                        </label>
+                        {pathway.summary ? (
+                          <div
+                            className="govuk-hint govuk-radios__hint"
+                            id={hintId}
+                          >
+                            {pathway.summary}
+                          </div>
+                        ) : null}
+                      </div>
+                    );
+                  })}
+                </div>
+              </fieldset>
+              {selectedPathway ? (
+                <div
+                  className="govuk-inset-text govuk-!-margin-top-5"
+                  aria-live="polite"
+                  aria-atomic="true"
+                >
+                  <h3 className="govuk-heading-s">What to do next</h3>
+                  {selectedPathway.details
+                    ? selectedPathway.details
+                        .split(/\n\n+/)
+                        .map((paragraph, index) => (
+                          <p className="govuk-body" key={index}>
+                            {paragraph}
+                          </p>
+                        ))
+                    : null}
+                  {selectedPathway.portalUrl ? (
+                    <a
+                      className="govuk-link"
+                      href={selectedPathway.portalUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Continue to {selectedPathway.title} on the official website
+                      <ExternalLinkIcon />
+                      <span className="govuk-visually-hidden">
+                        {" "}(opens in a new tab)
+                      </span>
+                    </a>
+                  ) : !selectedPathway.details ? (
+                    <p className="govuk-body">
+                      No direct application link or further guidance has been added for this pathway.
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
+            </section>
+          ) : null}
+
           {/* GOV.UK Start now — single primary CTA (external) */}
           <div className="govuk-!-margin-bottom-6">
-            {primaryPortal?.portalUrl ? (
+            {hasPathwayChooser ? null : primaryPortal?.portalUrl ? (
               <>
                 <a
                   href={primaryPortal.portalUrl}
@@ -331,7 +429,7 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
                 .
               </p>
             )}
-            {secondaryPortals.length > 0 && (
+            {!hasPathwayChooser && secondaryPortals.length > 0 && (
               <ul className="govuk-list govuk-list--bullet govuk-!-margin-top-3">
                 {secondaryPortals.map((portal, pIdx) => (
                   <li key={pIdx}>
@@ -367,24 +465,27 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
             </section>
           ) : null}
 
-  {service.pathways && service.pathways.length > 0 ? (
+  {pathways.length === 1 ? (
     <section id="pathways" aria-labelledby="pathways-heading" className="govuk-!-margin-bottom-6">
-      <h2 id="pathways-heading" className="govuk-heading-m">Choose a pathway</h2>
-      <p className="govuk-body">Select the option that matches what you want to do.</p>
-      {service.pathways.map((pathway, idx) => (
-        <details key={idx} className="govuk-details">
-          <summary className="govuk-details__summary"><span className="govuk-details__summary-text">{pathway.title}</span></summary>
-          <div className="govuk-details__text">
-            {pathway.summary ? <p className="govuk-body">{pathway.summary}</p> : null}
-            {pathway.details
-              ? pathway.details.split(/\n\n+/).map((paragraph, paragraphIndex) => (
-                  <p className="govuk-body" key={paragraphIndex}>{paragraph}</p>
-                ))
-              : null}
-            {pathway.portalUrl ? <a className="govuk-link" href={pathway.portalUrl} target="_blank" rel="noopener noreferrer">Apply for {pathway.title}</a> : null}
-          </div>
-        </details>
-      ))}
+      <h2 id="pathways-heading" className="govuk-heading-m">Pathway guidance</h2>
+      <details className="govuk-details">
+        <summary className="govuk-details__summary"><span className="govuk-details__summary-text">{pathways[0].title}</span></summary>
+        <div className="govuk-details__text">
+          {pathways[0].summary ? <p className="govuk-body">{pathways[0].summary}</p> : null}
+          {pathways[0].details
+            ? pathways[0].details.split(/\n\n+/).map((paragraph, paragraphIndex) => (
+                <p className="govuk-body" key={paragraphIndex}>{paragraph}</p>
+              ))
+            : null}
+          {pathways[0].portalUrl ? (
+            <a className="govuk-link" href={pathways[0].portalUrl} target="_blank" rel="noopener noreferrer">
+              Apply for {pathways[0].title}
+              <ExternalLinkIcon />
+              <span className="govuk-visually-hidden">{" "}(opens in a new tab)</span>
+            </a>
+          ) : null}
+        </div>
+      </details>
     </section>
   ) : null}
 
@@ -783,7 +884,7 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
             ) : null}
           </div>
 
-          {primaryPortal?.portalUrl && (
+          {!hasPathwayChooser && primaryPortal?.portalUrl && (
             <div className="govuk-!-margin-top-4">
               <a
                 href={primaryPortal.portalUrl}

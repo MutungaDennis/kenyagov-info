@@ -36,6 +36,8 @@ export type ServiceView = {
   commonMistakes?: { errorTitle: string; errorFix: string }[];
   faqs?: { question: string; answer: string }[];
   transactionPortals?: { portalLabel: string; portalUrl: string }[];
+  pathwayQuestion?: string;
+  pathways?: { title: string; summary?: string; details?: string; portalUrl?: string }[];
   providingBodies?: { name: string; slug: string; parentMinistry?: { name: string; slug: string } }[];
   relatedServices?: { title: string; slug: string }[];
   parentCategory?: { title: string; slug: string };

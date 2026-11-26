@@ -482,7 +482,7 @@ export default function ServiceEditor({
           Critical blockers
         </legend>
         <div className="govuk-hint govuk-!-margin-bottom-4">
-          High-visibility warnings that stop users from proceeding if they don't meet criteria (e.g., Rule of 6 Months, Online vs In-Person restrictions).
+          High-visibility warnings that stop users from proceeding if they don&apos;t meet criteria (e.g., Rule of 6 Months, Online vs In-Person restrictions).
         </div>
         <ArrayObjectEditor
           title=""
@@ -502,7 +502,7 @@ export default function ServiceEditor({
           Common traps & warnings
         </legend>
         <div className="govuk-hint govuk-!-margin-bottom-4">
-          Inline alerts for high-risk mistakes (e.g., "Leaving the father's section blank will cost Ksh 1,200 to fix later").
+          Inline alerts for high-risk mistakes (e.g., &quot;Leaving the father&apos;s section blank will cost Ksh 1,200 to fix later&quot;).
         </div>
         <ArrayObjectEditor
           title=""
@@ -711,7 +711,42 @@ export default function ServiceEditor({
 
       <ArrayObjectEditor title="Information sources" hint="List every website or document used to prepare this guide." items={form.sourceLinks} empty={{ label: "", href: "" }} fields={[{ key: "label", label: "Source label" }, { key: "href", label: "Source URL" }]} onChange={(items) => set("sourceLinks", items)} />
       
-      <ArrayObjectEditor title="Service pathways / subprocedures" hint="Use for branching journeys such as company type, citizenship or applicant category." items={form.pathways} empty={{ title: "", summary: "", details: "", portalUrl: "" }} fields={[{ key: "title", label: "Pathway title" }, { key: "summary", label: "Short summary" }, { key: "details", label: "Details", textarea: true }, { key: "portalUrl", label: "Application URL" }]} onChange={(items) => set("pathways", items)} />
+      <fieldset className="govuk-fieldset govuk-!-margin-bottom-6">
+        <legend className="govuk-fieldset__legend govuk-fieldset__legend--m">
+          Service pathways / subprocedures
+        </legend>
+        <p className="govuk-hint">
+          Add at least two options when people need different routes. Include the standard route as well as exceptions so users can choose what matches their situation. Each option appears as a radio choice; its guidance and official link appear after selection.
+        </p>
+        <div className="govuk-form-group">
+          <label className="govuk-label" htmlFor="svc-pathway-question">
+            Question shown above the options
+          </label>
+          <div className="govuk-hint" id="svc-pathway-question-hint">
+            For example: Which situation best describes you? Leave blank to use that question.
+          </div>
+          <input
+            className="govuk-input"
+            id="svc-pathway-question"
+            value={form.pathwayQuestion}
+            aria-describedby="svc-pathway-question-hint"
+            onChange={(event) => set("pathwayQuestion", event.target.value)}
+          />
+        </div>
+        <ArrayObjectEditor
+          title="Pathway options"
+          hint="Use a short option title, explain who it applies to, add any further instructions, and provide the relevant official URL when available."
+          items={form.pathways}
+          empty={{ title: "", summary: "", details: "", portalUrl: "" }}
+          fields={[
+            { key: "title", label: "Radio option title" },
+            { key: "summary", label: "Who this option is for" },
+            { key: "details", label: "What to do next", textarea: true },
+            { key: "portalUrl", label: "Official application URL" },
+          ]}
+          onChange={(items) => set("pathways", items)}
+        />
+      </fieldset>
       
       <ArrayObjectEditor title="County-specific requirements" hint="Only add counties where the requirements or process differ." items={form.countyRequirements} empty={{ county: "", requirements: "", sourceUrl: "" }} fields={[{ key: "county", label: "County" }, { key: "requirements", label: "Requirements and local guidance", textarea: true }, { key: "sourceUrl", label: "County source URL" }]} onChange={(items) => set("countyRequirements", items)} />
 
@@ -722,7 +757,7 @@ export default function ServiceEditor({
         </legend>
         <div className="govuk-form-group">
           <label className="govuk-label" htmlFor="svc-gazette">Official Gazette Reference</label>
-          <div className="govuk-hint">e.g., "Fees verified against Gazette Notice No. 17422"</div>
+          <div className="govuk-hint">e.g., &quot;Fees verified against Gazette Notice No. 17422&quot;</div>
           <input className="govuk-input" id="svc-gazette" value={form.gazetteReference} onChange={(e) => set("gazetteReference", e.target.value)} />
         </div>
         <div className="govuk-form-group">
