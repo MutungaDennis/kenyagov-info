@@ -317,10 +317,6 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
                     (opens in a new tab)
                   </span>
                 </a>
-                <p className="govuk-body-s govuk-!-margin-top-2">
-                  You will leave CitizenGuide.KE to complete the application on
-                  an official system.
-                </p>
               </>
             ) : (
               <p className="govuk-body">
@@ -703,22 +699,6 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
               Explore the topic
             </h2>
             <ul className="govuk-list govuk-list--bullet">
-              {service.moreInformationUrl ? (
-                <li>
-                  <a
-                    href={service.moreInformationUrl}
-                    className="govuk-link"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    More information on the official website
-                    <span className="govuk-visually-hidden">
-                      {" "}
-                      (opens in a new tab)
-                    </span>
-                  </a>
-                </li>
-              ) : null}
               {service.relatedLinks?.map((link, idx) => (
                 <li key={`rl-${idx}`}>
                   {link.href.startsWith("/") ? (
@@ -739,13 +719,6 @@ export default function ServiceClientView({ service }: ServiceClientViewProps) {
                       </span>
                     </a>
                   )}
-                </li>
-              ))}
-              {service.relatedServices?.map((rel) => (
-                <li key={rel.slug}>
-                  <Link href={`/${rel.slug}`} className="govuk-link">
-                    {rel.title}
-                  </Link>
                 </li>
               ))}
               {service.parentCategory && (
