@@ -14,7 +14,7 @@ export interface GovernmentServiceSummary {
   categorySlug: string | string[];
   subcategorySlug?: string;
   subcategoryParent?: string;
-  providingBody: string;
+  providingBody?: string;
 }
 
 export interface GovernmentCategoryFilter {
@@ -104,7 +104,7 @@ export default function ServicesClientView({
               <h2 id={`group-${heading}`} className="govuk-heading-l">{heading}</h2>
               <ChevronLinkList
                 ariaLabel={heading}
-                items={items.map((service) => ({ href: `/${service.slug}`, title: service.title, description: service.summary, meta: service.providingBody }))}
+                items={items.map((service) => ({ href: `/${service.slug}`, title: service.title, description: service.summary, meta: service.providingBody || undefined }))}
               />
             </section>
           ))}
