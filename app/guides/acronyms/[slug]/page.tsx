@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getGuideAcronymBySlug } from "@/lib/guides/reference-terms";
+import LinkedBiography from "@/components/site/LinkedBiography";
 
 type PageProps = { params: Promise<{ slug: string }> };
 export const revalidate = 300;
@@ -37,7 +38,7 @@ export default async function AcronymDetailPage({ params }: PageProps) {
           <p className="govuk-body">{entry.short_meaning}</p>
           <section aria-labelledby="full-details-heading">
             <h2 id="full-details-heading" className="govuk-heading-m">Full details</h2>
-            <p className="govuk-body" style={{ whiteSpace: "pre-wrap" }}>{entry.details}</p>
+            <LinkedBiography text={entry.details} />
           </section>
           <p className="govuk-body"><Link className="govuk-link" href="/guides/acronyms">Back to acronyms</Link></p>
         </div>
