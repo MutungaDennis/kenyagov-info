@@ -30,6 +30,7 @@ export async function POST(request: NextRequest) {
     if (!kind) return NextResponse.json({ error: "A valid entry kind is required." }, { status: 400 });
     const term = String(kind === "glossary" ? body.term || "" : body.acronym || "").trim();
     const fullForm = String(body.full_form || "").trim();
+    const category = String(body.category || "Other / unclassified").trim().slice(0, 100) || "Other / unclassified";
     const meaning = String(body.meaning || "").trim();
     const referenceLabel = String(body.reference_label || "").trim();
     const referenceUrl = String(body.reference_url || "").trim();
@@ -41,7 +42,7 @@ export async function POST(request: NextRequest) {
     }
     const record = kind === "glossary"
       ? { term, slug: String(body.slug || term).toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""), meaning, reference_label: referenceLabel || null, reference_url: referenceUrl || null }
-      : { acronym: term.toUpperCase(), full_form: fullForm, meaning: meaning || null, reference_label: referenceLabel || null, reference_url: referenceUrl || null };
+      : { acronym: term.toUpperCase(), full_form: fullForm, category, meaning: meaning || null, reference_label: referenceLabel || null, reference_url: referenceUrl || null };
     const sortOrder = Number(body.sort_order);
     const payload = { ...record, sort_order: Number.isInteger(sortOrder) ? sortOrder : 0, is_published: body.is_published !== false, updated_at: new Date().toISOString() };
     const query = body.id

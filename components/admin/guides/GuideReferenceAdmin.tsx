@@ -10,6 +10,7 @@ type Entry = {
   slug?: string;
   acronym?: string;
   full_form?: string;
+  category?: string | null;
   meaning?: string | null;
   reference_label?: string | null;
   reference_url?: string | null;
@@ -17,7 +18,7 @@ type Entry = {
   is_published?: boolean;
 };
 type FormState = Omit<Entry, "id"> & { id?: string };
-const blank: FormState = { term: "", acronym: "", full_form: "", meaning: "", reference_label: "", reference_url: "", sort_order: 0, is_published: true };
+const blank: FormState = { term: "", acronym: "", full_form: "", category: "Other / unclassified", meaning: "", reference_label: "", reference_url: "", sort_order: 0, is_published: true };
 
 export default function GuideReferenceAdmin() {
   const [kind, setKind] = useState<Kind>("glossary");
@@ -94,7 +95,10 @@ export default function GuideReferenceAdmin() {
               <label className="govuk-label" htmlFor="entry-term">{label}</label>
               <input required id="entry-term" className="govuk-input" value={kind === "glossary" ? form.term || "" : form.acronym || ""} onChange={(event) => update(kind === "glossary" ? "term" : "acronym", event.target.value)} />
             </div>
-            {kind === "acronym" ? <div className="govuk-form-group"><label className="govuk-label" htmlFor="entry-full-form">Full form</label><input required id="entry-full-form" className="govuk-input" value={form.full_form || ""} onChange={(event) => update("full_form", event.target.value)} /></div> : null}
+            {kind === "acronym" ? <>
+              <div className="govuk-form-group"><label className="govuk-label" htmlFor="entry-full-form">Full form</label><input required id="entry-full-form" className="govuk-input" value={form.full_form || ""} onChange={(event) => update("full_form", event.target.value)} /></div>
+              <div className="govuk-form-group"><label className="govuk-label" htmlFor="entry-category">Category</label><input id="entry-category" className="govuk-input" list="acronym-categories" maxLength={100} value={form.category || ""} onChange={(event) => update("category", event.target.value)} placeholder="For example, Kenyan government entity" /><datalist id="acronym-categories"><option value="Kenyan government entity" /><option value="Kenyan private entity" /><option value="International entity" /><option value="Civic / nonprofit organisation" /><option value="Terminology" /><option value="Other / unclassified" /></datalist><div className="govuk-hint">Choose a suggested category or enter your own.</div></div>
+            </> : null}
             <div className="govuk-form-group">
               <label className="govuk-label" htmlFor="entry-meaning">{kind === "glossary" ? "Meaning" : "Context or meaning (optional)"}</label>
               <textarea id="entry-meaning" required={kind === "glossary"} className="govuk-textarea" rows={4} value={form.meaning || ""} onChange={(event) => update("meaning", event.target.value)} />
@@ -115,6 +119,7 @@ export default function GuideReferenceAdmin() {
             <ul className="govuk-list govuk-list--spaced">
               {entries.map((entry) => <li key={entry.id} className="govuk-!-padding-bottom-3 govuk-!-margin-bottom-3" style={{ borderBottom: "1px solid #b1b4b6" }}>
                 <strong>{kind === "glossary" ? entry.term : `${entry.acronym} — ${entry.full_form}`}</strong>
+                {kind === "acronym" ? <p className="govuk-body-s govuk-!-margin-top-1">Category: {entry.category || "Other / unclassified"}</p> : null}
                 <p className="govuk-body-s govuk-!-margin-top-1">{entry.meaning || "No additional meaning"}{entry.is_published === false ? " · Draft" : ""}</p>
                 {entry.reference_url ? <p className="govuk-body-s"><a className="govuk-link" href={entry.reference_url} target="_blank" rel="noopener noreferrer">{entry.reference_label || "View reference"}</a></p> : null}
                 <div className="govuk-button-group"><button type="button" className="govuk-link" onClick={() => edit(entry)}>Edit</button><button type="button" className="govuk-link" onClick={() => void remove(entry)}>Delete</button></div>

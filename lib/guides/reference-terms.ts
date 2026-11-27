@@ -14,6 +14,7 @@ export type GuideAcronym = {
   id: string;
   acronym: string;
   full_form: string;
+  category: string;
   meaning: string | null;
   reference_label: string | null;
   reference_url: string | null;
@@ -39,7 +40,7 @@ export async function getGuideAcronyms(): Promise<GuideAcronym[]> {
   try {
     const { data, error } = await createPublicClient()
       .from("guide_acronyms")
-      .select("id,acronym,full_form,meaning,reference_label,reference_url")
+      .select("id,acronym,full_form,category,meaning,reference_label,reference_url")
       .eq("is_published", true)
       .order("sort_order")
       .order("acronym");
