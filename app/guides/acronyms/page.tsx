@@ -31,6 +31,7 @@ export default async function AcronymsPage() {
                   <dt className="govuk-summary-list__key">{entry.acronym.toUpperCase()}</dt>
                   <dd className="govuk-summary-list__value">
                     <p className="govuk-body govuk-!-font-weight-bold">{entry.full_form}</p>
+                    <p className="govuk-body-s govuk-!-margin-bottom-2"><span className="govuk-tag">{entry.category || "Other / unclassified"}</span></p>
                     {entry.meaning ? <p className="govuk-body">{entry.meaning}</p> : null}
                     {entry.reference_url ? (
                       <p className="govuk-body-s govuk-!-margin-bottom-0">Reference: <a className="govuk-link" href={entry.reference_url} target="_blank" rel="noopener noreferrer">
