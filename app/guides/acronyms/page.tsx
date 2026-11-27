@@ -5,7 +5,7 @@ import { getGuideAcronyms } from "@/lib/guides/reference-terms";
 export const revalidate = 300;
 export const metadata: Metadata = {
   title: "Acronyms",
-  description: "Full forms and references for acronyms used in Kenyan government information.",
+  description: "Browse acronyms used in Kenyan government and civic information, with concise meanings and full details.",
 };
 
 export default async function AcronymsPage() {
@@ -23,21 +23,19 @@ export default async function AcronymsPage() {
         <div className="govuk-grid-column-two-thirds">
           <span className="govuk-caption-l">Guides</span>
           <h1 className="govuk-heading-xl">Acronyms</h1>
-          <p className="govuk-body-l">Find the full forms and context for abbreviations used in public information.</p>
+          <p className="govuk-body-l">Browse acronyms and their short meanings. Open an acronym for its full details.</p>
           {acronyms.length ? (
             <dl className="govuk-summary-list">
               {acronyms.map((entry) => (
                 <div className="govuk-summary-list__row" key={entry.id}>
-                  <dt className="govuk-summary-list__key">{entry.acronym.toUpperCase()}</dt>
+                  <dt className="govuk-summary-list__key">
+                    <Link className="govuk-link" href={`/guides/acronyms/${entry.slug}`} aria-label={`${entry.acronym}: ${entry.full_form}`}>
+                      {entry.acronym.toUpperCase()}
+                    </Link>
+                  </dt>
                   <dd className="govuk-summary-list__value">
                     <p className="govuk-body govuk-!-font-weight-bold">{entry.full_form}</p>
-                    <p className="govuk-body-s govuk-!-margin-bottom-2"><span className="govuk-tag">{entry.category || "Other / unclassified"}</span></p>
-                    {entry.meaning ? <p className="govuk-body">{entry.meaning}</p> : null}
-                    {entry.reference_url ? (
-                      <p className="govuk-body-s govuk-!-margin-bottom-0">Reference: <a className="govuk-link" href={entry.reference_url} target="_blank" rel="noopener noreferrer">
-                        {entry.reference_label || "View source"}<span className="govuk-visually-hidden"> (opens in a new tab)</span>
-                      </a></p>
-                    ) : entry.reference_label ? <p className="govuk-body-s govuk-!-margin-bottom-0">Reference: {entry.reference_label}</p> : null}
+                    <p className="govuk-body govuk-!-margin-bottom-0">{entry.short_meaning}</p>
                   </dd>
                 </div>
               ))}
