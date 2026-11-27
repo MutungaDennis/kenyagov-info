@@ -36,6 +36,8 @@ export type ServiceView = {
   commonMistakes?: { errorTitle: string; errorFix: string }[];
   faqs?: { question: string; answer: string }[];
   transactionPortals?: { portalLabel: string; portalUrl: string }[];
+  pathwayQuestion?: string;
+  pathways?: { title: string; summary?: string; details?: string; portalUrl?: string }[];
   providingBodies?: { name: string; slug: string; parentMinistry?: { name: string; slug: string } }[];
   relatedServices?: { title: string; slug: string }[];
   parentCategory?: { title: string; slug: string };
@@ -128,7 +130,7 @@ export async function getServiceDirectory() {
       popularityWeight: s.popularityWeight || 0, 
       servicePriority: s.servicePriority || 0, 
       executionMode: s.executionMode,
-      providingBody: providers.find(p => p._id === s.providingBodies?.[0]?._ref)?.name || "Government Agency",
+      providingBody: providers.find(p => p._id === s.providingBodies?.[0]?._ref)?.name,
       categorySlug: visibleCategories.filter(c => activeLinks.some(l => l.category_id === c._id && l.service_id === s._id)).map(c => getSlug(c)),
       subcategorySlug: activeLinks.find(l => l.service_id === s._id)?.heading || undefined,
       subcategoryParent: (() => { const heading = activeLinks.find(l => l.service_id === s._id)?.heading; return visibleCategories.flatMap(c => c.subTopics || []).find(t => t.heading === heading)?.parentHeading; })(),

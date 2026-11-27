@@ -1,5 +1,10 @@
-/// <reference types="vite/client" />
 import { describe, expect, it, vi } from "vitest";
+
+declare global {
+  interface ImportMeta {
+    glob(pattern: string | string[]): Record<string, () => Promise<unknown>>;
+  }
+}
 import { NextRequest, NextResponse } from "next/server";
 const gate = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/admin-api", () => ({ requireAdminApi: gate, slugify: (s: string) => s }));

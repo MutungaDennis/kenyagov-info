@@ -13,7 +13,7 @@ export const ADMIN_NAVIGATION = [
     { path: "gazette", label: "Kenya Gazette" }, { path: "documents", label: "Documents" },
   ] },
   { title: "Services and elections", items: [
-    { path: "services", label: "Public services" }, { path: "polling-stations/upload", label: "Polling stations" },
+    { path: "services", label: "Public services" }, { path: "guides", label: "Guides glossary and acronyms" }, { path: "polling-stations/upload", label: "Polling stations" },
     { path: "elections/political-parties", label: "Political parties" }, { path: "elections/coalitions", label: "Coalitions" },
   ] },
   { title: "Citizen responses", items: [

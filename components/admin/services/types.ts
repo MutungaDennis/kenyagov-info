@@ -18,6 +18,7 @@ export type ServiceFormState = {
   copyrightNotice: string;
   licenseUrl: string;
   sourceLinks: Array<{ label: string; href: string }>;
+  pathwayQuestion: string;
   pathways: Array<{ title: string; summary: string; details: string; portalUrl: string }>;
   countyRequirements: Array<{ county: string; requirements: string; sourceUrl: string }>;
   popularityWeight: number;
@@ -99,6 +100,7 @@ export function emptyServiceForm(): ServiceFormState {
     copyrightNotice: "",
     licenseUrl: "",
     sourceLinks: [],
+    pathwayQuestion: "",
     pathways: [],
     countyRequirements: [],
     popularityWeight: 0,
@@ -179,6 +181,7 @@ export function detailToForm(data: Record<string, unknown>): ServiceFormState {
     copyrightNotice: String(d.copyrightNotice || ""),
     licenseUrl: String(d.licenseUrl || ""),
     sourceLinks: Array.isArray(d.sourceLinks) ? (d.sourceLinks as ServiceFormState["sourceLinks"]) : [],
+    pathwayQuestion: String(d.pathwayQuestion || ""),
     pathways: Array.isArray(d.pathways) ? (d.pathways as ServiceFormState["pathways"]) : [],
     countyRequirements: Array.isArray(d.countyRequirements) ? (d.countyRequirements as ServiceFormState["countyRequirements"]) : [],
     popularityWeight: Number(d.popularityWeight) || 0,
@@ -272,6 +275,7 @@ export function formToPayload(form: ServiceFormState) {
     copyrightNotice: form.copyrightNotice || undefined,
     licenseUrl: form.licenseUrl || undefined,
     sourceLinks: form.sourceLinks,
+    pathwayQuestion: form.pathwayQuestion.trim() || undefined,
     pathways: form.pathways,
     countyRequirements: form.countyRequirements,
     popularityWeight: form.popularityWeight,

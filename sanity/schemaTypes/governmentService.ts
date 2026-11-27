@@ -92,6 +92,12 @@ export default defineType({
       ], preview: { select: { title: 'label', subtitle: 'href' } } }],
     }),
     defineField({
+      name: 'pathwayQuestion',
+      title: 'Pathway selection question',
+      type: 'string',
+      description: 'The question shown above the radio options when this service has multiple pathways.',
+    }),
+    defineField({
       name: 'pathways',
       title: 'Service pathways / subprocedures',
       type: 'array',
