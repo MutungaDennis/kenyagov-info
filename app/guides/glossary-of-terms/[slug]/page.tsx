@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getGlossaryTermBySlug } from "@/lib/guides/reference-terms";
+import LinkedBiography from "@/components/site/LinkedBiography";
 
 type PageProps = { params: Promise<{ slug: string }> };
 export const revalidate = 300;
@@ -36,7 +37,7 @@ export default async function GlossaryTermPage({ params }: PageProps) {
           <p className="govuk-body-l">{entry.short_meaning}</p>
           <section aria-labelledby="full-definition-heading">
             <h2 id="full-definition-heading" className="govuk-heading-m">Full definition</h2>
-            <p className="govuk-body" style={{ whiteSpace: "pre-wrap" }}>{entry.details}</p>
+            <LinkedBiography text={entry.details} />
           </section>
           <p className="govuk-body"><Link className="govuk-link" href="/guides/glossary-of-terms">Back to glossary of terms</Link></p>
         </div>

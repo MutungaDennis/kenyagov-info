@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import GuideDetailsLinkEditor from "@/components/admin/guides/GuideDetailsLinkEditor";
 import useSWR from "swr";
 
 type EntryKind = "glossary" | "acronym";
@@ -205,11 +206,7 @@ export default function GuideReferenceAdmin() {
               <div className="govuk-hint">Shown in the list. Keep it concise (up to 300 characters).</div>
               <textarea required id="entry-short-meaning" className="govuk-textarea" rows={2} maxLength={300} value={form.short_meaning} onChange={(event) => update("short_meaning", event.target.value)} />
             </div>
-            <div className="govuk-form-group">
-              <label className="govuk-label" htmlFor="entry-details">Full details</label>
-              <div className="govuk-hint">Shown after a reader opens the entry (up to 5,000 characters).</div>
-              <textarea required id="entry-details" className="govuk-textarea" rows={7} maxLength={5000} value={form.details} onChange={(event) => update("details", event.target.value)} />
-            </div>
+            <GuideDetailsLinkEditor value={form.details} onChange={(value) => update("details", value)} />
             <div className="govuk-checkboxes govuk-!-margin-bottom-4">
               <div className="govuk-checkboxes__item">
                 <input id="entry-published" type="checkbox" className="govuk-checkboxes__input" checked={form.is_published} onChange={(event) => update("is_published", event.target.checked)} />

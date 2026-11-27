@@ -10,17 +10,10 @@ type Props = {
 const linkPattern = /\[((?:\\.|[^\]])+)\]\(([^)\s]+)\)/g;
 
 function safeLinkTarget(href: string): "internal" | "external" | null {
-  const internalPaths = [
-    /^\/government\/(?:institutions|people)\/(?!\/|\\)[^\s]*$/i,
-    /^\/elections\/political-parties\/(?!\/|\\\\)[^\s]*$/i,
-    /^\/elections\/coalitions(?:\?q=[^#]*)?$/i,
-    /^\/government\/legislature\/committees\/(?!\/|\\\\)[^\s]*$/i,
-    /^\/government\/counties\/(?!\/|\\\\)[^\s]*$/i,
-    /^\/constitution\/article\/\d+$/i,
-  ];
-  if (internalPaths.some((pattern) => pattern.test(href))) {
+  if (href.startsWith("/") && !href.startsWith("//") && !/[\\\\\s<>]/.test(href)) {
     return "internal";
   }
+
 
   try {
     return new URL(href).protocol === "https:" ? "external" : null;
