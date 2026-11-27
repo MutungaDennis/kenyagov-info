@@ -5,7 +5,7 @@ import { getGlossaryTerms } from "@/lib/guides/reference-terms";
 export const revalidate = 300;
 export const metadata: Metadata = {
   title: "Glossary of terms",
-  description: "Plain-language definitions of Kenyan government and civic terms, with references.",
+  description: "Browse concise meanings of terms used in Kenyan government and civic information, with full definitions on each term page.",
 };
 
 export default async function GlossaryPage() {
@@ -23,21 +23,16 @@ export default async function GlossaryPage() {
         <div className="govuk-grid-column-two-thirds">
           <span className="govuk-caption-l">Guides</span>
           <h1 className="govuk-heading-xl">Glossary of terms</h1>
-          <p className="govuk-body-l">Clear explanations of words and phrases used in government and civic information.</p>
+          <p className="govuk-body-l">Browse terms and their short meanings. Open a term to read the full definition.</p>
           {terms.length ? (
             <dl className="govuk-summary-list">
               {terms.map((entry) => (
-                <div className="govuk-summary-list__row" key={entry.id} id={entry.slug}>
-                  <dt className="govuk-summary-list__key">{entry.term}</dt>
+                <div className="govuk-summary-list__row" key={entry.id}>
+                  <dt className="govuk-summary-list__key">
+                    <Link className="govuk-link" href={`/guides/glossary-of-terms/${entry.slug}`}>{entry.term}</Link>
+                  </dt>
                   <dd className="govuk-summary-list__value">
-                    <p className="govuk-body">{entry.meaning}</p>
-                    {entry.reference_url ? (
-                      <p className="govuk-body-s govuk-!-margin-bottom-0">
-                        Reference: <a className="govuk-link" href={entry.reference_url} target="_blank" rel="noopener noreferrer">
-                          {entry.reference_label || "View source"}<span className="govuk-visually-hidden"> (opens in a new tab)</span>
-                        </a>
-                      </p>
-                    ) : entry.reference_label ? <p className="govuk-body-s govuk-!-margin-bottom-0">Reference: {entry.reference_label}</p> : null}
+                    <p className="govuk-body govuk-!-margin-bottom-0">{entry.short_meaning}</p>
                   </dd>
                 </div>
               ))}
