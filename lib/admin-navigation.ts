@@ -4,6 +4,9 @@ export const ADMIN_NAVIGATION = [
     { path: "institutions", label: "Institutions" }, { path: "schools", label: "Schools" },
     { path: "officials", label: "National officials" }, { path: "mcas", label: "County MCAs" },
   ] },
+  { title: "Presidency", items: [
+    { path: "presidential-speeches", label: "Presidential speeches" },
+  ] },
   { title: "Parliament and Hansard", items: [
     { path: "parliamentary-committees", label: "Parliamentary committees" },
     { path: "hansard", label: "Parliamentary Hansard" },
