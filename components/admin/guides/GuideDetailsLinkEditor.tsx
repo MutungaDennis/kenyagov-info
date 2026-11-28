@@ -6,8 +6,8 @@ import { useMemo, useRef, useState } from "react";
 
 type EntityType = "institution" | "person" | "party" | "coalition" | "committee" | "county" | "constituency" | "ward" | "article" | "school";
 type LinkableResult = { id: string; type: EntityType; name: string; detail: string; href: string };
-type SearchResponse = { data: LinkableResult[]; total: number; offset: number; type: EntityType };
-type BiographySearchResponse = { data: LinkableResult[]; total: number; offset: number };
+type SearchResponse = { data: LinkableResult[]; total: number; offset: number; type: EntityType; counts: Record<EntityType, number> };
+type BiographySearchResponse = { data: LinkableResult[]; total: number; offset: number; hasNextPage: boolean };
 type Props = { value: string; onChange: (value: string) => void };
 type LinkType = "internal" | "external";
 type TextSelection = { start: number; end: number; text: string };
@@ -66,6 +66,7 @@ async function fetchInternalLinks(url: string): Promise<BiographySearchResponse>
     data: results.flatMap((result) => result.data),
     total: results.reduce((sum, result) => sum + result.total, 0),
     offset,
+    hasNextPage: results.some((result) => result.counts[result.type] > offset + SEARCH_PAGE_SIZE),
   };
 }
 
