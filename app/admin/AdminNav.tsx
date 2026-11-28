@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useId, useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import { adminPath, getAdminBasePath } from "@/lib/admin-path";
 
 type NavItem = {
@@ -34,6 +34,10 @@ const NAV_SECTIONS: NavSection[] = [
       { segment: "officials", label: "National officials" },
       { segment: "mcas", label: "County MCAs" },
     ],
+  },
+  {
+    heading: "Presidency",
+    items: [{ segment: "presidential-speeches", label: "Presidential speeches" }],
   },
   {
     heading: "Parliament & Hansard",
@@ -105,10 +109,6 @@ export default function AdminNav() {
   const [menuOpen, setMenuOpen] = useState(false);
   const base = useMemo(() => getAdminBasePath(), []);
 
-  useEffect(() => {
-    setMenuOpen(false);
-  }, [pathname]);
-
   const activeLabel =
     NAV_SECTIONS.flatMap((s) => s.items).find((item) =>
       isActive(pathname, base, item),
@@ -174,6 +174,7 @@ export default function AdminNav() {
                       <Link
                         href={href}
                         aria-current={active ? "page" : undefined}
+                        onClick={() => setMenuOpen(false)}
                       >
                         {item.label}
                       </Link>
